@@ -19,12 +19,14 @@ var app = express();
 swagger.setAppHandler(app);
 
 // 添加swagger models
-var swaggerModels = {};
+var swaggerModels = {
+  models: {}
+};
 var swaggerModelFileNames = fs.readdirSync('./swagger_models');
 swaggerModelFileNames.forEach(function (fileName) {
   var model = require('./swagger_models/' + fileName);
   for (var key in model) {
-    swaggerModels[key] = model[key];
+    swaggerModels.models[key] = model[key];
   }
 });
 swagger.addModels(swaggerModels);
