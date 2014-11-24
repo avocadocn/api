@@ -10,7 +10,7 @@ module.exports = function (swagger, modules) {
     findById: {
       'spec': {
         description: "Operations about pets",
-        path: "/useres/{userId}",
+        path: "/users/{userId}",
         method: "GET",
         summary: "Find user by ID",
         notes: "Returns a user based on ID",

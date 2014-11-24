@@ -1,10 +1,11 @@
 'use strict';
 
 var fs = require('fs');
+var url = require('url');
 
 var express = require('express');
 var serveStatic = require('serve-static');
-var swagger = require('swagger-node-express');
+
 
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/donler-beta');
@@ -16,7 +17,20 @@ mongooseModels.forEach(function (model) {
 });
 
 var app = express();
-swagger.setAppHandler(app);
+var swagger = require('swagger-node-express').createNew(app);
+
+// todo 临时的api key 验证
+var key = '55yali';
+swagger.addValidator(function validate(req, path, httpMethod) {
+  var apiKey = req.headers["api_key"];
+  if (!apiKey) {
+    apiKey = url.parse(req.url, true).query["api_key"];
+  }
+  if (apiKey === key) {
+    return true;
+  }
+  return false;
+});
 
 // 添加swagger models
 var swaggerModels = {
