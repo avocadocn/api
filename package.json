@@ -1,0 +1,24 @@
+{
+  "name": "api",
+  "version": "0.0.1",
+  "description": "Donler API data",
+  "author": "CahaVar, Inc. <cahavar@55yali.com>",
+  "dependencies": {
+    "express": "~4.10.2",
+    "serve-static": "~1.7.1",
+    "swagger-node-express": "~2.1.2",
+    "mongoose": "~3.8.19"
+  },
+  "devDependencies": {
+    "gulp": "~3.8.10",
+    "gulp-nodemon": "~1.0.4"
+  },
+  "main": "index",
+  "engines": {
+    "node": ">= 0.10.0",
+    "npm": ">= 1.4.0"
+  },
+  "scripts": {
+    "start": "node node_modules/gulp/bin/gulp"
+  }
+}
