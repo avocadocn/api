@@ -5,9 +5,9 @@
   "author": "CahaVar, Inc. <cahavar@55yali.com>",
   "dependencies": {
     "express": "~4.10.2",
+    "mongoose": "~3.8.19",
     "serve-static": "~1.7.1",
-    "swagger-node-express": "~2.1.2",
-    "mongoose": "~3.8.19"
+    "swagger-node-express": "~2.1.2"
   },
   "devDependencies": {
     "gulp": "~3.8.10",
