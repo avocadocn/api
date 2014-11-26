@@ -9,12 +9,12 @@ module.exports = function (app, modules) {
     User.findById(req.params.userId).exec()
       .then(function (user) {
         if (!user) {
-          return res.send(404);
+          return res.sendStatus(404);
         }
         res.send(user);
       })
       .then(null, function (err) {
-        res.send(500);
+        res.sendStatus(500);
       });
   });
 
