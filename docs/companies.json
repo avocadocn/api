@@ -1,0 +1,70 @@
+{
+  "apiVersion": "1.0.0",
+  "swaggerVersion": "2.0",
+  "basePath": "http://localhost:3002",
+  "resourcePath": "/companies",
+  "produces": ["application/json", "text/plain"],
+  "apis": [
+    {
+      "path": "/companies",
+      "operations": [
+        {
+          "method": "POST",
+          "summary": "注册公司账号",
+          "notes": "",
+          "type": "void",
+          "nickname": "addCompany",
+          "consumes": ["application/json"],
+          "parameters": [
+            {
+              "name": "body",
+              "description": "Pet object that needs to be added to the store",
+              "required": true,
+              "type": "Pet",
+              "paramType": "body",
+              "allowMultiple": false
+            }
+          ],
+          "responseMessages": [
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "models": {
+    "RegisterForm": {
+      "id": "RegisterForm",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "公司名称，与营业执照注册名保持一致"
+        },
+        "province": {
+          "type": "string",
+          "description": "省份"
+        },
+        "city": {
+          "description": "城市",
+          "type": "string"
+        },
+        "district": {
+          "description": "区",
+          "type": "string"
+        },
+        "address": {
+          "description": "详细地址",
+          "type": "string"
+        },
+        "contacts": {
+          "description": "联系人",
+          "type": "string"
+        }
+      }
+    }
+  }
+}
