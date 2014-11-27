@@ -15,6 +15,7 @@
           "type": "void",
           "nickname": "addCompany",
           "consumes": ["application/json"],
+          "produces": ["text/plain"],
           "parameters": [
             {
               "name": "body",
@@ -40,9 +41,9 @@
         {
           "method": "GET",
           "summary": "获取公司信息",
-          "type": "void",
+          "type": "Company",
           "nickname": "getCompany",
-          "consumes": ["application/json"],
+          "produces": ["application/json"],
           "parameters": [
             {
               "name": "companyId",
@@ -62,12 +63,12 @@
       "required": ["name"],
       "properties": {
         "name": {
-          "type": "string",
-          "description": "公司名称，与营业执照注册名保持一致"
+          "description": "公司名称，与营业执照注册名保持一致",
+          "type": "string"
         },
         "province": {
-          "type": "string",
-          "description": "省份"
+          "description": "省份",
+          "type": "string"
         },
         "city": {
           "description": "城市",
@@ -86,6 +87,80 @@
           "type": "string"
         }
       }
+    },
+    "Company": {
+      "id": "Company",
+      "required": ["_id", "name", "short_name", "logo"],
+      "properties": {
+        "_id": {
+          "description": "公司id",
+          "type": "string"
+        },
+        "username": {
+          "description": "企业账号登录用的用户名",
+          "type": "string"
+        },
+        "domains": {
+          "description": "邮箱后缀",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "公司名称",
+          "type": "string"
+        },
+        "shortName": {
+          "description": "公司简称",
+          "type": "string"
+        },
+        "logo": {
+          "description": "公司logo url",
+          "type": "string"
+        },
+        "province": {
+          "description": "省份",
+          "type": "string"
+        },
+        "city": {
+          "description": "城市",
+          "type": "string"
+        },
+        "district": {
+          "description": "区",
+          "type": "string"
+        },
+        "address": {
+          "description": "详细地址",
+          "type": "string"
+        },
+        "contacts": {
+          "description": "联系人",
+          "type": "string"
+        },
+        "email": {
+          "description": "公司邮箱",
+          "type": "string"
+        },
+        "memberNumber": {
+          "description": "公司成员数量",
+          "type": "integer",
+          "format": "int64"
+        },
+        "companyInviteCodes": {
+          "description": "可供其它企业注册时使用的邀请码",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "staffInviteCode": {
+          "description": "给该企业员工使用的邀请码",
+          "type": "string"
+        }
+      }
     }
   }
 }
+
