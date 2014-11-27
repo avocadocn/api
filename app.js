@@ -6,6 +6,7 @@ var url = require('url');
 var express = require('express');
 var serveStatic = require('serve-static');
 var morgan = require('morgan');
+var bodyParser = require('body-parser');
 
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/donler-beta');
@@ -32,9 +33,11 @@ var walk = function(path, callback) {
 walk('./models');
 
 var app = express();
-app.set('root', __dirname)
+app.set('root', __dirname);
 
 app.use(morgan('dev'));
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 var controllers = {};
 walk('./controllers', function (file, path) {

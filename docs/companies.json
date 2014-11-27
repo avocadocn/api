@@ -10,7 +10,7 @@
       "operations": [
         {
           "method": "POST",
-          "summary": "注册公司账号",
+          "summary": "注册公司账号(todo)",
           "notes": "",
           "type": "void",
           "nickname": "addCompany",

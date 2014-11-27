@@ -3,6 +3,10 @@
   "swaggerVersion": "2.0",
   "apis": [
     {
+      "path": "/users",
+      "description": "用户"
+    },
+    {
       "path": "/companies",
       "description": "公司"
     }
