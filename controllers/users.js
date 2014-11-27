@@ -4,13 +4,6 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User');
 
 var jwt = require('jwt-simple');
-var moment = require('moment');
-
-// 设置token 7天过期
-var expires = moment().add('days', 7).valueOf();
-
-// todo secret for temp
-var secret = 'donler';
 
 module.exports = function (app) {
 
@@ -31,7 +24,6 @@ module.exports = function (app) {
     },
 
     login: function (req, res) {
-      console.log(req.body);
       if (!req.body || !req.body.email || !req.body.password) {
         return res.send(400, '缺少邮箱或密码');
       }
@@ -51,8 +43,8 @@ module.exports = function (app) {
           var token = jwt.encode({
             type: "user",
             id: user._id.toString(),
-            exp: expires
-          }, secret);
+            exp: app.get('tokenExpires')
+          }, app.get('tokenSecret'));
 
           res.send(200, {
             token: token

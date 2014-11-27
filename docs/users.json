@@ -15,21 +15,14 @@
           "notes": "",
           "nickname": "login",
           "produces": ["application/json", "text/plain"],
-          "consumes": ["application/x-www-form-urlencoded", "application/json"],
+          "consumes": ["application/json"],
           "parameters": [
             {
-              "name": "email",
-              "type": "string",
-              "paramType": "form",
+              "name": "body",
+              "type": "LoginForm",
+              "paramType": "body",
               "required": true,
-              "description": "用户邮箱"
-            },
-            {
-              "name": "password",
-              "type": "string",
-              "paramType": "form",
-              "required": true,
-              "description": "用户密码"
+              "description": "登录邮箱和密码"
             },
             {
               "name": "X-Parse-Application-Id",
@@ -90,15 +83,114 @@
           ]
         }
       ]
+    },
+    {
+      "path": "/users/{userId}",
+      "operations": [
+        {
+          "method": "GET",
+          "summary": "获取用户数据",
+          "type": "User",
+          "notes": "",
+          "nickname": "getUserData",
+          "produces": ["application/json", "text/plain"],
+          "parameters": [
+            {
+              "name": "userId",
+              "description": "用户id",
+              "requried": true,
+              "type": "string",
+              "paramType": "path"
+            },
+            {
+              "name": "X-Access-Token",
+              "type": "string",
+              "paramType": "header",
+              "required": true,
+              "description": "access token"
+            }
+          ],
+          "responseMessages": [
+            {
+              "code": 400,
+              "message": "缺少id"
+            },
+            {
+              "code": 401,
+              "message": "未登录"
+            }
+          ]
+        }
+      ]
     }
   ],
   "models": {
+    "Header": {
+      "id": "Header",
+      "properties": {
+        "X-Parse-Application-Id": {
+          "type": "string",
+          "required": true,
+          "description": "app id"
+        },
+        "X-Parse-REST-API-Key": {
+          "type": "string",
+          "required": true,
+          "description": "api key"
+        },
+        "X-Device-Id": {
+          "type": "string",
+          "required": true,
+          "description": "设备id"
+        },
+        "X-Device-Type": {
+          "type": "string",
+          "required": true,
+          "description": "设备型号"
+        },
+        "X-Platform": {
+          "type": "string",
+          "required": true,
+          "description": "平台系统"
+        },
+        "X-Version": {
+          "type": "string",
+          "required": true,
+          "description": "平台版本"
+        }
+      }
+    },
+    "LoginForm": {
+      "id": "LoginForm",
+      "properties": {
+        "email": {
+          "required": true,
+          "description": "用户邮箱",
+          "type": "string"
+        },
+        "password": {
+          "required": true,
+          "description": "密码",
+          "type": "string"
+        }
+      }
+    },
     "LoginSuccess": {
       "id": "LoginSuccess",
       "properties": {
         "token": {
           "type": "string",
           "description": "access token, 有效期7天",
+          "required": true
+        }
+      }
+    },
+    "User": {
+      "id": "User",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "用户邮箱",
           "required": true
         }
       }

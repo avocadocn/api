@@ -7,10 +7,13 @@ var express = require('express');
 var serveStatic = require('serve-static');
 var morgan = require('morgan');
 var bodyParser = require('body-parser');
+var moment = require('moment');
 
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/donler-beta');
 
+// custom middlewares
+var token = require('./middlewares/token.js');
 
 var walk = function(path, callback) {
   fs.readdirSync(path).forEach(function(file) {
@@ -33,11 +36,17 @@ var walk = function(path, callback) {
 walk('./models');
 
 var app = express();
+
+// app config
 app.set('root', __dirname);
+app.set('tokenSecret', 'donler');
+app.set('tokenExpires', moment().add('days', 7).valueOf());
 
 app.use(morgan('dev'));
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
+app.use(token.verifying(app));
 
 var controllers = {};
 walk('./controllers', function (file, path) {
