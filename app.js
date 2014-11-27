@@ -10,11 +10,26 @@ var morgan = require('morgan');
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/donler-beta');
 
+
+var walk = function(path, callback) {
+  fs.readdirSync(path).forEach(function(file) {
+    var newPath = path + '/' + file;
+    var stat = fs.statSync(newPath);
+    if (stat.isFile()) {
+      if (/(.*)\.(js$)/.test(file)) {
+        if (callback) {
+          callback(file, newPath)
+        } else {
+          require(newPath);
+        }
+      }
+    } else if (stat.isDirectory()) {
+      walk(newPath, callback);
+    }
+  });
+};
 // 初始化 mongoose models
-var modelFileNames = fs.readdirSync('./models');
-modelFileNames.forEach(function (fileName) {
-  require('./models/' + fileName);
-});
+walk('./models');
 
 var app = express();
 app.set('root', __dirname)
@@ -22,21 +37,18 @@ app.set('root', __dirname)
 app.use(morgan('dev'));
 
 var controllers = {};
-var controllerFileNames = fs.readdirSync('./controllers');
-controllerFileNames.forEach(function (fileName) {
-  var ctrlName = fileName.split('.')[0];
-  controllers[ctrlName] = require('./controllers/' + fileName);
+walk('./controllers', function (file, path) {
+  var ctrlName = file.split('.')[0];
+  controllers[ctrlName] = require(path);
 });
 
-// 初始化 routes
-var routeFileNames = fs.readdirSync('./routes');
-routeFileNames.forEach(function (fileName) {
-  var routeName = fileName.split('.')[0];
+walk('./routes', function (file, path) {
+  var routeName = file.split('.')[0];
   var ctrl;
   if (controllers[routeName]) {
     ctrl = controllers[routeName](app);
   }
-  require('./routes/' + fileName)(app, ctrl);
+  require(path)(app, ctrl);
 });
 
 app.use(serveStatic('public'));

@@ -33,6 +33,27 @@
           ]
         }
       ]
+    },
+    {
+      "path": "/companies/{companyId}",
+      "operations": [
+        {
+          "method": "GET",
+          "summary": "获取公司信息",
+          "type": "void",
+          "nickname": "getCompany",
+          "consumes": ["application/json"],
+          "parameters": [
+            {
+              "name": "companyId",
+              "description": "公司id",
+              "required": true,
+              "type": "string",
+              "paramType": "path"
+            }
+          ]
+        }
+      ]
     }
   ],
   "models": {
