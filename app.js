@@ -19,19 +19,24 @@ modelFileNames.forEach(function (fileName) {
 var app = express();
 app.set('root', __dirname)
 
-// 设置通用模块，减少重复的require
-var modules = {
-  mongoose: mongoose,
-  fs: fs,
-  path: require('path')
-};
-
 app.use(morgan('dev'));
 
-// 初始化 controllers
+var controllers = {};
 var controllerFileNames = fs.readdirSync('./controllers');
 controllerFileNames.forEach(function (fileName) {
-  require('./controllers/' + fileName)(app, modules);
+  var ctrlName = fileName.split('.')[0];
+  controllers[ctrlName] = require('./controllers/' + fileName);
+});
+
+// 初始化 routes
+var routeFileNames = fs.readdirSync('./routes');
+routeFileNames.forEach(function (fileName) {
+  var routeName = fileName.split('.')[0];
+  var ctrl;
+  if (controllers[routeName]) {
+    ctrl = controllers[routeName](app);
+  }
+  require('./routes/' + fileName)(app, ctrl);
 });
 
 app.use(serveStatic('public'));

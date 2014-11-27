@@ -1,12 +1,14 @@
 'use strict';
 
-module.exports = function (app, modules) {
+var mongoose = require('mongoose');
+var User = mongoose.model('User');
 
-  var mongoose = modules.mongoose;
-  var User = mongoose.model('User');
+module.exports = function (app) {
 
-  app.get('/users/:userId', function (req, res) {
-    User.findById(req.params.userId).exec()
+  return {
+
+    getUserById: function (req, res) {
+      User.findById(req.params.userId).exec()
       .then(function (user) {
         if (!user) {
           return res.sendStatus(404);
@@ -16,7 +18,8 @@ module.exports = function (app, modules) {
       .then(null, function (err) {
         res.sendStatus(500);
       });
-  });
+    }
 
+  }
 
-};
+}

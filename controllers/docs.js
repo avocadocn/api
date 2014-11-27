@@ -1,17 +1,21 @@
 'use strict';
 
-module.exports = function (app, modules) {
+var path = require('path');
+
+module.exports = function (app) {
 
   var root = app.get('root');
-  var path = modules.path;
 
-  app.get('/api-docs', function (req, res) {
-    res.sendFile(path.join(root, 'docs/swagger.json'));
-  });
+  return {
 
-  app.get('/api-docs/:apiName', function (req, res) {
-    res.sendFile(path.join(root, 'docs', req.params.apiName + '.json'));
-  });
+    getSwaggerJson: function (req, res) {
+      res.sendFile(path.join(root, 'docs/swagger.json'));
+    },
 
+    getSubApiDocs: function (req, res) {
+      res.sendFile(path.join(root, 'docs', req.params.apiName + '.json'));
+    }
+
+  };
 
 };
