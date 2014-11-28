@@ -6,6 +6,20 @@
     "version": "1.0.0"
   },
   "produces": ["application/json", "text/plain"],
+  "parameters": {
+    "test":{
+      "name": "test1",
+      "type": "string",
+      "in": "header",
+      "required": true,
+      "description": "app id"
+    }
+  },
+  "responses":{
+    "successRes":{
+      "description":"成功"
+    }
+  },
   "paths": {
     "/users/login": {
       "post": {
@@ -153,6 +167,202 @@
           }
         ]
       }
+    },
+    "/campaigns": {
+      "post":{
+        "summary": "发起活动",
+        "operationId": "addCampaign",
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Campaign object that needs to be added to the store",
+            "required": true,
+            "schema": {
+              "$ref": "Campaign"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "405":{
+            "description":"无效输入"
+          },
+          "200":{
+            "description":"成功"
+          }
+        }
+      },
+      "get": {
+        "summary": "获取活动列表",
+        "operationId": "getCampaign",
+        "parameters": [
+          {
+            "name": "hostType",
+            "description": "Campaign object that needs to be added to the store",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "enum": [
+              "user",
+              "team",
+              "company"
+            ]
+          },
+          {
+            "name": "hostId",
+            "description": "Campaign object that needs to be added to the store",
+            "required": true,
+            "type": "string",
+            "paramType": "path",
+            "allowMultiple": false
+          }
+        ],
+        "responses": {
+          "default":{
+            "description": "默认返回"
+          },
+          "200":{
+            "description": "成功"
+          }
+        }
+      }
+    },
+    "/campaigns/{campaignId}":{
+      "get": {
+        "summary": "获取单个活动",
+        "operationId": "getCampaignById",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "default":{
+            "description": "默认返回"
+          },
+          "200":{
+            "description": "成功"
+          }
+        }
+      },
+      "patch": {
+        "summary": "修改活动",
+        "operationId": "updateCampaign",
+        "consumes": ["application/json"],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "Campaign object that needs to be added to the store",
+            "required": true,
+            "schema":{
+              "$ref": "Campaign"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "default":{
+            "description": "默认返回"
+          },
+          "200":{
+            "description": "成功"
+          }
+        }
+      },
+      "delete": {
+        "summary": "关闭活动",
+        "operationId": "closeCampaign",
+        "consumes": ["application/json"],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "allowMultiple": false
+          }
+        ],
+        "responses": {
+          "default":{
+            "description": "默认返回"
+          },
+          "200":{
+            "description": "成功"
+          }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/users/{userId}":{
+      "patch": {
+        "summary": "参加活动",
+        "operationId": "joinCampaign",
+        "consumes": ["application/json"],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "userId",
+            "description": "用户 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "default":{
+            "description": "默认返回"
+          },
+          "200":{
+            "description": "成功"
+          }
+        }
+      },
+      "delete": {
+        "summary": "退出活动",
+        "operationId": "quitCampaign",
+        "consumes": ["application/json"],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "userId",
+            "description": "用户 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "default":{
+            "description": "默认返回"
+          },
+          "200":{
+            "description": "成功"
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -293,6 +503,175 @@
         "staffInviteCode": {
           "description": "给该企业员工使用的邀请码",
           "type": "string"
+        }
+      }
+    },
+    "Campaign": {
+      "title": "Campaign",
+      "required": ["cid","theme","location","start_time","end_time","campaign_mold"],
+      "properties": {
+        "cid":{
+          "type": "array",
+          "description": "活动所属公司的id",
+          "items":{
+            "type":"string"
+          }
+        },
+        "tid":{
+          "type": "array",
+          "description": "活动所属小队的id",
+          "items":{
+            "type":"string"
+          }
+        },
+        "campaign_unit":{
+          "type": "array",
+          "description": "活动的阵营",
+          "items":{
+            "$ref": "CampaignUnit"
+          }
+        },
+        "theme": {
+          "type": "string",
+          "description": "活动主题"
+        },
+        "location": {
+          "$ref": "Location"
+        },
+        "start_time": {
+          "description": "活动开始时间",
+          "type": "string",
+          "format":"date"
+        },
+        "end_time": {
+          "description": "活动结束时间",
+          "type": "string",
+          "format":"date"
+        },
+        "deadline": {
+          "description": "报名截止时间",
+          "type": "string",
+          "format":"date"
+        },
+        "campaign_mold": {
+          "description": "活动类型",
+          "type": "string"
+        },
+        "content": {
+          "description": "活动内容",
+          "type": "string"
+        },
+        "member_min": {
+          "description": "报名人数下限",
+          "type": "integer"
+        },
+        "member_max": {
+          "description": "报名人数上限",
+          "type": "integer"
+        },
+        "tags": {
+          "description": "标签",
+          "type": "array",
+          "items":{
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Location":{
+      "title": "Location",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "地点名称"
+        },
+        "coordinate": {
+          "type": "array",
+          "description": "地点坐标",
+          "items": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      }
+    },
+    "CampaignUnit":{
+      "title": "CampaignUnit",
+      "properties": {
+        "company": {
+          "$ref":"Company"
+        },
+        "team":{
+          "$ref":"Team"
+        },
+        "member": {
+          "type": "array",
+          "description": "参加的成员",
+          "items": {
+            "$ref": "Member"
+          }
+        },
+        "member_quit": {
+          "type": "array",
+          "description": "退出的成员",
+          "items": {
+            "$ref": "Member"
+          }
+        }
+      }
+    },
+    "Company":{
+      "title": "Company",
+      "required": ["_id"],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "公司id"
+        },
+        "name": {
+          "type": "string",
+          "description": "公司名称"
+        },
+        "logo": {
+          "type": "string",
+          "description": "公司头像"
+        }
+      }
+    },
+    "Team":{
+      "title": "Team",
+      "required": ["_id"],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "小队id"
+        },
+        "name": {
+          "type": "string",
+          "description": "小队名称"
+        },
+        "logo": {
+          "type": "string",
+          "description": "小队头像"
+        }
+      }
+    },
+    "Member":{
+      "title": "Member",
+      "required": ["_id"],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "用户id"
+        },
+        "nickname": {
+          "type": "string",
+          "description": "用户昵称"
+        },
+        "photo": {
+          "type": "string",
+          "description": "用户头像"
         }
       }
     }
