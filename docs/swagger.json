@@ -9,6 +9,10 @@
     {
       "path": "/companies",
       "description": "公司"
+    },
+    {
+      "path": "/campaigns",
+      "description": "活动"
     }
   ],
   "info": {
