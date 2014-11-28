@@ -25,32 +25,32 @@ paths:
           in: body
           required: true
           description: 登录邮箱和密码
-        - name: X-Parse-Application-Id
+        - name: x-parse-application-id
           type: string
           in: header
           required: true
           description: app id
-        - name: X-Parse-REST-API-Key
+        - name: x-parse-rest-api-key
           type: string
           in: header
           required: true
           description: api key
-        - name: X-Device-Id
+        - name: x-device-id
           type: string
           in: header
           required: true
           description: 设备id
-        - name: X-Device-Type
+        - name: x-device-type
           type: string
           in: header
           required: true
           description: 设备型号
-        - name: X-Platform
+        - name: x-platform
           type: string
           in: header
           required: true
           description: 平台系统
-        - name: X-Version
+        - name: x-version
           type: string
           in: header
           required: true
@@ -60,7 +60,7 @@ paths:
           description: 邮箱格式不正确或未填写邮箱或密码
         "401":
           description: 邮箱或密码错误
-        default:
+        "200":
           description: 登录成功后返回的数据
           schema:
             $ref: LoginSuccess
@@ -76,7 +76,7 @@ paths:
           required: true
           type: string
           in: path
-        - name: X-Access-Token
+        - name: x-access-token
           type: string
           in: header
           required: true
@@ -86,10 +86,78 @@ paths:
           description: 缺少id
         "401":
           description: 未登录
-        default:
+        "200":
           description: 用户数据
           schema:
             $ref: User
+    patch:
+      tags:
+        - users
+      summary: 修改用户数据
+      operationId: editUserData
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+        - name: x-access-token
+          type: string
+          in: header
+          required: true
+          description: access token
+        - name: nickname
+          description: 昵称
+          required: false
+          type: string
+          in: formData
+        - name: photo
+          description: 头像
+          required: false
+          type: file
+          in: formData
+        - name: password
+          description: 密码
+          required: false
+          type: string
+          in: formData
+        - name: realname
+          description: 真实姓名
+          required: false
+          type: string
+          in: formData
+        - name: intro
+          description: 简介
+          required: false
+          type: string
+          in: formData
+        - name: phone
+          description: 手机号码
+          required: false
+          type: string
+          in: formData
+        - name: qq
+          description: QQ号码
+          required: false
+          type: string
+          in: formData
+      responses:
+        "200":
+          description: 修改成功
+    delete:
+      tags:
+        - users
+      summary: 屏蔽用户
+      operationId: deleteUser
+      responses:
+        "401":
+          description: 需要登录
+        "403":
+          description: 没有权限
+        "204":
+          description: 删除成功
   /companies:
     post:
       tags:
@@ -342,6 +410,31 @@ definitions:
       phone:
         type: string
         description: 电话号码
+      qq:
+        type: string
+        description: QQ
+      company:
+        type: object
+        description: 公司
+        properties:
+          _id:
+            type: string
+            description: 公司id
+          name:
+            type: string
+            description: 公司名
+          briefName:
+            type: string
+            description: 公司简称
+      tids:
+        type: array
+        description: 小队id数组
+        items:
+          type: string
+      lastCommentTime:
+        type: string
+        format: date-time
+        description: 上次发表评论的时间
   RegisterForm:
     title: RegisterForm
     required:
