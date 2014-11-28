@@ -10,9 +10,7 @@
     "/users/login": {
       "post": {
         "summary": "用户登录",
-        "notes": "",
-        "nickname": "login",
-        "produces": ["application/json", "text/plain"],
+        "operationId": "login",
         "consumes": ["application/json"],
         "parameters": [
           {
@@ -85,8 +83,7 @@
       "get": {
         "summary": "获取用户数据",
         "type": "User",
-        "notes": "",
-        "nickname": "getUserData",
+        "operationId": "getUserData",
         "parameters": [
           {
             "name": "userId",
@@ -123,7 +120,6 @@
       "post": {
         "summary": "注册公司账号(todo)",
         "notes": "",
-        "type": "void",
         "nickname": "addCompany",
         "consumes": ["application/json"],
         "produces": ["text/plain"],
@@ -163,14 +159,13 @@
     "LoginForm": {
       "title": "LoginForm",
       "type": "object",
+      "required": ["email", "password"],
       "properties": {
         "email": {
-          "required": true,
           "description": "用户邮箱",
           "type": "string"
         },
         "password": {
-          "required": true,
           "description": "密码",
           "type": "string"
         }
@@ -179,22 +174,22 @@
     "LoginSuccess": {
       "title": "LoginSuccess",
       "type": "object",
+      "required": ["token"],
       "properties": {
         "token": {
           "type": "string",
-          "description": "access token, 有效期7天",
-          "required": true
+          "description": "access token, 有效期7天"
         }
       }
     },
     "User": {
       "title": "User",
       "type": "object",
+      "required": ["email"],
       "properties": {
         "email": {
           "type": "string",
-          "description": "用户邮箱",
-          "required": true
+          "description": "用户邮箱"
         }
       }
     },
