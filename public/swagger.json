@@ -313,10 +313,23 @@
         ],
         "responses": {
           "200": {
-            "description": "发起成功"
+            "description": "发起成功",
+            "schema": {
+              "properties": {
+                "campaign_id": {
+                  "type": "string"
+                },
+                "photo_album_id": {
+                  "type": "string"
+                }
+              }
+            }
           },
-          "405": {
-            "description": "无效输入"
+          "400": {
+            "description": "无效的数据"
+          },
+          "500": {
+            "description": "创建活动组件发出错误"
           }
         }
       },
@@ -329,7 +342,7 @@
         "parameters": [
           {
             "name": "hostType",
-            "description": "Campaign object that needs to be added to the store",
+            "description": "hostType",
             "required": true,
             "type": "string",
             "in": "query",
@@ -341,8 +354,43 @@
           },
           {
             "name": "hostId",
-            "description": "Campaign object that needs to be added to the store",
+            "description": "hostId",
             "required": true,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "start_time",
+            "description": "start_time",
+            "required": false,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "end_time",
+            "description": "end_time",
+            "required": false,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "join_flag",
+            "description": "join_flag",
+            "required": false,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "lastcomment_time",
+            "description": "join_flag",
+            "required": false,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "orderby",
+            "description": "orderby",
+            "required": false,
             "type": "string",
             "in": "query"
           }
@@ -351,8 +399,14 @@
           "200": {
             "description": "成功"
           },
-          "default": {
-            "description": "默认返回"
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到活动"
           }
         }
       }
@@ -375,10 +429,16 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "$ref": "Campaign"
+            }
           },
-          "default": {
-            "description": "默认返回"
+          "400": {
+            "description": "缺少id"
+          },
+          "404": {
+            "description": "未找到活动"
           }
         }
       },
@@ -411,10 +471,19 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "$ref": "Campaign"
+            }
           },
-          "default": {
-            "description": "默认返回"
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到活动"
           }
         }
       },
@@ -440,8 +509,14 @@
           "200": {
             "description": "成功"
           },
-          "default": {
-            "description": "默认返回"
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到活动"
           }
         }
       }
@@ -476,8 +551,14 @@
           "200": {
             "description": "成功"
           },
-          "default": {
-            "description": "默认返回"
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到活动"
           }
         }
       },
