@@ -5,11 +5,11 @@
     "description": "Donler API v1",
     "version": "1.0.0"
   },
+  "produces": ["application/json", "text/plain"],
   "paths": {
     "/users/login": {
       "post": {
         "summary": "用户登录",
-        "type": "LoginSuccess",
         "notes": "",
         "nickname": "login",
         "produces": ["application/json", "text/plain"],
@@ -17,7 +17,7 @@
         "parameters": [
           {
             "name": "body",
-            "schema": "LoginForm",
+            "$ref": "LoginForm",
             "in": "body",
             "required": true,
             "description": "登录邮箱和密码"
@@ -25,58 +25,135 @@
           {
             "name": "X-Parse-Application-Id",
             "type": "string",
-            "paramType": "header",
+            "in": "header",
             "required": true,
             "description": "app id"
           },
           {
             "name": "X-Parse-REST-API-Key",
             "type": "string",
-            "paramType": "header",
+            "in": "header",
             "required": true,
             "description": "api key"
           },
           {
             "name": "X-Device-Id",
             "type": "string",
-            "paramType": "header",
+            "in": "header",
             "required": true,
             "description": "设备id"
           },
           {
             "name": "X-Device-Type",
             "type": "string",
-            "paramType": "header",
+            "in": "header",
             "required": true,
             "description": "设备型号"
           },
           {
             "name": "X-Platform",
             "type": "string",
-            "paramType": "header",
+            "in": "header",
             "required": true,
             "description": "平台系统"
           },
           {
             "name": "X-Version",
             "type": "string",
-            "paramType": "header",
+            "in": "header",
             "required": true,
             "description": "平台版本"
           }
         ],
-        "responseMessages": [
+        "responses": {
+          "default": {
+            "description": "登录成功后返回的数据",
+            "schema": {
+              "$ref": "LoginSuccess"
+            }
+          },
+          "400": {
+            "description": "邮箱格式不正确或未填写邮箱或密码"
+          },
+          "401": {
+            "description": "邮箱或密码错误"
+          }
+        }
+      }
+    },
+    "/users/{userId}": {
+      "get": {
+        "summary": "获取用户数据",
+        "type": "User",
+        "notes": "",
+        "nickname": "getUserData",
+        "parameters": [
           {
-            "code": 400,
-            "message": "邮箱格式不正确"
+            "name": "userId",
+            "description": "用户id",
+            "required": true,
+            "type": "string",
+            "in": "path"
           },
           {
-            "code": 400,
-            "message": "缺少邮箱或密码"
+            "name": "X-Access-Token",
+            "type": "string",
+            "in": "header",
+            "required": true,
+            "description": "access token"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "用户数据",
+            "schema": {
+              "$ref": "User"
+            }
           },
+          "400": {
+            "description": "缺少id"
+          },
+          "401": {
+            "description": "未登录"
+          }
+        }
+      }
+    },
+    "/companies": {
+      "post": {
+        "summary": "注册公司账号(todo)",
+        "notes": "",
+        "type": "void",
+        "nickname": "addCompany",
+        "consumes": ["application/json"],
+        "produces": ["text/plain"],
+        "responses": {
+          "405": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/companies/{companyId}": {
+      "get": {
+        "summary": "获取公司信息",
+        "responses": {
+          "default": {
+            "description": "公司数据",
+            "schema": {
+              "$ref": "Company"
+            }
+          }
+        },
+        "nickname": "getCompany",
+        "produces": ["application/json"],
+        "parameters": [
           {
-            "code": 401,
-            "message": "邮箱或密码错误"
+            "name": "companyId",
+            "description": "公司id",
+            "required": true,
+            "type": "string",
+            "paramType": "path"
           }
         ]
       }
@@ -118,6 +195,109 @@
           "type": "string",
           "description": "用户邮箱",
           "required": true
+        }
+      }
+    },
+    "RegisterForm": {
+      "title": "RegisterForm",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "description": "公司名称，与营业执照注册名保持一致",
+          "type": "string"
+        },
+        "province": {
+          "description": "省份",
+          "type": "string"
+        },
+        "city": {
+          "description": "城市",
+          "type": "string"
+        },
+        "district": {
+          "description": "区",
+          "type": "string"
+        },
+        "address": {
+          "description": "详细地址",
+          "type": "string"
+        },
+        "contacts": {
+          "description": "联系人",
+          "type": "string"
+        }
+      }
+    },
+    "Company": {
+      "title": "Company",
+      "required": ["_id", "name", "short_name", "logo"],
+      "properties": {
+        "_id": {
+          "description": "公司id",
+          "type": "string"
+        },
+        "username": {
+          "description": "企业账号登录用的用户名",
+          "type": "string"
+        },
+        "domains": {
+          "description": "邮箱后缀",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "公司名称",
+          "type": "string"
+        },
+        "shortName": {
+          "description": "公司简称",
+          "type": "string"
+        },
+        "logo": {
+          "description": "公司logo url",
+          "type": "string"
+        },
+        "province": {
+          "description": "省份",
+          "type": "string"
+        },
+        "city": {
+          "description": "城市",
+          "type": "string"
+        },
+        "district": {
+          "description": "区",
+          "type": "string"
+        },
+        "address": {
+          "description": "详细地址",
+          "type": "string"
+        },
+        "contacts": {
+          "description": "联系人",
+          "type": "string"
+        },
+        "email": {
+          "description": "公司邮箱",
+          "type": "string"
+        },
+        "memberNumber": {
+          "description": "公司成员数量",
+          "type": "integer",
+          "format": "int64"
+        },
+        "companyInviteCodes": {
+          "description": "可供其它企业注册时使用的邀请码",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "staffInviteCode": {
+          "description": "给该企业员工使用的邀请码",
+          "type": "string"
         }
       }
     }
