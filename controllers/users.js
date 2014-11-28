@@ -3,7 +3,7 @@
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
 
-var jwt = require('jwt-simple');
+var jwt = require('jsonwebtoken');
 
 module.exports = function (app) {
 
@@ -40,7 +40,7 @@ module.exports = function (app) {
             return res.send(401, '邮箱或密码错误');
           }
 
-          var token = jwt.encode({
+          var token = jwt.sign({
             type: "user",
             id: user._id.toString(),
             exp: app.get('tokenExpires')

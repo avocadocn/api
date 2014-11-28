@@ -130,31 +130,37 @@
       "properties": {
         "X-Parse-Application-Id": {
           "type": "string",
+          "paramType": "header",
           "required": true,
           "description": "app id"
         },
         "X-Parse-REST-API-Key": {
           "type": "string",
+          "paramType": "header",
           "required": true,
           "description": "api key"
         },
         "X-Device-Id": {
           "type": "string",
+          "paramType": "header",
           "required": true,
           "description": "设备id"
         },
         "X-Device-Type": {
           "type": "string",
+          "paramType": "header",
           "required": true,
           "description": "设备型号"
         },
         "X-Platform": {
           "type": "string",
+          "paramType": "header",
           "required": true,
           "description": "平台系统"
         },
         "X-Version": {
           "type": "string",
+          "paramType": "header",
           "required": true,
           "description": "平台版本"
         }
