@@ -261,15 +261,18 @@
         },
         "start_time": {
           "description": "活动开始时间",
-          "type": "Date"
+          "type": "string",
+          "format":"date"
         },
         "end_time": {
           "description": "活动结束时间",
-          "type": "Date"
+          "type": "string",
+          "format":"date"
         },
         "deadline": {
           "description": "报名截止时间",
-          "type": "Date"
+          "type": "string",
+          "format":"date"
         },
         "campaign_mold": {
           "description": "活动类型",
@@ -308,8 +311,8 @@
           "type": "array",
           "description": "地点坐标",
           "items": {
-            "type": "integer",
-            "format": "int64"
+            "type": "number",
+            "format": "double"
           }
         }
       }
