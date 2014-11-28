@@ -5,6 +5,10 @@
     "description": "Donler API v1",
     "version": "1.0.0"
   },
+  "host": "localhost:3002",
+  "schemes": [
+    "http"
+  ],
   "produces": [
     "application/json",
     "text/plain"
@@ -12,6 +16,9 @@
   "paths": {
     "/users/login": {
       "post": {
+        "tags": [
+          "users"
+        ],
         "summary": "用户登录",
         "operationId": "login",
         "consumes": [
@@ -88,6 +95,9 @@
     },
     "/users/{userId}": {
       "get": {
+        "tags": [
+          "users"
+        ],
         "summary": "获取用户数据",
         "operationId": "getUserData",
         "parameters": [
@@ -124,6 +134,9 @@
     },
     "/companies": {
       "post": {
+        "tags": [
+          "companies"
+        ],
         "summary": "注册公司账号(todo)",
         "operationId": "addCompany",
         "consumes": [
@@ -141,6 +154,9 @@
     },
     "/companies/{companyId}": {
       "get": {
+        "tags": [
+          "companies"
+        ],
         "summary": "获取公司信息",
         "responses": {
           "default": {
@@ -167,6 +183,9 @@
     },
     "/campaigns": {
       "post": {
+        "tags": [
+          "campaigns"
+        ],
         "summary": "发起活动",
         "operationId": "addCampaign",
         "parameters": [
@@ -182,7 +201,7 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "发起成功"
           },
           "405": {
             "description": "无效输入"
@@ -190,6 +209,9 @@
         }
       },
       "get": {
+        "tags": [
+          "campaigns"
+        ],
         "summary": "获取活动列表",
         "operationId": "getCampaign",
         "parameters": [
@@ -225,6 +247,9 @@
     },
     "/campaigns/{campaignId}": {
       "get": {
+        "tags": [
+          "campaigns"
+        ],
         "summary": "获取单个活动",
         "operationId": "getCampaignById",
         "parameters": [
@@ -246,6 +271,9 @@
         }
       },
       "patch": {
+        "tags": [
+          "campaigns"
+        ],
         "summary": "修改活动",
         "operationId": "updateCampaign",
         "consumes": [
@@ -279,6 +307,9 @@
         }
       },
       "delete": {
+        "tags": [
+          "campaigns"
+        ],
         "summary": "关闭活动",
         "operationId": "closeCampaign",
         "consumes": [
@@ -304,7 +335,10 @@
       }
     },
     "/campaigns/{campaignId}/users/{userId}": {
-      "patch": {
+      "post": {
+        "tags": [
+          "campaigns"
+        ],
         "summary": "参加活动",
         "operationId": "joinCampaign",
         "consumes": [
@@ -336,6 +370,9 @@
         }
       },
       "delete": {
+        "tags": [
+          "campaigns"
+        ],
         "summary": "退出活动",
         "operationId": "quitCampaign",
         "consumes": [

@@ -3,12 +3,17 @@ info:
   title: Donler API v1
   description: Donler API v1
   version: 1.0.0
+host: "localhost:3002"
+schemes:
+  - http
 produces:
   - application/json
   - text/plain
 paths:
   /users/login:
     post:
+      tags:
+        - users
       summary: 用户登录
       operationId: login
       consumes:
@@ -61,6 +66,8 @@ paths:
             $ref: LoginSuccess
   "/users/{userId}":
     get:
+      tags:
+        - users
       summary: 获取用户数据
       operationId: getUserData
       parameters:
@@ -85,6 +92,8 @@ paths:
             $ref: User
   /companies:
     post:
+      tags:
+        - companies
       summary: 注册公司账号(todo)
       operationId: addCompany
       consumes:
@@ -96,6 +105,8 @@ paths:
           description: Invalid input
   "/companies/{companyId}":
     get:
+      tags:
+        - companies
       summary: 获取公司信息
       responses:
         default:
@@ -113,6 +124,8 @@ paths:
           in: path
   /campaigns:
     post:
+      tags:
+        - campaigns
       summary: 发起活动
       operationId: addCampaign
       parameters:
@@ -124,10 +137,12 @@ paths:
           in: body
       responses:
         "200":
-          description: 成功
+          description: 发起成功
         "405":
           description: 无效输入
     get:
+      tags:
+        - campaigns
       summary: 获取活动列表
       operationId: getCampaign
       parameters:
@@ -152,6 +167,8 @@ paths:
           description: 默认返回
   "/campaigns/{campaignId}":
     get:
+      tags:
+        - campaigns
       summary: 获取单个活动
       operationId: getCampaignById
       parameters:
@@ -166,6 +183,8 @@ paths:
         default:
           description: 默认返回
     patch:
+      tags:
+        - campaigns
       summary: 修改活动
       operationId: updateCampaign
       consumes:
@@ -188,6 +207,8 @@ paths:
         default:
           description: 默认返回
     delete:
+      tags:
+        - campaigns
       summary: 关闭活动
       operationId: closeCampaign
       consumes:
@@ -204,7 +225,9 @@ paths:
         default:
           description: 默认返回
   "/campaigns/{campaignId}/users/{userId}":
-    patch:
+    post:
+      tags:
+        - campaigns
       summary: 参加活动
       operationId: joinCampaign
       consumes:
@@ -226,6 +249,8 @@ paths:
         default:
           description: 默认返回
     delete:
+      tags:
+        - campaigns
       summary: 退出活动
       operationId: quitCampaign
       consumes:
