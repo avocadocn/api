@@ -2,6 +2,7 @@
 
 var gulp = require('gulp');
 var nodemon = require('gulp-nodemon');
+var yaml = require('gulp-yaml');
 
 gulp.task('nodemon', function () {
   nodemon({
@@ -16,7 +17,7 @@ gulp.task('nodemon', function () {
     ],
     env: {
       "NODE_ENV": "development"
-    },
+    }
   })
     .on('restart', function () {
       console.log('app restarted!')
@@ -24,4 +25,12 @@ gulp.task('nodemon', function () {
 
 });
 
-gulp.task('default', ['nodemon']);
+gulp.task('yaml', function () {
+  gulp.src('./docs/swagger.yaml')
+    .pipe(yaml({ space: 2 }))
+    .pipe(gulp.dest('./public'));
+});
+
+gulp.watch('./docs/swagger.yaml', ['yaml']);
+
+gulp.task('default', ['nodemon', 'yaml']);
