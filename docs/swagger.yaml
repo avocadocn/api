@@ -168,9 +168,18 @@ paths:
         - application/json
       produces:
         - text/plain
+      parameters:
+        - name: body
+          description: 注册表单数据
+          required: true
+          schema:
+            $ref: RegisterForm
+          in: body
       responses:
-        "405":
-          description: Invalid input
+        "201":
+          description: 注册成功
+        "400":
+          description: 无效的数据（邮箱、手机号等输入错误）
   "/companies/{companyId}":
     get:
       tags:
@@ -437,8 +446,17 @@ definitions:
         description: 上次发表评论的时间
   RegisterForm:
     title: RegisterForm
+    type: object
     required:
       - name
+      - province
+      - city
+      - district
+      - address
+      - contacts
+      - number
+      - tel
+      - email
     properties:
       name:
         description: 公司名称，与营业执照注册名保持一致
@@ -457,6 +475,24 @@ definitions:
         type: string
       contacts:
         description: 联系人
+        type: string
+      areacode:
+        type: string
+        description: 区号
+      number:
+        type: string
+        description: 号码
+      extension:
+        type: string
+        description: 分机
+      email:
+        description: 公司邮箱
+        type: string
+      phone:
+        description: 联系人手机号码
+        type: string
+      inviteCode:
+        description: 邀请码
         type: string
   Company:
     title: Company
