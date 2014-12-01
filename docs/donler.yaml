@@ -292,16 +292,74 @@ paths:
       tags:
         - companies
       summary: 验证某个属性是否已被使用
+      consumes:
+        - application/json
+      parameters:
+        - name: email
+          description: 企业邮箱
+          type: string
+          in: formData
+        - name: inviteCode
+          description: 邀请码
+          type: string
+          in: formData
+        - name: name
+          description: 企业官方名（与营业执照一致的）
+          type: string
+          in: formData
+        - name: username
+          description: 用户名（登录用）
+          type: string
+          in: formData
+      responses:
+        "200":
+          description: 验证完成
+          schema:
+            $ref: ValidateResult
   "/companies/{companyId}/teams":
     get:
       tags:
         - companies
       summary: 获取公司小队数据
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 小队统计信息（企业账号获取的数据）
+          schema:
+            type: array
+            items:
+              $ref: Team
+        "401":
+          description: 未登录
+        "403":
+          description: 权限不足
   "/companies/{companyId}/members":
     get:
       tags:
         - companies
       summary: 获取公司成员
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成员
+          schema:
+            type: array
+            items:
+              $ref: Member
+        "401":
+          description: 未登录
+        "403":
+          description: 权限不足
   "/companies/{companyId}/departments":
     get:
       tags:
@@ -1248,7 +1306,7 @@ definitions:
         items:
           description: 部门名
           type: string
-      phone: 
+      phone:
         description: 手机号码
         type: string
   CompanyRegisterForm:
@@ -1357,6 +1415,137 @@ definitions:
           type: string
       staffInviteCode:
         description: 给该企业员工使用的邀请码
+        type: string
+  ValidateResult:
+    title: ValidateResult
+    type: object
+    required:
+      - validate
+      - msg
+    properties:
+      validate:
+        description: 验证结果
+        type: boolean
+      msg:
+        description: 验证结果描述
+        type: string
+  Team:
+    title: Team
+    type: object
+    required:
+      - cid
+      - cname
+      - groupType
+      - name
+      - logo
+      - brief
+    properties:
+      cid:
+        description: 公司id
+        type: string
+      cname:
+        description: 公司名称(简称)
+        type: string
+      groupType:
+        description: 类型
+        type: string
+      name:
+        description: 小队名称
+        type: string
+      logo:
+        description: 小队logo url
+        type: string
+      brief:
+        description: 小队简介
+        type: string
+      score:
+        $ref: Score
+        description: 积分(HR可获取该属性)
+      active:
+        description: 是否激活(HR可获取该属性)
+        type: boolean
+      count:
+        $ref: CompanyCount
+        description: 统计信息(HR可获取该属性)
+      total:
+        description: 积分(员工可获取该属性)
+        type: integer
+      memberCount:
+        description: 成员人数
+        type: integer
+      previewMembers:
+        description: 用于卡片展示的几个成员(员工可获取该属性)
+        type: array
+        items:
+          $ref: Member
+      latestCampaign:
+        description: 最新活动(员工可获取该属性)
+        $ref: LatestCampaign
+      latestPhotos:
+        description: 最新照片(员工可获取该属性)
+        type: array
+        items:
+          type: string
+          description: 照片url
+  Score:
+    title: Score
+    type: object
+    properties:
+      campaign:
+        description: 活动加分
+        type: integer
+      member:
+        description: 成员加分
+        type: integer
+      participator:
+        description: 参加成员加分
+        type: integer
+      comment:
+        description: 评论加分
+        type: integer
+      album:
+        description: 相册加分
+        type: integer
+      provoke:
+        description: 挑战加分
+        type: integer
+      total:
+        description: 总积分
+        type: integer
+  CompanyCount:
+    title: CompanyCount
+    type: object
+    properties:
+      current_week_campaign:
+        description: 本周活动数量
+        type: integer
+      current_week_member:
+        description: 本周活动人次
+        type: integer
+      last_week_campaign:
+        description: 上周活动数量
+        type: integer
+      last_week_member:
+        description: 上周活动人次
+        type: integer
+      last_month_campaign:
+        description: 上个月活动数量
+        type: integer
+      last_month_member:
+        description: 上个月活动人次
+        type: integer
+  LatestCampaign:
+    title: LatestCampaign
+    type: object
+    properties:
+      _id:
+        description: 活动id
+        type: string
+      href:
+        description: 活动链接
+        type: string
+      theme:
+        description: 活动主题
         type: string
   Campaign:
     title: Campaign
