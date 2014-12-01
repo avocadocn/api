@@ -432,11 +432,45 @@ paths:
       tags:
         - teams
       summary: 创建小队
+      operationId: createTeams
+      consumes:
+        - application/json
+      parameters:
+        - name: body
+          description: 创建小队所需数据
+          required: true
+          schema:
+            $ref: CreateTeamsForm
+          in: body
+      responses:
+        "200":
+          description: 成功
+        "403":
+          description: 没有权限
+        "422":
+          description: 数据不合法
+        "500":
+          description: 服务器出错
+
   "/teams/{teamId}":
     get:
       tags:
         - teams
       summary: 获取小队数据
+      operationId: getTeamById
+      consumes:
+        - application/json
+      parameters:
+        - name: teamId
+          description: 小队Id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema: 
+            $ref: Team
     patch:
       tags:
         - teams
@@ -2023,3 +2057,43 @@ definitions:
         format: int32
       msg:
         type: string
+  CreateTeamsForm:
+    title: CreateTeamsForm
+    required:
+      - companyId
+      - SelectedGroups
+    properties:
+      companyId:
+        description: 公司id
+        type: string
+      SelectedGroups:
+        description: 所选小队
+        type: array
+        items:
+          $ref: SelectedGroups
+  SelectedGroups:
+    title: SelectedGroups
+    required:
+      - groupType
+    properties:
+      groupType:
+        type: string
+        description: 小队类型
+      teamName:
+        type: string
+        description: 小队名称
+  Team:
+    title: Team
+    required:
+      - name
+      - cname
+    properties:
+      name:
+        type: string
+        description: 小队名称
+      cname:
+        type: string
+        description: 公司名称
+      group_type:
+        type: string
+        description: 小队类型

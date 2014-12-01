@@ -641,7 +641,36 @@
         "tags": [
           "teams"
         ],
-        "summary": "创建小队"
+        "summary": "创建小队",
+        "operationId": "createTeams",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "description": "创建小队所需数据",
+            "required": true,
+            "schema": {
+              "$ref": "CreateTeamsForm"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "422": {
+            "description": "数据不合法"
+          },
+          "500": {
+            "description": "服务器出错"
+          }
+        }
       }
     },
     "/teams/{teamId}": {
@@ -649,7 +678,28 @@
         "tags": [
           "teams"
         ],
-        "summary": "获取小队数据"
+        "summary": "获取小队数据",
+        "operationId": "getTeamById",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "Team"
+            }
+          }
+        }
       },
       "patch": {
         "tags": [
@@ -2257,71 +2307,22 @@
     },
     "Team": {
       "title": "Team",
-      "type": "object",
       "required": [
-        "cid",
-        "cname",
-        "groupType",
         "name",
-        "logo",
-        "brief",
-        "total",
-        "memberCount",
-        "previewMembers",
-        "latestCampaign",
-        "latestPhotos"
+        "cname"
       ],
       "properties": {
-        "cid": {
-          "description": "公司id",
-          "type": "string"
+        "name": {
+          "type": "string",
+          "description": "小队名称"
         },
         "cname": {
-          "description": "公司名称(简称)",
-          "type": "string"
+          "type": "string",
+          "description": "公司名称"
         },
-        "groupType": {
-          "description": "类型",
-          "type": "string"
-        },
-        "name": {
-          "description": "小队名称",
-          "type": "string"
-        },
-        "logo": {
-          "description": "小队logo url",
-          "type": "string"
-        },
-        "brief": {
-          "description": "小队简介",
-          "type": "string"
-        },
-        "total": {
-          "description": "积分",
-          "type": "integer"
-        },
-        "memberCount": {
-          "description": "成员人数",
-          "type": "integer"
-        },
-        "previewMembers": {
-          "description": "用于卡片展示的几个成员",
-          "type": "array",
-          "items": {
-            "$ref": "Member"
-          }
-        },
-        "latestCampaign": {
-          "description": "最新活动",
-          "$ref": "LatestCampaign"
-        },
-        "latestPhotos": {
-          "description": "最新照片",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "description": "照片url"
-          }
+        "group_type": {
+          "type": "string",
+          "description": "小队类型"
         }
       }
     },
@@ -2918,6 +2919,42 @@
         },
         "msg": {
           "type": "string"
+        }
+      }
+    },
+    "CreateTeamsForm": {
+      "title": "CreateTeamsForm",
+      "required": [
+        "companyId",
+        "SelectedGroups"
+      ],
+      "properties": {
+        "companyId": {
+          "description": "公司id",
+          "type": "string"
+        },
+        "SelectedGroups": {
+          "description": "所选小队",
+          "type": "array",
+          "items": {
+            "$ref": "SelectedGroups"
+          }
+        }
+      }
+    },
+    "SelectedGroups": {
+      "title": "SelectedGroups",
+      "required": [
+        "groupType"
+      ],
+      "properties": {
+        "groupType": {
+          "type": "string",
+          "description": "小队类型"
+        },
+        "teamName": {
+          "type": "string",
+          "description": "小队名称"
         }
       }
     }
