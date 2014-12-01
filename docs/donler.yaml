@@ -26,12 +26,10 @@ paths:
           required: true
           description: 登录邮箱和密码
       responses:
-        "400":
-          description: 邮箱格式不正确或未填写邮箱或密码
+        defalut:
+          description: error
           schema:
-            $ref: ErrorMsg
-        "401":
-          description: 邮箱或密码错误
+            $ref: Error
         "200":
           description: 登录成功后返回的数据
           schema:
@@ -43,8 +41,10 @@ paths:
       summary: 用户注销
       operationId: userLogout
       responses:
-        "401":
-          description: 未登录
+        defalut:
+          description: error
+          schema:
+            $ref: Error
         "204":
           description: 注销成功
   /users:
@@ -63,10 +63,10 @@ paths:
       responses:
         "201":
           description: 注册成功
-        "400":
-          description: 填写信息有误
+        defalut:
+          description: error
           schema:
-            $ref: ErrorMsg
+            $ref: Error
   "/users/{userId}":
     get:
       tags:
@@ -80,8 +80,10 @@ paths:
           type: string
           in: path
       responses:
-        "401":
-          description: 未登录
+        defalut:
+          description: error
+          schema:
+            $ref: Error
         "200":
           description: 用户数据
           schema:
@@ -137,18 +139,20 @@ paths:
       responses:
         "200":
           description: 修改成功
-        "401":
-          description: 未登录
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     delete:
       tags:
         - users
       summary: 屏蔽用户
       operationId: deleteUser
       responses:
-        "401":
-          description: 未登录
-        "403":
-          description: 没有权限
+        defalut:
+          description: error
+          schema:
+            $ref: Error
         "204":
           description: 屏蔽成功
   /companies:
@@ -171,8 +175,10 @@ paths:
       responses:
         "201":
           description: 注册成功
-        "400":
-          description: 无效的数据（邮箱、手机号等输入错误）
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/companies/{companyId}":
     get:
       tags:
@@ -192,8 +198,10 @@ paths:
           description: 公司数据
           schema:
             $ref: Company
-        "401":
-          description: 未登录
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     patch:
       tags:
         - companies
@@ -287,6 +295,10 @@ paths:
       responses:
         "200":
           description: 修改成功
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   /companies/validate:
     post:
       tags:
@@ -316,6 +328,10 @@ paths:
           description: 验证完成
           schema:
             $ref: ValidateResult
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/companies/{companyId}/teams":
     get:
       tags:
@@ -334,10 +350,10 @@ paths:
             type: array
             items:
               $ref: Team
-        "401":
-          description: 未登录
-        "403":
-          description: 权限不足
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/companies/{companyId}/statistics":
     get:
       tags:
@@ -361,10 +377,10 @@ paths:
             type: array
             items:
               $ref: StatisticsTeam
-        "401":
-          description: 未登录
-        "403":
-          description: 权限不足
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/companies/{companyId}/members":
     get:
       tags:
@@ -383,10 +399,10 @@ paths:
             type: array
             items:
               $ref: Member
-        "401":
-          description: 未登录
-        "403":
-          description: 权限不足
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/companies/{companyId}/departments":
     get:
       tags:
@@ -403,10 +419,10 @@ paths:
           description: 部门数据
           schema:
             $ref: DepartmentTree
-        "401":
-          description: 未登录
-        "403":
-          description: 权限不足
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/companies/{companyId}/tags":
     get:
       tags:
@@ -423,8 +439,10 @@ paths:
           description: tags
           schema:
             $ref: Tags
-        "401":
-          description: 未登录
+        defalut:
+          description: error
+          schema:
+            $ref: Error
 
 
   /teams:
@@ -522,10 +540,10 @@ paths:
       responses:
         "201":
           description: 创建成功
-        "401":
-          description: 未登录
-        "403":
-          description: 权限不足
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/departments/{departmentId}":
     patch:
       tags:
@@ -547,6 +565,10 @@ paths:
       responses:
         "200":
           description: 修改成功
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     delete:
       tags:
         - departments
@@ -560,6 +582,10 @@ paths:
       responses:
         "204":
           description: 删除成功
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/departments/{departmentId}/users/{userId}":
     put:
       tags:
@@ -579,6 +605,10 @@ paths:
       responses:
         "200":
           description: 加入部门成功
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     delete:
       tags:
         - departments
@@ -597,6 +627,10 @@ paths:
       responses:
         "200":
           description: 退出部门成功
+        defalut:
+          description: error
+          schema:
+            $ref: Error
 
   /campaigns:
     post:
@@ -1610,9 +1644,11 @@ definitions:
       total:
         description: 积分
         type: integer
+        format: int32
       memberCount:
         description: 成员人数
         type: integer
+        format: int32
       previewMembers:
         description: 用于卡片展示的几个成员
         type: array
@@ -1682,24 +1718,31 @@ definitions:
       campaign:
         description: 活动加分
         type: integer
+        format: int32
       member:
         description: 成员加分
         type: integer
+        format: int32
       participator:
         description: 参加成员加分
         type: integer
+        format: int32
       comment:
         description: 评论加分
         type: integer
+        format: int32
       album:
         description: 相册加分
         type: integer
+        format: int32
       provoke:
         description: 挑战加分
         type: integer
+        format: int32
       total:
         description: 总积分
         type: integer
+        format: int32
   CompanyCount:
     title: CompanyCount
     type: object
@@ -1707,21 +1750,27 @@ definitions:
       current_week_campaign:
         description: 本周活动数量
         type: integer
+        format: int32
       current_week_member:
         description: 本周活动人次
         type: integer
+        format: int32
       last_week_campaign:
         description: 上周活动数量
         type: integer
+        format: int32
       last_week_member:
         description: 上周活动人次
         type: integer
+        format: int32
       last_month_campaign:
         description: 上个月活动数量
         type: integer
+        format: int32
       last_month_member:
         description: 上个月活动人次
         type: integer
+        format: int32
   LatestCampaign:
     title: LatestCampaign
     type: object
@@ -2049,12 +2098,7 @@ definitions:
     title: Error
     description: Error
     type: object
-    required:
-      - code
     properties:
-      code:
-        type: integer
-        format: int32
       msg:
         type: string
   CreateTeamsForm:

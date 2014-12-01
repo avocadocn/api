@@ -42,14 +42,11 @@
               "$ref": "LoginSuccess"
             }
           },
-          "400": {
-            "description": "邮箱格式不正确或未填写邮箱或密码",
+          "defalut": {
+            "description": "error",
             "schema": {
-              "$ref": "ErrorMsg"
+              "$ref": "Error"
             }
-          },
-          "401": {
-            "description": "邮箱或密码错误"
           }
         }
       }
@@ -65,8 +62,11 @@
           "204": {
             "description": "注销成功"
           },
-          "401": {
-            "description": "未登录"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -93,10 +93,10 @@
           "201": {
             "description": "注册成功"
           },
-          "400": {
-            "description": "填写信息有误",
+          "defalut": {
+            "description": "error",
             "schema": {
-              "$ref": "ErrorMsg"
+              "$ref": "Error"
             }
           }
         }
@@ -125,8 +125,11 @@
               "$ref": "User"
             }
           },
-          "401": {
-            "description": "未登录"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -201,8 +204,11 @@
           "200": {
             "description": "修改成功"
           },
-          "401": {
-            "description": "未登录"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -216,11 +222,11 @@
           "204": {
             "description": "屏蔽成功"
           },
-          "401": {
-            "description": "未登录"
-          },
-          "403": {
-            "description": "没有权限"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -253,8 +259,11 @@
           "201": {
             "description": "注册成功"
           },
-          "400": {
-            "description": "无效的数据（邮箱、手机号等输入错误）"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -285,8 +294,11 @@
               "$ref": "Company"
             }
           },
-          "401": {
-            "description": "未登录"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -419,6 +431,12 @@
         "responses": {
           "200": {
             "description": "修改成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -464,6 +482,12 @@
             "schema": {
               "$ref": "ValidateResult"
             }
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -493,11 +517,11 @@
               }
             }
           },
-          "401": {
-            "description": "未登录"
-          },
-          "403": {
-            "description": "权限不足"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -534,11 +558,11 @@
               }
             }
           },
-          "401": {
-            "description": "未登录"
-          },
-          "403": {
-            "description": "权限不足"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -568,11 +592,11 @@
               }
             }
           },
-          "401": {
-            "description": "未登录"
-          },
-          "403": {
-            "description": "权限不足"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -599,11 +623,11 @@
               "$ref": "DepartmentTree"
             }
           },
-          "401": {
-            "description": "未登录"
-          },
-          "403": {
-            "description": "权限不足"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -630,8 +654,11 @@
               "$ref": "Tags"
             }
           },
-          "401": {
-            "description": "未登录"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -777,11 +804,11 @@
           "201": {
             "description": "创建成功"
           },
-          "401": {
-            "description": "未登录"
-          },
-          "403": {
-            "description": "权限不足"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -814,6 +841,12 @@
         "responses": {
           "200": {
             "description": "修改成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -834,6 +867,12 @@
         "responses": {
           "204": {
             "description": "删除成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -863,6 +902,12 @@
         "responses": {
           "200": {
             "description": "加入部门成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -890,6 +935,12 @@
         "responses": {
           "200": {
             "description": "退出部门成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -2394,31 +2445,38 @@
       "properties": {
         "campaign": {
           "description": "活动加分",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "member": {
           "description": "成员加分",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "participator": {
           "description": "参加成员加分",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "comment": {
           "description": "评论加分",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "album": {
           "description": "相册加分",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "provoke": {
           "description": "挑战加分",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "total": {
           "description": "总积分",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -2428,27 +2486,33 @@
       "properties": {
         "current_week_campaign": {
           "description": "本周活动数量",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "current_week_member": {
           "description": "本周活动人次",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "last_week_campaign": {
           "description": "上周活动数量",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "last_week_member": {
           "description": "上周活动人次",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "last_month_campaign": {
           "description": "上个月活动数量",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         },
         "last_month_member": {
           "description": "上个月活动人次",
-          "type": "integer"
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -2909,14 +2973,7 @@
       "title": "Error",
       "description": "Error",
       "type": "object",
-      "required": [
-        "code"
-      ],
       "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
         "msg": {
           "type": "string"
         }
