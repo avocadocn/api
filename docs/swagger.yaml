@@ -15,7 +15,7 @@ paths:
       tags:
         - users
       summary: 用户登录
-      operationId: login
+      operationId: userLogin
       consumes:
         - application/json
       parameters:
@@ -64,6 +64,24 @@ paths:
           description: 登录成功后返回的数据
           schema:
             $ref: LoginSuccess
+  /users/logout:
+    get:
+      tags:
+        - users
+      summary: 用户注销
+      operationId: userLogout
+      responses:
+        "204":
+          description: 注销成功
+  /users:
+    post:
+      tags:
+        - users
+      summary: 注册用户
+      operationId: registerUser
+      responses:
+        "201":
+          description: 注册成功
   "/users/{userId}":
     get:
       tags:
@@ -199,6 +217,129 @@ paths:
           required: true
           type: string
           in: path
+    patch:
+      tags:
+        - companies
+      summary: 修改公司数据
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 修改成功
+    delete:
+      tags:
+        - companies
+      summary: 屏蔽公司
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+      responses:
+        "204":
+          description: 屏蔽成功
+  /companies/validate:
+    post:
+      tags:
+        - companies
+      summary: 验证某个属性是否已被使用
+  "/companies/{companyId}/teams":
+    get:
+      tags:
+        - companies
+      summary: 获取公司小队数据
+  "/companies/{companyId}/members":
+    get:
+      tags:
+        - companies
+      summary: 获取公司成员
+  "/companies/{companyId}/departments":
+    get:
+      tags:
+        - companies
+      summary: 获取公司部门数据
+  "/companies/{companyId}/tags":
+    get:
+      tags:
+        - companies
+      summary: 获取公司相关标签
+  /teams:
+    post:
+      tags:
+        - teams
+      summary: 创建小队
+  "/teams/{teamId}":
+    get:
+      tags:
+        - teams
+      summary: 获取小队数据
+    patch:
+      tags:
+        - teams
+      summary: 修改小队数据
+    delete:
+      tags:
+        - teams
+      summary: 关闭小队
+  "/teams/{teamId}/family_photos":
+    post:
+      tags:
+        - teams
+      summary: 上传全家福
+    get:
+      tags:
+        - teams
+      summary: 获取全家福
+  "/teams/{teamId}/family_photos/{familyPhotoId}":
+    put:
+      tags:
+        - teams
+      summary: 修改选中状态
+    delete:
+      tags:
+        - teams
+      summary: 删除全家福照片
+  "/teams/{teamId}/users/{userId}":
+    put:
+      tags:
+        - teams
+      summary: 加入小队
+    delete:
+      tags:
+        - teams
+      summary: 退出小队
+  /departments:
+    post:
+      tags:
+        - departments
+      summary: 创建部门
+  "/departments/{departmentId}":
+    get:
+      tags:
+        - departments
+      summary: 获取部门数据
+    patch:
+      tags:
+        - departments
+      summary: 修改部门
+    delete:
+      tags:
+        - departments
+      summary: 删除部门
+  "/departments/{departmentId}/users/{userId}":
+    put:
+      tags:
+        - departments
+      summary: 加入部门
+    delete:
+      tags:
+        - departments
+      summary: 退出部门
   /campaigns:
     post:
       tags:
