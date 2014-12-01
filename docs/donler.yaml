@@ -478,28 +478,91 @@ paths:
       tags:
         - departments
       summary: 创建部门
+      parameters:
+        - name: body
+          description: 部门数据
+          required: true
+          schema:
+            $ref: CreateDepartmentData
+          in: body
+      responses:
+        "201":
+          description: 创建成功
+        "401":
+          description: 未登录
+        "403":
+          description: 权限不足
   "/departments/{departmentId}":
-    get:
-      tags:
-        - departments
-      summary: 获取部门数据
     patch:
       tags:
         - departments
       summary: 修改部门
+      consumes:
+        - application/json
+      parameters:
+        - name: departmentId
+          description: 部门id
+          required: true
+          type: string
+          in: path
+        - name: name
+          description: 部门名字
+          required: true
+          type: string
+          in: formData
+      responses:
+        "200":
+          description: 修改成功
     delete:
       tags:
         - departments
       summary: 删除部门
+      parameters:
+        - name: departmentId
+          description: 部门id
+          required: true
+          type: string
+          in: path
+      responses:
+        "204":
+          description: 删除成功
   "/departments/{departmentId}/users/{userId}":
     put:
       tags:
         - departments
       summary: 加入部门
+      parameters:
+        - name: departmentId
+          description: 部门id
+          required: true
+          type: string
+          in: path
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 加入部门成功
     delete:
       tags:
         - departments
       summary: 退出部门
+      parameters:
+        - name: departmentId
+          description: 部门id
+          required: true
+          type: string
+          in: path
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 退出部门成功
 
   /campaigns:
     post:
@@ -1225,48 +1288,6 @@ paths:
           schema:
             $ref: Error
 
-  /logo:
-    get:
-      tags:
-        - logo
-      summary: 获取logo
-      operationId: getLogo
-      consumes:
-        - application/json
-      responses:
-        "200":
-          description: 成功
-        "403":
-          description: 没有权限
-    put:
-      tags:
-        - logo
-      summary: 修改logo
-      operationId: updateLogo
-      consumes:
-        - application/json
-      responses:
-        "200":
-          description: 成功
-        defalut:
-          description: error
-          schema:
-            $ref: Error
-
-  /tags:
-    get:
-      tags:
-        - tags
-      summary: 获取tags
-      operationId: getTags
-      consumes:
-        - application/json
-      responses:
-        "200":
-          description: 成功
-        "403":
-          description: 没有权限
-
 definitions:
   LoginForm:
     title: LoginForm
@@ -1866,6 +1887,24 @@ definitions:
         items:
           $ref: Campaign
 
+  CreateDepartmentData:
+    title: CreateDepartmentData
+    type: object
+    required:
+      - parentId
+      - name
+      - cid
+    properties:
+      parentId:
+        type: string
+        description: 父级部门或公司id
+      name:
+        type: string
+        description: 新建的部门名
+      cid:
+        type: string
+        description: 部门所属公司的id
+
   DepartmentTree:
     title: DepartmentTree
     type: object
@@ -1883,6 +1922,10 @@ definitions:
         type: array
         items:
           $ref: DepartmentTree
+      manager:
+        type: array
+        items:
+          $ref: Member
 
   Tags:
     title: Tags
