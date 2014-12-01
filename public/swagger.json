@@ -619,8 +619,708 @@
           "200": {
             "description": "成功"
           },
-          "default": {
-            "description": "默认返回"
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到活动"
+          }
+        }
+      }
+    },
+    "/photo_albums": {
+      "post": {
+        "tags": [
+          "photoAlbums"
+        ],
+        "summary": "创建相册",
+        "operationId": "createPhotoAlbum",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "description": "相册信息",
+            "required": true,
+            "type": "PhotoAlbum",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          }
+        }
+      }
+    },
+    "/photo_albums/{photoAlbumId}": {
+      "get": {
+        "tags": [
+          "photoAlbums"
+        ],
+        "summary": "获取相册数据",
+        "operationId": "getPhotoAlbum",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "photoAlbumId",
+            "description": "相册 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到相册"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "photoAlbums"
+        ],
+        "summary": "修改相册数据",
+        "operationId": "updatePotoAlbum",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "photoAlbumId",
+            "description": "相册 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到相册"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "photoAlbums"
+        ],
+        "summary": "删除相册",
+        "operationId": "deletePhotoAlbum",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "photoAlbumId",
+            "description": "相册 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到相册"
+          }
+        }
+      }
+    },
+    "/photo_albums/{photoAlbumId}/photos": {
+      "post": {
+        "tags": [
+          "photoAlbums"
+        ],
+        "summary": "上传照片",
+        "operationId": "createPhoto",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "photoAlbumId",
+            "description": "相册 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "照片信息",
+            "required": true,
+            "type": "Photo",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          }
+        }
+      }
+    },
+    "/photo_albums/{photoAlbumId}/photos/{photoId}": {
+      "get": {
+        "tags": [
+          "photoAlbums"
+        ],
+        "summary": "获取照片数据",
+        "operationId": "getPhoto",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "photoAlbumId",
+            "description": "相册 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "photoId",
+            "description": "照片Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到相册"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "photoAlbums"
+        ],
+        "summary": "修改照片数据",
+        "operationId": "updatePhoto",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "photoAlbumId",
+            "description": "相册 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "photoId",
+            "description": "照片Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "照片信息",
+            "required": true,
+            "type": "Photo",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到相册"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "photoAlbums"
+        ],
+        "summary": "删除照片",
+        "operationId": "updatePhoto",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "photoAlbumId",
+            "description": "相册 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "photoId",
+            "description": "照片Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到相册"
+          }
+        }
+      }
+    },
+    "/comments": {
+      "post": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "发表评论",
+        "operationId": "createComments",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "description": "评论信息",
+            "required": true,
+            "type": "Comment",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "获取评论",
+        "operationId": "getComments",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hostType",
+            "description": "主体类型",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "hostId",
+            "description": "主题Id",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "找不到"
+          }
+        }
+      }
+    },
+    "/comments/{commentId}": {
+      "get": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "获取一条评论",
+        "operationId": "getComment",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "commentId",
+            "description": "评论Id",
+            "required": true,
+            "type": "Comment",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "没有找到该评论"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "删除评论",
+        "operationId": "deleteComment",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "commentId",
+            "description": "评论Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "找不到"
+          }
+        }
+      }
+    },
+    "/messages": {
+      "post": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "发站内信",
+        "operationId": "createMessage",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "description": "站内信信息",
+            "required": true,
+            "type": "Message",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "获取评论",
+        "operationId": "getComments",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hostType",
+            "description": "主体类型",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "hostId",
+            "description": "主题Id",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "找不到"
+          }
+        }
+      }
+    },
+    "/messages/{messageId}": {
+      "patch": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "修改站内信",
+        "operationId": "upadateMessage",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "messageId",
+            "description": "站内信Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "站内信信息",
+            "required": true,
+            "type": "Message",
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "获取评论",
+        "operationId": "getComments",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "messageId",
+            "description": "站内信Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "找不到"
+          }
+        }
+      }
+    },
+    "/invitecode": {
+      "post": {
+        "tags": [
+          "invitecode"
+        ],
+        "summary": "创建邀请码",
+        "operationId": "createInviteCode",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": null,
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          }
+        }
+      }
+    },
+    "/invitecode/{inviteCodeId}": {
+      "delete": {
+        "tags": [
+          "invitecode"
+        ],
+        "summary": "删除邀请码",
+        "operationId": "deleteInveiteCode",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "inviteCodeId",
+            "description": "邀请码Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "summary": "搜索",
+        "operationId": "search",
+        "consumes": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          }
+        }
+      }
+    },
+    "/region": {
+      "get": {
+        "tags": [
+          "region"
+        ],
+        "summary": "获取区域数据",
+        "operationId": "getRegion",
+        "consumes": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          }
+        }
+      }
+    },
+    "/logo": {
+      "get": {
+        "tags": [
+          "logo"
+        ],
+        "summary": "获取logo",
+        "operationId": "getLogo",
+        "consumes": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "logo"
+        ],
+        "summary": "修改logo",
+        "operationId": "updateLogo",
+        "consumes": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          }
+        }
+      }
+    },
+    "/tags": {
+      "get": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "获取tags",
+        "operationId": "getTags",
+        "consumes": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
           }
         }
       }
@@ -723,14 +1423,8 @@
           "200": {
             "description": "成功"
           },
-          "400": {
-            "description": "缺少id"
-          },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "未找到活动"
+          "default": {
+            "description": "默认返回"
           }
         }
       }
