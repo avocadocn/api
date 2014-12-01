@@ -70,6 +70,11 @@
         addApiKeyAuthorization();
       });
 
+      $('#donler_headers_form input').change(function () {
+        var name = $(this).attr('id');
+        window.authorizations.add(name, new ApiKeyAuthorization(name, $(this).val(), "header"));
+      });
+
       // if you have an apiKey you would like to pre-populate on the page for demonstration purposes...
       /*
         var apiKey = "myApiKeyXXXX123456789";
@@ -88,10 +93,43 @@
     <a id="logo" href="http://swagger.io">swagger</a>
     <form id='api_selector'>
       <div class='input'><input placeholder="http://example.com/api" id="input_baseUrl" name="baseUrl" type="text"/></div>
-      <div class='input'><input placeholder="api_key" id="input_apiKey" name="apiKey" type="text"/></div>
+      <div class='input'><input placeholder="api_key(不要用于测试donler-api)" id="input_apiKey" name="apiKey" type="text"/></div>
       <div class='input'><a id="explore" href="#">Explore</a></div>
     </form>
   </div>
+</div>
+<div class="swagger-ui-wrap">
+  <form id="donler_headers_form">
+    <h1>common headers</h1>
+    <div class="donler_headers">
+      <label for="x-app-id">x-app-id</label>
+      <input type="text" id="x-app-id" placeholder="app id"/>
+    </div>
+    <div class="donler_headers">
+      <label for="x-api-key">x-api-key</label>
+      <input type="text" id="x-api-key" placeholder="api key"/>
+    </div>
+    <div class="donler_headers">
+      <label for="x-device-id">x-device-id</label>
+      <input type="text" id="x-device-id" placeholder="设备id"/>
+    </div>
+    <div class="donler_headers">
+      <label for="x-device-type">x-device-type</label>
+      <input type="text" id="x-device-type" placeholder="设备型号"/>
+    </div>
+    <div class="donler_headers">
+      <label for="x-platform">x-platform</label>
+      <input type="text" id="x-platform" placeholder="平台系统"/>
+    </div>
+    <div class="donler_headers">
+      <label for="x-version">x-version</label>
+      <input type="text" id="x-version" placeholder="平台版本"/>
+    </div>
+    <div class="donler_headers">
+      <label for="x-access-token">x-access-token</label>
+      <input type="text" id="x-access-token" placeholder="登录成功后获得的access token"/>
+    </div>
+  </form>
 </div>
 
 <div id="message-bar" class="swagger-ui-wrap">&nbsp;</div>

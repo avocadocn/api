@@ -33,48 +33,6 @@
             "in": "body",
             "required": true,
             "description": "登录邮箱和密码"
-          },
-          {
-            "name": "x-parse-application-id",
-            "type": "string",
-            "in": "header",
-            "required": true,
-            "description": "app id"
-          },
-          {
-            "name": "x-parse-rest-api-key",
-            "type": "string",
-            "in": "header",
-            "required": true,
-            "description": "api key"
-          },
-          {
-            "name": "x-device-id",
-            "type": "string",
-            "in": "header",
-            "required": true,
-            "description": "设备id"
-          },
-          {
-            "name": "x-device-type",
-            "type": "string",
-            "in": "header",
-            "required": true,
-            "description": "设备型号"
-          },
-          {
-            "name": "x-platform",
-            "type": "string",
-            "in": "header",
-            "required": true,
-            "description": "平台系统"
-          },
-          {
-            "name": "x-version",
-            "type": "string",
-            "in": "header",
-            "required": true,
-            "description": "平台版本"
           }
         ],
         "responses": {
@@ -135,13 +93,6 @@
             "required": true,
             "type": "string",
             "in": "path"
-          },
-          {
-            "name": "x-access-token",
-            "type": "string",
-            "in": "header",
-            "required": true,
-            "description": "access token"
           }
         ],
         "responses": {
