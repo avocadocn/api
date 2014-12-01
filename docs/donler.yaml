@@ -404,11 +404,7 @@ paths:
         "200":
           description: 发起成功
           schema:
-            properties:
-              campaign_id:
-                type: string
-              photo_album_id:
-                type: string
+            $ref: AddCampaignSuccess
         "400":
           description: 无效的数据
         "500":
@@ -621,15 +617,7 @@ paths:
           schema:
             type: array
             items:
-              properties:
-                year:
-                  type: string
-                month:
-                  type: array
-                  items:
-                    properties:
-                      month:
-                        type: string
+              $ref: TimelineRecord
         "403":
           description: 没有权限
         "404":
@@ -657,15 +645,7 @@ paths:
         "200":
           description: 成功
           schema:
-            properties:
-              year:
-                type: string
-              month:
-                type: string
-              campaigns:
-                type: array
-                items:
-                  $ref: Campaign
+            $ref: TimelineData
         "403":
           description: 没有权限
         "404":
@@ -1451,6 +1431,7 @@ definitions:
         items:
           type: number
           format: double
+          minItems: 2
   CampaignUnit:
     title: CampaignUnit
     properties:
@@ -1519,3 +1500,47 @@ definitions:
       msg:
         description: 错误信息
         type: string
+  AddCampaignSuccess:
+    title: AddCampaignSuccess
+    type: object
+    required:
+      - campaign_id
+      - photo_album_id
+    properties:
+      campaign_id:
+        type: string
+        description: campaign id
+      photo_album_id:
+        type: string
+        description: photo_album id
+  TimelineRecord:
+    title: TimelineRecord
+    description: timeline record
+    type: object
+    required:
+      - year
+      - month
+    properties:
+      year:
+        type: string
+      month:
+        type: array
+        items:
+          type: object
+          properties:
+            month:
+              type: string
+
+  TimelineData:
+    title: TimelineData
+    type: object
+    description: "timeline data"
+    properties:
+      year:
+        type: string
+      month:
+        type: string
+      campaigns:
+        type: array
+        items:
+          $ref: Campaign

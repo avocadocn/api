@@ -597,14 +597,7 @@
           "200": {
             "description": "发起成功",
             "schema": {
-              "properties": {
-                "campaign_id": {
-                  "type": "string"
-                },
-                "photo_album_id": {
-                  "type": "string"
-                }
-              }
+              "$ref": "AddCampaignSuccess"
             }
           },
           "400": {
@@ -917,21 +910,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "properties": {
-                  "year": {
-                    "type": "string"
-                  },
-                  "month": {
-                    "type": "array",
-                    "items": {
-                      "properties": {
-                        "month": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
+                "$ref": "TimelineRecord"
               }
             }
           },
@@ -974,20 +953,7 @@
           "200": {
             "description": "成功",
             "schema": {
-              "properties": {
-                "year": {
-                  "type": "string"
-                },
-                "month": {
-                  "type": "string"
-                },
-                "campaigns": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "Campaign"
-                  }
-                }
-              }
+              "$ref": "TimelineData"
             }
           },
           "403": {
@@ -2107,7 +2073,8 @@
           "description": "地点坐标",
           "items": {
             "type": "number",
-            "format": "double"
+            "format": "double",
+            "minItems": 2
           }
         }
       }
@@ -2207,6 +2174,68 @@
         "msg": {
           "description": "错误信息",
           "type": "string"
+        }
+      }
+    },
+    "AddCampaignSuccess": {
+      "title": "AddCampaignSuccess",
+      "type": "object",
+      "required": [
+        "campaign_id",
+        "photo_album_id"
+      ],
+      "properties": {
+        "campaign_id": {
+          "type": "string",
+          "description": "campaign id"
+        },
+        "photo_album_id": {
+          "type": "string",
+          "description": "photo_album id"
+        }
+      }
+    },
+    "TimelineRecord": {
+      "title": "TimelineRecord",
+      "description": "timeline record",
+      "type": "object",
+      "required": [
+        "year",
+        "month"
+      ],
+      "properties": {
+        "year": {
+          "type": "string"
+        },
+        "month": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "month": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "TimelineData": {
+      "title": "TimelineData",
+      "type": "object",
+      "description": "timeline data",
+      "properties": {
+        "year": {
+          "type": "string"
+        },
+        "month": {
+          "type": "string"
+        },
+        "campaigns": {
+          "type": "array",
+          "items": {
+            "$ref": "Campaign"
+          }
         }
       }
     }
