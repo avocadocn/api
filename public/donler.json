@@ -773,11 +773,11 @@
               "$ref": "AddCampaignSuccess"
             }
           },
-          "400": {
-            "description": "无效的数据"
-          },
-          "500": {
-            "description": "创建活动组件发出错误"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -789,8 +789,8 @@
         "operationId": "getCampaign",
         "parameters": [
           {
-            "name": "hostType",
-            "description": "hostType",
+            "name": "requestType",
+            "description": "requestType",
             "required": true,
             "type": "string",
             "in": "query",
@@ -801,8 +801,8 @@
             ]
           },
           {
-            "name": "hostId",
-            "description": "hostId",
+            "name": "requestId",
+            "description": "requestId",
             "required": true,
             "type": "string",
             "in": "query"
@@ -853,8 +853,11 @@
               }
             }
           },
-          "default": {
-            "description": "默认返回"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -882,11 +885,11 @@
               "$ref": "Campaign"
             }
           },
-          "400": {
-            "description": "缺少id"
-          },
-          "404": {
-            "description": "未找到活动"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -924,14 +927,11 @@
               "$ref": "Campaign"
             }
           },
-          "400": {
-            "description": "缺少id"
-          },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "未找到活动"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -957,14 +957,11 @@
           "200": {
             "description": "成功"
           },
-          "400": {
-            "description": "缺少id"
-          },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "未找到活动"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -993,20 +990,24 @@
             "required": true,
             "type": "string",
             "in": "path"
+          },
+          {
+            "name": "teamId",
+            "description": "小队 Id",
+            "required": false,
+            "type": "string",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
             "description": "成功"
           },
-          "400": {
-            "description": "缺少id"
-          },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "未找到活动"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -1039,19 +1040,16 @@
           "200": {
             "description": "成功"
           },
-          "400": {
-            "description": "缺少id"
-          },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "未找到活动"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
     },
-    "/timeline/record/{hostType}/{hostId}": {
+    "/timeline/record/{requestType}/{requestId}": {
       "get": {
         "tags": [
           "timeline"
@@ -1063,14 +1061,14 @@
         ],
         "parameters": [
           {
-            "name": "hostType",
+            "name": "requestType",
             "description": "主体类型",
             "required": true,
             "type": "string",
             "in": "path"
           },
           {
-            "name": "hostId",
+            "name": "requestId",
             "description": "主体Id",
             "required": true,
             "type": "string",
@@ -1087,16 +1085,16 @@
               }
             }
           },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "找不到"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
     },
-    "/timeline/data/{hostType}/{hostId}": {
+    "/timeline/data/{requesrType}/{requestId}": {
       "get": {
         "tags": [
           "timeline"
@@ -1108,18 +1106,32 @@
         ],
         "parameters": [
           {
-            "name": "hostType",
+            "name": "requestType",
             "description": "主体类型",
             "required": true,
             "type": "string",
             "in": "path"
           },
           {
-            "name": "hostId",
+            "name": "requestId",
             "description": "主体Id",
             "required": true,
             "type": "string",
             "in": "path"
+          },
+          {
+            "name": "year",
+            "description": "timeline year",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "month",
+            "description": "timeline month",
+            "required": true,
+            "type": "string",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1129,11 +1141,11 @@
               "$ref": "TimelineData"
             }
           },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "找不到"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -1153,7 +1165,9 @@
             "name": "body",
             "description": "相册信息",
             "required": true,
-            "type": "PhotoAlbum",
+            "schema": {
+              "$ref": "PhotoAlbum"
+            },
             "in": "body"
           }
         ],
@@ -1290,7 +1304,9 @@
             "name": "body",
             "description": "照片信息",
             "required": true,
-            "type": "Photo",
+            "schema": {
+              "$ref": "Photo"
+            },
             "in": "body"
           }
         ],
@@ -1370,7 +1386,9 @@
             "name": "body",
             "description": "照片信息",
             "required": true,
-            "type": "Photo",
+            "schema": {
+              "$ref": "Photo"
+            },
             "in": "body"
           }
         ],
@@ -1439,7 +1457,9 @@
             "name": "body",
             "description": "评论信息",
             "required": true,
-            "type": "Comment",
+            "schema": {
+              "$ref": "Comment"
+            },
             "in": "body"
           }
         ],
@@ -1447,8 +1467,11 @@
           "200": {
             "description": "成功"
           },
-          "403": {
-            "description": "没有权限"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -1463,17 +1486,29 @@
         ],
         "parameters": [
           {
-            "name": "hostType",
+            "name": "requestType",
             "description": "主体类型",
+            "required": true,
+            "type": "string",
+            "in": "query",
+            "enum": [
+              "comment",
+              "campaign"
+            ]
+          },
+          {
+            "name": "requestId",
+            "description": "主题Id",
             "required": true,
             "type": "string",
             "in": "query"
           },
           {
-            "name": "hostId",
-            "description": "主题Id",
-            "required": true,
-            "type": "string",
+            "name": "limit",
+            "description": "数量限制",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
             "in": "query"
           }
         ],
@@ -1481,11 +1516,11 @@
           "200": {
             "description": "成功"
           },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "找不到"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -1505,7 +1540,7 @@
             "name": "commentId",
             "description": "评论Id",
             "required": true,
-            "type": "Comment",
+            "type": "string",
             "in": "path"
           }
         ],
@@ -1543,11 +1578,11 @@
           "200": {
             "description": "成功"
           },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "找不到"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -1567,7 +1602,9 @@
             "name": "body",
             "description": "站内信信息",
             "required": true,
-            "type": "Message",
+            "schema": {
+              "$ref": "Message"
+            },
             "in": "body"
           }
         ],
@@ -1591,14 +1628,14 @@
         ],
         "parameters": [
           {
-            "name": "hostType",
+            "name": "requestType",
             "description": "主体类型",
             "required": true,
             "type": "string",
             "in": "query"
           },
           {
-            "name": "hostId",
+            "name": "requestId",
             "description": "主题Id",
             "required": true,
             "type": "string",
@@ -1640,7 +1677,9 @@
             "name": "body",
             "description": "站内信信息",
             "required": true,
-            "type": "Message",
+            "schema": {
+              "$ref": "Message"
+            },
             "in": "body"
           }
         ],
@@ -1694,7 +1733,6 @@
         "consumes": [
           "application/json"
         ],
-        "parameters": null,
         "responses": {
           "200": {
             "description": "成功"
@@ -1728,8 +1766,11 @@
           "200": {
             "description": "成功"
           },
-          "403": {
-            "description": "没有权限"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -1748,8 +1789,11 @@
           "200": {
             "description": "成功"
           },
-          "403": {
-            "description": "没有权限"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -1768,8 +1812,11 @@
           "200": {
             "description": "成功"
           },
-          "403": {
-            "description": "没有权限"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -1806,8 +1853,11 @@
           "200": {
             "description": "成功"
           },
-          "403": {
-            "description": "没有权限"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -2478,8 +2528,7 @@
           "description": "地点坐标",
           "items": {
             "type": "number",
-            "format": "double",
-            "minItems": 2
+            "format": "double"
           }
         }
       }
@@ -2678,6 +2727,133 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "Comment": {
+      "title": "Comment",
+      "type": "object",
+      "description": "comment",
+      "properties": {
+        "host_id": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "poster": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string"
+            },
+            "cid": {
+              "type": "string"
+            },
+            "cname": {
+              "type": "string"
+            },
+            "nickname": {
+              "type": "string"
+            },
+            "realname": {
+              "type": "string"
+            },
+            "photo": {
+              "type": "string"
+            }
+          }
+        },
+        "reply_to": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string"
+            },
+            "nickname": {
+              "type": "string"
+            }
+          }
+        },
+        "reply_count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "delete",
+            "shield"
+          ]
+        },
+        "host_type": {
+          "type": "string",
+          "enum": [
+            "campaign",
+            "comment"
+          ]
+        },
+        "pothos": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "uri": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Message": {
+      "title": "Message",
+      "descriptions": "message",
+      "type": "object",
+      "properties": {
+        "rec_id": {
+          "type": "string"
+        }
+      }
+    },
+    "PhotoAlbum": {
+      "title": "PhotoAlbum",
+      "description": "photo_albums",
+      "type": "object",
+      "properties": {
+        "uri": {
+          "type": "string"
+        }
+      }
+    },
+    "Photo": {
+      "title": "Photo",
+      "description": "photo",
+      "type": "object",
+      "properties": {
+        "uri": {
+          "type": "string"
+        }
+      }
+    },
+    "Error": {
+      "title": "Error",
+      "description": "Error",
+      "type": "object",
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
         }
       }
     }

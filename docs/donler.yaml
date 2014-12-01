@@ -519,18 +519,18 @@ paths:
           description: 发起成功
           schema:
             $ref: AddCampaignSuccess
-        "400":
-          description: 无效的数据
-        "500":
-          description: 创建活动组件发出错误
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     get:
       tags:
         - campaigns
       summary: 获取活动列表
       operationId: getCampaign
       parameters:
-        - name: hostType
-          description: hostType
+        - name: requestType
+          description: requestType
           required: true
           type: string
           in: query
@@ -538,8 +538,8 @@ paths:
             - user
             - team
             - company
-        - name: hostId
-          description: hostId
+        - name: requestId
+          description: requestId
           required: true
           type: string
           in: query
@@ -575,8 +575,10 @@ paths:
             type: array
             items:
               $ref: Campaign
-        default:
-          description: 默认返回
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/campaigns/{campaignId}":
     get:
       tags:
@@ -594,10 +596,10 @@ paths:
           description: 成功
           schema:
             $ref: Campaign
-        "400":
-          description: 缺少id
-        "404":
-          description: 未找到活动
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     patch:
       tags:
         - campaigns
@@ -622,12 +624,10 @@ paths:
           description: 成功
           schema:
             $ref: Campaign
-        "400":
-          description: 缺少id
-        "403":
-          description: 没有权限
-        "404":
-          description: 未找到活动
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     delete:
       tags:
         - campaigns
@@ -644,12 +644,10 @@ paths:
       responses:
         "200":
           description: 成功
-        "400":
-          description: 缺少id
-        "403":
-          description: 没有权限
-        "404":
-          description: 未找到活动
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/campaigns/{campaignId}/users/{userId}":
     post:
       tags:
@@ -669,15 +667,18 @@ paths:
           required: true
           type: string
           in: path
+        - name: teamId
+          description: 小队 Id
+          required: false
+          type: string
+          in: query
       responses:
         "200":
           description: 成功
-        "400":
-          description: 缺少id
-        "403":
-          description: 没有权限
-        "404":
-          description: 未找到活动
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     delete:
       tags:
         - campaigns
@@ -699,14 +700,12 @@ paths:
       responses:
         "200":
           description: 成功
-        "400":
-          description: 缺少id
-        "403":
-          description: 没有权限
-        "404":
-          description: 未找到活动
+        defalut:
+          description: error
+          schema:
+            $ref: Error
 
-  "/timeline/record/{hostType}/{hostId}":
+  "/timeline/record/{requestType}/{requestId}":
     get:
       tags:
         - timeline
@@ -715,12 +714,12 @@ paths:
       consumes:
         - application/json
       parameters:
-        - name: hostType
+        - name: requestType
           description: 主体类型
           required: true
           type: string
           in: path
-        - name: hostId
+        - name: requestId
           description: 主体Id
           required: true
           type: string
@@ -732,11 +731,11 @@ paths:
             type: array
             items:
               $ref: TimelineRecord
-        "403":
-          description: 没有权限
-        "404":
-          description: 找不到
-  "/timeline/data/{hostType}/{hostId}":
+        defalut:
+          description: error
+          schema:
+            $ref: Error
+  "/timeline/data/{requesrType}/{requestId}":
     get:
       tags:
         - timeline
@@ -745,25 +744,35 @@ paths:
       consumes:
         - application/json
       parameters:
-        - name: hostType
+        - name: requestType
           description: 主体类型
           required: true
           type: string
           in: path
-        - name: hostId
+        - name: requestId
           description: 主体Id
           required: true
           type: string
           in: path
+        - name: year
+          description: timeline year
+          required: true
+          type: string
+          in: query
+        - name: month
+          description: timeline month
+          required: true
+          type: string
+          in: query
       responses:
         "200":
           description: 成功
           schema:
             $ref: TimelineData
-        "403":
-          description: 没有权限
-        "404":
-          description: 找不到
+        defalut:
+          description: error
+          schema:
+            $ref: Error
 
   /photo_albums:
     post:
@@ -777,7 +786,8 @@ paths:
         - name: body
           description: 相册信息
           required: true
-          type: PhotoAlbum
+          schema:
+            $ref: PhotoAlbum
           in: body
       responses:
         "200":
@@ -868,7 +878,8 @@ paths:
         - name: body
           description: 照片信息
           required: true
-          type: Photo
+          schema:
+            $ref: Photo
           in: body
       responses:
         "200":
@@ -922,7 +933,8 @@ paths:
         - name: body
           description: 照片信息
           required: true
-          type: Photo
+          schema: 
+            $ref: Photo
           in: body
       responses:
         "200":
@@ -969,13 +981,16 @@ paths:
         - name: body
           description: 评论信息
           required: true
-          type: Comment
+          schema:
+            $ref: Comment
           in: body
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     get:
       tags:
         - comments
@@ -984,23 +999,32 @@ paths:
       consumes:
         - application/json
       parameters:
-        - name: hostType
+        - name: requestType
           description: 主体类型
           required: true
           type: string
           in: query
-        - name: hostId
+          enum:
+            - comment
+            - campaign
+        - name: requestId
           description: 主题Id
           required: true
           type: string
           in: query
+        - name: limit
+          description: 数量限制
+          required: false
+          type: integer
+          format: int32
+          in: query
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
-        "404":
-          description: 找不到
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/comments/{commentId}":
     get:
       tags:
@@ -1013,7 +1037,7 @@ paths:
         - name: commentId
           description: 评论Id
           required: true
-          type: Comment
+          type: string
           in: path
       responses:
         "200":
@@ -1038,10 +1062,10 @@ paths:
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
-        "404":
-          description: 找不到
+        defalut:
+          description: error
+          schema:
+            $ref: Error
 
   /messages:
     post:
@@ -1055,7 +1079,8 @@ paths:
         - name: body
           description: 站内信信息
           required: true
-          type: Message
+          schema:
+            $ref: Message
           in: body
       responses:
         "200":
@@ -1070,12 +1095,12 @@ paths:
       consumes:
         - application/json
       parameters:
-        - name: hostType
+        - name: requestType
           description: 主体类型
           required: true
           type: string
           in: query
-        - name: hostId
+        - name: requestId
           description: 主题Id
           required: true
           type: string
@@ -1104,7 +1129,8 @@ paths:
         - name: body
           description: 站内信信息
           required: true
-          type: Message
+          schema: 
+            $ref: Message
           in: body
       responses:
         "200":
@@ -1140,7 +1166,6 @@ paths:
       operationId: createInviteCode
       consumes:
         - application/json
-      parameters:
       responses:
         "200":
           description: 成功
@@ -1163,8 +1188,10 @@ paths:
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
+        defalut:
+          description: error
+          schema:
+            $ref: Error
 
   /search:
     get:
@@ -1177,8 +1204,10 @@ paths:
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
+        defalut:
+          description: error
+          schema:
+            $ref: Error
 
   /region:
     get:
@@ -1191,8 +1220,10 @@ paths:
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
+        defalut:
+          description: error
+          schema:
+            $ref: Error
 
   /logo:
     get:
@@ -1217,8 +1248,10 @@ paths:
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
+        defalut:
+          description: error
+          schema:
+            $ref: Error
 
   /tags:
     get:
@@ -1720,7 +1753,6 @@ definitions:
         items:
           type: number
           format: double
-          minItems: 2
   CampaignUnit:
     title: CampaignUnit
     properties:
@@ -1861,3 +1893,90 @@ definitions:
         description: tags
         items:
           type: string
+  Comment:
+    title: Comment
+    type: object
+    description: comment
+    properties:
+      host_id:
+        type: string
+      content:
+        type: string
+      poster:
+        type: object
+        properties:
+          _id:
+            type: string
+          cid:
+            type: string
+          cname:
+            type: string
+          nickname:
+            type: string
+          realname:
+            type: string
+          photo:
+            type: string
+      reply_to:
+        type: object
+        properties:
+          _id:
+            type: string
+          nickname:
+            type: string
+      reply_count:
+        type: integer
+        format: int32
+      status:
+        type: string
+        enum:
+          - active
+          - delete
+          - shield
+      host_type:
+        type: string
+        enum:
+          - campaign
+          - comment
+      pothos:
+        type: array
+        items:
+          type: object
+          properties:
+            _id:
+              type: string
+            uri:
+              type: string
+  Message:
+    title: Message
+    descriptions: message
+    type: object
+    properties:
+      rec_id:
+        type: string
+  PhotoAlbum:
+    title: PhotoAlbum
+    description: photo_albums
+    type: object
+    properties:
+      uri:
+        type: string
+  Photo:
+    title: Photo
+    description: photo
+    type: object
+    properties:
+      uri:
+        type: string
+  Error:
+    title: Error
+    description: Error
+    type: object
+    required:
+      - code
+    properties:
+      code:
+        type: integer
+        format: int32
+      msg:
+        type: string
