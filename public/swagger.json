@@ -619,14 +619,8 @@
           "200": {
             "description": "成功"
           },
-          "400": {
-            "description": "缺少id"
-          },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "未找到活动"
+          "default": {
+            "description": "默认返回"
           }
         }
       }
@@ -811,8 +805,14 @@
           "200": {
             "description": "成功"
           },
-          "default": {
-            "description": "默认返回"
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到活动"
           }
         }
       }
