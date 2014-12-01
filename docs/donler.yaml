@@ -28,6 +28,8 @@ paths:
       responses:
         "400":
           description: 邮箱格式不正确或未填写邮箱或密码
+          schema:
+            $ref: ErrorMsg
         "401":
           description: 邮箱或密码错误
         "200":
@@ -41,6 +43,8 @@ paths:
       summary: 用户注销
       operationId: userLogout
       responses:
+        "401":
+          description: 未登录
         "204":
           description: 注销成功
   /users:
@@ -49,9 +53,20 @@ paths:
         - users
       summary: 注册用户
       operationId: registerUser
+      parameters:
+        - name: body
+          schema:
+            $ref: UserRegisterForm
+          in: body
+          required: true
+          description: 用户注册表单数据
       responses:
         "201":
           description: 注册成功
+        "400":
+          description: 填写信息有误
+          schema:
+            $ref: ErrorMsg
   "/users/{userId}":
     get:
       tags:
@@ -65,8 +80,6 @@ paths:
           type: string
           in: path
       responses:
-        "400":
-          description: 缺少id
         "401":
           description: 未登录
         "200":
@@ -86,11 +99,6 @@ paths:
           required: true
           type: string
           in: path
-        - name: x-access-token
-          type: string
-          in: header
-          required: true
-          description: access token
         - name: nickname
           description: 昵称
           required: false
@@ -129,6 +137,8 @@ paths:
       responses:
         "200":
           description: 修改成功
+        "401":
+          description: 未登录
     delete:
       tags:
         - users
@@ -136,12 +146,11 @@ paths:
       operationId: deleteUser
       responses:
         "401":
-          description: 需要登录
+          description: 未登录
         "403":
           description: 没有权限
         "204":
-          description: 删除成功
-
+          description: 屏蔽成功
   /companies:
     post:
       tags:
@@ -157,7 +166,7 @@ paths:
           description: 注册表单数据
           required: true
           schema:
-            $ref: RegisterForm
+            $ref: CompanyRegisterForm
           in: body
       responses:
         "201":
@@ -169,11 +178,6 @@ paths:
       tags:
         - companies
       summary: 获取公司信息
-      responses:
-        default:
-          description: 公司数据
-          schema:
-            $ref: Company
       operationId: getCompany
       produces:
         - application/json
@@ -183,32 +187,106 @@ paths:
           required: true
           type: string
           in: path
+      responses:
+        "200":
+          description: 公司数据
+          schema:
+            $ref: Company
+        "401":
+          description: 未登录
     patch:
       tags:
         - companies
       summary: 修改公司数据
+      consumes:
+        - multipart/form-data
       parameters:
         - name: companyId
           description: 公司id
           required: true
           type: string
           in: path
+        - name: name
+          description: 简称
+          required: false
+          type: string
+          in: formData
+        - name: logo
+          description: logo
+          required: false
+          type: file
+          in: formData
+        - name: password
+          description: 密码
+          required: false
+          type: string
+          in: formData
+        - name: domain
+          description: 邮箱后缀(可以是多个，用空格区分)
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: ssv
+          in: formData
+        - name: province
+          description: 省份
+          required: false
+          type: string
+          in: formData
+        - name: city
+          description: 城市
+          required: false
+          type: string
+          in: formData
+        - name: district
+          description: 区
+          required: false
+          type: string
+          in: formData
+        - name: address
+          description: 地址
+          required: false
+          type: string
+          in: formData
+        - name: contacts
+          description: 联系人
+          required: false
+          type: string
+          in: formData
+        - name: areacode
+          description: 区号
+          required: false
+          type: string
+          in: formData
+        - name: tel
+          description: 电话号码
+          required: false
+          type: string
+          in: formData
+        - name: extension
+          description: 分机
+          required: false
+          type: string
+          in: formData
+        - name: intro
+          description: 简介
+          required: false
+          type: string
+          in: formData
+        - name: phone
+          description: 手机号码
+          required: false
+          type: string
+          in: formData
+        - name: email
+          description: 企业邮箱
+          required: false
+          type: string
+          in: formData
       responses:
         "200":
           description: 修改成功
-    delete:
-      tags:
-        - companies
-      summary: 屏蔽公司
-      parameters:
-        - name: companyId
-          description: 公司id
-          required: true
-          type: string
-          in: path
-      responses:
-        "204":
-          description: 屏蔽成功
   /companies/validate:
     post:
       tags:
@@ -1158,8 +1236,43 @@ definitions:
         type: string
         format: date-time
         description: 上次发表评论的时间
-  RegisterForm:
-    title: RegisterForm
+  UserRegisterForm:
+    title: UserRegisterForm
+    type: object
+    required:
+      - email
+      - domain
+      - nickname
+      - password
+      - realname
+      - department
+    properties:
+      email:
+        description: 用户邮箱（不含@及其后面部分）
+        type: string
+      domain:
+        description: 邮箱域名
+        type: string
+      nickname:
+        description: 昵称
+        type: string
+      password:
+        description: 密码
+        type: string
+      realname:
+        description: 真实姓名
+        type: string
+      department:
+        description: 部门
+        type: array
+        items:
+          description: 部门名
+          type: string
+      phone: 
+        description: 手机号码
+        type: string
+  CompanyRegisterForm:
+    title: CompanyRegisterForm
     type: object
     required:
       - name
@@ -1168,7 +1281,6 @@ definitions:
       - district
       - address
       - contacts
-      - number
       - tel
       - email
     properties:
@@ -1193,7 +1305,7 @@ definitions:
       areacode:
         type: string
         description: 区号
-      number:
+      tel:
         type: string
         description: 号码
       extension:
@@ -1398,3 +1510,12 @@ definitions:
       photo:
         type: string
         description: 用户头像
+  ErrorMsg:
+    title: 错误信息
+    type: object
+    required:
+      - msg
+    properties:
+      msg:
+        description: 错误信息
+        type: string
