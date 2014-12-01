@@ -176,6 +176,7 @@ paths:
           description: 没有权限
         "204":
           description: 删除成功
+
   /companies:
     post:
       tags:
@@ -268,6 +269,7 @@ paths:
       tags:
         - companies
       summary: 获取公司相关标签
+
   /teams:
     post:
       tags:
@@ -313,6 +315,7 @@ paths:
       tags:
         - teams
       summary: 退出小队
+
   /departments:
     post:
       tags:
@@ -340,6 +343,7 @@ paths:
       tags:
         - departments
       summary: 退出部门
+
   /campaigns:
     post:
       tags:
@@ -544,7 +548,60 @@ paths:
           description: 没有权限
         "404":
           description: 未找到活动
-  "/photo_albums":
+
+  "/timeline/record/{hostType}/{hostId}":
+    get:
+      tags:
+        - timeline
+      summary: 获取timeline记录
+      operationId: getTimelinesRecord
+      consumes:
+        - application/json
+      parameters:
+        - name: hostType
+          description: 主体类型
+          required: true
+          type: string
+          in: path
+        - name: hostId
+          description: 主体Id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+        "403":
+          description: 没有权限
+        "404":
+          description: 找不到
+  "/timeline/data/{hostType}/{hostId}":
+    get:
+      tags:
+        - timeline
+      summary: 获取timline数据
+      operationId: getTimelinesData
+      consumes:
+        - application/json
+      parameters:
+        - name: hostType
+          description: 主体类型
+          required: true
+          type: string
+          in: query
+        - name: hostId
+          description: 主体Id
+          required: true
+          type: string
+          in: query
+      responses:
+        "200":
+          description: 成功
+        "403":
+          description: 没有权限
+        "404":
+          description: 找不到
+  /photo_albums:
     post:
       tags:
         - photoAlbums
@@ -736,7 +793,7 @@ paths:
         "404":
           description: 未找到相册
 
-  "/comments":
+  /comments:
     post:
       tags:
         - comments
@@ -780,7 +837,6 @@ paths:
           description: 没有权限
         "404":
           description: 找不到
-
   "/comments/{commentId}":
     get:
       tags:
@@ -823,7 +879,7 @@ paths:
         "404":
           description: 找不到
 
-  "/messages":
+  /messages:
     post:
       tags:
         - messages
@@ -912,7 +968,7 @@ paths:
         "404":
           description: 找不到
 
-  "/invitecode":
+  /invitecode:
     post:
       tags:
         - invitecode
@@ -946,7 +1002,7 @@ paths:
         "403":
           description: 没有权限
 
-  "/search":
+  /search:
     get:
       tags:
         - search
@@ -959,7 +1015,8 @@ paths:
           description: 成功
         "403":
           description: 没有权限
-  "/region":
+
+  /region:
     get:
       tags:
         - region
@@ -972,7 +1029,8 @@ paths:
           description: 成功
         "403":
           description: 没有权限
-  "/logo":
+
+  /logo:
     get:
       tags:
         - logo
@@ -997,7 +1055,8 @@ paths:
           description: 成功
         "403":
           description: 没有权限
-  "/tags":
+
+  /tags:
     get:
       tags:
         - tags

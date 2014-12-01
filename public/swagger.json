@@ -619,6 +619,77 @@
           "200": {
             "description": "成功"
           },
+          "default": {
+            "description": "默认返回"
+          }
+        }
+      }
+    },
+    "/campaigns/{campaignId}": {
+      "get": {
+        "tags": [
+          "campaigns"
+        ],
+        "summary": "获取单个活动",
+        "operationId": "getCampaignById",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "Campaign"
+            }
+          },
+          "400": {
+            "description": "缺少id"
+          },
+          "404": {
+            "description": "未找到活动"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "campaigns"
+        ],
+        "summary": "修改活动",
+        "operationId": "updateCampaign",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "Campaign object that needs to be added to the store",
+            "required": true,
+            "schema": {
+              "$ref": "Campaign"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "Campaign"
+            }
+          },
           "400": {
             "description": "缺少id"
           },
@@ -627,6 +698,199 @@
           },
           "404": {
             "description": "未找到活动"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "campaigns"
+        ],
+        "summary": "关闭活动",
+        "operationId": "closeCampaign",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到活动"
+          }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/users/{userId}": {
+      "post": {
+        "tags": [
+          "campaigns"
+        ],
+        "summary": "参加活动",
+        "operationId": "joinCampaign",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "userId",
+            "description": "用户 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到活动"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "campaigns"
+        ],
+        "summary": "退出活动",
+        "operationId": "quitCampaign",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "userId",
+            "description": "用户 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "description": "缺少id"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "未找到活动"
+          }
+        }
+      }
+    },
+    "/timeline/record/{hostType}/{hostId}": {
+      "get": {
+        "tags": [
+          "timeline"
+        ],
+        "summary": "获取timeline记录",
+        "operationId": "getTimelinesRecord",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hostType",
+            "description": "主体类型",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "hostId",
+            "description": "主体Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "找不到"
+          }
+        }
+      }
+    },
+    "/timeline/data/{hostType}/{hostId}": {
+      "get": {
+        "tags": [
+          "timeline"
+        ],
+        "summary": "获取timline数据",
+        "operationId": "getTimelinesData",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hostType",
+            "description": "主体类型",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "hostId",
+            "description": "主体Id",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "403": {
+            "description": "没有权限"
+          },
+          "404": {
+            "description": "找不到"
           }
         }
       }
@@ -1321,192 +1585,6 @@
           },
           "403": {
             "description": "没有权限"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaignId}": {
-      "get": {
-        "tags": [
-          "campaigns"
-        ],
-        "summary": "获取单个活动",
-        "operationId": "getCampaignById",
-        "parameters": [
-          {
-            "name": "campaignId",
-            "description": "活动 Id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功",
-            "schema": {
-              "$ref": "Campaign"
-            }
-          },
-          "400": {
-            "description": "缺少id"
-          },
-          "404": {
-            "description": "未找到活动"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "campaigns"
-        ],
-        "summary": "修改活动",
-        "operationId": "updateCampaign",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "campaignId",
-            "description": "活动 Id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          },
-          {
-            "name": "body",
-            "description": "Campaign object that needs to be added to the store",
-            "required": true,
-            "schema": {
-              "$ref": "Campaign"
-            },
-            "in": "body"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功",
-            "schema": {
-              "$ref": "Campaign"
-            }
-          },
-          "400": {
-            "description": "缺少id"
-          },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "未找到活动"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "campaigns"
-        ],
-        "summary": "关闭活动",
-        "operationId": "closeCampaign",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "campaignId",
-            "description": "活动 Id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "默认返回"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaignId}/users/{userId}": {
-      "post": {
-        "tags": [
-          "campaigns"
-        ],
-        "summary": "参加活动",
-        "operationId": "joinCampaign",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "campaignId",
-            "description": "活动 Id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          },
-          {
-            "name": "userId",
-            "description": "用户 Id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "400": {
-            "description": "缺少id"
-          },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "未找到活动"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "campaigns"
-        ],
-        "summary": "退出活动",
-        "operationId": "quitCampaign",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "campaignId",
-            "description": "活动 Id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          },
-          {
-            "name": "userId",
-            "description": "用户 Id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "400": {
-            "description": "缺少id"
-          },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "未找到活动"
           }
         }
       }
