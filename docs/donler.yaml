@@ -2080,6 +2080,32 @@ definitions:
     properties:
       rec_id:
         type: string
+      MessageContent:
+        type: string
+      type:
+        type: string
+        enum:
+          - private
+          - team
+          - department
+          - company
+          - global
+      status:
+        type: string
+        enum:
+          - unread
+          - read
+          - delete
+          - sender_delete
+      specific_type:
+        type: object
+        properties:
+          value:
+            type: integer
+            format: int32
+          child_type:
+            type: integer
+            format: int32
   PhotoAlbum:
     title: PhotoAlbum
     description: photo_albums
