@@ -26,11 +26,11 @@ gulp.task('nodemon', function () {
 });
 
 gulp.task('yaml', function () {
-  gulp.src('./docs/swagger.yaml')
+  gulp.src('./docs/donler.yaml')
     .pipe(yaml({ space: 2 }))
     .pipe(gulp.dest('./public'));
 });
 
-gulp.watch('./docs/swagger.yaml', ['yaml']);
+gulp.watch('./docs/donler.yaml', ['yaml']);
 
 gulp.task('default', ['nodemon', 'yaml']);
