@@ -383,6 +383,10 @@ paths:
       responses:
         "200":
           description: 成功
+          schema:
+            type: array
+            items:
+              $ref: Campaign
         default:
           description: 默认返回
   "/campaigns/{campaignId}":
@@ -536,6 +540,18 @@ paths:
       responses:
         "200":
           description: 成功
+          schema:
+            type: array
+            items:
+              properties:
+                year:
+                  type: string
+                month:
+                  type: array
+                  items:
+                    properties:
+                      month:
+                        type: string
         "403":
           description: 没有权限
         "404":
@@ -553,19 +569,30 @@ paths:
           description: 主体类型
           required: true
           type: string
-          in: query
+          in: path
         - name: hostId
           description: 主体Id
           required: true
           type: string
-          in: query
+          in: path
       responses:
         "200":
           description: 成功
+          schema:
+            properties:
+              year:
+                type: string
+              month:
+                type: string
+              campaigns:
+                type: array
+                items:
+                  $ref: Campaign
         "403":
           description: 没有权限
         "404":
           description: 找不到
+
   /photo_albums:
     post:
       tags:
