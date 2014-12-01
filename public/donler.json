@@ -485,11 +485,52 @@
         ],
         "responses": {
           "200": {
-            "description": "小队统计信息（企业账号获取的数据）",
+            "description": "小队数据",
             "schema": {
               "type": "array",
               "items": {
                 "$ref": "Team"
+              }
+            }
+          },
+          "401": {
+            "description": "未登录"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        }
+      }
+    },
+    "/companies/{companyId}/statistics": {
+      "get": {
+        "tags": [
+          "companies"
+        ],
+        "summary": "获取公司小队或部门的统计信息",
+        "parameters": [
+          {
+            "name": "companyId",
+            "description": "公司id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "target",
+            "description": "部门或小队",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "统计数据",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "StatisticsTeam"
               }
             }
           },
@@ -541,7 +582,30 @@
         "tags": [
           "companies"
         ],
-        "summary": "获取公司部门数据"
+        "summary": "获取公司部门数据",
+        "parameters": [
+          {
+            "name": "companyId",
+            "description": "公司id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "部门数据",
+            "schema": {
+              "$ref": "DepartmentTree"
+            }
+          },
+          "401": {
+            "description": "未登录"
+          },
+          "403": {
+            "description": "权限不足"
+          }
+        }
       }
     },
     "/companies/{companyId}/tags": {
@@ -549,7 +613,27 @@
         "tags": [
           "companies"
         ],
-        "summary": "获取公司相关标签"
+        "summary": "获取公司相关标签",
+        "parameters": [
+          {
+            "name": "companyId",
+            "description": "公司id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "tags",
+            "schema": {
+              "$ref": "Tags"
+            }
+          },
+          "401": {
+            "description": "未登录"
+          }
+        }
       }
     },
     "/teams": {
@@ -2095,7 +2179,12 @@
         "groupType",
         "name",
         "logo",
-        "brief"
+        "brief",
+        "total",
+        "memberCount",
+        "previewMembers",
+        "latestCampaign",
+        "latestPhotos"
       ],
       "properties": {
         "cid": {
@@ -2122,20 +2211,8 @@
           "description": "小队简介",
           "type": "string"
         },
-        "score": {
-          "$ref": "Score",
-          "description": "积分(HR可获取该属性)"
-        },
-        "active": {
-          "description": "是否激活(HR可获取该属性)",
-          "type": "boolean"
-        },
-        "count": {
-          "$ref": "CompanyCount",
-          "description": "统计信息(HR可获取该属性)"
-        },
         "total": {
-          "description": "积分(员工可获取该属性)",
+          "description": "积分",
           "type": "integer"
         },
         "memberCount": {
@@ -2143,23 +2220,85 @@
           "type": "integer"
         },
         "previewMembers": {
-          "description": "用于卡片展示的几个成员(员工可获取该属性)",
+          "description": "用于卡片展示的几个成员",
           "type": "array",
           "items": {
             "$ref": "Member"
           }
         },
         "latestCampaign": {
-          "description": "最新活动(员工可获取该属性)",
+          "description": "最新活动",
           "$ref": "LatestCampaign"
         },
         "latestPhotos": {
-          "description": "最新照片(员工可获取该属性)",
+          "description": "最新照片",
           "type": "array",
           "items": {
             "type": "string",
             "description": "照片url"
           }
+        }
+      }
+    },
+    "StatisticsTeam": {
+      "title": "StatisticsTeam",
+      "type": "object",
+      "required": [
+        "cid",
+        "cname",
+        "groupType",
+        "name",
+        "logo",
+        "brief",
+        "score",
+        "active",
+        "count",
+        "memberCount"
+      ],
+      "properties": {
+        "cid": {
+          "description": "公司id",
+          "type": "string"
+        },
+        "cname": {
+          "description": "公司名称(简称)",
+          "type": "string"
+        },
+        "did": {
+          "description": "部门id",
+          "type": "string"
+        },
+        "groupType": {
+          "description": "类型",
+          "type": "string"
+        },
+        "name": {
+          "description": "小队(部门)名称",
+          "type": "string"
+        },
+        "logo": {
+          "description": "小队(部门)logo url",
+          "type": "string"
+        },
+        "brief": {
+          "description": "小队(部门)简介",
+          "type": "string"
+        },
+        "score": {
+          "$ref": "Score",
+          "description": "积分"
+        },
+        "active": {
+          "description": "是否激活",
+          "type": "boolean"
+        },
+        "count": {
+          "$ref": "CompanyCount",
+          "description": "统计信息"
+        },
+        "memberCount": {
+          "description": "成员人数",
+          "type": "integer"
         }
       }
     },
@@ -2501,6 +2640,43 @@
           "type": "array",
           "items": {
             "$ref": "Campaign"
+          }
+        }
+      }
+    },
+    "DepartmentTree": {
+      "title": "DepartmentTree",
+      "type": "object",
+      "required": [
+        "_id",
+        "name"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "部门id（如果是根节点，则为公司id）"
+        },
+        "name": {
+          "type": "string",
+          "description": "部门名（如果是根节点，怎为公司名字）"
+        },
+        "department": {
+          "type": "array",
+          "items": {
+            "$ref": "DepartmentTree"
+          }
+        }
+      }
+    },
+    "Tags": {
+      "title": "Tags",
+      "type": "object",
+      "properties": {
+        "tags": {
+          "type": "array",
+          "description": "tags",
+          "items": {
+            "type": "string"
           }
         }
       }
