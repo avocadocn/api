@@ -1448,7 +1448,7 @@
           }
         }
       },
-      "patch": {
+      "put": {
         "tags": [
           "campaigns"
         ],
@@ -1558,8 +1558,7 @@
           "200": {
             "description": "成功",
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "$ref": "Campaign"
             }
           },
           "default": {
@@ -1628,7 +1627,12 @@
             "description": "主体类型",
             "required": true,
             "type": "string",
-            "in": "path"
+            "in": "path",
+            "enum": [
+              "user",
+              "team",
+              "company"
+            ]
           },
           {
             "name": "requestId",
@@ -1636,6 +1640,13 @@
             "required": true,
             "type": "string",
             "in": "path"
+          },
+          {
+            "name": "unfinishFlag",
+            "description": "是否包含未完成的活动",
+            "required": false,
+            "type": "boolean",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1657,7 +1668,7 @@
         }
       }
     },
-    "/timeline/data/{requesrType}/{requestId}": {
+    "/timeline/data/{requestType}/{requestId}": {
       "get": {
         "tags": [
           "timeline"
@@ -1673,7 +1684,12 @@
             "description": "主体类型",
             "required": true,
             "type": "string",
-            "in": "path"
+            "in": "path",
+            "enum": [
+              "user",
+              "team",
+              "company"
+            ]
           },
           {
             "name": "requestId",
@@ -2260,7 +2276,7 @@
         "tags": [
           "messages"
         ],
-        "summary": "获取评论",
+        "summary": "获取站内信",
         "operationId": "getComments",
         "consumes": [
           "application/json"
@@ -2301,7 +2317,7 @@
       }
     },
     "/messages/{messageId}": {
-      "patch": {
+      "put": {
         "tags": [
           "messages"
         ],
@@ -2347,7 +2363,7 @@
         "tags": [
           "messages"
         ],
-        "summary": "获取评论",
+        "summary": "获取一条站内信",
         "operationId": "getComments",
         "consumes": [
           "application/json"
@@ -3129,14 +3145,6 @@
     },
     "Campaign": {
       "title": "Campaign",
-      "required": [
-        "cid",
-        "theme",
-        "location",
-        "start_time",
-        "end_time",
-        "campaign_mold"
-      ],
       "properties": {
         "cid": {
           "type": "array",

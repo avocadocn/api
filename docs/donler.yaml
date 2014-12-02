@@ -981,7 +981,7 @@ paths:
           description: error
           schema:
             $ref: Error
-    patch:
+    put:
       tags:
         - campaigns
       summary: 修改活动
@@ -1057,8 +1057,7 @@ paths:
         "200":
           description: 成功
           schema:
-            type: integer
-            format: int32
+            $ref: Campaign
         default:
           description: error
           schema:
@@ -1106,11 +1105,20 @@ paths:
           required: true
           type: string
           in: path
+          enum:
+            - user
+            - team
+            - company
         - name: requestId
           description: 主体Id
           required: true
           type: string
           in: path
+        - name: unfinishFlag
+          description: 是否包含未完成的活动
+          required: false
+          type: boolean
+          in: query
       responses:
         "200":
           description: 成功
@@ -1122,7 +1130,7 @@ paths:
           description: error
           schema:
             $ref: Error
-  "/timeline/data/{requesrType}/{requestId}":
+  "/timeline/data/{requestType}/{requestId}":
     get:
       tags:
         - timeline
@@ -1136,6 +1144,10 @@ paths:
           required: true
           type: string
           in: path
+          enum:
+            - user
+            - team
+            - company
         - name: requestId
           description: 主体Id
           required: true
@@ -1528,7 +1540,7 @@ paths:
     get:
       tags:
         - messages
-      summary: 获取评论
+      summary: 获取站内信
       operationId: getComments
       consumes:
         - application/json
@@ -1555,7 +1567,7 @@ paths:
           schema:
             $ref: Error
   "/messages/{messageId}":
-    patch:
+    put:
       tags:
         - messages
       summary: 修改站内信
@@ -1586,7 +1598,7 @@ paths:
     get:
       tags:
         - messages
-      summary: 获取评论
+      summary: 获取一条站内信
       operationId: getComments
       consumes:
         - application/json
@@ -2161,13 +2173,6 @@ definitions:
         type: string
   Campaign:
     title: Campaign
-    required:
-      - cid
-      - theme
-      - location
-      - start_time
-      - end_time
-      - campaign_mold
     properties:
       cid:
         type: array
