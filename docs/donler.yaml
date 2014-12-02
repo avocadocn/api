@@ -1606,41 +1606,6 @@ paths:
           schema:
             $ref: Error
 
-  /invitecode:
-    post:
-      tags:
-        - invitecode
-      summary: 创建邀请码
-      operationId: createInviteCode
-      consumes:
-        - application/json
-      responses:
-        "200":
-          description: 成功
-        "403":
-          description: 没有权限
-  "/invitecode/{inviteCodeId}":
-    delete:
-      tags:
-        - invitecode
-      summary: 删除邀请码
-      operationId: deleteInveiteCode
-      consumes:
-        - application/json
-      parameters:
-        - name: inviteCodeId
-          description: 邀请码Id
-          required: true
-          type: string
-          in: path
-      responses:
-        "200":
-          description: 成功
-        default:
-          description: error
-          schema:
-            $ref: Error
-
   /search:
     get:
       tags:
@@ -1668,6 +1633,8 @@ paths:
       responses:
         "200":
           description: 成功
+          schema:
+            $ref: RegionData
         default:
           description: error
           schema:
@@ -2791,3 +2758,53 @@ definitions:
       _id:
         type: string
         description: userId
+
+  RegionData:
+    title: RegionData
+    required:
+      - regions
+    properties:
+      regions:
+        type: array
+        items:
+          $ref: Province
+  Province:
+    title: Province
+    required:
+      - label
+      - value
+      - data
+    properties:
+      label:
+        type: string
+      value: 
+        type: string
+      data:
+        type: array
+        items:
+          $ref: City
+  City:
+    title: City
+    required:
+      - label
+      - value
+      - data
+    properties:
+      label:
+        type: string
+      value: 
+        type: string
+      data:
+        type: array
+        items:
+          $ref: District
+  District:
+    title: District
+    required:
+      - label
+      - value
+    properties:
+      label:
+        type: string
+      value: 
+        type: string
