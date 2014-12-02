@@ -47,7 +47,7 @@ module.exports = function (app) {
             exp: app.get('tokenExpires')
           }, app.get('tokenSecret'));
 
-          user.app_token = token;
+          user.access_token = token;
           user.save(function (err) {
             if (err) {
               log(err);
@@ -64,6 +64,18 @@ module.exports = function (app) {
           log(err);
           res.sendStatus(500);
         });
+    },
+
+    logout: function (req, res) {
+      req.user.access_token = null;
+      req.user.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+        } else {
+          res.sendStatus(204);
+        }
+      });
     }
 
   }

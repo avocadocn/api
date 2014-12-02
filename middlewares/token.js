@@ -18,6 +18,7 @@ exports.verifying = function (app) {
               type: decoded.type,
               id: decoded.id
             };
+            req.token = token;
           }
           next();
         }
@@ -47,6 +48,10 @@ exports.needToken = function (req, res, next) {
         if (!user) {
           return res.sendStatus(401);
         }
+        if (user.access_token !== req.token) {
+          return res.sendStatus(401);
+        }
+
         req.user = user;
         next();
       })

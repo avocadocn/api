@@ -3,6 +3,7 @@
 var mongoose = require('mongoose');
 var Company = mongoose.model('Company');
 var jwt = require('jsonwebtoken');
+var log = require('../services/error_log.js');
 
 module.exports = function (app) {
 
@@ -75,8 +76,7 @@ module.exports = function (app) {
 
         })
         .then(null, function (err) {
-          // todo add to log
-          console.log(err);
+          log(err);
           res.send(500, '服务器错误');
         });
     },
@@ -84,7 +84,7 @@ module.exports = function (app) {
 
     login: function (req, res) {
       if (!req.body || !req.body.username || !req.body.password) {
-        return res.send(400, '缺少邮箱或密码');
+        return res.status(400).send('缺少邮箱或密码');
       }
 
       Company.findOne({
@@ -92,11 +92,11 @@ module.exports = function (app) {
       }).exec()
         .then(function (company) {
           if (!company) {
-            return res.send(401, '邮箱或密码错误');
+            return res.status(401).send('邮箱或密码错误');
           }
 
           if (!company.encryptPassword(req.body.password)) {
-            return res.send(401, '邮箱或密码错误');
+            return res.status(401).send('邮箱或密码错误');
           }
 
           var token = jwt.sign({
@@ -105,16 +105,33 @@ module.exports = function (app) {
             exp: app.get('tokenExpires')
           }, app.get('tokenSecret'));
 
-          res.send(200, {
-            token: token
+          company.access_token = token;
+          company.save(function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+            } else {
+              res.status(200).send({ token: token });
+            }
           });
 
         })
         .then(null, function (err) {
-          // todo temp err handle
-          console.log(err);
+          log(err);
           res.sendStatus(500);
         });
+    },
+
+    logout: function (req, res) {
+      req.user.access_token = null;
+      req.user.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+        } else {
+          res.sendStatus(204);
+        }
+      });
     }
 
   };

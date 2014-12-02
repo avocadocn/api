@@ -35,7 +35,7 @@ paths:
           schema:
             $ref: LoginSuccess
   /users/logout:
-    get:
+    post:
       tags:
         - users
       summary: 用户注销
@@ -484,7 +484,7 @@ paths:
           schema:
             $ref: LoginSuccess
   /companies/logout:
-    get:
+    post:
       tags:
         - companies
       summary: 公司注销

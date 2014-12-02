@@ -52,7 +52,7 @@
       }
     },
     "/users/logout": {
-      "get": {
+      "post": {
         "tags": [
           "users"
         ],
@@ -720,7 +720,7 @@
       }
     },
     "/companies/logout": {
-      "get": {
+      "post": {
         "tags": [
           "companies"
         ],
