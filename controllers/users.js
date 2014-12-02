@@ -4,6 +4,7 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User');
 
 var jwt = require('jsonwebtoken');
+var log = require('../services/error_log.js');
 
 module.exports = function (app) {
 
@@ -13,19 +14,19 @@ module.exports = function (app) {
       User.findById(req.params.userId).exec()
         .then(function (user) {
           if (!user) {
-            return res.send(404, "找不到该用户");
+            return res.status(404).send("找不到该用户");
           }
           res.send(user);
         })
         .then(null, function (err) {
-          console.log(err);
+          log(err);
           res.sendStatus(500);
         });
     },
 
     login: function (req, res) {
       if (!req.body || !req.body.email || !req.body.password) {
-        return res.send(400, '缺少邮箱或密码');
+        return res.status(400).send('缺少邮箱或密码');
       }
 
       User.findOne({
@@ -33,11 +34,11 @@ module.exports = function (app) {
       }).exec()
         .then(function (user) {
           if (!user) {
-            return res.send(401, '邮箱或密码错误');
+            return res.status(401).send('邮箱或密码错误');
           }
 
           if (!user.encryptPassword(req.body.password)) {
-            return res.send(401, '邮箱或密码错误');
+            return res.status(401).send('邮箱或密码错误');
           }
 
           var token = jwt.sign({
@@ -46,14 +47,21 @@ module.exports = function (app) {
             exp: app.get('tokenExpires')
           }, app.get('tokenSecret'));
 
-          res.send(200, {
-            token: token
+          user.app_token = token;
+          user.save(function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+            } else {
+              res.status(200).send({
+                token: token
+              });
+            }
           });
 
         })
         .then(null, function (err) {
-          // todo temp err handle
-          console.log(err);
+          log(err);
           res.sendStatus(500);
         });
     }

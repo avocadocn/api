@@ -119,7 +119,7 @@ var UserSchema = new Schema({
     cname: String,
     company_official_name: String,
     team: [_team],
-    app_token: String,
+    app_token: String, // 保存上次登录的token，如果注销则清除。
     //本系统是否关闭此人
     disabled:{
         type: Boolean,
