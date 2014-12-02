@@ -2476,6 +2476,40 @@
           }
         }
       }
+    },
+    "/push": {
+      "post": {
+        "tags": [
+          "push"
+        ],
+        "summary": "推送通知",
+        "operationId": "pushService",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "PushData"
+            },
+            "in": "body",
+            "required": true,
+            "description": "推送"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -3827,6 +3861,40 @@
         "name": {
           "type": "string",
           "description": "照片名称"
+        }
+      }
+    },
+    "PushData": {
+      "title": "PushData",
+      "required": [
+        "title",
+        "description",
+        "members"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "活动主题"
+        },
+        "description": {
+          "type": "string",
+          "description": "详细内容"
+        },
+        "members": {
+          "type": "array",
+          "description": "接收用户",
+          "items": {
+            "$ref": "PushUser"
+          }
+        }
+      }
+    },
+    "PushUser": {
+      "title": "PushUser",
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "userId"
         }
       }
     }
