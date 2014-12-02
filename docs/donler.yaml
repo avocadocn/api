@@ -349,7 +349,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: Team
+              $ref: TeamCard
         defalut:
           description: error
           schema:
@@ -443,7 +443,39 @@ paths:
           description: error
           schema:
             $ref: Error
-
+  /companies/login:
+    post:
+      tags:
+        - companies
+      summary: 公司登录
+      parameters:
+        - name: body
+          schema:
+            $ref: CompanyLoginForm
+          in: body
+          required: true
+          description: 登录邮箱和密码
+      responses:
+        defalut:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 登录成功后返回的数据
+          schema:
+            $ref: LoginSuccess
+  /companies/logout:
+    get:
+      tags:
+        - companies
+      summary: 公司注销
+      responses:
+        defalut:
+          description: error
+          schema:
+            $ref: Error
+        "204":
+          description: 注销成功
 
   /teams:
     post:
@@ -1107,13 +1139,35 @@ paths:
           description: 相册信息
           required: true
           schema:
-            $ref: PhotoAlbum
+            $ref: CreatePhotoAlbumForm
           in: body
+      responses:
+        "201":
+          description: 成功
+        defalut:
+          description: error
+          schema:
+            $ref: Error
+    get:
+      tags:
+        - photoAlbums
+      summary: 获取相册列表
+      parameters:
+        - name: ownerType
+          description: 相册所属类型，现在只允许是team
+          type: string
+          in: query
+        - name: onwerId
+          description: 相册所属model的id
+          type: string
+          in: query
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
+          schema:
+            type: array
+            items:
+              $ref: PhotoAlbum
   "/photo_albums/{photoAlbumId}":
     get:
       tags:
@@ -1131,13 +1185,13 @@ paths:
       responses:
         "200":
           description: 成功
-        "400":
-          description: 缺少id
-        "403":
-          description: 没有权限
-        "404":
-          description: 未找到相册
-    patch:
+          schema:
+            $ref: PhotoAlbum
+        defalut:
+          description: error
+          schema:
+            $ref: Error
+    put:
       tags:
         - photoAlbums
       summary: 修改相册数据
@@ -1150,22 +1204,23 @@ paths:
           required: true
           type: string
           in: path
+        - name: name
+          description: 相册名
+          required: false
+          type: string
+          in: formData
       responses:
         "200":
           description: 成功
-        "400":
-          description: 缺少id
-        "403":
-          description: 没有权限
-        "404":
-          description: 未找到相册
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     delete:
       tags:
         - photoAlbums
       summary: 删除相册
       operationId: deletePhotoAlbum
-      consumes:
-        - application/json
       parameters:
         - name: photoAlbumId
           description: 相册 Id
@@ -1173,14 +1228,12 @@ paths:
           type: string
           in: path
       responses:
-        "200":
+        "204":
           description: 成功
-        "400":
-          description: 缺少id
-        "403":
-          description: 没有权限
-        "404":
-          description: 未找到相册
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/photo_albums/{photoAlbumId}/photos":
     post:
       tags:
@@ -1188,24 +1241,47 @@ paths:
       summary: 上传照片
       operationId: createPhoto
       consumes:
-        - application/json
+        - multipart/form-data
       parameters:
         - name: photoAlbumId
           description: 相册 Id
           required: true
           type: string
           in: path
-        - name: body
-          description: 照片信息
+        - name: photo
+          description: 照片文件
           required: true
+          type: file
+          in: formData
+      responses:
+        "201":
+          description: 成功
+        defalut:
+          description: error
           schema:
-            $ref: Photo
-          in: body
+            $ref: Error
+    get:
+      tags:
+        - photoAlbums
+      summary: 获取相册的照片列表
+      operationId: getPhotos
+      parameters:
+        - name: photoAlbumId
+          description: 相册 Id
+          required: true
+          type: string
+          in: path
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
+          schema:
+            type: array
+            items:
+              $ref: PhotoForList
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/photo_albums/{photoAlbumId}/photos/{photoId}":
     get:
       tags:
@@ -1228,11 +1304,12 @@ paths:
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
-        "404":
-          description: 未找到相册
-    patch:
+          $ref: Photo
+        defalut:
+          description: error
+          schema:
+            $ref: Error
+    put:
       tags:
         - photoAlbums
       summary: 修改照片数据
@@ -1250,26 +1327,22 @@ paths:
           required: true
           type: string
           in: path
-        - name: body
-          description: 照片信息
+        - name: name
+          description: 照片名字
           required: true
-          schema: 
-            $ref: Photo
-          in: body
+          type: string
+          in: formData
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
-        "404":
-          description: 未找到相册
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     delete:
       tags:
         - photoAlbums
       summary: 删除照片
-      operationId: updatePhoto
-      consumes:
-        - application/json
       parameters:
         - name: photoAlbumId
           description: 相册 Id
@@ -1282,12 +1355,12 @@ paths:
           type: string
           in: path
       responses:
-        "200":
+        "204":
           description: 成功
-        "403":
-          description: 没有权限
-        "404":
-          description: 未找到相册
+        defalut:
+          description: error
+          schema:
+            $ref: Error
 
   /comments:
     post:
@@ -1579,6 +1652,19 @@ definitions:
       password:
         description: 密码
         type: string
+  CompanyLoginForm:
+    title: CompanyLoginForm
+    type: object
+    required:
+      - username
+      - password
+    properties:
+      username:
+        description: 用户名
+        type: string
+      password:
+        description: 密码
+        type: string
   LoginSuccess:
     title: LoginSuccess
     type: object
@@ -1816,8 +1902,8 @@ definitions:
       msg:
         description: 验证结果描述
         type: string
-  Team:
-    title: Team
+  TeamCard:
+    title: TeamCard
     type: object
     required:
       - cid
@@ -2451,3 +2537,118 @@ definitions:
         type: array
         items:
           $ref: Photo
+
+  CreatePhotoAlbumForm:
+    title: CreatePhotoAlbumForm
+    type: object
+    required:
+      - ownerModel
+      - ownerId
+      - cid
+      - tid
+      - name
+    properties:
+      ownerModel:
+        type: string
+        description: 所属model的类型，目前只允许是'company_group'
+      ownerId:
+        type: string
+        description: 所属model的id
+      cid:
+        type: string
+        description: 所属公司id
+      tid:
+        type: string
+        description: 所属小队id
+      name:
+        type: string
+        description: 相册名
+
+  UpdateUser:
+    title: UpdateUser
+    type: object
+    required:
+      - _id
+      - name
+      - type
+    properties:
+      _id:
+        type: string
+        description: 更新者id
+      name:
+        type: string
+        description: 更新者的名字（公司名或用户昵称）
+      type:
+        type: string
+        description: 用户类型，'hr' or 'user'
+
+  PhotoAlbum:
+    title: PhotoAlbum
+    type: object
+    required:
+      - _id
+      - name
+      - updateDate
+      - updateUser
+      - photoCount
+    properties:
+      _id:
+        type: string
+        description: 相册id
+      name:
+        type: string
+        description: 相册名
+      updateDate:
+        type: string
+        format: date-time
+        description: 上次更新时间
+      updateUser:
+        $ref: UpdateUser
+      photoCount:
+        type: integer
+        format: int32
+        description: 照片数
+
+  Photo:
+    title: Photo
+    type: object
+    required:
+      - _id
+      - url
+      - name
+      - uploadUser
+      - uploadDate
+    properties:
+      _id:
+        type: string
+        description: 照片id
+      url:
+        type: string
+        description: 照片url
+      name:
+        type: string
+        description: 照片名称
+      uploadUser:
+        $ref: UpdateUser
+      uploadDate:
+        type: string
+        description: 上传时间
+        format: date-time
+
+  PhotoForList:
+    title: PhotoForList
+    type: object
+    required:
+      - _id
+      - url
+      - name
+    properties:
+      _id:
+        type: string
+        description: 照片id
+      url:
+        type: string
+        description: 照片url
+      name:
+        type: string
+        description: 照片名称
