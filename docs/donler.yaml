@@ -806,6 +806,9 @@ paths:
       responses:
         "200":
           description: 成功
+          schema:
+            type: integer
+            format: int32
         defalut:
           description: error
           schema:
@@ -831,6 +834,9 @@ paths:
       responses:
         "200":
           description: 成功
+          schema:
+            type: integer
+            format: int32
         defalut:
           description: error
           schema:
@@ -1118,6 +1124,8 @@ paths:
       responses:
         "200":
           description: 成功
+          schema:
+            $ref: Comment
         defalut:
           description: error
           schema:
@@ -1152,6 +1160,10 @@ paths:
       responses:
         "200":
           description: 成功
+          schema:
+            type: array
+            items:
+              $ref: Comment
         defalut:
           description: error
           schema:
@@ -1173,10 +1185,12 @@ paths:
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
-        "404":
-          description: 没有找到该评论
+          schema:
+            $ref: Comment
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     delete:
       tags:
         - comments
@@ -1216,8 +1230,10 @@ paths:
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     get:
       tags:
         - messages
@@ -1239,10 +1255,14 @@ paths:
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
-        "404":
-          description: 找不到
+          schema:
+            type: array
+            items:
+              $ref: Message
+        defalut:
+          description: error
+          schema:
+            $ref: Error
   "/messages/{messageId}":
     patch:
       tags:
@@ -1266,8 +1286,12 @@ paths:
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
+          schema:
+            $ref: Message
+        defalut:
+          description: error
+          schema:
+            $ref: Error
     get:
       tags:
         - messages
@@ -1284,10 +1308,12 @@ paths:
       responses:
         "200":
           description: 成功
-        "403":
-          description: 没有权限
-        "404":
-          description: 找不到
+          schema:
+            $ref: Message
+        defalut:
+          description: error
+          schema:
+            $ref: Error
 
   /invitecode:
     post:

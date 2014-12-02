@@ -1198,7 +1198,11 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
           },
           "defalut": {
             "description": "error",
@@ -1235,7 +1239,11 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
           },
           "defalut": {
             "description": "error",
@@ -1662,7 +1670,10 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "$ref": "Comment"
+            }
           },
           "defalut": {
             "description": "error",
@@ -1711,7 +1722,13 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "Comment"
+              }
+            }
           },
           "defalut": {
             "description": "error",
@@ -1743,13 +1760,16 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "$ref": "Comment"
+            }
           },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "没有找到该评论"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -1809,8 +1829,11 @@
           "200": {
             "description": "成功"
           },
-          "403": {
-            "description": "没有权限"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -1841,13 +1864,19 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "Message"
+              }
+            }
           },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "找不到"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -1882,10 +1911,16 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "$ref": "Message"
+            }
           },
-          "403": {
-            "description": "没有权限"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -1909,13 +1944,16 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "$ref": "Message"
+            }
           },
-          "403": {
-            "description": "没有权限"
-          },
-          "404": {
-            "description": "找不到"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
