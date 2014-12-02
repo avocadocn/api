@@ -611,7 +611,7 @@ paths:
       summary: 上传全家福
       operationId: uploadFamilyPhotos
       consumes:
-        - application/json
+        - multipart/form-data
       parameters:
         - name: teamId
           description: 小队Id
@@ -619,12 +619,11 @@ paths:
           type: string
           in: path
           default: 53aa701011fd597b3e1be25d
-        - name: body
+        - name: photo
           description: 全家福照片
           required: true
-          schema:
-            $ref: Photos
-          in: body
+          type: file
+          in: formData
       responses:
         "200":
           description: 成功
@@ -2635,12 +2634,16 @@ definitions:
   FamilyPhoto:
     title: FamilyPhoto
     required:
+      - _id
       - uri
       - select
     properties:
+      _id:
+        type: string
+        description: 照片id
       uri:
         type: string
-        description: 图片地址
+        description: 照片url
       select:
         type: boolean
         description: 是否选择

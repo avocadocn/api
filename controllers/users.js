@@ -55,7 +55,7 @@ module.exports = function (app) {
           // todo temp err handle
           console.log(err);
           res.sendStatus(500);
-        })
+        });
     }
 
   }

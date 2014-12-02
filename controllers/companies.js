@@ -2,6 +2,7 @@
 
 var mongoose = require('mongoose');
 var Company = mongoose.model('Company');
+var jwt = require('jsonwebtoken');
 
 module.exports = function (app) {
 
@@ -77,6 +78,42 @@ module.exports = function (app) {
           // todo add to log
           console.log(err);
           res.send(500, '服务器错误');
+        });
+    },
+
+
+    login: function (req, res) {
+      if (!req.body || !req.body.username || !req.body.password) {
+        return res.send(400, '缺少邮箱或密码');
+      }
+
+      Company.findOne({
+        username: req.body.username
+      }).exec()
+        .then(function (company) {
+          if (!company) {
+            return res.send(401, '邮箱或密码错误');
+          }
+
+          if (!company.encryptPassword(req.body.password)) {
+            return res.send(401, '邮箱或密码错误');
+          }
+
+          var token = jwt.sign({
+            type: "company",
+            id: company._id.toString(),
+            exp: app.get('tokenExpires')
+          }, app.get('tokenSecret'));
+
+          res.send(200, {
+            token: token
+          });
+
+        })
+        .then(null, function (err) {
+          // todo temp err handle
+          console.log(err);
+          res.sendStatus(500);
         });
     }
 
