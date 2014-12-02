@@ -105,7 +105,7 @@ module.exports = function (app) {
             exp: app.get('tokenExpires')
           }, app.get('tokenSecret'));
 
-          company.access_token = token;
+          company.app_token = token;
           company.save(function (err) {
             if (err) {
               log(err);
@@ -123,7 +123,7 @@ module.exports = function (app) {
     },
 
     logout: function (req, res) {
-      req.user.access_token = null;
+      req.user.app_token = null;
       req.user.save(function (err) {
         if (err) {
           log(err);

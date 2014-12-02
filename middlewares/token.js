@@ -48,7 +48,7 @@ exports.needToken = function (req, res, next) {
         if (!user) {
           return res.sendStatus(401);
         }
-        if (user.access_token !== req.token) {
+        if (user.app_token !== req.token) {
           return res.sendStatus(401);
         }
 
