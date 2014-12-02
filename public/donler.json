@@ -688,14 +688,11 @@
           "200": {
             "description": "成功"
           },
-          "403": {
-            "description": "没有权限"
-          },
-          "422": {
-            "description": "数据不合法"
-          },
-          "500": {
-            "description": "服务器出错"
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -725,6 +722,12 @@
             "schema": {
               "$ref": "Team"
             }
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -732,13 +735,88 @@
         "tags": [
           "teams"
         ],
-        "summary": "修改小队数据"
+        "summary": "修改小队数据",
+        "operationId": "editTeamData",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "name",
+            "description": "小队名称",
+            "required": false,
+            "type": "string",
+            "in": "formData"
+          },
+          {
+            "name": "logo",
+            "description": "logo",
+            "required": false,
+            "type": "file",
+            "in": "formData"
+          },
+          {
+            "name": "brief",
+            "description": "小队简介",
+            "required": false,
+            "type": "string",
+            "in": "formData"
+          },
+          {
+            "name": "home_court",
+            "description": "主场信息",
+            "required": false,
+            "type": "array",
+            "items": {
+              "$ref": "HomeCourt"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
       },
       "delete": {
         "tags": [
           "teams"
         ],
-        "summary": "关闭小队"
+        "summary": "关闭小队",
+        "operationId": "deleteTeam",
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
       }
     },
     "/teams/{teamId}/family_photos": {
@@ -746,13 +824,79 @@
         "tags": [
           "teams"
         ],
-        "summary": "上传全家福"
+        "summary": "上传全家福",
+        "operationId": "uploadFamilyPhotos",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "全家福照片",
+            "required": true,
+            "schema": {
+              "$ref": "Photos"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
       },
       "get": {
         "tags": [
           "teams"
         ],
-        "summary": "获取全家福"
+        "summary": "获取全家福",
+        "operationId": "getFamilyPhotos",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "name": "family_photos",
+              "type": "array",
+              "required": true,
+              "description": "全家福照片",
+              "items": {
+                "$ref": "FamilyPhoto"
+              }
+            }
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
       }
     },
     "/teams/{teamId}/family_photos/{familyPhotoId}": {
@@ -760,13 +904,75 @@
         "tags": [
           "teams"
         ],
-        "summary": "修改选中状态"
+        "summary": "修改选中状态",
+        "operationId": "toggleSelectFamilyPhoto",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "familyPhotoId",
+            "description": "相片Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
       },
       "delete": {
         "tags": [
           "teams"
         ],
-        "summary": "删除全家福照片"
+        "summary": "删除全家福照片",
+        "operationId": "deleteFamilyPhoto",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "familyPhotoId",
+            "description": "相片Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
       }
     },
     "/teams/{teamId}/users/{userId}": {
@@ -774,13 +980,75 @@
         "tags": [
           "teams"
         ],
-        "summary": "加入小队"
+        "summary": "加入小队",
+        "operationId": "joinTeam",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "userId",
+            "description": "用户id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
       },
       "delete": {
         "tags": [
           "teams"
         ],
-        "summary": "退出小队"
+        "summary": "退出小队",
+        "operationId": "quitTeam",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "userId",
+            "description": "用户id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "defalut": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
       }
     },
     "/departments": {
@@ -2398,7 +2666,12 @@
       "title": "Team",
       "required": [
         "name",
-        "cname"
+        "cname",
+        "logo",
+        "create_time",
+        "brief",
+        "home_court",
+        "family"
       ],
       "properties": {
         "name": {
@@ -2409,9 +2682,49 @@
           "type": "string",
           "description": "公司名称"
         },
+        "logo": {
+          "type": "string",
+          "description": "logo"
+        },
         "group_type": {
           "type": "string",
           "description": "小队类型"
+        },
+        "create_time": {
+          "type": "date-time",
+          "description": "成立时间"
+        },
+        "brief": {
+          "type": "string",
+          "description": "小队简介"
+        },
+        "member": {
+          "type": "array",
+          "description": "成员列表",
+          "items": {
+            "$ref": "Member"
+          }
+        },
+        "home_court": {
+          "type": "array",
+          "description": "主场信息",
+          "items": {
+            "$ref": "HomeCourt"
+          }
+        },
+        "leader": {
+          "type": "array",
+          "description": "队长信息",
+          "items": {
+            "$ref": "Member"
+          }
+        },
+        "family": {
+          "type": "array",
+          "description": "全家福",
+          "items": {
+            "$ref": "FamilyPhoto"
+          }
         }
       }
     },
@@ -3085,6 +3398,66 @@
         "teamName": {
           "type": "string",
           "description": "小队名称"
+        }
+      }
+    },
+    "HomeCourt": {
+      "title": "HomeCourt",
+      "required": [
+        "loc",
+        "name"
+      ],
+      "properties": {
+        "loc": {
+          "description": "坐标信息",
+          "$ref": "HomeCourtLoc"
+        },
+        "name": {
+          "type": "string",
+          "description": "主场名"
+        }
+      }
+    },
+    "HomeCourtLoc": {
+      "title": "HomeCourtLoc",
+      "required": [
+        "coordinates"
+      ],
+      "properties": {
+        "coordinates": {
+          "type": "array",
+          "description": "坐标",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "FamilyPhoto": {
+      "title": "FamilyPhoto",
+      "required": [
+        "uri",
+        "select"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "图片地址"
+        },
+        "select": {
+          "type": "boolean",
+          "description": "是否选择"
+        }
+      }
+    },
+    "Photos": {
+      "title": "Photos",
+      "properties": {
+        "photos": {
+          "type": "array",
+          "items": {
+            "$ref": "Photo"
+          }
         }
       }
     }
