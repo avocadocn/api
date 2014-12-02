@@ -2482,7 +2482,7 @@
         "tags": [
           "push"
         ],
-        "summary": "推送通知",
+        "summary": "指定人员推送通知",
         "operationId": "pushService",
         "consumes": [
           "application/json"
@@ -2495,12 +2495,94 @@
             },
             "in": "body",
             "required": true,
-            "description": "推送"
+            "description": "推送数据"
           }
         ],
         "responses": {
-          "200": {
-            "description": "成功"
+          "202": {
+            "description": "请求提交成功，稍后将异步的进行处理"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/push/team/{teamId}": {
+      "post": {
+        "tags": [
+          "push"
+        ],
+        "summary": "对小队成员推送",
+        "operationId": "pushToTeamMembers",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "PushData"
+            },
+            "in": "body",
+            "required": true,
+            "description": "推送数据"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "请求提交成功，稍后将异步的进行处理"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/push/company/{companyId}": {
+      "post": {
+        "tags": [
+          "push"
+        ],
+        "summary": "对公司成员推送",
+        "operationId": "pushToCompanyMembers",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "description": "公司 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "PushData"
+            },
+            "in": "body",
+            "required": true,
+            "description": "推送数据"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "请求提交成功，稍后将异步的进行处理"
           },
           "default": {
             "description": "error",
@@ -3868,8 +3950,7 @@
       "title": "PushData",
       "required": [
         "title",
-        "description",
-        "members"
+        "description"
       ],
       "properties": {
         "title": {
