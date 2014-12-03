@@ -213,6 +213,10 @@ Campaign.virtual('members').get(function () {
   return members;
 });
 
+Campaign.virtual('isProvoke').get(function () {
+  
+  return [4,5,7,9].indexOf(this.campaign_type)>-1;
+});
 // Campaign.plugin(mongoosePaginate);
 
 Campaign.methods = {

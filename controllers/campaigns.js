@@ -4,11 +4,13 @@ var mongoose = require('mongoose');
 var Campaign = mongoose.model('Campaign'),
     PhotoAlbum = mongoose.model('PhotoAlbum'),
     CampaignMold = mongoose.model('CampaignMold'),
-    User = mongoose.model('User');
+    User = mongoose.model('User'),
+    CompanyGroup = mongoose.model('CompanyGroup');
 var moment = require('moment'),
     async = require('async'),
     xss = require('xss');
-var logController = require('../controllers/log');
+var logController = require('../controllers/log'),
+    messageController = require('../controllers/message');
 
 
 module.exports = function (app) {
@@ -384,6 +386,116 @@ module.exports = function (app) {
         };
       })
       .then(null, function (err) {
+        res.status(500).send('服务器错误');
+      });
+    },
+    dealProvoke: function(req, res){
+      var campaignId = req.params.campaignId;
+      Campaign
+      .findById(campaignId)
+      //.populate('photo_album')
+      .exec()
+      .then(function (campaign) {
+        if (!campaign) {
+          res.status(404).send('未找到活动')
+        }
+        else{
+          if (!campaign.isProvoke || campaign.campaign_unit.length<2) {
+            return res.status(400).send('该活动不是挑战');
+          }
+          //确认状态变更
+          var status = req.body.dealType;
+          switch(status){
+            case 1://接受
+              campaign.campaign_unit[1].start_confirm = true;
+              campaign.confirm_status = true;
+              break;
+            case 2://拒绝
+              campaign.active = false;
+              break;
+            case 3://取消
+              campaign.campaign_unit[0].start_confirm = false;
+              campaign.active = false;
+              break;
+          }
+
+          campaign.save(function(err){
+            if(err){
+              res.status(500).send('保存错误');
+            }
+            else{
+              //发站内信
+              var own_team = status===3? campaign.campaign_unit[0].team:campaign.campaign_unit[1].team;
+              var receive_team = status ===3? campaign.campaign_unit[1].team:campaign.campaign_unit[0].team;
+              var param = {
+                'specific_type':{
+                  'value':4,
+                  'child_type':status
+                },
+                'type':'private',
+                'caption':campaign.theme,
+                'own':{
+                  '_id':req.user._id,
+                  'nickname':req.user.provider==='company'?req.user.info.official_name: req.user.nickname,
+                  'photo':req.user.provider==='company'? req.user.info.logo: req.user.photo,
+                  'role':req.user.provider==='company'? 'HR':'LEADER'
+                },
+                // 'receiver':{
+                //   '_id':rst[0].leader[0]._id
+                // },
+                'content':null,
+                'own_team':{
+                  '_id':own_team._id,
+                  'name':own_team.name,
+                  'logo':own_team.logo,
+                  'status': status===1 ? 1 :(status===2? 4 :5)
+                },
+                'receive_team':{
+                  '_id':receive_team._id,
+                  'name':receive_team.name,
+                  'logo':receive_team.logo,
+                  'status': status===1 ? 1 :(status===2? 4 :5)
+                },
+                'campaign_id':campaign._id,
+                'auto':true
+              };
+              CompanyGroup.findOne({'_id':receive_team._id},{leader:1},function(err,opposite_team){
+                if(err){
+                  res.status(500);
+                  next('查询对方小队错误');
+                }
+                else{
+                  param.receiver = {
+                    '_id':opposite_team.leader.length? opposite_team.leader[0]._id:''//要是没有队长呢......
+                  }
+                  messageController.sendToOne(req,res,param);
+                }
+              });
+              //若接受,则发动态、加积分
+              if(status ===1){
+                push.campaign(campaignId);
+                GroupMessage.findOne({campaign:campaign._id}).exec(function(err,groupMessage){
+                  groupMessage.message_type = 5;
+                  groupMessage.create_time = new Date();
+                  groupMessage.save(function (err) {
+                    if (err) {
+                      console.log('保存约战动态时出错' + err);
+                    }
+                  });
+                });
+                CompanyGroup.update({'_id':{'$in':campaign.tid}},{'$inc':{'score.provoke':15}},function (err,team){
+                  if(err){
+                    console.log('RESPONSE_PROVOKE_POINT_FAILED!',err);
+                  }
+                });
+              }
+              return res.send({'result':1,'msg':'SUCCESS'});
+            }
+          });
+        }
+      })
+      .then(null, function (err) {
+        console.log(err)
         res.status(500).send('服务器错误');
       });
     }

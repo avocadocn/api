@@ -2,7 +2,8 @@
 
 var mongoose = require('mongoose');
 var Campaign = mongoose.model('Campaign');
-var tools = require('../tools/tools');
+var tools = require('../tools/tools'),
+    cache = require('../services/cache/Cache');
 
 module.exports = function (app) {
 
@@ -34,11 +35,10 @@ module.exports = function (app) {
           finishLimit ='1';
         }
       }
-      //cache.createCache(cacheName);
-      //var dateRecord = cache.get(cacheName, req.params.requestId+finishLimit);
-      var dateRecord = false;
+      cache.createCache(cacheName);
+      var dateRecord = cache.get(cacheName, req.params.requestId+finishLimit);
       if (dateRecord) {
-        res.send({ result: 1, dateRecord: dateRecord });
+        return res.status(200).send(dateRecord);
       } else {
         // 查找分页数据
         // todo 可能会有垃圾数据影响分组，需要清除

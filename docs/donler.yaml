@@ -1029,6 +1029,42 @@ paths:
           description: error
           schema:
             $ref: Error
+  "/campaigns/{campaignId}/dealProvoke":
+    put:
+      tags:
+        - campaigns
+      summary: 处理挑战
+      operationId: con
+      consumes:
+        - application/json
+      parameters:
+        - name: campaignId
+          description: 活动Id
+          required: true
+          type: string
+          in: path
+        - name: body
+          description: 处理的类型
+          required: false
+          type: object
+          in: body
+          properties:
+            dealType:
+              type: integer
+              format: int32
+              enum:
+                - 1
+                - 2
+                - 3
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: Campaign
+        default:
+          description: error
+          schema:
+            $ref: Error
   "/campaigns/{campaignId}/users/{userId}":
     post:
       tags:
@@ -1162,6 +1198,11 @@ paths:
           description: timeline month
           required: true
           type: string
+          in: query
+        - name: unfinishFlag
+          description: 是否包含未完成的活动
+          required: false
+          type: boolean
           in: query
       responses:
         "200":
