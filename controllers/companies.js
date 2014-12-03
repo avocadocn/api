@@ -6,6 +6,7 @@ var Company = mongoose.model('Company');
 var jwt = require('jsonwebtoken');
 var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
+var auth = require('../services/auth.js');
 
 module.exports = function (app) {
 
@@ -13,20 +14,21 @@ module.exports = function (app) {
 
     getCompanyById: function (req, res) {
       if (!req.params.companyId) {
-        return res.send(400, '缺少companyId');
+        return res.status(400).send('缺少companyId');
       }
 
       Company.findById(req.params.companyId).exec()
         .then(function (company) {
           if (!company) {
-            return res.send(404, '没有找到对应的公司');
+            return res.status(404).send('没有找到对应的公司');
           }
 
-          // todo get role
-          var role = 'hr';
-          switch (role) {
+          var role = auth.getRole(req.user, {
+            companies: [company._id]
+          });
+          switch (role.company) {
             case 'hr':
-              res.send(200, {
+              res.status(200).send({
                 _id: company._id,
                 username: company.username,
                 domains: company.email.domain,
@@ -39,13 +41,13 @@ module.exports = function (app) {
                 address: company.info.address,
                 contacts: company.info.contact,
                 email: company.info.email,
-                memberNumber: company.member_number,
+                memberNumber: company.info.membernumber,
                 companyInviteCodes: company.register_invite_code,
                 staffInviteCode: company.invite_key
               });
               break;
             case 'member':
-              res.send(200, {
+              res.status(200).send({
                 _id: company._id,
                 domains: company.email.domain,
                 name: company.info.name,
@@ -56,12 +58,12 @@ module.exports = function (app) {
                 district: company.info.city.district,
                 address: company.info.address,
                 email: company.info.email,
-                memberNumber: company.member_number,
+                memberNumber: company.info.membernumber,
                 staffInviteCode: company.invite_key
               });
               break;
             default:
-              res.send(200, {
+              res.status(200).send({
                 _id: company._id,
                 name: company.info.name,
                 shortName: company.info.official_name,
@@ -71,7 +73,7 @@ module.exports = function (app) {
                 district: company.info.city.district,
                 address: company.info.address,
                 email: company.info.email,
-                memberNumber: company.member_number
+                memberNumber: company.info.membernumber
               });
               break;
           }
@@ -79,7 +81,7 @@ module.exports = function (app) {
         })
         .then(null, function (err) {
           log(err);
-          res.send(500, '服务器错误');
+          res.status(500).send('服务器错误');
         });
     },
 

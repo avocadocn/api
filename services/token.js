@@ -99,4 +99,4 @@ exports.needToken = function (req, res, next) {
   } else {
     res.sendStatus(401);
   }
-}
+};
