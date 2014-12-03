@@ -3,6 +3,7 @@
 var util = require('util');
 var validatorModule = require('validator');
 var async = require('async');
+var moment = require('moment');
 
 // 常用的验证方法可添加到此对象中，特殊的（如验证公司邮箱是否已被使用）请不要添加
 var validators = {};
@@ -22,12 +23,17 @@ var validators = {};
  *      validators: ['required', 'email']
  *    },
  *    asyncTest: {
- *      name: '公司名称',
- *      value: req.body.name,
+ *      name: 'test',
+ *      value: 'test',
  *      validators: ['required', function (name, value, callback) {
  *        // do something
  *        callback(false, '该名称已被注册');
  *      }]
+ *    },
+ *    name: {
+ *      name: '公司名称',
+ *      value: req.body.name,
+ *      validators: ['required', donlerValidator.minLength(6), donlerValidator.maxLength(20)]
  *    }
  *  }, 'complete', function (pass, msg) {
  *    if (pass) {
@@ -43,7 +49,7 @@ var validators = {};
  * @param {String} mode 验证模式，可以是'fast','complete'。fast模式下，只要有一个验证失败，就立即结束；complete模式则会全部验证完才结束。
  * @param {Function} callback 验证完成后的回调函数，形式为function(pass, msg)
  */
-module.exports = function (ruleObj, mode, callback) {
+var donlerValidator = function (ruleObj, mode, callback) {
 
   var resultMsg = {};
   var validateTasks = [];
@@ -114,6 +120,73 @@ module.exports = function (ruleObj, mode, callback) {
 
 };
 
+donlerValidator.minLength = function (min) {
+  return function (name, value, callback) {
+    if (value.length >= min) {
+      callback(true);
+    } else {
+      var msg = util.format('%s最小长度为%d', name, min);
+      callback(false, msg);
+    }
+  };
+};
+
+donlerValidator.maxLength = function (max) {
+  return function (name, value, callback) {
+    if (value.length <= max) {
+      callback(true);
+    } else {
+      var msg = util.format('%s最大长度为%d', name, max);
+      callback(false, msg);
+    }
+  };
+};
+
+donlerValidator.isLength = function (length) {
+  return function (name, value, callback) {
+    if (value.length === length) {
+      callback(true);
+    } else {
+      var msg = util.format('%s的长度应为%d', name, length);
+      callback(false, msg);
+    }
+  };
+};
+
+donlerValidator.after = function (date) {
+  return function (name, value, callback) {
+    if (validatorModule.isAfter(date)) {
+      callback(true);
+    } else {
+      var formatDate;
+      if (date) {
+        formatDate = moment(date).format('YYYY年M月D日');
+      } else {
+        formatDate = '现在';
+      }
+      var msg = util.format('%s不能早于%s', name, formatDate);
+      callback(false, msg);
+    }
+  };
+};
+
+donlerValidator.before = function (date) {
+  return function (name, value, callback) {
+    if (validatorModule.isBefore(date)) {
+      callback(true);
+    } else {
+      var formatDate;
+      if (date) {
+        formatDate = moment(date).format('YYYY年M月D日');
+      } else {
+        formatDate = '现在';
+      }
+      var msg = util.format('%s不能早于%s', name, formatDate);
+      callback(false, msg);
+    }
+  };
+};
+
 validators.required = function (name, value, callback) {
   if (!value) {
     var msg = util.format('%s不能为空', name);
@@ -131,3 +204,15 @@ validators.email = function (name, value, callback) {
     callback(true);
   }
 };
+
+validators.number = function (name, value, callback) {
+  if (!validatorModule.isNumeric(value)) {
+    var msg = util.format('%s必须是数字', name);
+    callback(false, msg);
+  } else {
+    callback(true);
+  }
+};
+
+
+module.exports = donlerValidator;

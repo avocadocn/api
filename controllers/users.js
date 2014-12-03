@@ -93,6 +93,31 @@ module.exports = function (app) {
           name: '企业邮箱',
           value: req.body.email + '@' + req.body.domain,
           validators: ['required', 'email']
+        },
+        nickname: {
+          name: '昵称',
+          value: req.body.nickname,
+          validators: ['required']
+        },
+        password: {
+          name: '密码',
+          value: req.body.password,
+          validators: ['required', donlerValidator.minLength(6), donlerValidator.maxLength(20)]
+        },
+        realname: {
+          name: '真实姓名',
+          value: req.body.realname,
+          validators: ['required']
+        },
+        department: {
+          name: '部门',
+          value: req.body.department,
+          validators: ['required']
+        },
+        phone: {
+          name: '手机号码',
+          value: req.body.phone,
+          validators: ['number', donlerValidator.isLength(11)]
         }
       }, 'complete', function (pass, msg) {
         // todo 测试验证是否成功
