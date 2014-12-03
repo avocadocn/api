@@ -934,20 +934,34 @@ paths:
           required: false
           type: string
           in: query
+        - name: select_type
+          description: select_type
+          required: false
+          type: integer
+          format: int32
+          in: query
+        - name: provoke_flag
+          description: provoke_flag
+          required: false
+          type: integer
+          format: int32
+          in: query
         - name: join_flag
           description: join_flag
           required: false
-          type: string
+          type: integer
+          format: int32
           in: query
-        - name: lastcomment_time
-          description: join_flag
+        - name: sortBy
+          description: sortBy
           required: false
           type: string
           in: query
-        - name: orderby
-          description: orderby
+        - name: limit
+          description: limit
           required: false
-          type: string
+          type: integer
+          format: int32
           in: query
       responses:
         "200":
@@ -1126,6 +1140,79 @@ paths:
           description: error
           schema:
             $ref: Error
+
+  "/components/ScoreBoard/{componentId}":
+    get:
+      tags:
+        - components
+      summary: 获取比分记录
+      operationId: getScoreLogs
+      consumes:
+        - application/json
+      parameters:
+        - name: componentId
+          description: 组件 Id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: ScoreLog
+        default:
+          description: error
+          schema:
+            $ref: Error
+    post:
+      tags:
+        - components
+      summary: 发比分
+      operationId: setScore
+      consumes:
+        - application/json
+      parameters:
+        - name: componentId
+          description: 活动 Id
+          required: true
+          type: string
+          in: path
+        - name: body
+          description: 比分信息
+          required: true
+          schema:
+            $ref: ScoreData
+          in: body
+      responses:
+        "200":
+          description: 成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+    put:
+      tags:
+        - components
+      summary: 确认比分
+      operationId: setScore
+      consumes:
+        - application/json
+      parameters:
+        - name: componentId
+          description: 活动 Id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+
 
   "/timeline/record/{requestType}/{requestId}":
     get:
@@ -2857,4 +2944,43 @@ definitions:
       label:
         type: string
       value: 
+        type: string
+  ScoreData:
+    title: ScoreData
+    required:
+      - data
+      - isInit
+    properties:
+      data:
+        $ref: ScoreDataDetail
+      isInit:
+        type: boolean
+  ScoreDataDetail:
+    title: ScoreDataDetail
+    required:
+      - scores
+      - results
+    properties:
+      scores:
+        type: array
+        items:
+          type: integer
+          format: int32
+      results:
+        type: array
+        items:
+          type: integer
+          format: int32
+  ScoreLog:
+    title: ScoreLog
+    required:
+      - date
+      - value
+    properties:
+      date:
+        type: string
+        format: date-time
+      teamName:
+        type: string
+      text:
         type: string

@@ -168,170 +168,176 @@ var setScore = function (scoreBoard, allowSetScore, data) {
   scoreBoard.logs.push(log);
 };
 
-// ScoreBoard.methods = {
+ScoreBoard.methods = {
 
-//   /**
-//    * 获取组件数据
-//    * @param {Object} user req.user
-//    * @param {Function} callback
-//    */
-//   getData: function (user, callback) {
-//     this.playing_teams.forEach(function (playing_team) {
-//       var allow = auth(user, {
-//         companies: [playing_team.cid],
-//         teams: [playing_team.tid]
-//       }, ['setScoreBoardScore']);
-//       if (allow.setScoreBoardScore) {
-//         playing_team.set('allowManage', true, {strict: false});
-//       } else {
-//         playing_team.set('allowManage', false, {strict: false});
-//       }
-//     });
+  /**
+   * 获取组件数据
+   * @param {Object} user req.user
+   * @param {Function} callback
+   */
+  getData: function (user, callback) {
+    this.playing_teams.forEach(function (playing_team) {
+      var allow = auth(user, {
+        companies: [playing_team.cid],
+        teams: [playing_team.tid]
+      }, ['setScoreBoardScore']);
+      if (allow.setScoreBoardScore) {
+        playing_team.set('allowManage', true, {strict: false});
+      } else {
+        playing_team.set('allowManage', false, {strict: false});
+      }
+    });
 
-//     if (this.effective) {
-//       callback({
-//         playingTeams: this.playing_teams,
-//         status: this.status,
-//         effective: true
-//       });
-//     } else {
-//       callback({
-//         effective: false
-//       });
-//     }
-//   },
+    if (this.effective) {
+      callback({
+        playingTeams: this.playing_teams,
+        status: this.status,
+        effective: true
+      });
+    } else {
+      callback({
+        effective: false
+      });
+    }
+  },
 
-//   /**
-//    * 初始化比分和胜负关系，会将状态改为1（待确认状态）。如果此时状态为1会阻止设置。
-//    * @param {Array} allowSetScore 是否允许设置比分
-//    * @param {Object} data 比分数据
-//    *  data: {
-//    *    scores: [Number], // 可选
-//    *    results: [Number], // 可选
-//    *    // scores,results属性至少要有一个
-//    *  }
-//    * @returns {String|undefined} 如果有错误，则返回错误信息
-//    */
-//   initScore: function (allowSetScore, data) {
-//     if (this.status === 1) {
-//       return '对方已设置了比分，请刷新页面进行确认。';
-//     } else if (this.status === 2) {
-//       return '抱歉，比分已确认，不可以再设置。';
-//     } else {
-//       setScore(this, allowSetScore, data);
-//     }
-//   },
+  /**
+   * 初始化比分和胜负关系，会将状态改为1（待确认状态）。如果此时状态为1会阻止设置。
+   * @param {Array} allowSetScore 是否允许设置比分
+   * @param {Object} data 比分数据
+   *  data: {
+   *    scores: [Number], // 可选
+   *    results: [Number], // 可选
+   *    // scores,results属性至少要有一个
+   *  }
+   * @returns {String|undefined} 如果有错误，则返回错误信息
+   */
+  initScore: function (allowSetScore, data) {
+    if (this.status === 1) {
+      return '对方已设置了比分，请刷新页面进行确认。';
+    } else if (this.status === 2) {
+      return '抱歉，比分已确认，不可以再设置。';
+    } else {
+      setScore(this, allowSetScore, data);
+    }
+  },
 
-//   /**
-//    * 不同意对方设置的比分，重新设置
-//    * @param {Array} allowSetScore 是否允许设置比分
-//    * @param {Object} data 比分数据
-//    *  data: {
-//    *    scores: [Number], // 可选
-//    *    results: [Number], // 可选
-//    *    // scores,results属性至少要有一个
-//    *  }
-//    * @returns {String|undefined} 如果有错误，则返回错误信息
-//    */
-//   resetScore: function (allowSetScore, data) {
-//     if (this.status === 2) {
-//       return '抱歉，比分已确认，不可以再设置。';
-//     } else {
-//       setScore(this, allowSetScore, data);
-//     }
-//   },
+  /**
+   * 不同意对方设置的比分，重新设置
+   * @param {Array} allowSetScore 是否允许设置比分
+   * @param {Object} data 比分数据
+   *  data: {
+   *    scores: [Number], // 可选
+   *    results: [Number], // 可选
+   *    // scores,results属性至少要有一个
+   *  }
+   * @returns {String|undefined} 如果有错误，则返回错误信息
+   */
+  resetScore: function (allowSetScore, data) {
+    if (this.status === 2) {
+      return '抱歉，比分已确认，不可以再设置。';
+    } else {
+      setScore(this, allowSetScore, data);
+    }
+  },
 
-//   /**
-//    * 确认比分
-//    * @returns {String|undefined} 如果有错误，则返回错误信息
-//    */
-//   confirm: function () {
-//     if (this.status === 2) {
-//       return '比分已确认。';
-//     }
+  /**
+   * 
+   * @returns {String|undefined} 如果有错误，则返回错误信息
+   */
+  /**
+   * 确认比分
+   * @param  {[array]}   confirmIndex 有权限确认比分的阵营下标
+   * @param  {Function} callback     回调函数
+   * @return {[type]}                [description]
+   */
+  confirm: function (confirmIndex) {
 
-//     var log = {
-//       scores: [],
-//       results: [],
-//       confirm: true
-//     };
-//     for (var i = 0; i < this.playing_teams.length; i++) {
-//       var playing_team = this.playing_teams[i];
-//       if (!playing_team.confirm) {
-//         log.playing_team = {
-//           cid: playing_team.cid,
-//           tid: playing_team.tid
-//         };
-//       }
-//       playing_team.confirm = true;
-//     }
-//     for (var i = 0; i < this.playing_teams.length; i++) {
-//       log.scores.push(this.playing_teams[i].score);
-//       log.results.push(this.playing_teams[i].result);
-//     }
-//     this.logs.push(log);
-//     this.status = 2;
-//   },
+    var log = {
+      scores: [],
+      results: [],
+      confirm: true
+    };
+    var confirmFlag=false;
+    for (var i = 0; i < confirmIndex.length; i++) {
+      var playing_team = this.playing_teams[confirmIndex[i]];
+      if (!playing_team.confirm) {
+        log.playing_team = {
+          cid: playing_team.cid,
+          tid: playing_team.tid
+        };
+        playing_team.confirm = true;
+        confirmFlag =true;
+      }
+    }
 
-//   /**
-//    * 获取设置比分的记录
-//    * example:
-//    *  var logs = scoreBoard.getLogs();
-//    *
-//    * logs: {
-//    *   text: String,
-//    *   date: String,
-//    *   teamName: String
-//    * }
-//    *
-//    * @return {Array} 返回一个对象数组
-//    */
-//   getLogs: function () {
-//     var self = this;
-//     var logs = [];
+    for (var i = 0; i < this.playing_teams.length; i++) {
+      log.scores.push(this.playing_teams[i].score);
+      log.results.push(this.playing_teams[i].result);
+    }
+    this.logs.push(log);
+    this.status = 2;
+  },
 
-//     var formatResult = function (result) {
-//       switch (result) {
-//       case 1:
-//         return '胜';
-//       case 0:
-//         return '平';
-//       case -1:
-//         return '败';
-//       default:
-//         return '';
-//       }
-//     };
+  /**
+   * 获取设置比分的记录
+   * example:
+   *  var logs = scoreBoard.getLogs();
+   *
+   * logs: {
+   *   text: String,
+   *   date: String,
+   *   teamName: String
+   * }
+   *
+   * @return {Array} 返回一个对象数组
+   */
+  getLogs: function () {
+    var self = this;
+    var logs = [];
 
-//     this.logs.forEach(function (log) {
-//       var newLog = {
-//         date: moment(log.date).format('YYYY-MM-DD HH:mm')
-//       };
-//       var scoreText = '';
-//       for (var i = 0; i < self.playing_teams.length; i++) {
-//         var team = self.playing_teams[i];
-//         if (log.playing_team.tid.toString() === team.tid.toString()) {
-//           newLog.teamName = team.name;
-//         }
+    var formatResult = function (result) {
+      switch (result) {
+      case 1:
+        return '胜';
+      case 0:
+        return '平';
+      case -1:
+        return '败';
+      default:
+        return '';
+      }
+    };
 
-//         scoreText += (team.name + ' ' + log.scores[i] + ' ' + formatResult(log.results[i]));
-//         if (i === 0) {
-//           scoreText += ' : ';
-//         }
-//       }
-//       if (!log.confirm) {
-//         newLog.text = scoreText;
-//       } else {
-//         newLog.text = '确认了比分';
-//       }
-//       logs.push(newLog);
-//     });
+    this.logs.forEach(function (log) {
+      var newLog = {
+        date: moment(log.date).format('YYYY-MM-DD HH:mm')
+      };
+      var scoreText = '';
+      for (var i = 0; i < self.playing_teams.length; i++) {
+        var team = self.playing_teams[i];
+        if (log.playing_team.tid.toString() === team.tid.toString()) {
+          newLog.teamName = team.name;
+        }
 
-//     return logs;
-//   }
+        scoreText += (team.name + ' ' + log.scores[i] + ' ' + formatResult(log.results[i]));
+        if (i === 0) {
+          scoreText += ' : ';
+        }
+      }
+      if (!log.confirm) {
+        newLog.text = scoreText;
+      } else {
+        newLog.text = '确认了比分';
+      }
+      logs.push(newLog);
+    });
+
+    return logs;
+  }
 
 
-// };
+};
 
 mongoose.model('ScoreBoard', ScoreBoard);
 

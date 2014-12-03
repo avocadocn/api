@@ -1,4 +1,4 @@
-var registeredTask = require('./tasks_description.js');
+var registeredTasks = require('./tasks_description.js');
 
 /**
  * 比较用户和资源的关系，获取对应的角色

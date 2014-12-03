@@ -113,14 +113,71 @@ module.exports = function (app) {
       }
     },
     getCampaign: function (req, res) {
-      console.log(req.query)
-      var option ={
-
+      var option,
+          requestType = req.query.requestType,
+          requestId = req.query.requestId,
+          sort = req.query.sortBy || 'start_time',
+          limit = parseInt(req.query.limit) || 0,
+          now = new Date();
+      switch(requestType){
+        case 'company':
+          option = {
+            'active':true,
+            'cid' : requestId
+          };
+        break;
+        case 'team':
+          option = {
+            'active':true,
+            'tid':requestId
+          }
+        break;
+        case 'user':
+          var team_ids = [];
+          for( var i = req.user.team.length-1; i >=0 ; i--) {
+            team_ids.push(req.user.team[i]._id.toString());
+          }
+          option={
+            'active':true,
+            'cid': req.user.cid
+          }
+          if(req.query.join_flag=='1'){
+            option['campaign_unit.member._id'] = requestId;
+          }
+          else{
+            option['$or'] = [{'tid':{'$in':team_ids}},{'tid':{'$size':0}}];
+          }
+        break;
+        default:
+        break;
+      }
+      switch(req.query.select_type){
+        //即将开始的活动
+        case '1':
+          option.start_time = { '$gte':now };
+        break;
+        //正在进行的活动
+        case '2':
+          option.start_time = { '$lt':now };
+          option.end_time = { '$gte':now };
+        break;
+        //已经结束的活动
+        case '3':
+          option.end_time = { '$lte':now };
+        break;
+        default:
+        break;
+      }
+      //未确认的挑战
+      if(req.query.provoke_flag){
+        option.confirm_status = false;
+        option.start_time = { '$gte': now};
+        option.campaign_type = {'$in':[4,5,7,9]};
       }
       Campaign
       .find(option)
-      // .populate('photo_album')
-      .limit(5)
+      .sort(sort)
+      .limit(limit)
       .exec()
       .then(function (campaign) {
         if (!campaign) {
