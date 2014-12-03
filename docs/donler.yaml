@@ -2531,6 +2531,29 @@ definitions:
         description: tags
         items:
           type: string
+  CommentPoster:
+    title: CommentPoster
+    properties:
+      _id:
+        type: string
+      cid:
+        type: string
+      cname:
+        type: string
+      nickname:
+        type: string
+      realname:
+        type: string
+      photo:
+        type: string
+  CommentReplyTo:
+    title: CommentReplyTo
+    type: object
+    properties:
+      _id:
+        type: string
+      nickname:
+        type: string
   Comment:
     title: Comment
     type: object
@@ -2541,27 +2564,9 @@ definitions:
       content:
         type: string
       poster:
-        type: object
-        properties:
-          _id:
-            type: string
-          cid:
-            type: string
-          cname:
-            type: string
-          nickname:
-            type: string
-          realname:
-            type: string
-          photo:
-            type: string
+        $ref: CommentPoster
       reply_to:
-        type: object
-        properties:
-          _id:
-            type: string
-          nickname:
-            type: string
+        $ref: CommentReplyTo
       reply_count:
         type: integer
         format: int32
