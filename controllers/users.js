@@ -2,11 +2,13 @@
 
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
+var Company = mongoose.model('Company');
 
 var jwt = require('jsonwebtoken');
 var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var donlerValidator = require('../services/donler_validator.js');
+var tools = require('../tools/tools.js');
 
 module.exports = function (app) {
 
@@ -82,7 +84,66 @@ module.exports = function (app) {
       });
     },
 
-    register: function (req, res) {
+    getCompanyByCid: function (req, res, next) {
+      if (!req.body || !req.body.cid || req.body.cid === '') {
+        res.status(400).send({ msg: 'cid不能为空' });
+        return;
+      }
+
+      Company.findById(req.body.cid).exec()
+        .then(function (company) {
+          if (!company) {
+            res.status(400).send({ msg: '没有找到对应的公司' });
+          } else {
+            req.company = company;
+            next();
+          }
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
+    },
+
+    registerValidate: function (req, res, next) {
+
+      var isUsedEmail = function (name, value, callback) {
+        User.findOne({ email: value }).exec()
+          .then(function (user) {
+            if (user) {
+              callback(false, '该邮箱已被注册');
+              return;
+            }
+            callback(true);
+          })
+          .then(null, function (err) {
+            log(err);
+            callback(false, '服务器错误');
+          });
+      };
+
+      var validateDomain = function (name, value, callback) {
+        if (req.company.email.domain.indexOf(value) === -1) {
+          callback(false, '邮箱后缀与公司允许的后缀不一致');
+        } else {
+          callback(true);
+        }
+      };
+
+      var validateDepartment = function (name, value, callback) {
+        var departments = req.company.department;
+        for (var i = 0; i < value.length; i++) {
+          var index = tools.arrayObjectIndexOf(departments, value[i], 'name');
+          if (index === -1) {
+            callback(false, '公司没有开设该部门');
+            return;
+          } else {
+            departments = departments[index].department;
+          }
+        }
+        callback(true);
+      };
+
       donlerValidator({
         cid: {
           name: '公司id',
@@ -92,7 +153,12 @@ module.exports = function (app) {
         email: {
           name: '企业邮箱',
           value: req.body.email + '@' + req.body.domain,
-          validators: ['required', 'email']
+          validators: ['required', 'email', isUsedEmail]
+        },
+        domain: {
+          name: '邮箱后缀',
+          value: req.body.domain,
+          validators: [validateDomain]
         },
         nickname: {
           name: '昵称',
@@ -112,7 +178,7 @@ module.exports = function (app) {
         department: {
           name: '部门',
           value: req.body.department,
-          validators: ['required']
+          validators: ['required', validateDepartment]
         },
         phone: {
           name: '手机号码',
@@ -125,10 +191,32 @@ module.exports = function (app) {
           res.status(400).send({ msg: resMsg });
           return;
         }
+        next();
+      });
+    },
 
-        // todo create user
+    register: function (req, res) {
+      var user = new User({
+        email: req.body.email,
+        username: req.body.email,
+        cid: req.body.cid,
+        //cname: company.info.name,
+        nickname: req.body.nickname,
+        password: req.body.password,
+        realname: req.body.realname,
+        phone: req.body.phone,
+        role: 'EMPLOYEE'
+      });
+
+      user.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+          return;
+        }
         res.sendStatus(201);
       });
+
 
     }
 
