@@ -1363,15 +1363,15 @@
             "in": "query"
           },
           {
-            "name": "start_time",
-            "description": "start_time",
+            "name": "from",
+            "description": "from",
             "required": false,
             "type": "string",
             "in": "query"
           },
           {
-            "name": "end_time",
-            "description": "end_time",
+            "name": "to",
+            "description": "to",
             "required": false,
             "type": "string",
             "in": "query"

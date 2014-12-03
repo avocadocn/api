@@ -151,6 +151,12 @@ module.exports = function (app) {
         default:
         break;
       }
+      if(req.query.to){
+        option.start_time = { '$lte':new Date(parseInt(req.query.to)) };
+      }
+      if(req.query.from){
+        option.end_time = { '$gte':new Date(parseInt(req.query.from)) };
+      }
       switch(req.query.select_type){
         //即将开始的活动
         case '1':
