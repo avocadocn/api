@@ -1884,6 +1884,7 @@ definitions:
     title: UserRegisterForm
     type: object
     required:
+      - cid
       - email
       - domain
       - nickname
@@ -1891,6 +1892,9 @@ definitions:
       - realname
       - department
     properties:
+      cid:
+        description: 公司id
+        type: string
       email:
         description: 用户邮箱（不含@及其后面部分）
         type: string

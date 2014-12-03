@@ -6,6 +6,7 @@ var User = mongoose.model('User');
 var jwt = require('jsonwebtoken');
 var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
+var donlerValidator = require('../services/donler_validator.js');
 
 module.exports = function (app) {
 
@@ -15,7 +16,7 @@ module.exports = function (app) {
       User.findById(req.params.userId).exec()
         .then(function (user) {
           if (!user) {
-            return res.status(404).send("找不到该用户");
+            return res.status(404).send({ msg: "找不到该用户" });
           }
           res.send(user);
         })
@@ -27,7 +28,7 @@ module.exports = function (app) {
 
     login: function (req, res) {
       if (!req.body || !req.body.email || !req.body.password) {
-        return res.status(400).send('缺少邮箱或密码');
+        return res.status(400).send({ msg: '缺少邮箱或密码' });
       }
 
       User.findOne({
@@ -35,11 +36,11 @@ module.exports = function (app) {
       }).exec()
         .then(function (user) {
           if (!user) {
-            return res.status(401).send('邮箱或密码错误');
+            return res.status(401).send({ msg: '邮箱或密码错误' });
           }
 
           if (!user.encryptPassword(req.body.password)) {
-            return res.status(401).send('邮箱或密码错误');
+            return res.status(401).send({ msg: '邮箱或密码错误' });
           }
 
           var token = jwt.sign({
@@ -79,6 +80,29 @@ module.exports = function (app) {
           res.sendStatus(204);
         }
       });
+    },
+
+    register: function (req, res) {
+      donlerValidator({
+        cid: {
+          name: '公司id',
+          value: req.body.cid,
+          validators: ['required']
+        },
+        email: {
+          name: '企业邮箱',
+          value: req.body.email + '@' + req.body.domain,
+          validators: ['required', 'email']
+        }
+      }, 'complete', function (pass, msg) {
+        // todo 测试验证是否成功
+        if (pass) {
+          res.sendStatus(200);
+        } else {
+          res.status(400).send(msg);
+        }
+      });
+
     }
 
   }

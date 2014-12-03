@@ -7,6 +7,7 @@ var jwt = require('jsonwebtoken');
 var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var auth = require('../services/auth.js');
+var donlerValidator = require('../services/donler_validator.js');
 
 module.exports = function (app) {
 
@@ -14,13 +15,13 @@ module.exports = function (app) {
 
     getCompanyById: function (req, res) {
       if (!req.params.companyId) {
-        return res.status(400).send('缺少companyId');
+        return res.status(400).send({ msg: '缺少companyId' });
       }
 
       Company.findById(req.params.companyId).exec()
         .then(function (company) {
           if (!company) {
-            return res.status(404).send('没有找到对应的公司');
+            return res.status(404).send({ msg: '没有找到对应的公司' });
           }
 
           var role = auth.getRole(req.user, {
@@ -81,14 +82,14 @@ module.exports = function (app) {
         })
         .then(null, function (err) {
           log(err);
-          res.status(500).send('服务器错误');
+          res.status(500).send({ msg: '服务器错误' });
         });
     },
 
 
     login: function (req, res) {
       if (!req.body || !req.body.username || !req.body.password) {
-        return res.status(400).send('缺少邮箱或密码');
+        return res.status(400).send({ msg: '缺少邮箱或密码' });
       }
 
       Company.findOne({
@@ -96,11 +97,11 @@ module.exports = function (app) {
       }).exec()
         .then(function (company) {
           if (!company) {
-            return res.status(401).send('邮箱或密码错误');
+            return res.status(401).send({ msg: '邮箱或密码错误' });
           }
 
           if (!company.encryptPassword(req.body.password)) {
-            return res.status(401).send('邮箱或密码错误');
+            return res.status(401).send({ msg: '邮箱或密码错误' });
           }
 
           var token = jwt.sign({
