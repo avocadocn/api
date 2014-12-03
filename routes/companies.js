@@ -1,6 +1,6 @@
 'use strict';
 
-var token = require('../middlewares/token.js');
+var token = require('../services/token.js');
 
 module.exports = function (app, ctrl) {
 

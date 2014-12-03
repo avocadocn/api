@@ -103,7 +103,15 @@ var CompanySchema = new Schema({
     register_invite_code: [String],
     // 企业给用户的邀请码
     invite_key: String,
-    app_token: String // 保存上次登录的token，如果注销则清除。
+    app_token: String, // 保存上次登录的token，如果注销则清除。
+    token_device: {
+        platform: String,
+        version: String,
+        device_id: String,
+        device_type: String,
+        app_id: String,
+        api_key: String
+    } // 上次登录的设备信息，如果注销则清除。
 });
 
 /**

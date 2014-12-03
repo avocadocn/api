@@ -3,6 +3,43 @@
 var jwt = require('jsonwebtoken');
 var mongoose = require('mongoose');
 
+var headersKeys = ['x-app-id', 'x-api-key', 'x-device-id', 'x-device-type', 'x-platform', 'x-version'];
+var modelKeys = ['app_id', 'api_key', 'device_id', 'device_type', 'platform', 'version'];
+
+/**
+ * 验证headers是否和user的tokenDevice一致
+ * @param  {Object} headers     req.headers
+ * @param  {Object} tokenDevice req.user.token_device
+ * @return {Boolean}             如果一致，返回true，否则返回false
+ */
+var validateHeaders = function (headers, tokenDevice) {
+  for (var i = 0; i < headersKeys.length; i++) {
+    var headersKey = headersKeys[i];
+    var modelKey = modelKeys[i];
+    if (tokenDevice[modelKey] && headers[headersKey] !== tokenDevice[modelKey]) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/**
+ * 创建tokenDevice对象以便保存或更新
+ * @param  {Object} headers req.headers
+ * @return {Object}         see user.token_device
+ */
+exports.createTokenDevice = function (headers) {
+  var tokenDevice = {};
+  for (var i = 0; i < headersKeys.length; i++) {
+    var headersKey = headersKeys[i];
+    var modelKey = modelKeys[i];
+    if (headers[headersKey]) {
+      tokenDevice[modelKey] = headers[headersKey];
+    }
+  }
+  return tokenDevice;
+};
+
 exports.verifying = function (app) {
   return function (req, res, next) {
     var token = req.headers['x-access-token'];
@@ -18,7 +55,6 @@ exports.verifying = function (app) {
               type: decoded.type,
               id: decoded.id
             };
-            req.token = token;
           }
           next();
         }
@@ -48,7 +84,7 @@ exports.needToken = function (req, res, next) {
         if (!user) {
           return res.sendStatus(401);
         }
-        if (user.app_token !== req.token) {
+        if (user.app_token !== req.headers['x-access-token'] || !validateHeaders(req.headers, user.token_device)) {
           return res.sendStatus(401);
         }
 

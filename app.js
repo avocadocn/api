@@ -13,7 +13,7 @@ var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/donler-beta');
 
 // custom middlewares
-var token = require('./middlewares/token.js');
+var token = require('./services/token.js');
 
 var walk = function(path, callback) {
   fs.readdirSync(path).forEach(function(file) {

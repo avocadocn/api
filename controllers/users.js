@@ -5,6 +5,7 @@ var User = mongoose.model('User');
 
 var jwt = require('jsonwebtoken');
 var log = require('../services/error_log.js');
+var tokenService = require('../services/token.js');
 
 module.exports = function (app) {
 
@@ -48,6 +49,7 @@ module.exports = function (app) {
           }, app.get('tokenSecret'));
 
           user.app_token = token;
+          user.token_device = tokenService.createTokenDevice(req.headers);
           user.save(function (err) {
             if (err) {
               log(err);
@@ -68,6 +70,7 @@ module.exports = function (app) {
 
     logout: function (req, res) {
       req.user.app_token = null;
+      req.user.token_device = null;
       req.user.save(function (err) {
         if (err) {
           log(err);
