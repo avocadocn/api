@@ -91,7 +91,11 @@ var donlerValidator = function (ruleObj, mode, callback) {
         }
       } else if (mode === 'complete') {
         if (!pass) {
-          resultMsg[ruleName] = msg;
+          if (!resultMsg[ruleName]) {
+            resultMsg[ruleName] = msg;
+          } else {
+            resultMsg[ruleName] += (';' + msg);
+          }
           asyncMapCallback(null, false);
           return;
         } else {
@@ -187,8 +191,18 @@ donlerValidator.before = function (date) {
   };
 };
 
+donlerValidator.combineMsg = function (msg) {
+  var resMsg = '';
+  for (var i in msg) {
+    resMsg += msg[i];
+    resMsg += ';';
+  }
+  resMsg = resMsg.slice(0, resMsg.length - 1);
+  return resMsg;
+};
+
 validators.required = function (name, value, callback) {
-  if (!value) {
+  if (!value && value === '') {
     var msg = util.format('%s不能为空', name);
     callback(false, msg);
   } else {

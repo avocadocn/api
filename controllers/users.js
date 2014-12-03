@@ -120,12 +120,14 @@ module.exports = function (app) {
           validators: ['number', donlerValidator.isLength(11)]
         }
       }, 'complete', function (pass, msg) {
-        // todo 测试验证是否成功
-        if (pass) {
-          res.sendStatus(200);
-        } else {
-          res.status(400).send(msg);
+        if (!pass) {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+          return;
         }
+
+        // todo create user
+        res.sendStatus(201);
       });
 
     }
