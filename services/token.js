@@ -35,6 +35,8 @@ exports.createTokenDevice = function (headers) {
     var modelKey = modelKeys[i];
     if (headers[headersKey]) {
       tokenDevice[modelKey] = headers[headersKey];
+    } else {
+      tokenDevice[modelKey] = null;
     }
   }
   return tokenDevice;

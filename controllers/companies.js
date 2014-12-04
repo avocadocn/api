@@ -109,7 +109,7 @@ module.exports = function (app) {
             id: company._id.toString(),
             exp: app.get('tokenExpires')
           }, app.get('tokenSecret'));
-
+          
           company.app_token = token;
           company.token_device = tokenService.createTokenDevice(req.headers);
           company.save(function (err) {
