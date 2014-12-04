@@ -3,7 +3,7 @@
 var mongoose = require('mongoose');
 var auth = require('../services/auth.js');
 var message = require('../controllers/message.js');
-
+var log = require('../services/error_log.js');
 var Campaign = mongoose.model('Campaign');
 var CompanyGroup = mongoose.model('CompanyGroup');
 
@@ -28,13 +28,13 @@ var sendScoreBoardMessage = function (req, scoreBoard, leaderTeam, status, oppon
       Campaign.findById(scoreBoard.host_id).exec()
       .then(function (campaign) {
         if (!campaign) {
-          console.log('not found campaign with id:', scoreBoard.host_id);
+          log('not found campaign with id:', scoreBoard.host_id);
         } else {
 
           CompanyGroup.findById(opponentTid).exec()
           .then(function (companyGroup) {
             if (!companyGroup) {
-              console.log('not found company_group with id:', opponentTid);
+              log('not found company_group with id:', opponentTid);
             } else {
               // 向每个队长发送站内信，resultConfirm第二个参数需要res对象，但这不安全，故设为null。
               // 前面已经有res.send，禁止其它函数对res对象进行操作
@@ -46,13 +46,13 @@ var sendScoreBoardMessage = function (req, scoreBoard, leaderTeam, status, oppon
             }
           })
           .then(null, function (err) {
-            console.log(err);
+            log(err);
           });
         }
       })
       .then(null, function (err) {
         if (err) {
-          console.log(err);
+          log(err);
         }
       });
     }
@@ -125,7 +125,7 @@ module.exports = function (app) {
 
                   scoreBoard.save(function (err) {
                     if (err) {
-                      console.log(err);
+                      log(err);
                       return res.status(500).send({msg: err });
                     } else {
                       return res.sendStatus(200);
@@ -144,7 +144,7 @@ module.exports = function (app) {
             }
           })
           .then(null, function (err) {
-            console.log(err);
+            log(err);
             return res.status(500).send({msg: err });
           });
       },

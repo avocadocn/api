@@ -126,7 +126,7 @@ var donlerValidator = function (ruleObj, mode, callback) {
 
 donlerValidator.minLength = function (min) {
   return function (name, value, callback) {
-    if (value.length >= min) {
+    if (!value || value.length >= min) {
       callback(true);
     } else {
       var msg = util.format('%s最小长度为%d', name, min);
@@ -137,7 +137,7 @@ donlerValidator.minLength = function (min) {
 
 donlerValidator.maxLength = function (max) {
   return function (name, value, callback) {
-    if (value.length <= max) {
+    if (!value || value.length <= max) {
       callback(true);
     } else {
       var msg = util.format('%s最大长度为%d', name, max);
@@ -148,7 +148,7 @@ donlerValidator.maxLength = function (max) {
 
 donlerValidator.isLength = function (length) {
   return function (name, value, callback) {
-    if (value.length === length) {
+    if (!value || value.length === length) {
       callback(true);
     } else {
       var msg = util.format('%s的长度应为%d', name, length);
@@ -159,7 +159,7 @@ donlerValidator.isLength = function (length) {
 
 donlerValidator.after = function (date) {
   return function (name, value, callback) {
-    if (validatorModule.isAfter(date)) {
+    if (validatorModule.isAfter(value, date)) {
       callback(true);
     } else {
       var formatDate;
@@ -176,7 +176,7 @@ donlerValidator.after = function (date) {
 
 donlerValidator.before = function (date) {
   return function (name, value, callback) {
-    if (validatorModule.isBefore(date)) {
+    if (validatorModule.isBefore(value, date)) {
       callback(true);
     } else {
       var formatDate;
@@ -185,7 +185,7 @@ donlerValidator.before = function (date) {
       } else {
         formatDate = '现在';
       }
-      var msg = util.format('%s不能早于%s', name, formatDate);
+      var msg = util.format('%s不能晚于%s', name, formatDate);
       callback(false, msg);
     }
   };

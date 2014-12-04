@@ -3,113 +3,173 @@
 var mongoose = require('mongoose');
 var Campaign = mongoose.model('Campaign');
 var tools = require('../tools/tools'),
-    cache = require('../services/cache/Cache');
+    cache = require('../services/cache/Cache'),
+    log = require('../services/error_log.js'),
+    auth = require('../services/auth.js');
 
 module.exports = function (app) {
 
   return {
 
     getTimelineRecord: function (req, res) {
-      // todo 权限判断
-      var cacheName,finishLimit='';
-      var options ={
-        'active':true
-      };
-      if(req.params.requestType=='team'){
-        cacheName ='TeamPageCampaignDateRecord';
-        options.tid = { $in: [mongoose.Types.ObjectId(req.params.requestId)] }
+      var reqModel,
+          requestType = req.params.requestType,
+          requestId =req.params.requestId;
+      switch(requestType){
+        case 'company':
+          reqModel = 'Company';
+        break;
+        case 'team':
+          reqModel = 'CompanyGroup';
+        break;
+        case 'user':
+          reqModel = 'User';
+        break;
+        default:
+        break;
       }
-      else if(req.params.requestType=='user'){
-        cacheName ='UserPageCampaignDateRecord';
-        options['campaign_unit.member._id'] = mongoose.Types.ObjectId(req.params.requestId);
-        if(!req.query.unfinishFlag){
-          options.finish=true;
-          finishLimit ='1';
+      mongoose.model(reqModel)
+      .findById(requestId)
+      .exec()
+      .then(function(requestModal){
+        var role = auth.getRole(req.user, {
+          companies: [requestType=='company' ? requestId : requestModal.cid]
+        });
+        var allow = auth.auth(role, ['getCampaigns']);
+        if(!allow.getCampaigns){
+          return res.status(403).send('您没有权限获取该活动');
         }
-      }
-      else if(req.params.requestType=='company'){
-        cacheName ='CompanyPageCampaignDateRecord';
-        options['cid'] = mongoose.Types.ObjectId(req.params.requestId);
-        if(!req.query.unfinishFlag){
-          options.finish=true;
-          finishLimit ='1';
+        var cacheName,finishLimit='';
+        var options ={
+          'active':true
+        };
+        if(req.params.requestType=='team'){
+          cacheName ='TeamPageCampaignDateRecord';
+          options.tid = { $in: [mongoose.Types.ObjectId(req.params.requestId)] }
         }
-      }
-      cache.createCache(cacheName);
-      var dateRecord = cache.get(cacheName, req.params.requestId+finishLimit);
-      if (dateRecord) {
-        return res.status(200).send(dateRecord);
-      } else {
-        // 查找分页数据
-        // todo 可能会有垃圾数据影响分组，需要清除
-        Campaign
-          .aggregate()
-          .match(options)
-          .group({
-            _id: {
-              year: { $year: '$start_time' },
-              month: { $month: '$start_time' }
-            }
-          })
-          .sort('-_id.year -_id.month')
-          .exec()
-          .then(function (results) {
-            var dateRecord = [];
-            results.forEach(function (result) {
-              var found = false;
-              var i;
-              for (i = 0; i < dateRecord.length; i++) {
-                if (dateRecord[i].year === result._id.year) {
-                  found = true;
-                  break;
+        else if(req.params.requestType=='user'){
+          cacheName ='UserPageCampaignDateRecord';
+          options['campaign_unit.member._id'] = mongoose.Types.ObjectId(req.params.requestId);
+          if(!req.query.unfinishFlag){
+            options.finish=true;
+            finishLimit ='1';
+          }
+        }
+        else if(req.params.requestType=='company'){
+          cacheName ='CompanyPageCampaignDateRecord';
+          options['cid'] = mongoose.Types.ObjectId(req.params.requestId);
+          if(!req.query.unfinishFlag){
+            options.finish=true;
+            finishLimit ='1';
+          }
+        }
+        cache.createCache(cacheName);
+        var dateRecord = cache.get(cacheName, req.params.requestId+finishLimit);
+        if (dateRecord) {
+          return res.status(200).send(dateRecord);
+        } else {
+          // 查找分页数据
+          // todo 可能会有垃圾数据影响分组，需要清除
+          Campaign
+            .aggregate()
+            .match(options)
+            .group({
+              _id: {
+                year: { $year: '$start_time' },
+                month: { $month: '$start_time' }
+              }
+            })
+            .sort('-_id.year -_id.month')
+            .exec()
+            .then(function (results) {
+              var dateRecord = [];
+              results.forEach(function (result) {
+                var found = false;
+                var i;
+                for (i = 0; i < dateRecord.length; i++) {
+                  if (dateRecord[i].year === result._id.year) {
+                    found = true;
+                    break;
+                  }
                 }
-              }
-              if (found) {
-                dateRecord[i].month.push({
-                  month:result._id.month
-                });
-              } else {
-                dateRecord.push({
-                  year: result._id.year,
-                  month: [{
+                if (found) {
+                  dateRecord[i].month.push({
                     month:result._id.month
-                  }]
-                });
-              }
+                  });
+                } else {
+                  dateRecord.push({
+                    year: result._id.year,
+                    month: [{
+                      month:result._id.month
+                    }]
+                  });
+                }
+              });
+              // cache.set(cacheName, req.params.hostId, dateRecord);
+              return res.status(200).send(dateRecord);
+            })
+            .then(null, function (err) {
+              log(err);
+              res.status(200).send({msg: '获取有活动的年月列表失败' });
             });
-            // cache.set(cacheName, req.params.hostId, dateRecord);
-            return res.status(200).send(dateRecord);
-          })
-          .then(null, function (err) {
-            console.log(err);
-            res.status(200).send({msg: '获取有活动的年月列表失败' });
-          });
-      }
+        }
+      })
+      .then(null, function (err) {
+        log(err);
+        return res.status(500).send({msg: err });
+      });
     },
     getTimelineData: function(req, res){
-      // todo 权限判断
+      var reqModel,
+        requestType = req.params.requestType,
+        requestId =req.params.requestId;
+      switch(requestType){
+        case 'company':
+          reqModel = 'Company';
+        break;
+        case 'team':
+          reqModel = 'CompanyGroup';
+        break;
+        case 'user':
+          reqModel = 'User';
+        break;
+        default:
+        break;
+      }
+      console.log(requestType,reqModel)
+      mongoose.model(reqModel)
+      .findById(requestId)
+      .exec()
+      .then(function(requestModal){
+        var role = auth.getRole(req.user, {
+          companies: [requestType=='company' ? requestId : requestModal.cid]
+        });
+        var allow = auth.auth(role, ['getCampaigns']);
+        if(!allow.getCampaigns){
+          return res.status(403).send('您没有权限获取该活动');
+        }
 
-      var now = new Date();
-      var year = req.query.year || now.getFullYear();
-      var month = req.query.month || now.getMonth();
+        var now = new Date();
+        var year = req.query.year || now.getFullYear();
+        var month = req.query.month || now.getMonth();
 
-      var thisMonth = new Date(year, month - 1);
-      var nextMonth = new Date(year, month);
-      var options ={
-        start_time: { $gte: thisMonth, $lt: nextMonth },
-        'active':true,
-        'confirm_status': { '$ne': false } // 旧数据没有此属性，新数据默认为true
-      };
-      if(req.params.requestType=='team'){
-        options.tid = mongoose.Types.ObjectId(req.params.requestId);
-      }
-      else if(req.params.requestType=='user'){
-        options['campaign_unit.member._id'] = mongoose.Types.ObjectId(req.params.requestId);
-      }
-      else if(req.params.requestType=='company'){
-        options['cid'] = mongoose.Types.ObjectId(req.params.requestId);
-      }
-      Campaign
+        var thisMonth = new Date(year, month - 1);
+        var nextMonth = new Date(year, month);
+        var options ={
+          start_time: { $gte: thisMonth, $lt: nextMonth },
+          'active':true,
+          'confirm_status': { '$ne': false } // 旧数据没有此属性，新数据默认为true
+        };
+        if(requestType=='team'){
+          options.tid = mongoose.Types.ObjectId(requestId);
+        }
+        else if(requestType=='user'){
+          options['campaign_unit.member._id'] = mongoose.Types.ObjectId(requestId);
+        }
+        else if(requestType=='company'){
+          options['cid'] = mongoose.Types.ObjectId(requestId);
+        }
+        Campaign
         .find(options)
         .populate('photo_album')
         .sort('-start_time')
@@ -134,7 +194,7 @@ module.exports = function (app) {
             else if(ct!==6&&ct!==2){
               // _head = campaign.team[0].name +'对' + campaign.team[1].name +'的比赛';
               for(var i = 0;i<campaign.campaign_unit.length;i++){
-                var index = tools.arrayObjectIndexOf(campaign.campaign_unit[i].member,req.params.requestId,'_id');
+                var index = tools.arrayObjectIndexOf(campaign.campaign_unit[i].member,requestId,'_id');
                 if(index>-1){
                   _logo = campaign.campaign_unit[i].team.logo;
                   _name = campaign.campaign_unit[i].team.name;
@@ -204,8 +264,12 @@ module.exports = function (app) {
           console.log(err);
           res.status(400).send({ msg: '获取活动失败' });
         });
+      })
+      .then(null, function (err) {
+        log(err);
+        return res.status(500).send({msg: err });
+      });
     }
-
   };
 
 };

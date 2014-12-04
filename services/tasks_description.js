@@ -77,9 +77,12 @@ var registeredTasks = {
   visitPhotoAlbum: {
     company: ['hr', 'member']
   },
-  sponsorCampaign: {
+  sponsorTeamCampaign: {
     company: ['hr'],
     team: ['leader']
+  },
+  sponsorCompanyCampaign: {
+    company: ['hr']
   },
   getOneTeaminfo:{
     company:['hr']
@@ -127,6 +130,9 @@ var registeredTasks = {
   editTeamFamily: {
     company: ['hr'],
     team: ['leader']
+  },
+  getCampaigns: {
+    company: ['member','hr']
   }
 };
 

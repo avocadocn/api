@@ -10,7 +10,10 @@ var moment = require('moment'),
     async = require('async'),
     xss = require('xss');
 var logController = require('../controllers/log'),
-    messageController = require('../controllers/message');
+    messageController = require('../controllers/message'),
+    auth = require('../services/auth.js'),
+    donlerValidator = require('../services/donler_validator.js'),
+    log = require('../services/error_log.js');
 
 
 module.exports = function (app) {
@@ -18,25 +21,65 @@ module.exports = function (app) {
   return {
 
     postCampaign: function (req, res) {
-      var campaign = new Campaign();
-      // campaign.theme = basicInfo.theme;//主题
-      // campaign.content = basicInfo.content ? basicInfo.content : ''; //活动内容
-      // campaign.location = basicInfo.location; //活动地点
-      // campaign.start_time = basicInfo.start_time;
-      // campaign.end_time = basicInfo.end_time;
-      // campaign.member_min = basicInfo.member_min ? basicInfo.member_min : 0;
-      // campaign.member_max = basicInfo.member_max ? basicInfo.member_max : 0;
-      // campaign.deadline = basicInfo.deadline ? basicInfo.deadline : basicInfo.end_time;
-      campaign.active = true;
-      // campaign.campaign_mold = basicInfo.campaign_mold?basicInfo.campaign_mold:'其它';//以防万一
-      // if(basicInfo.tags&&basicInfo.tags.length>0)
-      //   campaign.tags = basicInfo.tags;
-      var _now = new Date();
-      if (req.body.start_time < _now || req.body.end_time < _now || req.body.deadline < _now) {
-        return res.status(400).send('活动的时间比现在更早');
-      }
-      else{
-        //---providerInfo
+      donlerValidator({
+        cid: {
+          name: '公司id',
+          value: req.body.cid,
+          validators: ['required']
+        },
+        campaign_type: {
+          name: '活动类型',
+          value: req.body.campaign_type,
+          validators: ['required', 'number']
+        },
+        tid: {
+          name: '小队tid',
+          value: req.body.nickname,
+          validators: req.body.campaign_type ==1 ? []:['required']
+        },
+        theme: {
+          name: '主题',
+          value: req.body.theme,
+          validators: ['required',  donlerValidator.maxLength(14)]
+        },
+        location: {
+          name: '活动位置',
+          value: req.body.location,
+          validators: ['required']
+        },
+        campaign_mold: {
+          name: '活动模型',
+          value: req.body.campaign_mold,
+          validators: ['required']
+        },
+        start_time: {
+          name: '开始时间',
+          value: req.body.start_time,
+          validators: [donlerValidator.after(new Date())]
+        },
+        end_time: {
+          name: '结束时间',
+          value: req.body.end_time,
+          validators: [donlerValidator.after(req.body.start_time)]
+        }
+      }, 'complete', function (pass, msg) {
+        if (!pass) {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+          return;
+        }
+
+        var role = auth.getRole(req.user, {
+          companies: [req.body.cid[0]],
+          teams: req.body.tid ? [req.body.tid[0]]:[]
+        });
+        var taskName = req.body.campaign_type == 1 ? 'sponsorCompanyCampaign': 'sponsorTeamCampaign';
+        var allow = auth.auth(role, [taskName]);
+        if(!allow[taskName]){
+          return res.status(403).send('您没有权限发布该活动');
+        }
+        var campaign = new Campaign();
+        campaign.active = true;
         for (var attr in req.body) {
           campaign[attr] = req.body[attr];
         }
@@ -110,7 +153,8 @@ module.exports = function (app) {
             }
           });
         });
-      }
+      });
+      
     },
     getCampaign: function (req, res) {
       var option,
@@ -118,83 +162,116 @@ module.exports = function (app) {
           requestId = req.query.requestId,
           sort = req.query.sortBy || 'start_time',
           limit = parseInt(req.query.limit) || 0,
-          now = new Date();
+          now = new Date(),reqModel;
       switch(requestType){
         case 'company':
-          option = {
-            'active':true,
-            'cid' : requestId
-          };
+          reqModel = 'Company';
         break;
         case 'team':
-          option = {
-            'active':true,
-            'tid':requestId
-          }
+          reqModel = 'CompanyGroup';
         break;
         case 'user':
-          var team_ids = [];
-          for( var i = req.user.team.length-1; i >=0 ; i--) {
-            team_ids.push(req.user.team[i]._id.toString());
-          }
-          option={
-            'active':true,
-            'cid': req.user.cid
-          }
-          if(req.query.join_flag=='1'){
-            option['campaign_unit.member._id'] = requestId;
+          reqModel = 'User';
+        break;
+        default:
+        break;
+      }
+      mongoose.model(reqModel)
+      .findById(requestId)
+      .exec()
+      .then(function(requestModal){
+        if(!requestModal){
+          return res.status(404).send('未找到该活动');
+        }
+        var role = auth.getRole(req.user, {
+          companies: [requestType=='company' ? requestId : requestModal.cid]
+        });
+        var allow = auth.auth(role, ['getCampaigns']);
+        if(!allow.getCampaigns){
+          return res.status(403).send('您没有权限获取该活动');
+        }
+        switch(requestType){
+          case 'company':
+            option = {
+              'active':true,
+              'cid' : requestId
+            };
+          break;
+          case 'team':
+            option = {
+              'active':true,
+              'cid':requestModal.cid,
+              'tid':requestId
+            };
+          break;
+          case 'user':
+            var team_ids = [];
+            for( var i = requestModal.team.length-1; i >=0 ; i--) {
+              team_ids.push(requestModal.team[i]._id.toString());
+            }
+            option={
+              'active':true,
+              'cid': requestModal.cid
+            }
+            if(req.query.join_flag=='1'){
+              option['campaign_unit.member._id'] = requestId;
+            }
+            else{
+              option['$or'] = [{'tid':{'$in':team_ids}},{'tid':{'$size':0}}];
+            }
+          break;
+          default:
+          break;
+        }
+        if(req.query.to){
+          option.start_time = { '$lte':new Date(parseInt(req.query.to)) };
+        }
+        if(req.query.from){
+          option.end_time = { '$gte':new Date(parseInt(req.query.from)) };
+        }
+        switch(req.query.select_type){
+          //即将开始的活动
+          case '1':
+            option.start_time = { '$gte':now };
+          break;
+          //正在进行的活动
+          case '2':
+            option.start_time = { '$lt':now };
+            option.end_time = { '$gte':now };
+          break;
+          //已经结束的活动
+          case '3':
+            option.end_time = { '$lte':now };
+          break;
+          default:
+          break;
+        }
+        //未确认的挑战
+        if(req.query.provoke_flag){
+          option.confirm_status = false;
+          option.start_time = { '$gte': now};
+          option.campaign_type = {'$in':[4,5,7,9]};
+        }
+        Campaign
+        .find(option)
+        .sort(sort)
+        .limit(limit)
+        .exec()
+        .then(function (campaign) {
+          if (!campaign) {
+            res.status(404).send('未找到活动');
           }
           else{
-            option['$or'] = [{'tid':{'$in':team_ids}},{'tid':{'$size':0}}];
+            res.status(200).send(campaign);
           }
-        break;
-        default:
-        break;
-      }
-      if(req.query.to){
-        option.start_time = { '$lte':new Date(parseInt(req.query.to)) };
-      }
-      if(req.query.from){
-        option.end_time = { '$gte':new Date(parseInt(req.query.from)) };
-      }
-      switch(req.query.select_type){
-        //即将开始的活动
-        case '1':
-          option.start_time = { '$gte':now };
-        break;
-        //正在进行的活动
-        case '2':
-          option.start_time = { '$lt':now };
-          option.end_time = { '$gte':now };
-        break;
-        //已经结束的活动
-        case '3':
-          option.end_time = { '$lte':now };
-        break;
-        default:
-        break;
-      }
-      //未确认的挑战
-      if(req.query.provoke_flag){
-        option.confirm_status = false;
-        option.start_time = { '$gte': now};
-        option.campaign_type = {'$in':[4,5,7,9]};
-      }
-      Campaign
-      .find(option)
-      .sort(sort)
-      .limit(limit)
-      .exec()
-      .then(function (campaign) {
-        if (!campaign) {
-          res.status(404).send('未找到活动');
-        }
-        else{
-          res.status(200).send(campaign);
-        }
+        })
+        .then(null, function (err) {
+          res.status(500).send('服务器错误');
+        });
       })
       .then(null, function (err) {
-        res.status(500).send('服务器错误');
+        log(err);
+        return res.status(500).send({msg: err });
       });
     },
     getCampaignById: function (req, res) {
@@ -207,6 +284,13 @@ module.exports = function (app) {
           res.status(404).send('未找到活动')
         }
         else{
+          var role = auth.getRole(req.user, {
+            companies: campaign.cid
+          });
+          var allow = auth.auth(role, ['getCampaigns']);
+          if(!allow.getCampaigns){
+            return res.status(403).send('您没有权限获取该活动');
+          }
           res.status(200).send(campaign);
         }
       })
@@ -223,6 +307,15 @@ module.exports = function (app) {
           res.status(404).send('未找到活动')
         }
         else{
+          var role = auth.getRole(req.user, {
+            companies: campaign.cid,
+            teams: campaign.tid
+          });
+          var taskName = campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
+          var allow = auth.auth(role, [taskName]);
+          if(!allow[taskName]){
+            return res.status(403).send('您没有权限获取该活动');
+          }
           if (req.body.content) {
             campaign.content=xss(req.body.content);
           }
@@ -262,6 +355,15 @@ module.exports = function (app) {
           res.status(404).send('未找到可以关闭的活动')
         }
         else{
+          var role = auth.getRole(req.user, {
+            companies: campaign.cid,
+            teams: campaign.tid
+          });
+          var taskName = campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
+          var allow = auth.auth(role, [taskName]);
+          if(!allow[taskName]){
+            return res.status(403).send('您没有权限获取该活动');
+          }
           campaign.active = false;
           campaign.save(function (err) {
             if (err) {
@@ -285,6 +387,15 @@ module.exports = function (app) {
           res.status(404).send('未找到活动');
         }
         else{
+          var role = auth.getRole(req.user, {
+            companies: campaign.cid,
+            teams: campaign.tid
+          });
+          var taskName = campaign.campaign_type==1?'joinCampanyCampaign':'joinTeamCampaign';
+          var allow = auth.auth(role, [taskName]);
+          if(!allow[taskName]){
+            return res.status(403).send('您没有权限参加该活动');
+          }
           User.findById(req.params.userId)
           .exec()
           .then(function(user){
@@ -355,7 +466,7 @@ module.exports = function (app) {
             } else {
               campaign.save(function (err) {
                 if (err) {
-                  console.log(err);
+                  log(err);
                   return req.status(400).send({
                     msg: '参加失败，请重试'
                   });
@@ -383,6 +494,13 @@ module.exports = function (app) {
       });
     },
     quitCampaign: function(req,res){
+      var role = auth.getRole(req.user, {
+        users: [req.params.userId]
+      });
+      var allow = auth.auth(role, ['quitCampaign']);
+      if(!allow.quitCampaign){
+        return res.status(403).send('您没有权限退出该活动');
+      }
       Campaign
       .findById(req.params.campaignId)
       .exec()
@@ -425,7 +543,7 @@ module.exports = function (app) {
             } else {
               campaign.save(function (err) {
                 if (err) {
-                  console.log(err);
+                  log(err);
                   return req.status(400).send({
                     msg: '退出失败，请重试'
                   });
@@ -456,7 +574,6 @@ module.exports = function (app) {
       var campaignId = req.params.campaignId;
       Campaign
       .findById(campaignId)
-      //.populate('photo_album')
       .exec()
       .then(function (campaign) {
         if (!campaign) {
@@ -468,23 +585,34 @@ module.exports = function (app) {
           }
           //确认状态变更
           var status = req.body.dealType;
+          var dealUnitIndex;
           switch(status){
             case 1://接受
               campaign.campaign_unit[1].start_confirm = true;
               campaign.confirm_status = true;
+              dealUnitIndex = 1;
               break;
             case 2://拒绝
               campaign.active = false;
+              dealUnitIndex = 1;
               break;
             case 3://取消
               campaign.campaign_unit[0].start_confirm = false;
               campaign.active = false;
+              dealUnitIndex = 0;
               break;
           }
-
+          var role = auth.getRole(req.user, {
+            companies: [campaign.cid[dealUnitIndex]],
+            teams: [campaign.tid[dealUnitIndex]]
+          });
+          var allow = auth.auth(role, ['sponsorProvoke']);
+          if(!allow.sponsorProvoke){
+            return res.status(403).send('您没有权限处理该挑战');
+          }
           campaign.save(function(err){
             if(err){
-              res.status(500).send('保存错误');
+              res.status(500).send({msg:'保存错误'});
             }
             else{
               //发站内信
@@ -524,8 +652,7 @@ module.exports = function (app) {
               };
               CompanyGroup.findOne({'_id':receive_team._id},{leader:1},function(err,opposite_team){
                 if(err){
-                  res.status(500);
-                  next('查询对方小队错误');
+                  log('查询对方小队错误');
                 }
                 else{
                   param.receiver = {
@@ -537,29 +664,29 @@ module.exports = function (app) {
               //若接受,则发动态、加积分
               if(status ===1){
                 push.campaign(campaignId);
-                GroupMessage.findOne({campaign:campaign._id}).exec(function(err,groupMessage){
-                  groupMessage.message_type = 5;
-                  groupMessage.create_time = new Date();
-                  groupMessage.save(function (err) {
-                    if (err) {
-                      console.log('保存约战动态时出错' + err);
-                    }
-                  });
-                });
+                // GroupMessage.findOne({campaign:campaign._id}).exec(function(err,groupMessage){
+                //   groupMessage.message_type = 5;
+                //   groupMessage.create_time = new Date();
+                //   groupMessage.save(function (err) {
+                //     if (err) {
+                //       log('保存约战动态时出错' + err);
+                //     }
+                //   });
+                // });
                 CompanyGroup.update({'_id':{'$in':campaign.tid}},{'$inc':{'score.provoke':15}},function (err,team){
                   if(err){
-                    console.log('RESPONSE_PROVOKE_POINT_FAILED!',err);
+                    log('RESPONSE_PROVOKE_POINT_FAILED!',err);
                   }
                 });
               }
-              return res.send({'result':1,'msg':'SUCCESS'});
+              return res.status(200).send({'msg':'SUCCESS'});
             }
           });
         }
       })
       .then(null, function (err) {
-        console.log(err)
-        res.status(500).send('服务器错误');
+        log(err)
+        res.status(500).send({msg:'服务器错误'});
       });
     }
   };

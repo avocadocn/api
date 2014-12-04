@@ -2319,6 +2319,10 @@ definitions:
         description: 活动所属小队的id
         items:
           type: string
+      campaign_type:
+        type: integer
+        format: int32
+        description: 活动的类型
       campaign_unit:
         type: array
         description: 活动的阵营
