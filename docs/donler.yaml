@@ -524,7 +524,7 @@ paths:
       tags:
         - teams
       summary: 获取小队数据
-      operationId: getTeamById
+      operationId: getTeam
       consumes:
         - application/json
       parameters:

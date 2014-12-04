@@ -3,7 +3,8 @@
 var mongoose = require('mongoose');
 var Campaign = mongoose.model('Campaign'),
     Comment = mongoose.model('Comment');
-var auth = require('../services/auth.js');
+var auth = require('../services/auth.js'),
+    log = require('../services/error_log.js');
 
 var shieldTip = "该评论已经被系统屏蔽";
 /**
@@ -78,6 +79,7 @@ var setDeleteAuth = function setDeleteAuth(data, callback) {
         })
         .then(null, function (err) {
           _auth();
+          log(err);
           callback(err);
         });
       break;
@@ -100,6 +102,7 @@ var setDeleteAuth = function setDeleteAuth(data, callback) {
           }, callback);
         })
         .then(null, function (err) {
+          log(err);
           callback(err);
         });
       break;
@@ -146,25 +149,26 @@ module.exports = function (app) {
 
       comment.save(function (err) {
         if (err) {
-          console.log('COMMENT_PUSH_ERROR', err);
-          return res.send("{{'COMMENT_PUSH_ERROR'|translate}}");
+          //'COMMENT_PUSH_ERROR'
+          log(err);
+          return res.status(500).send("{{'COMMENT_PUSH_ERROR'|translate}}");
         } else {
           if (host_type === "campaign" || host_type === "campaign_detail" || host_type === "competition") {
             Campaign.findByIdAndUpdate(host_id, {'$inc': {'comment_sum': 1}}, function (err, message) {
               if (err || !message) {
-                return res.send({'msg': 'ERROR', 'comment': []});
+                return res.status(500).send({msg: 'ERROR'});
               } else {
                 //之后增加用socket通信
-                return res.send({'msg': 'SUCCESS', 'comment': comment});
+                return res.status(200).send({'comment': comment});
               }
             });
           } else {
-            return res.send({'msg': 'SUCCESS', 'comment': comment});
+            return res.status(200).send({'comment': comment});
           }
         }
       });
     },
-    canPublishComment: function(req, res) {
+    canPublishComment: function(req, res, next) {
       var host_id = req.body.host_id;
       var host_type = req.body.host_type.toLowerCase();
       switch (host_type) {
@@ -172,14 +176,14 @@ module.exports = function (app) {
           Campaign.findById(host_id).exec()
           .then(function (campaign) {
             if (!campaign) {
-              return res.status(403).send('权限错误');
+              return res.status(403).send({msg: '权限错误'});
             }
             var allow = auth(req.user, {
               companies: campaign.cid,
               teams: campaign.tid
             }, ['publishComment']);
             if (allow.publishComment === false) {
-              return res.status(403).send('权限错误');
+              return res.status(403).send({msg: '权限错误'});
             } else {
               next();
             }
@@ -189,7 +193,7 @@ module.exports = function (app) {
           });
           break;
         default:
-          return res.status(403).send('权限错误');
+          return res.status(403).send({msg: '权限错误'});
       }
     },
 
@@ -212,11 +216,11 @@ module.exports = function (app) {
           comment.status = 'delete';
           comment.save(function (err) {
             if (err) {
-              console.log(err);
-              return res.send({ result: 0, msg: 'error' });
+              log(err);
+              return res.status(500).send({msg: 'comment save error'});
             }
             // save成功就意味着已经改为delete状态，后续操作不影响已经成功这个事实，故直接返回成功状态
-            res.send({ result: 1, msg: 'success' });
+            res.status(200).send('success');
 
             // 计数-1
             if (comment.host_type === "campaign" || comment.host_type === "campaign_detail") {
@@ -226,7 +230,7 @@ module.exports = function (app) {
                 }
               }, function (err, message) {
                 if (err) {
-                  console.log(err);
+                  log(err);
                 }
               });
             }
@@ -234,7 +238,7 @@ module.exports = function (app) {
             if (comment.photos && comment.photos.length > 0) {
               photo_album_ctrl.deletePhotos(comment.photos, function (err) {
                 if (err) {
-                  console.log(err);
+                  log(err);
                 }
               });
             }
@@ -246,29 +250,28 @@ module.exports = function (app) {
                 }
               }, function (err) {
                 if (err) {
-                  console.log(err);
+                  log(err);
                 }
               });
             }
           });
         } else {
-          res.status(403);
-          return next('forbidden');
+          return res.status(403).send({msg: 'forbidden'});
         }
       });
     },
-    getCommentById: function(req, res) {
+    getCommentById: function(req, res, next) {
       Comment.findById(req.params.commentId).exec()
       .then(function (comment) {
         if (!comment) {
-          return res.status(404).send('未找到评论');
+          return res.status(404).send({msg: '未找到评论'});
         } else {
           req.comment = comment;
           next();
         }
       })
       .then(null, function (err) {
-        next(err);
+        return res.status(500).send({msg: 'Comment not found'});
       });
     }
   };
