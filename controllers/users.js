@@ -207,8 +207,15 @@ module.exports = function (app) {
         password: req.body.password,
         realname: req.body.realname,
         phone: req.body.phone,
-        role: 'EMPLOYEE'
+        role: 'EMPLOYEE',
+        invite_active: false
       });
+
+      var inviteKeyValid = false;
+      if (req.body.inviteKey && req.company.invite_key === req.body.inviteKey) {
+        inviteKeyValid = true;
+        user.invite_active = true;
+      }
 
       user.save(function (err) {
         if (err) {
@@ -217,16 +224,11 @@ module.exports = function (app) {
           return;
         }
 
-        var inviteKeyValid = false;
-        if (req.body.inviteKey && req.company.invite_key === req.body.inviteKey) {
-          inviteKeyValid = true;
-        }
-
         var emailSender;
         if (inviteKeyValid) {
-          emailSender = emailService.sendNewStaffActiveMail;
-        } else {
           emailSender = emailService.sendStaffActiveMail;
+        } else {
+          emailSender = emailService.sendNewStaffActiveMail;
         }
         emailSender(user.email, user._id.toString(), user.cid.toString(), function (err) {
           if (err) {
