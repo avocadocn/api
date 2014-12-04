@@ -2006,6 +2006,9 @@ definitions:
       phone:
         description: 手机号码
         type: string
+      inviteKey:
+        description: 注册邀请码
+        type: string
   CompanyRegisterForm:
     title: CompanyRegisterForm
     type: object

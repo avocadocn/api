@@ -8,6 +8,7 @@ var jwt = require('jsonwebtoken');
 var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var donlerValidator = require('../services/donler_validator.js');
+var emailService = require('../services/email.js');
 var tools = require('../tools/tools.js');
 
 module.exports = function (app) {
@@ -196,11 +197,12 @@ module.exports = function (app) {
     },
 
     register: function (req, res) {
+      var email = req.body.email + '@' + req.body.domain;
       var user = new User({
-        email: req.body.email,
-        username: req.body.email,
-        cid: req.body.cid,
-        //cname: company.info.name,
+        email: email,
+        username: email,
+        cid: req.company._id,
+        cname: req.company.info.name,
         nickname: req.body.nickname,
         password: req.body.password,
         realname: req.body.realname,
@@ -214,12 +216,30 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
-        res.sendStatus(201);
-      });
 
+        var inviteKeyValid = false;
+        if (req.body.inviteKey && req.company.invite_key === req.body.inviteKey) {
+          inviteKeyValid = true;
+        }
+
+        var emailSender;
+        if (inviteKeyValid) {
+          emailSender = emailService.sendNewStaffActiveMail;
+        } else {
+          emailSender = emailService.sendStaffActiveMail;
+        }
+        emailSender(user.email, user._id.toString(), user.cid.toString(), function (err) {
+          if (err) {
+            log(err);
+            res.sendStatus(500);
+          } else {
+            res.sendStatus(201);
+          }
+        });
+      });
 
     }
 
   }
 
-}
+};

@@ -5,6 +5,7 @@
   "author": "CahaVar, Inc. <cahavar@55yali.com>",
   "dependencies": {
     "body-parser": "~1.9.3",
+    "nodemailer": "~0.6.1",
     "express": "~4.10.2",
     "mongoose": "~3.8.19",
     "serve-static": "~1.7.1",
@@ -13,7 +14,9 @@
     "async": "~0.7.0",
     "validator": "~3.10.0",
     "jsonwebtoken": "~1.2.0",
-    "xss":"~0.1.12"
+    "soap": "~0.5.1",
+    "jade": "~1.0.2",
+    "xss": "~0.1.12"
   },
   "devDependencies": {
     "gulp": "~3.8.10",
