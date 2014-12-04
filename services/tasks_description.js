@@ -151,6 +151,16 @@ var registeredTasks = {
   getUserMinData: {
     company: ['hr', 'member', 'other_hr', 'other_member'],
     user: ['self']
+  },
+
+  // 屏蔽用户
+  closeUser: {
+    company: ['hr']
+  },
+
+  // 解除屏蔽
+  openUser: {
+    company: ['hr']
   }
 };
 

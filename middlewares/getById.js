@@ -59,7 +59,7 @@ module.exports = {
       if (!user) {
         res.status(400).send({ msg: '没有找到对应的用户' });
       } else {
-        req.resourseUser = user;
+        req.resourceUser = user;
         next();
       }
     })

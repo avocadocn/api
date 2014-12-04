@@ -87,7 +87,6 @@ exports.needToken = function (req, res, next) {
         if (user.app_token !== req.headers['x-access-token'] || !validateHeaders(req.headers, user.token_device)) {
           return res.sendStatus(401);
         }
-
         req.user = user;
         next();
       })

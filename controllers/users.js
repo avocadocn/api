@@ -301,6 +301,51 @@ module.exports = function (app) {
           res.sendStatus(204);
         }
       });
+    },
+
+    close: function (req, res) {
+      var role = auth.getRole(req.user, {
+        companies: [req.resourceUser.cid],
+        users: [req.resourceUser._id]
+      });
+      var allow = auth.auth(role, ['closeUser']);
+      if (!allow.closeUser) {
+        res.sendStatus(403);
+        return;
+      }
+
+      req.resourceUser.active = false;
+      req.resourceUser.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+          return;
+        }
+        res.sendStatus(204);
+      });
+
+    },
+
+    open: function (req, res) {
+      var role = auth.getRole(req.user, {
+        companies: [req.resourceUser.cid],
+        users: [req.resourceUser._id]
+      });
+      var allow = auth.auth(role, ['openUser']);
+      if (!allow.openUser) {
+        res.sendStatus(403);
+        return;
+      }
+
+      req.resourceUser.active = true;
+      req.resourceUser.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+          return;
+        }
+        res.sendStatus(204);
+      });
     }
 
   };
