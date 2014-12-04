@@ -3,43 +3,163 @@
 var mongoose = require('mongoose');
 var User = mongoose.model('User'),
     Company = mongoose.model('Company'),
-    CompanyGroup = mongoose.model('CompanyGroup');
+    CompanyGroup = mongoose.model('CompanyGroup'),
+    Group = mongoose.model('Group');
 
-var log = require('../services/error_log.js');
+var log = require('../services/error_log.js'),
+    auth = require('../services/auth.js');
 
 module.exports = function (app) {
 
   return {
    
     createTeams : function(req, res) {
-        return res.send();
+      var role = auth.getRole(req.user, {
+        companies:[req.body.companyId]
+      });
+      var allow = auth.auth(role,['createTeams']);
+      if(!allow.createTeams){
+        return res.status(403).send({msg: '权限错误'});
+      }
+      Company.findById(req.body.companyId).exec()
+      .then(function (company) {
+        if (!company) {
+          return res.status(400).send({ msg: '没有找到对应的公司' });
+        } else {
+          var selectedGroups = req.body.selectedGroups;
+          for (var i = 0; i < selectedGroups.length; i++) {
+            var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : company.info.official_name + '-' + selectedGroups[i].group_type + '队';
+            var companyGroup = new CompanyGroup();
+
+            companyGroup.cid = company._id;
+            companyGroup.cname = company.info.name;
+            companyGroup.gid = selectedGroups[i]._id;
+            companyGroup.group_type = selectedGroups[i].group_type;
+            companyGroup.name = tname;
+            companyGroup.logo = '/img/icons/group/' + selectedGroups[i].entity_type.toLowerCase() + '_on.png';
+
+            companyGroup.save(function(err) {
+              if (err) {
+                log(err);
+                return res.status(500).send({msg:'保存小队失败'});
+              }
+            });
+
+            company.team.push({
+              'gid': selectedGroups[i]._id,
+              'group_type': selectedGroups[i].group_type,
+              'name': tname,
+              'id': companyGroup._id
+            });
+            company.save(function(err){
+              if(err){
+                log(err);
+                return res.status(500).send({msg:'保存公司失败'});
+              }else{
+                return res.status(200).send({msg:'保存成功'});
+              }
+            });
+          }
+        }
+      })
+      .then(null, function (err) {
+        log(err);
+        return res.status(500).send({msg: '查找公司错误'});
+      });
     },
     getTeam : function(req, res) {
-        return;
+      var team = req.companyGroup;
+
+      var membersWithoutLeader = [];
+      team.member.forEach(function (member) {
+        var isLeader = false;
+        for (var i = 0; i < team.leader.length; i++) {
+          var leader = team.leader[i];
+          if (leader._id.toString() === member._id.toString()) {
+            isLeader = true;
+            break;
+          }
+        }
+        if (!isLeader) {
+          membersWithoutLeader.push(member);
+        }
+      });
+      var briefTeam = {
+        name: team.name,
+        cname: team.cname,
+        logo: team.logo,
+        group_type: team.group_type,
+        create_time: team.create_time,
+        brief: team.brief,
+        leaders: team.leader,
+        members: membersWithoutLeader.slice(0, 6 - team.leader.length),
+        // memberCount: team.member.length,
+        homeCourts: team.home_court,
+        cid: team.cid,
+        familyPhotos: team.family.filter(function (photo) {
+          return !photo.hidden && photo.select;
+        })
+      };
+      return res.status(200).send(briefTeam);
     },
     editTeamData : function(req, res) {
-        return;
+      var team = req.companyGroup;
+      var role = auth.getRole(req.user, {
+        companies:[team.cid],
+        teams:[req.params.teamId]
+      });
+      var allow = auth.auth(role,['editTeamCampaign']);
+      if(!allow.editTeamCampaign){
+        return res.status(403).send({msg: '权限错误'});
+      }
+      if(req.body.name){
+        team.name = req.body.name;
+      }
+      if(req.body.logo){
+        team.logo = req.body.logo;
+      }
+      if(req.body.brief){
+        team.brief = req.body.brief;
+      }
+      if(req.body.home_court){
+        var homecourts = req.body.homecourt;
+        homecourts.forEach(function (homecourt) {
+          if (!homecourt.loc || !homecourt.loc.coordinates || homecourt.loc.coordinates.length === 0) {
+            delete homecourt.loc;
+          }
+        });
+        team.home_court = homecourts;
+      }
+      team.save(function(err){
+        if(err){
+          log(err);
+          return res.status(500).send({msg:'保存错误'});
+        }
+        else{
+          return res.status(200).send({msg:'成功'});
+        }
+      });
     },
     deleteTeam : function(req, res) {
-        return;
+      return;
     },
     uploadFamilyPhotos : function(req, res) {
-        return;
+      return;
     },
     getFamilyPhotos : function(req, res) {
-        return;
+      return;
     },
     toggleSelectFamilyPhoto : function(req, res) {
-        return;
+      return;
     },
     deleteFamilyPhoto : function(req, res) {
-        return;
+      return;
     },
     joinTeam : function(req, res) {
-        return;
+      return;
     },
     quitTeam : function(req, res) {
-        return;
+      return;
     }
   }
 }

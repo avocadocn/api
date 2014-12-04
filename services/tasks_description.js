@@ -110,6 +110,9 @@ var registeredTasks = {
   closeTeam: {
     company: ['hr']
   },
+  createTeams:{
+    company: ['hr']
+  },
   editTeam: {
     company: ['hr'],
     team: ['leader']

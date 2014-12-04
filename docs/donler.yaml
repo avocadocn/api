@@ -545,7 +545,7 @@ paths:
       tags:
         - teams
       summary: 获取小队数据
-      operationId: getTeam
+      operationId: getTeamById
       consumes:
         - application/json
       parameters:
@@ -2684,12 +2684,12 @@ definitions:
     title: CreateTeamsForm
     required:
       - companyId
-      - SelectedGroups
+      - selectedGroups
     properties:
       companyId:
         description: 公司id
         type: string
-      SelectedGroups:
+      selectedGroups:
         description: 所选小队
         type: array
         items:
@@ -2698,13 +2698,21 @@ definitions:
     title: SelectedGroups
     required:
       - groupType
+      - entity_type
+      - _id
     properties:
-      groupType:
+      group_type:
         type: string
         description: 小队类型
       teamName:
         type: string
         description: 小队名称
+      entity_type:
+        type: string
+        description: 小队类型
+      _id:
+        type: string
+        description: gid
   Team:
     title: Team
     required:
@@ -2734,22 +2742,22 @@ definitions:
       brief:
         type: string
         description: 小队简介
-      member:
+      members:
         type: array
         description: 成员列表
         items:
           $ref: Member
-      home_court:
+      homeCourts:
         type: array
         description: 主场信息
         items:
           $ref: HomeCourt
-      leader:
+      leaders:
         type: array
         description: 队长信息
         items:
           $ref: Member
-      family:
+      familyPhotos:
         type: array
         description: 全家福
         items:
