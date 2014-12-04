@@ -9,81 +9,12 @@ var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var donlerValidator = require('../services/donler_validator.js');
 var emailService = require('../services/email.js');
+var auth = require('../services/auth.js');
 var tools = require('../tools/tools.js');
 
 module.exports = function (app) {
 
   return {
-
-    getUserById: function (req, res) {
-      User.findById(req.params.userId).exec()
-        .then(function (user) {
-          if (!user) {
-            return res.status(404).send({ msg: "找不到该用户" });
-          }
-          res.send(user);
-        })
-        .then(null, function (err) {
-          log(err);
-          res.sendStatus(500);
-        });
-    },
-
-    login: function (req, res) {
-      if (!req.body || !req.body.email || !req.body.password) {
-        return res.status(400).send({ msg: '缺少邮箱或密码' });
-      }
-
-      User.findOne({
-        email: req.body.email
-      }).exec()
-        .then(function (user) {
-          if (!user) {
-            return res.status(401).send({ msg: '邮箱或密码错误' });
-          }
-
-          if (!user.encryptPassword(req.body.password)) {
-            return res.status(401).send({ msg: '邮箱或密码错误' });
-          }
-
-          var token = jwt.sign({
-            type: "user",
-            id: user._id.toString(),
-            exp: app.get('tokenExpires')
-          }, app.get('tokenSecret'));
-
-          user.app_token = token;
-          user.token_device = tokenService.createTokenDevice(req.headers);
-          user.save(function (err) {
-            if (err) {
-              log(err);
-              res.sendStatus(500);
-            } else {
-              res.status(200).send({
-                token: token
-              });
-            }
-          });
-
-        })
-        .then(null, function (err) {
-          log(err);
-          res.sendStatus(500);
-        });
-    },
-
-    logout: function (req, res) {
-      req.user.app_token = null;
-      req.user.token_device = null;
-      req.user.save(function (err) {
-        if (err) {
-          log(err);
-          res.sendStatus(500);
-        } else {
-          res.sendStatus(204);
-        }
-      });
-    },
 
     getCompanyByCid: function (req, res, next) {
       if (!req.body || !req.body.cid || req.body.cid === '') {
@@ -107,7 +38,6 @@ module.exports = function (app) {
     },
 
     registerValidate: function (req, res, next) {
-
       var isUsedEmail = function (name, value, callback) {
         User.findOne({ email: value }).exec()
           .then(function (user) {
@@ -240,8 +170,138 @@ module.exports = function (app) {
         });
       });
 
+    },
+
+    getUserById: function (req, res) {
+      User.findById(req.params.userId).exec()
+        .then(function (user) {
+          if (!user) {
+            return res.status(404).send({ msg: "找不到该用户" });
+          }
+
+          var role = auth.getRole(req.user, {
+            companies: [user.cid],
+            users: [user._id]
+          });
+          var allow = auth.auth(role, ['getUserCompleteData', 'getUserBriefData', 'getUserMinData']);
+          if (allow.getUserCompleteData) {
+            var tids = [];
+            user.team.forEach(function (team) {
+              tids.push(team._id);
+            });
+
+            var completeData = {
+              _id: user._id,
+              email: user.email,
+              nickname: user.nickname,
+              photo: user.photo,
+              realname: user.realname,
+              department: user.department,
+              sex: user.sex,
+              birthday: user.birthday,
+              bloodType: user.bloodType,
+              introduce: user.introduce,
+              registerDate: user.register_date,
+              phone: user.phone,
+              qq: user.qq,
+              company: {
+                _id: user.cid,
+                name: user.company_official_name,
+                briefName: user.cname
+              },
+              tids: tids,
+              lastCommentTime: user.last_comment_time
+            };
+            res.status(200).send(completeData);
+          } else if (allow.getUserBriefData) {
+            var briefData = {
+              _id: user._id,
+              email: user.email,
+              nickname: user.nickname,
+              photo: user.photo,
+              realname: user.realname,
+              department: user.department,
+              sex: user.sex,
+              birthday: user.birthday,
+              bloodType: user.bloodType,
+              introduce: user.introduce,
+              phone: user.phone,
+              qq: user.qq
+            };
+            res.status(200).send(briefData);
+          } else if (allow.getUserMinData) {
+            var minData = {
+              _id: user._id,
+              nickname: user.nickname,
+              photo: user.photo
+            };
+            res.status(200).send(minData);
+          } else {
+            res.sendStatus(403);
+          }
+
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
+    },
+
+    login: function (req, res) {
+      if (!req.body || !req.body.email || !req.body.password) {
+        return res.status(400).send({ msg: '缺少邮箱或密码' });
+      }
+
+      User.findOne({
+        email: req.body.email
+      }).exec()
+        .then(function (user) {
+          if (!user) {
+            return res.status(401).send({ msg: '邮箱或密码错误' });
+          }
+
+          if (!user.encryptPassword(req.body.password)) {
+            return res.status(401).send({ msg: '邮箱或密码错误' });
+          }
+
+          var token = jwt.sign({
+            type: "user",
+            id: user._id.toString(),
+            exp: app.get('tokenExpires')
+          }, app.get('tokenSecret'));
+
+          user.app_token = token;
+          user.token_device = tokenService.createTokenDevice(req.headers);
+          user.save(function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+            } else {
+              res.status(200).send({
+                token: token
+              });
+            }
+          });
+
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
+    },
+
+    logout: function (req, res) {
+      req.user.app_token = null;
+      req.user.token_device = null;
+      req.user.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+        } else {
+          res.sendStatus(204);
+        }
+      });
     }
 
-  }
-
+  };
 };

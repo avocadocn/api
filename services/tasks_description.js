@@ -132,7 +132,25 @@ var registeredTasks = {
     team: ['leader']
   },
   getCampaigns: {
-    company: ['member','hr']
+    company: ['member', 'hr']
+  },
+
+  // 获取用户的完整信息
+  getUserCompleteData: {
+    company: ['hr'],
+    user: ['self']
+  },
+
+  // 获取用户的简略信息
+  getUserBriefData: {
+    company: ['hr', 'member'],
+    user: ['self']
+  },
+
+  // 获取用户的最基本的信息，只包括_id, nickname, photo
+  getUserMinData: {
+    company: ['hr', 'member', 'other_hr', 'other_member'],
+    user: ['self']
   }
 };
 

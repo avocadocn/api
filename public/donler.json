@@ -2798,9 +2798,15 @@
       "title": "User",
       "type": "object",
       "required": [
-        "email"
+        "_id",
+        "nickname",
+        "photo"
       ],
       "properties": {
+        "_id": {
+          "type": "string",
+          "description": "用户id"
+        },
         "email": {
           "type": "string",
           "description": "用户邮箱"
@@ -2808,6 +2814,10 @@
         "nickname": {
           "type": "string",
           "description": "昵称"
+        },
+        "photo": {
+          "type": "string",
+          "description": "头像url"
         },
         "realname": {
           "type": "string",

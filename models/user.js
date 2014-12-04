@@ -142,7 +142,7 @@ var UserSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Campaign'
     },
-    last_comment_time: Date,
+    last_comment_time: Date
 });
 
 /**
