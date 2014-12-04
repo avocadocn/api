@@ -4,6 +4,112 @@ var mongoose = require('mongoose');
 var Campaign = mongoose.model('Campaign'),
     Comment = mongoose.model('Comment');
 var auth = require('../services/auth.js');
+
+var shieldTip = "该评论已经被系统屏蔽";
+/**
+ * 为comments的每个comment设置权限
+ * @param {Object} data 用户和评论的相关数据
+ * data: {
+ *     host_type: String, // 留言或评论目标对象类型, campaign or photo
+ *     host_id: String, // 目标对象id
+ *     user: Object, // req.user
+ *     comments: Array // 数组元素类型为mongoose.model('Comment')
+ * }
+ * @param {Function} callback 设置结束的回调, callback(err)
+ */
+var setDeleteAuth = function setDeleteAuth(data, callback) {
+  var user = data.user;
+  var _auth = function (callback) {
+    for (var i = 0; i < data.comments.length; i++) {
+      var comment = data.comments[i];
+      var can_delete = false;
+
+      if (user.provider === 'company') {
+        if (comment.poster.cid.toString() === user._id.toString()) {
+          can_delete = true;
+        }
+      } else if (user.provider === 'user') {
+        if (comment.poster._id.toString() === user._id.toString()) {
+          can_delete = true;
+        }
+        // 其它情况，如user是队长
+        if (callback) {
+          can_delete = !!callback(comment);
+        }
+      }
+      comment.set('delete_permission', can_delete, {strict: false});
+      comment.delete_permission = can_delete;
+      if (comment.status === 'shield') {
+        comment.set('content', shieldTip, {strict: false});
+      }
+    }
+  };
+
+  switch (data.host_type) {
+    case 'campaign_detail':
+    // waterfall
+    case 'campaign':
+      // 评论目标是活动
+      Campaign.findById(data.host_id).exec()
+        .then(function (campaign) {
+          var is_leader = false;
+          if (campaign.team && user.provider === 'user') {
+            for (var i = 0; i < campaign.team.length; i++) {
+              if (user.isTeamLeader(campaign.team[i].toString())) {
+                is_leader = true;
+                break;
+              }
+            }
+          }
+          if (is_leader) {
+            _auth(function (comment) {
+              // 是leader可以删除活动中自己公司成员发的评论
+              if (comment.poster.cid.toString() === user.cid.toString()) {
+                return true;
+              } else {
+                return false;
+              }
+            });
+            callback && callback();
+          } else {
+            _auth();
+            callback && callback();
+          }
+        })
+        .then(null, function (err) {
+          _auth();
+          callback(err);
+        });
+      break;
+    case 'photo':
+      // todo: 评论目标是照片
+      _auth();
+      callback();
+      break;
+    case 'comment':
+      Comment.findById(data.host_id).exec()
+        .then(function (comment) {
+          if (!comment) {
+            return callback('not found');
+          }
+          setDeleteAuth({
+            host_type: comment.host_type,
+            host_id: comment.host_id,
+            user: user,
+            comments: data.comments
+          }, callback);
+        })
+        .then(null, function (err) {
+          callback(err);
+        });
+      break;
+    default:
+      _auth();
+      callback();
+      break;
+  }
+};
+
 module.exports = function (app) {
 
   return {
@@ -48,7 +154,7 @@ module.exports = function (app) {
               if (err || !message) {
                 return res.send({'msg': 'ERROR', 'comment': []});
               } else {
-                //之后改成用socket通信
+                //之后增加用socket通信
                 return res.send({'msg': 'SUCCESS', 'comment': comment});
               }
             });
@@ -85,6 +191,85 @@ module.exports = function (app) {
         default:
           return res.status(403).send('权限错误');
       }
+    },
+
+    getComments: function(req, res) {
+      //todo 获取评论，包括reply与comment
+    },
+
+    deleteComment: function(req, res) {
+      var comment = req.comment;
+      setDeleteAuth({
+        host_type: comment.host_type,
+        host_id: comment.host_id,
+        user: req.user,
+        comments: [comment]
+      }, function (err) {
+        if (err) {
+          console.log(err);
+        }
+        if (comment.delete_permission) {
+          comment.status = 'delete';
+          comment.save(function (err) {
+            if (err) {
+              console.log(err);
+              return res.send({ result: 0, msg: 'error' });
+            }
+            // save成功就意味着已经改为delete状态，后续操作不影响已经成功这个事实，故直接返回成功状态
+            res.send({ result: 1, msg: 'success' });
+
+            // 计数-1
+            if (comment.host_type === "campaign" || comment.host_type === "campaign_detail") {
+              Campaign.findByIdAndUpdate(comment.host_id, {
+                '$inc': {
+                  'comment_sum': -1
+                }
+              }, function (err, message) {
+                if (err) {
+                  console.log(err);
+                }
+              });
+            }
+            // 同时在相册移除相应的照片
+            if (comment.photos && comment.photos.length > 0) {
+              photo_album_ctrl.deletePhotos(comment.photos, function (err) {
+                if (err) {
+                  console.log(err);
+                }
+              });
+            }
+            // 如果comment的目标类型是comment，将comment的计数-1
+            if (comment.host_type === 'comment') {
+              Comment.findByIdAndUpdate(comment.host_id, {
+                '$inc': {
+                  'reply_count': -1
+                }
+              }, function (err) {
+                if (err) {
+                  console.log(err);
+                }
+              });
+            }
+          });
+        } else {
+          res.status(403);
+          return next('forbidden');
+        }
+      });
+    },
+    getCommentById: function(req, res) {
+      Comment.findById(req.params.commentId).exec()
+      .then(function (comment) {
+        if (!comment) {
+          return res.status(404).send('未找到评论');
+        } else {
+          req.comment = comment;
+          next();
+        }
+      })
+      .then(null, function (err) {
+        next(err);
+      });
     }
   };
 };
