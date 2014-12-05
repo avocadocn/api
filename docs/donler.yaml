@@ -95,8 +95,7 @@ paths:
       summary: 修改用户数据
       operationId: editUserData
       consumes:
-        //- multipart/form-data
-        - application/x-www-form-urlencoded
+        - multipart/form-data
       parameters:
         - name: userId
           description: 用户id
@@ -109,11 +108,11 @@ paths:
           required: false
           type: string
           in: formData
-#        - name: photo
-#          description: 头像
-#          required: false
-#          type: file
-#          in: formData
+        - name: photo
+          description: 头像
+          required: false
+          type: file
+          in: formData
         - name: password
           description: 密码
           required: false

@@ -16,7 +16,10 @@
     "jsonwebtoken": "~1.2.0",
     "soap": "~0.5.1",
     "jade": "~1.0.2",
-    "xss": "~0.1.12"
+    "xss": "~0.1.12",
+    "gm": "~1.17.0",
+    "multiparty": "~4.1.0",
+    "mime": "1.2.11"
   },
   "devDependencies": {
     "gulp": "~3.8.10",

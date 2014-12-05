@@ -1,5 +1,7 @@
 'use strict';
 
+var path = require('path');
+
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var Company = mongoose.model('Company');
@@ -9,6 +11,7 @@ var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var donlerValidator = require('../services/donler_validator.js');
 var emailService = require('../services/email.js');
+var uploader = require('../services/uploader.js');
 var auth = require('../services/auth.js');
 var tools = require('../tools/tools.js');
 
@@ -293,6 +296,25 @@ module.exports = function (app) {
       });
     },
 
+    updatePhoto: function (req, res, next) {
+      var user = req.resourceUser;
+      uploader(req, {
+        fieldName: 'photo',
+        targetDir: '/public/img/user/photo',
+        success: function (url, oriName) {
+          user.photo = path.join('/img/user/photo', url);
+          next();
+        },
+        error: function (err) {
+          if (err.type === 'notfound') {
+            next();
+          } else {
+            res.sendStatus(500);
+          }
+        }
+      });
+    },
+
     update: function (req, res) {
       var user = req.resourceUser;
       if (req.body.nickname) {
@@ -313,7 +335,6 @@ module.exports = function (app) {
       if (req.body.qq) {
         user.qq = req.body.qq;
       }
-      // todo edit photo
       user.save(function (err) {
         if (err) {
           log(err);
