@@ -84,6 +84,17 @@ module.exports = function (app) {
           membersWithoutLeader.push(member);
         }
       });
+      //过滤隐藏
+      var originFamilyPhotos = team.family.filter(function(photo){
+        return !photo.hidden && photo.select;
+      });
+      //只需传uri
+      var familyPhotos = [];
+      for(var i=0;i<originFamilyPhotos.length;i++){
+        familyPhotos.push({
+          uri:originFamilyPhotos[i].uri
+        });
+      }
       var briefTeam = {
         name: team.name,
         cname: team.cname,
@@ -96,13 +107,12 @@ module.exports = function (app) {
         // memberCount: team.member.length,
         homeCourts: team.home_court,
         cid: team.cid,
-        familyPhotos: team.family.filter(function (photo) {
-          return !photo.hidden && photo.select;
-        })
+        familyPhotos: familyPhotos
       };
       return res.status(200).send(briefTeam);
     },
     editTeamData : function(req, res) {
+      console.log(req.body);
       var team = req.companyGroup;
       var role = auth.getRole(req.user, {
         companies:[team.cid],
@@ -163,11 +173,45 @@ module.exports = function (app) {
         })
       }
     },
+    openTeam : function(req, res) {
+      var team = req.companyGroup;
+      var role = auth.getRole(req.user, {
+        companies:[team.cid],
+        teams:[req.params.teamId]
+      });
+      var allow = auth.auth(role,['closeTeam']);
+      if(!allow.closeTeam){
+        return res.status(403).send({msg: '权限错误'});
+      }else{
+        team.active = true;
+        team.save(function(err){
+          if(err){
+            log(err);
+            return res.status(500).send({msg:'保存错误'});
+          }
+          else{
+            return res.status(200).send({msg:'成功'});
+          }
+        })
+      }
+    },
     uploadFamilyPhotos : function(req, res) {
       //上传 todo
     },
     getFamilyPhotos : function(req, res) {
-      return;
+      var team = req.companyGroup;
+      var originFamilyPhotos = team.family.filter(function(photo){
+        return !photo.hidden ;
+      });
+      var familyPhotos = [];
+      for(var i=0;i<originFamilyPhotos.length;i++){
+        familyPhotos.push({
+          _id: team.family[i]._id,
+          uri: team.family[i].uri,
+          select: team.family[i].select
+        });
+      }
+      return res.status(200).send(familyPhotos);
     },
     toggleSelectFamilyPhoto : function(req, res) {
       return;

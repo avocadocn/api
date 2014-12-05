@@ -837,7 +837,7 @@
         "summary": "修改小队数据",
         "operationId": "editTeamData",
         "consumes": [
-          "application/json"
+          "application/x-www-form-urlencoded"
         ],
         "parameters": [
           {
@@ -856,13 +856,6 @@
             "in": "formData"
           },
           {
-            "name": "logo",
-            "description": "logo",
-            "required": false,
-            "type": "file",
-            "in": "formData"
-          },
-          {
             "name": "brief",
             "description": "小队简介",
             "required": false,
@@ -876,7 +869,8 @@
             "type": "array",
             "items": {
               "$ref": "HomeCourt"
-            }
+            },
+            "in": "formData"
           }
         ],
         "responses": {
@@ -897,6 +891,36 @@
         ],
         "summary": "关闭小队",
         "operationId": "deleteTeam",
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队Id",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "default": "53aa701011fd597b3e1be25d"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/teams/{teamId}/actions/open": {
+      "post": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "打开小队",
+        "operationId": "openTeam",
         "parameters": [
           {
             "name": "teamId",
@@ -3955,7 +3979,7 @@
         "logo",
         "createTime",
         "brief",
-        "homeCourt",
+        "homeCourts",
         "family"
       ],
       "properties": {
@@ -4008,7 +4032,7 @@
           "type": "array",
           "description": "全家福",
           "items": {
-            "$ref": "FamilyPhoto"
+            "$ref": "Photo"
           }
         }
       }
