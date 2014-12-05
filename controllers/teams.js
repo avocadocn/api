@@ -7,7 +7,8 @@ var User = mongoose.model('User'),
     Group = mongoose.model('Group');
 
 var log = require('../services/error_log.js'),
-    auth = require('../services/auth.js');
+    auth = require('../services/auth.js'),
+    tools = require('../tools/tools.js');
 
 module.exports = function (app) {
 
@@ -112,7 +113,6 @@ module.exports = function (app) {
       return res.status(200).send(briefTeam);
     },
     editTeamData : function(req, res) {
-      console.log(req.body);
       var team = req.companyGroup;
       var role = auth.getRole(req.user, {
         companies:[team.cid],
@@ -200,29 +200,203 @@ module.exports = function (app) {
     },
     getFamilyPhotos : function(req, res) {
       var team = req.companyGroup;
+      var role = auth.getRole(req.user, {
+        companies:[team.cid],
+        teams:[req.params.teamId]
+      });
+      var allow = auth.auth(role,['visitPhotoAlbum']);
+      if(!allow.visitPhotoAlbum){
+        return res.status(403).send({msg: '权限错误'});
+      }
       var originFamilyPhotos = team.family.filter(function(photo){
-        return !photo.hidden ;
+        return !photo.hidden;
       });
       var familyPhotos = [];
       for(var i=0;i<originFamilyPhotos.length;i++){
         familyPhotos.push({
-          _id: team.family[i]._id,
-          uri: team.family[i].uri,
-          select: team.family[i].select
+          _id: originFamilyPhotos[i]._id,
+          uri: originFamilyPhotos[i].uri,
+          select: originFamilyPhotos[i].select
         });
       }
       return res.status(200).send(familyPhotos);
     },
     toggleSelectFamilyPhoto : function(req, res) {
-      return;
+      var team = req.companyGroup;
+      var role = auth.getRole(req.user, {
+        companies:[team.cid],
+        teams:[req.params.teamId]
+      });
+      var allow = auth.auth(role,['editTeam']);
+      if(!allow.editTeam){
+        return res.status(403).send({msg: '权限错误'});
+      }
+      for (var i = 0; i < team.family.length; i++) {
+        if (team.family[i]._id.toString() === req.params.familyPhotoId) {
+          if (!team.family[i].select) {
+            team.family[i].select = true;
+          } else {
+            team.family[i].select = false;
+          }
+          break;
+        }
+      }
+      team.save(function(err) {
+        if (err) {
+          log(err);
+          return res.status(500).send({msg:'保存错误'});
+        }
+        return res.status(200).send({msg:'成功'});
+      });
     },
     deleteFamilyPhoto : function(req, res) {
-      return;
+      var team = req.companyGroup;
+      var role = auth.getRole(req.user, {
+        companies:[team.cid],
+        teams:[req.params.teamId]
+      });
+      var allow = auth.auth(role,['editTeam']);
+      if(!allow.editTeam){
+        return res.status(403).send({msg: '权限错误'});
+      }
+      for (var i = 0; i < team.family.length; i++) {
+        if (team.family[i]._id.toString() === req.params.familyPhotoId) {
+          team.family[i].hidden = true;
+          break;
+        }
+      }
+      team.save(function(err) {
+        if (err) {
+          log(err);
+          return res.status(500).send({msg:'保存错误'});
+        }
+        return res.status(200).send({msg:'成功'});
+      });
     },
     joinTeam : function(req, res) {
-      return;
+      var user = req.resourceUser;
+      var team = req.companyGroup;
+      var requestRole = auth.getRole(req.user, {
+        companies:[user.getCid()],
+        users:[req.params.userId]
+      });
+      var requestAllow = auth.auth(requestRole,['joinTeamOperation']);
+      if(!requestAllow.joinTeamOperation){
+        return res.status(403).send({msg: '权限错误'});
+      }
+      var resourceRole = auth.getRole(user,{
+        companies:[user.getCid()],
+        teams:[team._id],
+      });
+      var resourceAllow = auth.auth(resourceRole, ['joinTeam'])
+      if(!resourceAllow.joinTeam){
+        return res.status(400).send({msg: '已加入'});
+      }else{
+        team.member.push({
+          '_id':user._id,
+          'nickname':user.nickname,
+          'photo':user.photo
+        });
+        var memberScore = team.score.member;
+        memberScore = (memberScore == undefined || memberScore == null) ? 10 : memberScore + 10;
+        team.score.member = memberScore;
+        user.team.push({
+          '_id' : team._id,
+          'gid': team.gid,
+          'group_type': team.group_type,
+          'entity_type': team.entity_type,
+          'name':team.name,
+          'logo':team.logo
+        });
+        team.save(function(err){
+          if(err){
+            log(err);
+            return res.status(500).send({msg:'保存错误'});
+          }else{
+            user.save(function (uErr){
+              if(uErr){
+                log(uErr);
+                return res.status(500).send({msg:'保存错误'});
+              }
+              return res.status(200).send({msg:'加入成功'});
+            });
+          }
+        });
+      }
     },
     quitTeam : function(req, res) {
+      var user = req.resourceUser;
+      var team = req.companyGroup;
+      var requestRole = auth.getRole(req.user, {
+        companies:[user.getCid()],
+        users:[req.params.userId]
+      });
+      var allow = auth.auth(requestRole,['quitTeamOperation']);
+      if(!allow.quitTeamOperation){
+        return res.status(403).send({msg: '权限错误'});
+      }
+      var resourceRole = auth.getRole(user,{
+        companies:[user.getCid()],
+        teams:[team._id],
+      });
+      var resourceAllow = auth.auth(resourceRole, ['quitTeam'])
+      
+      if(!resourceAllow.quitTeam){
+        return res.status(400).send({msg: '未参加此小队'});
+      }
+      //对team操作
+      var memberIndex = model_helper.arrayObjectIndexOf(companyGroup.member,user._id,'_id');
+      team.member.splice(memberIndex,1);
+      var memberScore = team.score.member;
+      memberScore = (memberScore == undefined || memberScore == null) ? 0 : memberScore + 10;
+      team.score.member = memberScore;
+
+      var leaderIndex = model_helper.arrayObjectIndexOf(team.leader,user._id,'_id');
+      if(leaderIndex>-1){
+        team.leader.splice(leaderIndex,1);
+      }
+      //修改user.role的逻辑部分
+      //看他是不是这个队队长
+      if(resourceRole.team='leader'){
+        //看他是不是其它队的队长
+        var tids = [];
+        for(var i =0; i<user.team.length;i++){
+          if(user.team._id.toString()!==team._id){
+            tids.push(user.team._id);
+          }
+        }
+        var otherRole = auth.getRole(user, {
+          teams: [tids]
+        });
+        //如果不是
+        if(otherRole.team!=='leader'){
+          user.role = 'EMPLOYEE';
+        }
+      }
+
+      //对user操作
+      
+      if(teamIndex>-1){
+        user.team.splice(teamIndex,1);
+      }
+
+      team.save(function(err){
+        if(err){
+          log(err);
+          return res.status(500).send({msg:'保存错误'});
+        }else{
+          user.save(function (uErr){
+            if(uErr){
+              log(uErr);
+              return res.status(500).send({msg:'保存错误'});
+            }
+            return res.status(200).send({msg:'退出成功'});
+          });
+        }
+      });
+
+    },
+    getTeamTags : function(req, res) {
       return;
     }
   }

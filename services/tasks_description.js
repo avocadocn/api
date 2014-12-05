@@ -164,6 +164,17 @@ var registeredTasks = {
   // 解除屏蔽
   openUser: {
     company: ['hr']
+  },
+
+  // 能操作某user加入小队
+  joinTeamOperation: {
+    company: ['hr'],
+    user: ['self']
+  },
+  // 能操作某user退出小队
+  quitTeamOperation: {
+    company: ['hr'],
+    user: ['self']
   }
 };
 

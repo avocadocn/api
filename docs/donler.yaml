@@ -810,7 +810,28 @@ paths:
           description: error
           schema:
             $ref: Error
-
+  "/teams/{teamId}/tags":
+    get:
+      tags:
+        - teams
+      summary: 获取小队tags
+      operationId: getTeamTags
+      parameters:
+        - name: teamId
+          description: 小队Id
+          required: true
+          type: string
+          in: path
+          default: 53aa701011fd597b3e1be25d
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: Tags
+        default:
+          description: error
+          schema:
+            $ref: Error
   /departments:
     post:
       tags:
