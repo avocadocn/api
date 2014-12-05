@@ -202,7 +202,7 @@ donlerValidator.combineMsg = function (msg) {
 };
 
 validators.required = function (name, value, callback) {
-  if (!value && value === '') {
+  if (!value || value === '') {
     var msg = util.format('%s不能为空', name);
     callback(false, msg);
   } else {
@@ -211,6 +211,10 @@ validators.required = function (name, value, callback) {
 };
 
 validators.email = function (name, value, callback) {
+  if (!value) {
+    callback(true);
+    return;
+  }
   if (!validatorModule.isEmail(value)) {
     var msg = util.format('%s不是一个正确的邮箱地址', name);
     callback(false, msg);
@@ -220,6 +224,10 @@ validators.email = function (name, value, callback) {
 };
 
 validators.number = function (name, value, callback) {
+  if (!value) {
+    callback(true);
+    return;
+  }
   if (!validatorModule.isNumeric(value)) {
     var msg = util.format('%s必须是数字', name);
     callback(false, msg);

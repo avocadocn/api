@@ -62,6 +62,10 @@ module.exports = function (app) {
       };
 
       var validateDepartment = function (name, value, callback) {
+        if (!value) {
+          callback(true);
+          return;
+        }
         var departments = req.company.department;
         for (var i = 0; i < value.length; i++) {
           var index = tools.arrayObjectIndexOf(departments, value[i], 'name');
@@ -94,12 +98,12 @@ module.exports = function (app) {
         nickname: {
           name: '昵称',
           value: req.body.nickname,
-          validators: ['required']
+          validators: ['required', donlerValidator.maxLength(20)]
         },
         password: {
           name: '密码',
           value: req.body.password,
-          validators: ['required', donlerValidator.minLength(6), donlerValidator.maxLength(20)]
+          validators: ['required', donlerValidator.minLength(6), donlerValidator.maxLength(30)]
         },
         realname: {
           name: '真实姓名',
@@ -117,12 +121,12 @@ module.exports = function (app) {
           validators: ['number', donlerValidator.isLength(11)]
         }
       }, 'complete', function (pass, msg) {
-        if (!pass) {
+        if (pass) {
+          next();
+        } else {
           var resMsg = donlerValidator.combineMsg(msg);
           res.status(400).send({ msg: resMsg });
-          return;
         }
-        next();
       });
     },
 
@@ -245,6 +249,79 @@ module.exports = function (app) {
           log(err);
           res.sendStatus(500);
         });
+    },
+
+    updateValidate: function (req, res, next) {
+      donlerValidator({
+        nickname: {
+          name: '昵称',
+          value: req.body.nickname,
+          validators: [donlerValidator.minLength(1), donlerValidator.maxLength(20)]
+        },
+        password: {
+          name: '密码',
+          value: req.body.password,
+          validators: [donlerValidator.minLength(6), donlerValidator.maxLength(30)]
+        },
+        realname: {
+          name: '真实姓名',
+          value: req.body.realname,
+          validators: [donlerValidator.minLength(1), donlerValidator.maxLength(20)]
+        },
+        intro: {
+          name: '简介',
+          value: req.body.realname,
+          validators: [donlerValidator.maxLength(40)]
+        },
+        phone: {
+          name: '手机号码',
+          value: req.body.phone,
+          validators: ['number', donlerValidator.isLength(11)]
+        },
+        qq: {
+          name: 'qq',
+          value: req.body.qq,
+          validators: ['number']
+        }
+      }, 'complete', function (pass, msg) {
+        if (pass) {
+          next();
+        } else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+        }
+      });
+    },
+
+    update: function (req, res) {
+      var user = req.resourceUser;
+      if (req.body.nickname) {
+        user.nickname = req.body.nickname;
+      }
+      if (req.body.password) {
+        user.password = req.body.password;
+      }
+      if (req.body.realname) {
+        user.realname = req.body.realname;
+      }
+      if (req.body.intro) {
+        user.intro = req.body.intro;
+      }
+      if (req.body.phone) {
+        user.phone = req.body.phone;
+      }
+      if (req.body.qq) {
+        user.qq = req.body.qq;
+      }
+      // todo edit photo
+      user.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+          return;
+        }
+        res.sendStatus(200);
+      });
     },
 
     login: function (req, res) {

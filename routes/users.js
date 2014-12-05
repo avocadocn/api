@@ -7,6 +7,7 @@ module.exports = function (app, ctrl) {
 
   app.post('/users', ctrl.getCompanyByCid, ctrl.registerValidate, ctrl.register);
   app.get('/users/:userId', token.needToken, ctrl.getUserById);
+  app.put('/users/:userId', token.needToken, getById.getUserById, ctrl.updateValidate, ctrl.update);
 
   app.post('/users/:userId/close', token.needToken, getById.getUserById, ctrl.close);
   app.post('/users/:userId/open', token.needToken, getById.getUserById, ctrl.open);
