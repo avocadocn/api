@@ -161,7 +161,18 @@ var CompanyGroup = new Schema({
 });
 
 // CompanyGroup.plugin(mongoosePaginate);
+/**
+ * Virtuals
+ */
+CompanyGroup.virtual('groupType').set(function(groupType) {
+    this.group_type = groupType;
+}).get(function(){
+    return this.group_type;
+});
 
+/**
+ * methods:
+ */
 CompanyGroup.methods = {
     /**
      * 用户是否是这个队的成员

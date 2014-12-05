@@ -20,5 +20,18 @@ var GroupModel = new Schema({
     },
     group_rule: String,
 });
+/**
+ * Virtuals
+ */
+GroupModel.virtual('groupType').set(function(groupType) {
+    this.group_type = groupType;
+}).get(function(){
+    return this.group_type;
+});
+GroupModel.virtual('entityType').set(function(entityType) {
+    this.entity_type = entityType;
+}).get(function(){
+    return this.entity_type;
+});
 
 mongoose.model('Group', GroupModel);

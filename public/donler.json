@@ -870,7 +870,7 @@
             "in": "formData"
           },
           {
-            "name": "home_court",
+            "name": "homeCourt",
             "description": "主场信息",
             "required": false,
             "type": "array",
@@ -3925,11 +3925,11 @@
       "title": "SelectedGroups",
       "required": [
         "groupType",
-        "entity_type",
+        "entityType",
         "_id"
       ],
       "properties": {
-        "group_type": {
+        "groupType": {
           "type": "string",
           "description": "小队类型"
         },
@@ -3937,7 +3937,7 @@
           "type": "string",
           "description": "小队名称"
         },
-        "entity_type": {
+        "entityType": {
           "type": "string",
           "description": "小队类型"
         },
@@ -3953,9 +3953,9 @@
         "name",
         "cname",
         "logo",
-        "create_time",
+        "createTime",
         "brief",
-        "home_court",
+        "homeCourt",
         "family"
       ],
       "properties": {
@@ -3971,11 +3971,11 @@
           "type": "string",
           "description": "logo"
         },
-        "group_type": {
+        "groupType": {
           "type": "string",
           "description": "小队类型"
         },
-        "create_time": {
+        "createTime": {
           "type": "date-time",
           "description": "成立时间"
         },

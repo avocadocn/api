@@ -28,15 +28,15 @@ module.exports = function (app) {
         } else {
           var selectedGroups = req.body.selectedGroups;
           for (var i = 0; i < selectedGroups.length; i++) {
-            var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : company.info.official_name + '-' + selectedGroups[i].group_type + '队';
+            var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : company.info.official_name + '-' + selectedGroups[i].groupType + '队';
             var companyGroup = new CompanyGroup();
 
             companyGroup.cid = company._id;
             companyGroup.cname = company.info.name;
             companyGroup.gid = selectedGroups[i]._id;
-            companyGroup.group_type = selectedGroups[i].group_type;
+            companyGroup.group_type = selectedGroups[i].groupType;
             companyGroup.name = tname;
-            companyGroup.logo = '/img/icons/group/' + selectedGroups[i].entity_type.toLowerCase() + '_on.png';
+            companyGroup.logo = '/img/icons/group/' + selectedGroups[i].entityType.toLowerCase() + '_on.png';
 
             companyGroup.save(function(err) {
               if (err) {
@@ -47,7 +47,7 @@ module.exports = function (app) {
 
             company.team.push({
               'gid': selectedGroups[i]._id,
-              'group_type': selectedGroups[i].group_type,
+              'group_type': selectedGroups[i].groupType,
               'name': tname,
               'id': companyGroup._id
             });
@@ -88,8 +88,8 @@ module.exports = function (app) {
         name: team.name,
         cname: team.cname,
         logo: team.logo,
-        group_type: team.group_type,
-        create_time: team.create_time,
+        groupType: team.group_type,
+        createTime: team.create_time,
         brief: team.brief,
         leaders: team.leader,
         members: membersWithoutLeader.slice(0, 6 - team.leader.length),
@@ -116,12 +116,13 @@ module.exports = function (app) {
         team.name = req.body.name;
       }
       if(req.body.logo){
-        team.logo = req.body.logo;
+        // team.logo = req.body.logo;
+        // logo todo
       }
       if(req.body.brief){
         team.brief = req.body.brief;
       }
-      if(req.body.home_court){
+      if(req.body.homeCourt){
         var homecourts = req.body.homecourt;
         homecourts.forEach(function (homecourt) {
           if (!homecourt.loc || !homecourt.loc.coordinates || homecourt.loc.coordinates.length === 0) {
@@ -141,10 +142,29 @@ module.exports = function (app) {
       });
     },
     deleteTeam : function(req, res) {
-      return;
+      var team = req.companyGroup;
+      var role = auth.getRole(req.user, {
+        companies:[team.cid],
+        teams:[req.params.teamId]
+      });
+      var allow = auth.auth(role,['closeTeam']);
+      if(!allow.closeTeam){
+        return res.status(403).send({msg: '权限错误'});
+      }else{
+        team.active = false;
+        team.save(function(err){
+          if(err){
+            log(err);
+            return res.status(500).send({msg:'保存错误'});
+          }
+          else{
+            return res.status(200).send({msg:'成功'});
+          }
+        })
+      }
     },
     uploadFamilyPhotos : function(req, res) {
-      return;
+      //上传 todo
     },
     getFamilyPhotos : function(req, res) {
       return;
