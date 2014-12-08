@@ -504,12 +504,6 @@
             "in": "formData"
           },
           {
-            "name": "inviteCode",
-            "description": "邀请码",
-            "type": "string",
-            "in": "formData"
-          },
-          {
             "name": "name",
             "description": "企业官方名（与营业执照一致的）",
             "type": "string",
@@ -2915,6 +2909,40 @@
             "description": "状态改变成功",
             "schema": {
               "type": "boolean"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/invitecode": {
+      "get": {
+        "tags": [
+          "invitecode"
+        ],
+        "summary": "验证invitecode是否有效",
+        "operationId": "checkInviteCode",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "invite_code",
+            "description": "邀请码",
+            "type": "string",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "schema": {
+              "$ref": "ValidateResult"
             }
           },
           "default": {

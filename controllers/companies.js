@@ -162,6 +162,18 @@ module.exports = function (app) {
       });
     },
 
+    companyInfoValidate: function (req, res) {
+      // Company.findOne({
+      //   'login_email': req.body.login_email
+      // }, function(err, company) {
+      //   if (err || company) {
+      //     res.send(true);
+      //   } else {
+      //     res.send(false);
+      //   }
+      // });
+    },
+
     register: function (req, res, next) {
       var company = new Company({
         info: {
@@ -346,6 +358,29 @@ module.exports = function (app) {
         });
     },
 
+    updateCompany: function (req, res) {
+
+    },
+
+    getCompanyTeams: function (req, res) {
+
+    },
+
+    getCompanyStatistics: function (req, res) {
+
+    },
+
+    getCompanyMembers: function (req, res) {
+
+    },
+
+    getCompanyDepartments: function (req, res) {
+
+    },
+
+    getCompanyTags: function (req, res) {
+
+    },
 
     login: function (req, res) {
       if (!req.body || !req.body.username || !req.body.password) {
