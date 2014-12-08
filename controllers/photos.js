@@ -220,7 +220,7 @@ module.exports = function (app) {
 
     },
 
-
+    // todo 待测试
     uploadPhoto: function (req, res) {
       var photoAlbum = req.photoAlbum;
 
@@ -284,10 +284,126 @@ module.exports = function (app) {
         }
       });
 
+    },
+
+    // todo 待测试
+    getPhotos: function (req, res) {
+      var photoAlbum = req.photoAlbum;
+      var photos = photoAlbum.getPhotos();
+      var resPhotos = [];
+      photos.forEach(function (photo) {
+        resPhotos.push({
+          _id: photo._id,
+          url: photo.uri,
+          name: photo.name
+        });
+      });
+      res.status(200).send(resPhotos);
+    },
+
+    // todo 待测试
+    getPhoto: function (req, res) {
+      var photoAlbum = req.photoAlbum;
+
+      var photo = photoAlbum.getPhoto(req.params.photoId);
+      if (!photo) {
+        res.sendStatus(404);
+        return;
+      }
+
+      var resPhoto = {
+        _id: photo._id,
+        url: photo.uri,
+        name: photo.name,
+        uploadUser: photo.upload_user,
+        uploadDate: photo.upload_date
+      };
+      res.status(200).send(resPhoto);
+
+    },
+
+
+    editPhotoValidate: function (req, res, next) {
+      donlerValidator({
+        name: {
+          name: '照片名称',
+          value: req.body.name,
+          validators: ['required', donlerValidator.maxLength(30)]
+        }
+      }, 'fast', function (pass, msg) {
+        if (pass) {
+          next();
+        } else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+        }
+      });
+    },
+
+    // todo 待测试
+    editPhoto: function (req, res) {
+      var photoAlbum = req.photoAlbum;
+
+      var photo = photoAlbum.getPhoto(req.params.photoId);
+      if (!photo) {
+        res.sendStatus(404);
+        return;
+      }
+
+      var role = auth.getRole(req.user, {
+        companies: photoAlbum.owner.companies,
+        teams: photoAlbum.owner.teams,
+        users: [photo.upload_user._id]
+      });
+      var allow = auth.auth(role, ['editPhoto']);
+      if (!allow.editPhoto) {
+        res.sendStatus(403);
+        return;
+      }
+
+      photo.name = req.body.name;
+      photoAlbum.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+        } else {
+          res.sendStatus(200);
+        }
+      });
+
+    },
+
+    // todo 待测试
+    deletePhoto: function (req, res) {
+      var photoAlbum = req.photoAlbum;
+
+      var photo = photoAlbum.getPhoto(req.params.photoId);
+      if (!photo) {
+        res.sendStatus(404);
+        return;
+      }
+
+      var role = auth.getRole(req.user, {
+        companies: photoAlbum.owner.companies,
+        teams: photoAlbum.owner.teams,
+        users: [photo.upload_user._id]
+      });
+      var allow = auth.auth(role, ['deletePhoto']);
+      if (!allow.deletePhoto) {
+        res.sendStatus(403);
+        return;
+      }
+
+      photo.hidden = true;
+      photoAlbum.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+        } else {
+          res.sendStatus(200);
+        }
+      });
     }
-
-
-
 
   };
 };

@@ -135,6 +135,29 @@ PhotoAlbum.methods = {
       }
     }
     this.photo_count = count;
+  },
+
+  // 获取没有删除的照片
+  getPhotos: function () {
+    return this.photos.filter(function (photo) {
+      return !photo.hidden;
+    });
+  },
+
+  /**
+   * 获取某一张照片
+   * @param {Object|String} id 照片id
+   * @returns {Object}
+   */
+  getPhoto: function (id) {
+    var photo;
+    for (var i = 0; i < this.photos.length; i++) {
+      if (this.photos[i]._id.toString() === id.toString()) {
+        photo = this.photos[i];
+        break;
+      }
+    }
+    return photo;
   }
 };
 

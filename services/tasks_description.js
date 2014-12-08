@@ -70,10 +70,6 @@ var registeredTasks = {
     company: ['hr'],
     team: ['leader']
   },
-  uploadPhoto: {
-    company: ['hr'],
-    team: ['leader', 'member']
-  },
   visitPhotoAlbum: {
     company: ['hr', 'member']
   },
@@ -203,7 +199,21 @@ var registeredTasks = {
   deletePhotoAlbum: {
     company: ['hr'],
     team: ['leader']
+  },
+
+  // 上传照片
+  uploadPhoto: {
+    company: ['hr'],
+    team: ['leader', 'member']
+  },
+
+  // 修改照片
+  editPhoto: {
+    company: ['hr'],
+    team: ['leader'],
+    user: ['self']
   }
+
 };
 
 module.exports = registeredTasks;
