@@ -2572,6 +2572,57 @@
           }
         }
       },
+      "put": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "批量修改站内信状态",
+        "operationId": "updateMessages",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "requestType",
+            "description": "主体类型",
+            "required": true,
+            "type": "string",
+            "in": "query",
+            "enum": [
+              "all",
+              "private",
+              "send"
+            ]
+          },
+          {
+            "name": "requestId",
+            "description": "主题Id",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "body",
+            "description": "站内信信息",
+            "required": true,
+            "schema": {
+              "$ref": "MessageUpdateData"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
           "messages"
@@ -2587,7 +2638,13 @@
             "description": "主体类型",
             "required": true,
             "type": "string",
-            "in": "query"
+            "in": "query",
+            "enum": [
+              "private",
+              "team",
+              "all",
+              "global"
+            ]
           },
           {
             "name": "requestId",
@@ -2595,15 +2652,31 @@
             "required": true,
             "type": "string",
             "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "数量限制",
+            "required": true,
+            "type": "int32",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
             "description": "成功",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "Message"
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "Message"
+                  }
+                }
               }
             }
           },
@@ -2616,39 +2689,47 @@
         }
       }
     },
-    "/messages/{messageId}": {
-      "put": {
+    "/messages/{requestType}/{requestId}": {
+      "get": {
         "tags": [
           "messages"
         ],
-        "summary": "修改站内信",
-        "operationId": "upadateMessage",
+        "summary": "收取站内信",
+        "operationId": "reciveMessages",
         "consumes": [
           "application/json"
         ],
         "parameters": [
           {
-            "name": "messageId",
-            "description": "站内信Id",
+            "name": "requestType",
+            "description": "主体类型",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "enum": [
+              "user",
+              "company"
+            ]
+          },
+          {
+            "name": "requestId",
+            "description": "主体Id",
             "required": true,
             "type": "string",
             "in": "path"
-          },
-          {
-            "name": "body",
-            "description": "站内信信息",
-            "required": true,
-            "schema": {
-              "$ref": "Message"
-            },
-            "in": "body"
           }
         ],
         "responses": {
           "200": {
             "description": "成功",
             "schema": {
-              "$ref": "Message"
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
             }
           },
           "default": {
@@ -2658,20 +2739,33 @@
             }
           }
         }
-      },
+      }
+    },
+    "/messages/send/{requestType}/{requestId}": {
       "get": {
         "tags": [
           "messages"
         ],
-        "summary": "获取一条站内信",
-        "operationId": "getComments",
+        "summary": "获取已经发送的站内信",
+        "operationId": "getsentComments",
         "consumes": [
           "application/json"
         ],
         "parameters": [
           {
-            "name": "messageId",
-            "description": "站内信Id",
+            "name": "requestType",
+            "description": "主体类型",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "enum": [
+              "private",
+              "team"
+            ]
+          },
+          {
+            "name": "requestId",
+            "description": "主体Id",
             "required": true,
             "type": "string",
             "in": "path"
@@ -2681,7 +2775,19 @@
           "200": {
             "description": "成功",
             "schema": {
-              "$ref": "Message"
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "Message"
+                  }
+                }
+              }
             }
           },
           "default": {
@@ -2742,30 +2848,31 @@
         }
       }
     },
-    "/push": {
-      "post": {
+    "/push/{userId}": {
+      "get": {
         "tags": [
           "push"
         ],
-        "summary": "指定人员推送通知",
-        "operationId": "pushService",
+        "summary": "获取用户的推送设置状态",
+        "operationId": "getPushStatus",
         "consumes": [
           "application/json"
         ],
         "parameters": [
           {
-            "name": "body",
-            "schema": {
-              "$ref": "PushData"
-            },
-            "in": "body",
+            "name": "userId",
+            "type": "string",
+            "in": "path",
             "required": true,
-            "description": "推送数据"
+            "description": "用户id"
           }
         ],
         "responses": {
-          "202": {
-            "description": "请求提交成功，稍后将异步的进行处理"
+          "200": {
+            "description": "请求成功",
+            "schema": {
+              "type": "boolean"
+            }
           },
           "default": {
             "description": "error",
@@ -2774,80 +2881,40 @@
             }
           }
         }
-      }
-    },
-    "/push/team/{teamId}": {
-      "post": {
+      },
+      "put": {
         "tags": [
           "push"
         ],
-        "summary": "对小队成员推送",
-        "operationId": "pushToTeamMembers",
+        "summary": "更改用户的推送设置状态",
+        "operationId": "updatePushStatus",
         "consumes": [
           "application/json"
         ],
         "parameters": [
           {
-            "name": "teamId",
-            "description": "小队 Id",
-            "required": true,
+            "name": "userId",
             "type": "string",
-            "in": "path"
+            "in": "path",
+            "required": true,
+            "description": "用户id"
           },
           {
             "name": "body",
             "schema": {
-              "$ref": "PushData"
+              "$ref": "PushStatusData"
             },
             "in": "body",
             "required": true,
-            "description": "推送数据"
+            "description": "推送状态"
           }
         ],
         "responses": {
-          "202": {
-            "description": "请求提交成功，稍后将异步的进行处理"
-          },
-          "default": {
-            "description": "error",
+          "200": {
+            "description": "状态改变成功",
             "schema": {
-              "$ref": "Error"
+              "type": "boolean"
             }
-          }
-        }
-      }
-    },
-    "/push/company/{companyId}": {
-      "post": {
-        "tags": [
-          "push"
-        ],
-        "summary": "对公司成员推送",
-        "operationId": "pushToCompanyMembers",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "companyId",
-            "description": "公司 Id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          },
-          {
-            "name": "body",
-            "schema": {
-              "$ref": "PushData"
-            },
-            "in": "body",
-            "required": true,
-            "description": "推送数据"
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "请求提交成功，稍后将异步的进行处理"
           },
           "default": {
             "description": "error",
@@ -3916,6 +3983,40 @@
         }
       }
     },
+    "MessageUpdateData": {
+      "title": "MessageUpdateData",
+      "description": "更新站内信的数据",
+      "type": "object",
+      "properties": {
+        "msg_id": {
+          "type": "string"
+        },
+        "multi": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "delete",
+            "read",
+            "sender_delete",
+            "unread"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "all",
+            "private",
+            "send",
+            "team",
+            "department",
+            "company",
+            "global"
+          ]
+        }
+      }
+    },
     "PhotoAlbum": {
       "title": "PhotoAlbum",
       "type": "object",
@@ -4431,6 +4532,15 @@
         },
         "icon": {
           "type": "string"
+        }
+      }
+    },
+    "PushStatusData": {
+      "title": "PushStatusData",
+      "required": "-pushStatus",
+      "properties": {
+        "pushStatus": {
+          "type": "boolean"
         }
       }
     }

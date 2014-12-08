@@ -117,6 +117,15 @@ var registeredTasks = {
     company: ['hr'],
     team: ['leader']
   },
+  getPrivateMessage: {
+    user: ['self']
+  },
+  getSentMessage: {
+    user: ['self']
+  },
+  updatePrivateMessage: {
+    user: ['self']
+  },
   // 发小队站内信
   publishTeamMessage: {
     company: ['hr'],
@@ -155,7 +164,6 @@ var registeredTasks = {
     company: ['hr', 'member', 'other_hr', 'other_member'],
     user: ['self']
   },
-
   // 屏蔽用户
   closeUser: {
     company: ['hr']
@@ -175,6 +183,9 @@ var registeredTasks = {
   quitTeamOperation: {
     company: ['hr'],
     user: ['self']
+  },
+  changeUserPushStatus:{
+    user:['self']
   }
 };
 

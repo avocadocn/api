@@ -136,7 +136,6 @@ module.exports = function (app) {
         default:
         break;
       }
-      console.log(requestType,reqModel)
       mongoose.model(reqModel)
       .findById(requestId)
       .exec()
