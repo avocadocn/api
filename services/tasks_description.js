@@ -191,6 +191,12 @@ var registeredTasks = {
   createPhotoAlbum: {
     company: ['hr'],
     team: ['leader']
+  },
+
+  // 编辑相册
+  editPhotoAlbum: {
+    company: ['hr'],
+    team: ['leader']
   }
 };
 

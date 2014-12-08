@@ -10,6 +10,22 @@ var donlerValidator = require('../services/donler_validator.js');
 module.exports = function (app) {
   return {
 
+    getByPhotoAlbumId: function (req, res, next) {
+      PhotoAlbum.findById(req.params.photoAlbumId).exec()
+        .then(function (photoAlbum) {
+          if (!photoAlbum) {
+            res.sendStatus(404);
+          } else {
+            req.photoAlbum = photoAlbum;
+            next();
+          }
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
+    },
+
     createPhotoAlbumValidate: function (req, res, next) {
       donlerValidator({
         cid: {
@@ -118,7 +134,61 @@ module.exports = function (app) {
           log(err);
           res.sendStatus(500);
         });
+    },
+
+    getPhotoAlbum: function (req, res) {
+      var photoAlbum = req.photoAlbum;
+      var resPhotoAlbum = {
+        _id: photoAlbum._id,
+        name: photoAlbum.name,
+        updateDate: photoAlbum.update_date,
+        updateUser: photoAlbum.update_user,
+        photoCount: photoAlbum.photo_count
+      };
+      res.status(200).send(resPhotoAlbum);
+    },
+
+    editPhotoAlbumValidate: function (req, res, next) {
+      donlerValidator({
+        name: {
+          name: '相册名',
+          value: req.body.name,
+          validators: ['required', donlerValidator.maxLength(30)]
+        }
+      }, 'fast', function (pass, msg) {
+        if (pass) {
+          next();
+        } else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+        }
+      });
+    },
+
+    editPhotoAlbum: function (req, res) {
+      var photoAlbum = req.photoAlbum;
+
+      var role = auth.getRole(req.user, {
+        companies: photoAlbum.owner.companies,
+        teams: photoAlbum.owner.teams
+      });
+      var allow = auth.auth(role, ['editPhotoAlbum']);
+      if (!allow.editPhotoAlbum) {
+        res.sendStatus(403);
+        return;
+      }
+
+      photoAlbum.name = req.body.name;
+      photoAlbum.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+        } else {
+          res.sendStatus(200);
+        }
+      });
     }
+
 
   };
 };

@@ -2134,7 +2134,7 @@
         "summary": "修改相册数据",
         "operationId": "updatePotoAlbum",
         "consumes": [
-          "application/json"
+          "application/x-www-form-urlencoded"
         ],
         "parameters": [
           {
