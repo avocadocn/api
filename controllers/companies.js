@@ -2,16 +2,207 @@
 
 var mongoose = require('mongoose');
 var Company = mongoose.model('Company');
+var CompanyRegisterInviteCode = mongoose.model('CompanyRegisterInviteCode');
 
 var jwt = require('jsonwebtoken');
+var crypto = require('crypto');
+var util = require('util');
+
 var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var auth = require('../services/auth.js');
 var donlerValidator = require('../services/donler_validator.js');
+var emailService = require('../services/email.js');
 
 module.exports = function (app) {
 
   return {
+
+    registerValidate: function (req, res, next) {
+
+      var emailValidate = function (name, value, callback) {
+        if (!value) {
+          callback(true);
+        }
+        Company.findOne({ 'info.email': value }, { '_id': 1 }).exec()
+          .then(function (company) {
+            if (!company) {
+              callback(true);
+            } else {
+              var msg = util.format('%s已被注册', name);
+              callback(false, msg);
+            }
+          })
+          .then(null, function (err) {
+            log(err);
+            var msg = util.format('验证%s时出错', name);
+            callback(false, msg);
+          });
+      };
+
+      var nameValidate = function (name, value, callback) {
+        if (!value) {
+          callback(true);
+        }
+        Company.findOne({ 'info.name': value }, { '_id': 1 }).exec()
+          .then(function (company) {
+            if (!company) {
+              callback(true);
+            } else {
+              var msg = util.format('%s已被注册', name);
+              callback(false, msg);
+            }
+          })
+          .then(null, function (err) {
+            log(err);
+            var msg = util.format('验证%s时出错', name);
+            callback(false, msg);
+          });
+      };
+
+      var inviteCodeValidate = function (name, value, callback) {
+        if (!value) {
+          callback(true);
+        }
+        CompanyRegisterInviteCode
+          .findOne({
+            code: value,
+            status: 'active'
+          }, { '_id': 1 })
+          .exec()
+          .then(function (code) {
+            if (!code) {
+              var msg = util.format('无效的%s', name);
+              callback(false, msg);
+            } else {
+             callback(true);
+            }
+          })
+          .then(null, function (err) {
+            log(err);
+            var msg = util.format('验证%s时出错', name);
+            callback(false, msg);
+          });
+      };
+
+      donlerValidator({
+        name: {
+          name: '公司名称',
+          value: req.body.name,
+          validators: ['required', nameValidate]
+        },
+        province: {
+          name: '省份',
+          value: req.body.province,
+          validators: ['required']
+        },
+        city: {
+          name: '城市',
+          value: req.body.city,
+          validators: ['required']
+        },
+        district: {
+          name: '地区',
+          value: req.body.district,
+          validators: ['required']
+        },
+        region: {
+          name: '省市区',
+          value: req.body.province + ',' + req.body.city + ',' + req.body.district,
+          validators: ['region']
+        },
+        address: {
+          name: '详细地址',
+          value: req.body.address,
+          validators: ['required']
+        },
+        contacts: {
+          name: '联系人',
+          value: req.body.contacts,
+          validators: ['required']
+        },
+        areacode: {
+          name: '区号',
+          value: req.body.areacode,
+          validators: ['number']
+        },
+        tel: {
+          name: '电话号码',
+          value: req.body.tel,
+          validators: ['required','number']
+        },
+        extension: {
+          name: '分机',
+          value: req.body.extension,
+          validators: ['number']
+        },
+        email: {
+          name: '企业邮箱',
+          value: req.body.email,
+          validators: ['required', 'email', emailValidate]
+        },
+        phone: {
+          name: '联系人手机号码',
+          value: req.body.phone,
+          validators: ['number']
+        },
+        inviteCode: {
+          name: '邀请码',
+          value: req.body.inviteCode,
+          validators: [inviteCodeValidate]
+        }
+      }, 'complete', function (pass, msg) {
+        if (pass) {
+          next();
+        } else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+        }
+      });
+    },
+
+    register: function (req, res) {
+      var company = new Company({
+        info: {
+          name: req.body.name,
+          city: {
+            province: req.body.province,
+            city: req.body.city,
+            district: req.body.district
+          },
+          address: req.body.address,
+          lindline: {
+            areacode: req.body.areacode,
+            number: req.body.tel,
+            extension: req.body.extension
+          },
+          linkman: req.body.contacts,
+          phone: req.body.phone,
+          email: req.body.email
+        },
+        login_email: req.body.email,
+        email: {
+          domain: [req.body.email.split('@')[1]]
+        }
+      });
+
+      //生成随机邀请码
+      var salt = new Buffer(crypto.randomBytes(16).toString('base64'), 'base64');
+      company.invite_key = crypto.pbkdf2Sync(Date.now().toString(), salt, 10000, 6).toString('base64');
+
+      // todo 添加3个企业注册邀请码
+
+      company.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+          return;
+        }
+
+        res.sendStatus(201);
+      });
+
+    },
 
     getCompanyById: function (req, res) {
       if (!req.params.companyId) {

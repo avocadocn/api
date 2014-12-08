@@ -5,6 +5,9 @@ var validatorModule = require('validator');
 var async = require('async');
 var moment = require('moment');
 
+var mongoose = require('mongoose');
+var Region = mongoose.model('Region');
+
 // 常用的验证方法可添加到此对象中，特殊的（如验证公司邮箱是否已被使用）请不要添加
 var validators = {};
 
@@ -79,12 +82,18 @@ var donlerValidator = function (ruleObj, mode, callback) {
     var name = validateTask.rule.name;
     var value = validateTask.rule.value;
     var ruleName = validateTask.ruleName;
+    if (!validateTask.validator) {
+      console.log(ruleName, '存在无效的验证器');
+      asyncMapCallback('无效的验证器', false);
+      return;
+    }
     validateTask.validator(name, value, function (pass, msg) {
       if (mode === 'fast') {
         if (!pass) {
           if (!validateTask.rule.hideMsg) {
             resultMsg[ruleName] = msg;
           }
+          // 这个msg只是为了中断验证，没有其它用处
           asyncMapCallback(msg, false);
           return;
         } else {
@@ -256,6 +265,39 @@ validators.number = function (name, value, callback) {
   } else {
     callback(true);
   }
+};
+
+/**
+ * 验证省市区是否合法
+ * @param {String} name 验证目标的名称，用于描述错误消息
+ * @param {String} value 省，市，区，用英文逗号分隔，如"广西,梧州市,长洲区"
+ * @param {Function} callback
+ */
+validators.region = function (name, value, callback) {
+  if (!value) {
+    callback(true);
+    return;
+  }
+  var regions = value.split(',');
+  var province = regions[0], city = regions[1], district = regions[2];
+  Region.findOne({
+    name: province,
+    'city.name': city,
+    'city.district.name': district
+  }, { '_id': 1 }).exec()
+    .then(function (region) {
+      if (!region) {
+        var msg = util.format('%s是无效的省市区', name);
+        callback(false, msg);
+      } else {
+        callback(true);
+      }
+    })
+    .then(null, function (err) {
+      console.log(err);
+      var msg = util.format('验证%s时出错了', name);
+      callback(false, msg);
+    });
 };
 
 

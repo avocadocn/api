@@ -25,7 +25,7 @@ module.exports = function (app) {
         name: {
           name: '相册名字',
           value: req.body.name,
-          validators: ['required', donlerValidator.minLength(1), donlerValidator.maxLength(30)]
+          validators: ['required', donlerValidator.maxLength(30)]
         }
       }, 'fast', function (pass, msg) {
         if (pass) {
