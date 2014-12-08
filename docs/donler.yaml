@@ -2681,7 +2681,7 @@ definitions:
         description: 部门id（如果是根节点，则为公司id）
       name:
         type: string
-        description: 部门名（如果是根节点，怎为公司名字）
+        description: 部门名（如果是根节点，则为公司名字）
       department:
         type: array
         items:

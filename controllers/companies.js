@@ -2,6 +2,7 @@
 
 var mongoose = require('mongoose');
 var Company = mongoose.model('Company');
+var User = mongoose.model('User');
 var CompanyRegisterInviteCode = mongoose.model('CompanyRegisterInviteCode');
 
 var jwt = require('jsonwebtoken');
@@ -17,6 +18,25 @@ var donlerValidator = require('../services/donler_validator.js');
 module.exports = function (app) {
 
   return {
+
+    getCompanyById: function (req, res, next) {
+      Company.findOne({
+        _id: req.params.companyId,
+        'status.active': true
+      }).exec()
+        .then(function (company) {
+          if (!company) {
+            res.sendStatus(404);
+          } else {
+            req.company = company;
+            next();
+          }
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
+    },
 
     registerValidate: function (req, res, next) {
 
@@ -284,7 +304,7 @@ module.exports = function (app) {
 
     },
 
-    getCompanyById: function (req, res) {
+    getCompany: function (req, res) {
       if (!req.params.companyId) {
         return res.status(400).send({ msg: '缺少companyId' });
       }
@@ -370,11 +390,35 @@ module.exports = function (app) {
     },
 
     getCompanyMembers: function (req, res) {
-
+      User.find({
+        cid: req.params.companyId
+      }).exec()
+        .then(function (users) {
+          var resUsers = [];
+          users.forEach(function (user) {
+            resUsers.push({
+              _id: user._id,
+              nickname: user.nickname,
+              photo: user.photo
+            });
+          });
+          res.status(200).send(resUsers);
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
     },
 
     getCompanyDepartments: function (req, res) {
-
+      // todo
+      //var company = req.company;
+      //var departmentTree = {
+      //  _id: company._id,
+      //  name: company.info.name,
+      //  department: company.department
+      //};
+      //res.status(200).send(departmentTree);
     },
 
     getCompanyTags: function (req, res) {
