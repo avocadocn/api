@@ -82,7 +82,9 @@ var donlerValidator = function (ruleObj, mode, callback) {
     validateTask.validator(name, value, function (pass, msg) {
       if (mode === 'fast') {
         if (!pass) {
-          resultMsg[ruleName] = msg;
+          if (!validateTask.rule.hideMsg) {
+            resultMsg[ruleName] = msg;
+          }
           asyncMapCallback(msg, false);
           return;
         } else {
@@ -187,6 +189,26 @@ donlerValidator.before = function (date) {
       }
       var msg = util.format('%s不能晚于%s', name, formatDate);
       callback(false, msg);
+    }
+  };
+};
+
+donlerValidator.enum = function (enums, customMsg) {
+  return function (name, value, callback) {
+    if (!value) {
+      callback(true);
+    } else {
+      if (enums.indexOf(value) === -1) {
+        var msg;
+        if (!customMsg) {
+          msg = util.format('%s只能是%s', name, enums);
+        } else {
+          msg = customMsg;
+        }
+        callback(false, msg);
+      } else {
+        callback(true);
+      }
     }
   };
 };

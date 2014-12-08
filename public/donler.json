@@ -1017,7 +1017,6 @@
             "schema": {
               "name": "family_photos",
               "type": "array",
-              "required": true,
               "description": "全家福照片",
               "items": {
                 "$ref": "FamilyPhoto"
@@ -2075,7 +2074,7 @@
             "in": "query"
           },
           {
-            "name": "onwerId",
+            "name": "ownerId",
             "description": "相册所属model的id",
             "type": "string",
             "in": "query"
@@ -2294,7 +2293,9 @@
         "responses": {
           "200": {
             "description": "成功",
-            "$ref": "Photo"
+            "schema": {
+              "$ref": "Photo"
+            }
           },
           "default": {
             "description": "error",
@@ -4169,7 +4170,8 @@
           "description": "小队类型"
         },
         "createTime": {
-          "type": "date-time",
+          "type": "string",
+          "format": "date-time",
           "description": "成立时间"
         },
         "brief": {
@@ -4275,21 +4277,11 @@
       "title": "CreatePhotoAlbumForm",
       "type": "object",
       "required": [
-        "ownerModel",
-        "ownerId",
         "cid",
         "tid",
         "name"
       ],
       "properties": {
-        "ownerModel": {
-          "type": "string",
-          "description": "所属model的类型，目前只允许是'company_group'"
-        },
-        "ownerId": {
-          "type": "string",
-          "description": "所属model的id"
-        },
         "cid": {
           "type": "string",
           "description": "所属公司id"

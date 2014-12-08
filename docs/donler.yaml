@@ -593,6 +593,7 @@ paths:
           required: false
           type: string
           in: formData
+# todo:此处导致swagger编辑器报错
         - name: homeCourt
           description: 主场信息
           required: false
@@ -693,7 +694,6 @@ paths:
           schema:
             name: family_photos
             type: array
-            required: true
             description: 全家福照片
             items:
               $ref: FamilyPhoto
@@ -1137,6 +1137,7 @@ paths:
           required: true
           type: string
           in: path
+# todo:此处导致swagger编辑器报错
         - name: body
           description: 处理的类型
           required: false
@@ -1412,7 +1413,7 @@ paths:
           description: 相册所属类型，现在只允许是team
           type: string
           in: query
-        - name: onwerId
+        - name: ownerId
           description: 相册所属model的id
           type: string
           in: query
@@ -1559,7 +1560,8 @@ paths:
       responses:
         "200":
           description: 成功
-          $ref: Photo
+          schema:
+            $ref: Photo
         default:
           description: error
           schema:
@@ -2869,7 +2871,8 @@ definitions:
         type: string
         description: 小队类型
       createTime:
-        type:  date-time
+        type: string
+        format: date-time
         description: 成立时间
       brief:
         type: string
@@ -2943,18 +2946,10 @@ definitions:
     title: CreatePhotoAlbumForm
     type: object
     required:
-      - ownerModel
-      - ownerId
       - cid
       - tid
       - name
     properties:
-      ownerModel:
-        type: string
-        description: 所属model的类型，目前只允许是'company_group'
-      ownerId:
-        type: string
-        description: 所属model的id
       cid:
         type: string
         description: 所属公司id

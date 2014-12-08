@@ -184,8 +184,13 @@ var registeredTasks = {
     company: ['hr'],
     user: ['self']
   },
-  changeUserPushStatus:{
-    user:['self']
+  changeUserPushStatus: {
+    user: ['self']
+  },
+  // 创建相册
+  createPhotoAlbum: {
+    company: ['hr'],
+    team: ['leader']
   }
 };
 
