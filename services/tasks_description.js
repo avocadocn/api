@@ -197,6 +197,12 @@ var registeredTasks = {
   editPhotoAlbum: {
     company: ['hr'],
     team: ['leader']
+  },
+
+  // 删除相册
+  deletePhotoAlbum: {
+    company: ['hr'],
+    team: ['leader']
   }
 };
 

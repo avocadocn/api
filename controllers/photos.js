@@ -10,8 +10,11 @@ var donlerValidator = require('../services/donler_validator.js');
 module.exports = function (app) {
   return {
 
-    getByPhotoAlbumId: function (req, res, next) {
-      PhotoAlbum.findById(req.params.photoAlbumId).exec()
+    getPhotoAlbumById: function (req, res, next) {
+      PhotoAlbum.findOne({
+        _id: req.params.photoAlbumId,
+        hidden: false
+    }).exec()
         .then(function (photoAlbum) {
           if (!photoAlbum) {
             res.sendStatus(404);
@@ -187,6 +190,31 @@ module.exports = function (app) {
           res.sendStatus(200);
         }
       });
+    },
+
+    deletePhotoAlbum: function (req, res) {
+      var photoAlbum = req.photoAlbum;
+
+      var role = auth.getRole(req.user, {
+        companies: photoAlbum.owner.companies,
+        teams: photoAlbum.owner.teams
+      });
+      var allow = auth.auth(role, ['deletePhotoAlbum']);
+      if (!allow.deletePhotoAlbum) {
+        res.sendStatus(403);
+        return;
+      }
+
+      photoAlbum.hidden = true;
+      photoAlbum.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+        } else {
+          res.sendStatus(204);
+        }
+      });
+
     }
 
 
