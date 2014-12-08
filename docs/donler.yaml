@@ -832,6 +832,23 @@ paths:
           description: error
           schema:
             $ref: Error
+  /groups:
+    get:
+      tags:
+        - teams
+      summary: 获取所有group信息
+      operationId: getGroups
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: Group
+        default:
+          description: error
+          schema:
+            $ref: Error
   /departments:
     post:
       tags:
@@ -3074,4 +3091,19 @@ definitions:
       teamName:
         type: string
       text:
+        type: string
+  Group:
+    title: Group
+    required:
+      - groupType
+      - entityType
+      - _id
+    properties:
+      groupType:
+        type: string
+      entityType:
+        type: string
+      _id:
+        type: string
+      icon:
         type: string

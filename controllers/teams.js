@@ -4,6 +4,8 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User'),
     Company = mongoose.model('Company'),
     CompanyGroup = mongoose.model('CompanyGroup'),
+    Group = mongoose.model('Group'),
+    Campaign = mongoose.model('Campaign'),
     Group = mongoose.model('Group');
 
 var log = require('../services/error_log.js'),
@@ -337,21 +339,20 @@ module.exports = function (app) {
       }
       var resourceRole = auth.getRole(user,{
         companies:[user.getCid()],
-        teams:[team._id],
+        teams:[team._id]
       });
       var resourceAllow = auth.auth(resourceRole, ['quitTeam'])
-      
       if(!resourceAllow.quitTeam){
         return res.status(400).send({msg: '未参加此小队'});
       }
       //对team操作
-      var memberIndex = model_helper.arrayObjectIndexOf(companyGroup.member,user._id,'_id');
+      var memberIndex = tools.arrayObjectIndexOf(team.member,user._id,'_id');
       team.member.splice(memberIndex,1);
       var memberScore = team.score.member;
       memberScore = (memberScore == undefined || memberScore == null) ? 0 : memberScore + 10;
       team.score.member = memberScore;
 
-      var leaderIndex = model_helper.arrayObjectIndexOf(team.leader,user._id,'_id');
+      var leaderIndex = tools.arrayObjectIndexOf(team.leader,user._id,'_id');
       if(leaderIndex>-1){
         team.leader.splice(leaderIndex,1);
       }
@@ -361,8 +362,8 @@ module.exports = function (app) {
         //看他是不是其它队的队长
         var tids = [];
         for(var i =0; i<user.team.length;i++){
-          if(user.team._id.toString()!==team._id){
-            tids.push(user.team._id);
+          if(user.team[i]._id.toString()!==team._id){
+            tids.push(user.team[i]._id);
           }
         }
         var otherRole = auth.getRole(user, {
@@ -375,7 +376,7 @@ module.exports = function (app) {
       }
 
       //对user操作
-      
+      var teamIndex = tools.arrayObjectIndexOf(user.team,team._id,'_id');
       if(teamIndex>-1){
         user.team.splice(teamIndex,1);
       }
@@ -397,7 +398,50 @@ module.exports = function (app) {
 
     },
     getTeamTags : function(req, res) {
-      return;
+      Campaign.aggregate()
+      .project({"tags":1,"tid":1})
+      .match({'tid' : mongoose.Types.ObjectId(req.params.teamId)})//可在查询条件中加入时间
+      .unwind("tags")
+      .group({_id : "$tags", number: { $sum : 1} })
+      .sort({number:-1})
+      .limit(10)
+      .exec(function(err,results){
+        if (err) {
+          log(err);
+          return res.status(500).send({msg:'获取tag错误'});
+        }
+        else{
+          var tags = [];
+          for(var i=0; i<results.length; i++){
+            tags.push(results[i]._id);
+          }
+          return res.status(200).send(tags);
+        }
+      });
+    },
+    getGroups : function(req, res) {
+      if(req.user.provider!=='company'){
+        return res.status(403).send({msg: '权限错误'});
+      }
+      Group.find(null, function(err,group){
+        if (err) {
+          log(err);
+          return res.status(500).send({msg: 'group寻找错误'});
+        }
+        var _length = group.length;
+        var groups = [];
+        for(var i = 0; i < _length; i++) {
+          if(group[i]._id!=='0'){
+            groups.push({
+              '_id': group[i]._id,
+              'groupType': group[i].group_type, //中文
+              'entityType': group[i].entity_type //英文
+              // 'icon': group[i].icon//暂时无值，到前端需用entityType来取icon
+            });
+          }
+        }
+        return res.status(200).send(groups);
+      });
     }
   }
 }

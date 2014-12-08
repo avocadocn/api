@@ -13,12 +13,12 @@ var GroupModel = new Schema({
     _id: String,
     group_type: String,
     entity_type: String,
-    icon: String,
+    icon: String,//暂无值，todo
     active: {
         type: Boolean,
         default: false
     },
-    group_rule: String,
+    group_rule: String,//不知何用
 });
 /**
  * Virtuals
