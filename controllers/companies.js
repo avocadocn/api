@@ -7,6 +7,7 @@ var CompanyRegisterInviteCode = mongoose.model('CompanyRegisterInviteCode');
 var jwt = require('jsonwebtoken');
 var crypto = require('crypto');
 var util = require('util');
+var async = require('async');
 
 var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
@@ -161,7 +162,7 @@ module.exports = function (app) {
       });
     },
 
-    register: function (req, res) {
+    register: function (req, res, next) {
       var company = new Company({
         info: {
           name: req.body.name,
@@ -189,14 +190,82 @@ module.exports = function (app) {
       //生成随机邀请码
       var salt = new Buffer(crypto.randomBytes(16).toString('base64'), 'base64');
       company.invite_key = crypto.pbkdf2Sync(Date.now().toString(), salt, 10000, 6).toString('base64');
+      req.company = company;
 
       // todo 添加3个企业注册邀请码
+      company.register_invite_code = [];
+      var code_count = 0;
+      async.whilst(
+        function () {
+          return code_count < 3;
+        },
+        function (callback) {
+          var inviteCode = new CompanyRegisterInviteCode({
+            company: company._id
+          });
+          inviteCode.save(function (err) {
+            if (err) {
+              callback(err);
+            } else {
+              company.register_invite_code.push(inviteCode.code);
+              code_count++;
+              callback();
+            }
+          });
+        },
+        function (err) {
+          if (err) {
+            log(err);
+          }
+          // 即使添加邀请码出错，也允许注册
+          next();
+        }
+      );
+    },
 
+    registerSave: function (req, res) {
+      var company = req.company;
       company.save(function (err) {
         if (err) {
           log(err);
           res.sendStatus(500);
           return;
+        }
+        // 使用邀请码
+        if (req.body.inviteCode) {
+          CompanyRegisterInviteCode.findOne({
+            'code': req.body.inviteCode
+          })
+            .populate('company')
+            .exec()
+            .then(function (code) {
+              // 不再判断code是否存在，因为验证中间件已验证过了
+              // 如果邀请码属于公司，则在公司邀请码列表中将其移除
+              if (code.company) {
+                var company = code.company;
+                var removeIndex = company.register_invite_code.indexOf(code.code);
+                company.register_invite_code.splice(removeIndex, 1);
+                company.save(function (err) {
+                  if (err) {
+                    log(err);
+                  }
+                });
+              }
+              code.status = 'used';
+              code.use_by_company = {
+                '_id': company._id,
+                'name': company.info.name,
+                'email': company.info.email
+              };
+              code.save(function(err) {
+                if (err) {
+                  log(err);
+                }
+              });
+            })
+            .then(null, function (err) {
+              log(err);
+            });
         }
 
         res.sendStatus(201);
