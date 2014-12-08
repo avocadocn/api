@@ -19,17 +19,7 @@ module.exports = function (app) {
   return {
     sendMessage: function(req, res) {
       //TODO:
-      param.collection.create(param.operate,function(err,message){
-        if(err || !message){
-          if(param._err!=null && typeof param._err == 'function'){
-            param._err(err,param.req,param.res);
-          }
-        } else {
-          if(param.callback!=null && typeof param.callback == 'function'){
-            param.callback(message,param.other_param,param.req,param.res);
-          }
-        }
-      });
+      res.sendStatus(200);
     },
     getMessageList: function(req, res) {
       var requestType = req.query.requestType;
