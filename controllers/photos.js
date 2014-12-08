@@ -286,7 +286,6 @@ module.exports = function (app) {
 
     },
 
-    // todo 待测试
     getPhotos: function (req, res) {
       var photoAlbum = req.photoAlbum;
       var photos = photoAlbum.getPhotos();
@@ -301,7 +300,6 @@ module.exports = function (app) {
       res.status(200).send(resPhotos);
     },
 
-    // todo 待测试
     getPhoto: function (req, res) {
       var photoAlbum = req.photoAlbum;
 
@@ -340,7 +338,6 @@ module.exports = function (app) {
       });
     },
 
-    // todo 待测试
     editPhoto: function (req, res) {
       var photoAlbum = req.photoAlbum;
 
@@ -373,7 +370,6 @@ module.exports = function (app) {
 
     },
 
-    // todo 待测试
     deletePhoto: function (req, res) {
       var photoAlbum = req.photoAlbum;
 

@@ -1572,7 +1572,7 @@ paths:
       summary: 修改照片数据
       operationId: updatePhoto
       consumes:
-        - application/json
+        - application/x-www-form-urlencoded
       parameters:
         - name: photoAlbumId
           description: 相册 Id

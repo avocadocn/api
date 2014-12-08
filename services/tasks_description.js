@@ -212,6 +212,13 @@ var registeredTasks = {
     company: ['hr'],
     team: ['leader'],
     user: ['self']
+  },
+
+  // 删除照片
+  deletePhoto: {
+    company: ['hr'],
+    team: ['leader'],
+    user: ['self']
   }
 
 };

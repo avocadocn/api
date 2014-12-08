@@ -153,7 +153,9 @@ PhotoAlbum.methods = {
     var photo;
     for (var i = 0; i < this.photos.length; i++) {
       if (this.photos[i]._id.toString() === id.toString()) {
-        photo = this.photos[i];
+        if (this.photos[i].hidden === false) {
+          photo = this.photos[i];
+        }
         break;
       }
     }
