@@ -19,6 +19,7 @@
     "xss": "~0.1.12",
     "gm": "~1.17.0",
     "multiparty": "~4.1.0",
+    "mkdirp": "^0.5.0",
     "mime": "1.2.11"
   },
   "devDependencies": {

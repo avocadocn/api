@@ -5,6 +5,7 @@ var gm = require('gm');
 var mime = require('mime');
 var path = require('path');
 var fs = require('fs');
+var mkdirp = require('mkdirp');
 
 // 要求api项目与yali项目在同一目录下
 var yaliDir = path.join(__dirname, '../../yali/');
@@ -61,7 +62,13 @@ exports.uploadImg = function (req, options) {
       var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
       var ext = mime.extension(file.originalFilename);
       var dateImgName = Date.now().toString() + '.' + ext;
-      gm(file.path).write(path.join(yaliDir, options.targetDir, dateDirName, dateImgName), function(err) {
+
+      var imgDir = path.join(yaliDir, options.targetDir, dateDirName);
+      if (!fs.existsSync(imgDir)) {
+        mkdirp.sync(imgDir);
+      }
+
+      gm(file.path).write(path.join(imgDir, dateImgName), function(err) {
         if (err) {
           options.error(err);
           return;
@@ -70,6 +77,11 @@ exports.uploadImg = function (req, options) {
         if (options.saveOrigin) {
 
           var saveOrigin = function (oriPath, oriName, oriCallback) {
+            var oriDir = path.join(yaliDir, oriPath);
+            if (!fs.existsSync(oriDir)) {
+              mkdirp.sync(oriDir);
+            }
+
             fs.rename(file.path, path.join(yaliDir, oriPath, oriName + ext), function (err) {
               oriCallback(err);
             });

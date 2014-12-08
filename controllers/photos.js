@@ -1,11 +1,14 @@
 'use strict';
 
+var path = require('path');
+
 var mongoose = require('mongoose');
 var PhotoAlbum = mongoose.model('PhotoAlbum');
 
 var log = require('../services/error_log.js');
 var auth = require('../services/auth.js');
 var donlerValidator = require('../services/donler_validator.js');
+var uploader = require('../services/uploader.js');
 
 module.exports = function (app) {
   return {
@@ -215,7 +218,75 @@ module.exports = function (app) {
         }
       });
 
+    },
+
+
+    uploadPhoto: function (req, res) {
+      var photoAlbum = req.photoAlbum;
+
+      var role = auth.getRole(req.user, {
+        companies: photoAlbum.owner.companies,
+        teams: photoAlbum.owner.teams
+      });
+      var allow = auth.auth(role, ['uploadPhoto']);
+      if (!allow.uploadPhoto) {
+        res.sendStatus(403);
+        return;
+      }
+
+      // todo upload photo 待测试
+      uploader(req, {
+        fieldName: 'photo',
+        targetDir: '/public/photo_album',
+        saveOrigin: true,
+        success: function (url, oriName, oriCallback) {
+          var uploadUser;
+          if (req.user.provider === 'user') {
+            uploadUser = {
+              _id: req.user._id,
+              name: req.user.nickname,
+              type: 'user'
+            };
+          } else if (req.user.provider === 'company') {
+            uploadUser = {
+              _id: req.user._id,
+              name: req.user.info.name,
+              type: 'hr'
+            }
+          }
+          var photo = {
+            uri: path.join('/photo_album', url),
+            name: oriName,
+            upload_user: uploadUser
+          };
+          photoAlbum.photos.push(photo);
+          photoAlbum.update_user = uploadUser;
+          photoAlbum.update_date = Date.now();
+          photoAlbum.save(function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+            } else {
+              var date_dir_name = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
+              oriCallback(path.join('/ori_img', date_dir_name), photo._id, function (err) {
+                if (err) {
+                  log(err);
+                }
+              });
+              res.sendStatus(201);
+            }
+          });
+
+        },
+        error: function (err) {
+          log(err);
+          res.sendStatus(500);
+        }
+      });
+
     }
+
+
 
 
   };
