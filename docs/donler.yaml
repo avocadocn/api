@@ -1412,10 +1412,14 @@ paths:
           description: 相册所属类型，现在只允许是team
           type: string
           in: query
+          required: true
+          enum:
+            - team
         - name: ownerId
           description: 相册所属model的id
           type: string
           in: query
+          required: true
       responses:
         "200":
           description: 成功

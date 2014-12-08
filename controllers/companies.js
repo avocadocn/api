@@ -13,7 +13,6 @@ var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var auth = require('../services/auth.js');
 var donlerValidator = require('../services/donler_validator.js');
-var emailService = require('../services/email.js');
 
 module.exports = function (app) {
 
