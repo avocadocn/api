@@ -201,8 +201,17 @@ var Campaign = new Schema({
   ],
 
   // 是否使用组件, 这是为了兼容旧的数据, 旧的活动没有此属性, 进入活动页面时将会为该活动创建评论组件并将此属性的值设为true
-  modularization: Boolean
+  modularization: Boolean,
 
+  //评论过的人(已参加、未参加的都可能在这儿)
+  commentMembers: [_member], 
+
+  //最新评论
+  latestComment: {
+    _id: Schema.Types.ObjectId,
+    poster:_member,
+    content: String
+  }
 });
 
 Campaign.virtual('members').get(function () {

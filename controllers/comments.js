@@ -2,9 +2,11 @@
 
 var mongoose = require('mongoose');
 var Campaign = mongoose.model('Campaign'),
-    Comment = mongoose.model('Comment');
+    Comment = mongoose.model('Comment'),
+    User = mongoose.model('User');
 var auth = require('../services/auth.js'),
-    log = require('../services/error_log.js');
+    log = require('../services/error_log.js'),
+    tools = require('../tools/tools.js');
 
 var shieldTip = "该评论已经被系统屏蔽";
 /**
@@ -154,13 +156,93 @@ module.exports = function (app) {
           return res.status(500).send("{{'COMMENT_PUSH_ERROR'|translate}}");
         } else {
           if (host_type === "campaign" || host_type === "campaign_detail" || host_type === "competition") {
-            Campaign.findByIdAndUpdate(host_id, {'$inc': {'comment_sum': 1}}, function (err, message) {
-              if (err || !message) {
-                return res.status(500).send({msg: 'ERROR'});
-              } else {
-                //之后增加用socket通信
-                return res.status(200).send({'comment': comment});
+            Campaign.findById(host_id,function(err, campaign){
+              campaign.comment_sum++;
+              var poster = {
+                '_id': req.user._id,
+                'nickname': req.user.nickname,
+                'photo': req.user.photo
+              };
+              campaign.latestComment = {
+                '_id': comment._id,
+                'poster': poster,
+                'content': content
+              };
+              //如果不在已评论过的人列表
+              if(tools.arrayObjectIndexOf(campaign.commentMembers, req.user._id, '_id') === -1){
+                campaign.commentMembers.push(poster);
               }
+              campaign.save(function(err){
+                if(err){
+                  log(err);
+                }
+              });
+
+              //users操作
+              var revalentUids = [];
+              for(var i = 0; i<campaign.members.length; i++){
+                revalentUids.push(campaign.members[i]._id);
+              }
+              for(var i = 0; i<campaign.commentMembers.length;i++){
+                revalentUids.push(campaign.commentMembers[i]._id);
+              }
+              var arrayMaxLength = 20;
+              User.find({'_id':{'$in':revalentUids}},{'commentCampaigns':1,'unjoinedCommentCampaigns':1},function(err,users){
+                if(err){
+                  console.log(err);
+                }else{
+                  async.map(users,function(user,callback){
+                    //已参加
+                    if(campaign.whichUnit(user._id)) {
+                      var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns,host_id,'_id');
+                      if(campaignIndex === -1){//如果user中没有
+                        //放到最前,数组长度到max值时去掉最后面的campaign
+                        user.commentCampaigns.unshift({
+                          '_id': host_id,
+                          'unread': 0
+                        });
+                        if(user.commentCampaigns.length>arrayMaxLength){
+                          user.commentCampaigns.length = arrayMaxLength;
+                        }
+                      }else{//如果存在于user中
+                        //更新到最前,如果不是自己发的,unread数增加
+                        if(user._id.toString() != req.user._id.toString())
+                          user.commentCampaigns[campaignIndex].unread++;
+                        var campaignNeedUpdate = user.commentCampaigns.splice(campaignIndex,1);
+                        user.commentCampaigns.unshift(campaignNeedUpdate[0]);
+                      }
+                    }else{
+                      var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns,host_id,'_id');
+                      if(campaignIndex === -1){//如果user中没有
+                        //放到最前,数组长度到max值时去掉最后面的campaign
+                        user.unjoinedCommentCampaigns.unshift({
+                          '_id': host_id,
+                          'unread': 0
+                        });
+                        if(user.unjoinedCommentCampaigns.length>arrayMaxLength){
+                          user.unjoinedCommentCampaigns.length = arrayMaxLength;
+                        }
+                      }else{//如果存在于user中
+                        //更新到最前,如果不是自己发的,unread数增加
+                        if(user._id.toString() != req.user._id.toString())
+                          user.unjoinedCommentCampaigns[campaignIndex].unread++;
+                        var campaignNeedUpdate = user.unjoinedCommentCampaigns.splice(campaignIndex,1);
+                        user.unjoinedCommentCampaigns.unshift(campaignNeedUpdate[0]);
+                      }
+                    }
+                    user.save(function(err){
+                      if(err){
+                        console.log('user save error:',err);
+                      }else{
+                        callback();
+                      }
+                    });
+                  },function(err, results) {
+                    console.log('done');
+                    return;
+                  })
+                }
+              })
             });
           } else {
             return res.status(200).send({'comment': comment});
