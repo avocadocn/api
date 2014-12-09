@@ -366,7 +366,7 @@ module.exports = function (app) {
             return res.status(401).send({ msg: '邮箱或密码错误' });
           }
 
-          if (!user.encryptPassword(req.body.password)) {
+          if (!user.authenticate(req.body.password)) {
             return res.status(401).send({ msg: '邮箱或密码错误' });
           }
 

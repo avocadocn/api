@@ -670,7 +670,7 @@ module.exports = function (app) {
             return res.status(401).send({ msg: '邮箱或密码错误' });
           }
 
-          if (!company.encryptPassword(req.body.password)) {
+          if (!company.authenticate(req.body.password)) {
             return res.status(401).send({ msg: '邮箱或密码错误' });
           }
 
