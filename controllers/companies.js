@@ -4,7 +4,6 @@ var mongoose = require('mongoose');
 var Company = mongoose.model('Company');
 var User = mongoose.model('User');
 var CompanyGroup = mongoose.model('CompanyGroup');
-var Department = mongoose.model('Department');
 var CompanyRegisterInviteCode = mongoose.model('CompanyRegisterInviteCode');
 
 var jwt = require('jsonwebtoken');
