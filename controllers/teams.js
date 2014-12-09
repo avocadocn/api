@@ -358,7 +358,7 @@ module.exports = function (app) {
       }
       //修改user.role的逻辑部分
       //看他是不是这个队队长
-      if(resourceRole.team='leader'){
+      if(resourceRole.team==='leader'){
         //看他是不是其它队的队长
         var tids = [];
         for(var i =0; i<user.team.length;i++){
@@ -367,7 +367,7 @@ module.exports = function (app) {
           }
         }
         var otherRole = auth.getRole(user, {
-          teams: [tids]
+          teams: tids
         });
         //如果不是
         if(otherRole.team!=='leader'){
