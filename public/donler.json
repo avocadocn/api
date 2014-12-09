@@ -494,7 +494,7 @@
         ],
         "summary": "验证某个属性是否已被使用",
         "consumes": [
-          "application/json"
+          "application/x-www-form-urlencoded"
         ],
         "parameters": [
           {

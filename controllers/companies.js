@@ -18,7 +18,6 @@ var donlerValidator = require('../services/donler_validator.js');
 module.exports = function (app) {
 
   return {
-
     getCompanyById: function (req, res, next) {
       Company.findOne({
         _id: req.params.companyId,
@@ -38,6 +37,33 @@ module.exports = function (app) {
         });
     },
 
+    companyInfoValidate: function (req, res) {
+      var checkInfo,queryInfo;
+      if ( req.query.email ) {
+        checkInfo = 'login_email';
+        queryInfo = 'email';
+      }
+      else if ( req.query.username ) {
+        checkInfo = 'username';
+        queryInfo = 'username';
+      }
+      else if ( req.query.name){
+        checkInfo = 'info.official_name';
+        queryInfo = 'name';
+      }
+      else{
+        return res.status(400).send({msg:'数据输入有误'});
+      }
+      Company.findOne({
+        checkInfo: req.body[queryInfo]
+      }, function(err, company) {
+        if (err || company) {
+          res.send({ validate:false, msg:'已经存在' });
+        } else {
+          res.send({ validate:true, msg:'可以使用' });
+        }
+      });
+    },
     registerValidate: function (req, res, next) {
 
       var emailValidate = function (name, value, callback) {
@@ -179,18 +205,6 @@ module.exports = function (app) {
           res.status(400).send({ msg: resMsg });
         }
       });
-    },
-
-    companyInfoValidate: function (req, res) {
-      // Company.findOne({
-      //   'login_email': req.body.login_email
-      // }, function(err, company) {
-      //   if (err || company) {
-      //     res.send(true);
-      //   } else {
-      //     res.send(false);
-      //   }
-      // });
     },
 
     register: function (req, res, next) {
@@ -376,9 +390,140 @@ module.exports = function (app) {
           res.status(500).send({ msg: '服务器错误' });
         });
     },
-
+    updateCompanyValidate: function (req, res, next) {
+      donlerValidator({
+        name: {
+          name: '简称',
+          value: req.body.name,
+          validators: [donlerValidator.minLength(1), donlerValidator.maxLength(20)]
+        },
+        password: {
+          name: '密码',
+          value: req.body.password,
+          validators: [donlerValidator.minLength(6), donlerValidator.maxLength(30)]
+        },
+        domain: {
+          name: '邮箱后缀',
+          value: req.body.domain,
+          validators: [donlerValidator.minLength(1)]
+        },
+        province: {
+          name: '省份',
+          value: req.body.province,
+          validators: [donlerValidator.maxLength(40)]
+        },
+        city: {
+          name: '城市',
+          value: req.body.city,
+          validators: [donlerValidator.maxLength(40)]
+        },
+        district: {
+          name: '区',
+          value: req.body.district,
+          validators: [donlerValidator.maxLength(40)]
+        },
+        address: {
+          name: '地址',
+          value: req.body.address,
+          validators: [donlerValidator.maxLength(120)]
+        },
+        contacts: {
+          name: '联系人',
+          value: req.body.contacts,
+          validators: [donlerValidator.maxLength(40)]
+        },
+        areacode: {
+          name: '区号',
+          value: req.body.areacode,
+          validators: ['number', donlerValidator.isLength(5)]
+        },
+        tel: {
+          name: '电话号码',
+          value: req.body.tel,
+          validators: ['number', donlerValidator.isLength(10)]
+        },
+        extension: {
+          name: '分机',
+          value: req.body.extension,
+          validators: ['number', donlerValidator.isLength(5)]
+        },
+        intro: {
+          name: '简介',
+          value: req.body.intro,
+          validators: [donlerValidator.maxLength(70)]
+        },
+        phone: {
+          name: '手机号码',
+          value: req.body.phone,
+          validators: ['number', donlerValidator.isLength(11)]
+        },
+        email: {
+          name: '企业邮箱',
+          value: req.body.email,
+          validators: ['email']
+        }
+      }, 'complete', function (pass, msg) {
+        if (pass) {
+          next();
+        } else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+        }
+      });
+    },
     updateCompany: function (req, res) {
+      var company = req.company;
+      if (req.body.name) {
+        company.info.official_name = req.body.name;
+      }
+      if (req.body.password) {
+        company.password = req.body.password;
+      }
+      if (req.body.domain) {
+        company.email.domain = req.body.domain.split(' ');
+      }
+      if (req.body.province) {
+        company.info.city.province = req.body.province;
+      }
+      if (req.body.city) {
+        company.info.city.city = req.body.city;
+      }
+      if (req.body.district) {
+        company.info.city.district = req.body.district;
+      }
+      if (req.body.address) {
+        company.info.address = req.body.address;
+      }
+      if (req.body.contacts) {
+        company.info.city.linkman = req.body.contacts;
+      }
+      if (req.body.areacode) {
+        company.info.lindline.areacode = req.body.areacode;
+      }
+      if (req.body.tel) {
+        company.info.lindline.number = req.body.tel;
+      }
+      if (req.body.extension) {
+        company.info.lindline.extension = req.body.extension;
+      }
 
+      if (req.body.intro) {
+        company.info.brief = req.body.intro;
+      }
+      if (req.body.phone) {
+        company.info.phone = req.body.phone;
+      }
+      if (req.body.email) {
+        company.info.email = req.body.qq;
+      }
+      company.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+          return;
+        }
+        res.sendStatus(200);
+      });
     },
 
     getCompanyTeams: function (req, res) {

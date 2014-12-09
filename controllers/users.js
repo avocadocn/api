@@ -327,7 +327,7 @@ module.exports = function (app) {
         user.realname = req.body.realname;
       }
       if (req.body.intro) {
-        user.intro = req.body.intro;
+        user.introduce = req.body.intro;
       }
       if (req.body.phone) {
         user.phone = req.body.phone;
