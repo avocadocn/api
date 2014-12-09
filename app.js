@@ -43,7 +43,9 @@ app.set('root', __dirname);
 app.set('tokenSecret', 'donler');
 app.set('tokenExpires', moment().add('days', 7).valueOf());
 
-app.use(cors());
+app.use(cors({
+  methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']
+}));
 app.use(morgan('dev'));
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
