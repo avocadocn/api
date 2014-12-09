@@ -239,7 +239,7 @@ paths:
         - companies
       summary: 修改公司数据
       consumes:
-        - multipart/form-data
+        - application/x-www-form-urlencoded
       parameters:
         - name: companyId
           description: 公司id
@@ -252,11 +252,11 @@ paths:
           required: false
           type: string
           in: formData
-        - name: logo
-          description: logo
-          required: false
-          type: file
-          in: formData
+        # - name: logo
+        #   description: logo
+        #   required: false
+        #   type: file
+        #   in: formData
         - name: password
           description: 密码
           required: false

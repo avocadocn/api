@@ -6,7 +6,7 @@ var User = mongoose.model('User');
 var CompanyGroup = mongoose.model('CompanyGroup');
 var Department = mongoose.model('Department');
 var CompanyRegisterInviteCode = mongoose.model('CompanyRegisterInviteCode');
-
+var Campaign = mongoose.model('Campaign');
 var jwt = require('jsonwebtoken');
 var crypto = require('crypto');
 var util = require('util');
@@ -439,17 +439,17 @@ module.exports = function (app) {
         areacode: {
           name: '区号',
           value: req.body.areacode,
-          validators: ['number', donlerValidator.isLength(5)]
+          validators: ['number', donlerValidator.maxLength(5)]
         },
         tel: {
           name: '电话号码',
           value: req.body.tel,
-          validators: ['number', donlerValidator.isLength(10)]
+          validators: ['number', donlerValidator.maxLength(10)]
         },
         extension: {
           name: '分机',
           value: req.body.extension,
-          validators: ['number', donlerValidator.isLength(5)]
+          validators: ['number', donlerValidator.maxLength(5)]
         },
         intro: {
           name: '简介',
@@ -484,6 +484,7 @@ module.exports = function (app) {
         res.sendStatus(403);
         return;
       }
+      console.log(req.body)
       var company = req.company;
       if (req.body.name) {
         company.info.official_name = req.body.name;
@@ -526,7 +527,7 @@ module.exports = function (app) {
         company.info.phone = req.body.phone;
       }
       if (req.body.email) {
-        company.info.email = req.body.qq;
+        company.info.email = req.body.email;
       }
       company.save(function (err) {
         if (err) {
@@ -534,6 +535,7 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
+        console.log(company)
         res.sendStatus(200);
       });
     },
