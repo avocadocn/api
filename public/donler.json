@@ -532,41 +532,6 @@
         }
       }
     },
-    "/companies/{companyId}/teams": {
-      "get": {
-        "tags": [
-          "companies"
-        ],
-        "summary": "获取公司小队数据",
-        "parameters": [
-          {
-            "name": "companyId",
-            "description": "公司id",
-            "required": true,
-            "type": "string",
-            "in": "path",
-            "default": "53aa6fc011fd597b3e1be250"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "小队数据",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "TeamCard"
-              }
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
     "/companies/{companyId}/statistics": {
       "get": {
         "tags": [
@@ -668,7 +633,7 @@
           "200": {
             "description": "部门数据",
             "schema": {
-              "$ref": "DepartmentTree"
+              "$ref": "DepartmentList"
             }
           },
           "default": {
@@ -788,6 +753,38 @@
         "responses": {
           "200": {
             "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "获取公司小队数据",
+        "parameters": [
+          {
+            "name": "companyId",
+            "description": "公司id",
+            "required": false,
+            "type": "string",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "小队数据",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "Team"
+              }
+            }
           },
           "default": {
             "description": "error",
@@ -3858,11 +3855,43 @@
           "type": "string",
           "description": "部门名（如果是根节点，则为公司名字）"
         },
+        "tid": {
+          "type": "string",
+          "description": "对应的team的id"
+        },
         "department": {
           "type": "array",
           "items": {
             "$ref": "DepartmentTree"
           }
+        },
+        "manager": {
+          "type": "array",
+          "items": {
+            "$ref": "Member"
+          }
+        }
+      }
+    },
+    "DepartmentList": {
+      "title": "DepartmentList",
+      "type": "object",
+      "required": [
+        "_id",
+        "name"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "部门id（如果是根节点，则为公司id）"
+        },
+        "name": {
+          "type": "string",
+          "description": "部门名（如果是根节点，则为公司名字）"
+        },
+        "tid": {
+          "type": "string",
+          "description": "对应的team的id"
         },
         "manager": {
           "type": "array",

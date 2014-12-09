@@ -169,7 +169,13 @@ var registeredTasks = {
   openUser: {
     company: ['hr']
   },
-
+  editUser: {
+    company: ['hr'],
+    user: ['self']
+  },
+  editCompany: {
+    company: ['hr']
+  },
   // 能操作某user加入小队
   joinTeamOperation: {
     company: ['hr'],

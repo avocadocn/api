@@ -3,6 +3,8 @@
 var mongoose = require('mongoose');
 var Company = mongoose.model('Company');
 var User = mongoose.model('User');
+var CompanyGroup = mongoose.model('CompanyGroup');
+var Department = mongoose.model('Department');
 var CompanyRegisterInviteCode = mongoose.model('CompanyRegisterInviteCode');
 
 var jwt = require('jsonwebtoken');
@@ -14,6 +16,8 @@ var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var auth = require('../services/auth.js');
 var donlerValidator = require('../services/donler_validator.js');
+
+
 
 module.exports = function (app) {
 
@@ -472,6 +476,14 @@ module.exports = function (app) {
       });
     },
     updateCompany: function (req, res) {
+      var role = auth.getRole(req.user, {
+        companies: [req.company._id]
+      });
+      var allow = auth.auth(role, ['editCompany']);
+      if (!allow.editCompany) {
+        res.sendStatus(403);
+        return;
+      }
       var company = req.company;
       if (req.body.name) {
         company.info.official_name = req.body.name;
@@ -526,12 +538,50 @@ module.exports = function (app) {
       });
     },
 
-    getCompanyTeams: function (req, res) {
-
-    },
-
     getCompanyStatistics: function (req, res) {
-
+      var option = {
+        'cid':req.query.companyId || req.user.cid || req.user._id
+      };
+      if(req.user.provider=='user'){
+        option.active = true;
+      }
+      if(req.query.target=='team') {
+        option.gid = {
+          '$ne': '0'
+        }
+      }
+      else{
+        option.gid = '0';
+      }
+      CompanyGroup
+      .find(option)
+      .exec()
+      .then(function(companyGroups) {
+        var formatCompanyGroups = [];
+        for(var i = companyGroups.length-1; i>=0; i-- ) {
+          var briefTeam = {
+            name: companyGroups[i].name,
+            cid: companyGroups[i].cid,
+            cname: companyGroups[i].cname,
+            logo: companyGroups[i].logo,
+            groupType: companyGroups[i].group_type,
+            active: companyGroups[i].active,
+            brief: companyGroups[i].brief,
+            score: companyGroups[i].score,
+            count: companyGroups[i].count,
+            memberCount: companyGroups[i].member.length
+          };
+          if(req.query.target=='department'){
+            briefTeam.did = companyGroups[i].department;
+          }
+          formatCompanyGroups.push(briefTeam);
+        }
+        return res.status(200).send(formatCompanyGroups);
+      })
+      .then(null, function(err) {
+        log(err);
+        res.sendStatus(500);
+      });
     },
 
     getCompanyMembers: function (req, res) {
@@ -556,18 +606,53 @@ module.exports = function (app) {
     },
 
     getCompanyDepartments: function (req, res) {
-      // todo
-      //var company = req.company;
-      //var departmentTree = {
-      //  _id: company._id,
-      //  name: company.info.name,
-      //  department: company.department
-      //};
-      //res.status(200).send(departmentTree);
+      var option = {
+        'company._id': req.params.companyId
+      };
+      if(req.user.provider=='user'){
+        option.status = 'active';
+      }
+      Department
+      .find(option)
+      .exec()
+      .then(function(departments) {
+        var departmentList = [];
+        for (var i = 0; i < departments.length; i++) {
+          departmentList.push({
+            _id: departments[i]._id,
+            tid: departments[i].team,
+            name: departments[i].name,
+            manager: departments.manager
+          });
+        }
+        res.status(200).send(departmentList);
+      })
+      .then(null, function(err) {
+        log(err);
+        res.sendStatus(500);
+      });
     },
 
     getCompanyTags: function (req, res) {
-
+      Campaign.aggregate()
+      .project({"tags":1,"campaign_type":1,"cid":1})
+      .match({$and: [
+        {'cid' : mongoose.Types.ObjectId(req.params.companyId)},
+        {'campaign_type':1}
+        ]})//可在查询条件中加入时间
+      .unwind("tags")
+      .group({_id : "$tags", number: { $sum : 1} })
+      .sort({number:-1})
+      .limit(10)
+      .exec(function(err,result){
+          if (err) {
+            log(err);
+            res.sendStatus(500);
+          }
+          else{
+            return res.status(200).send(result);
+          }
+      });
     },
 
     login: function (req, res) {

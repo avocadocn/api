@@ -114,6 +114,67 @@ module.exports = function (app) {
       };
       return res.status(200).send(briefTeam);
     },
+    getTeams : function(req, res) {
+      var option = {
+        'cid':req.query.companyId || req.user.cid || req.user._id
+      };
+      if(req.user.provider=='user'){
+        option.active = true;
+      }
+      CompanyGroup
+      .find(option)
+      .exec()
+      .then(function(companyGroups) {
+        var formatCompanyGroups = [];
+        for(var i = companyGroups.length-1; i>=0; i-- ) {
+          var membersWithoutLeader = [];
+          companyGroups[i].member.forEach(function (member) {
+            var isLeader = false;
+            for (var i = 0; i < companyGroups[i].leader.length; i++) {
+              var leader = companyGroups[i].leader[i];
+              if (leader._id.toString() === member._id.toString()) {
+                isLeader = true;
+                break;
+              }
+            }
+            if (!isLeader) {
+              membersWithoutLeader.push(member);
+            }
+          });
+          //过滤隐藏
+          var originFamilyPhotos = companyGroups[i].family.filter(function(photo){
+            return !photo.hidden && photo.select;
+          });
+          //只需传uri
+          var familyPhotos = [];
+          for(var i=0;i<originFamilyPhotos.length;i++){
+            familyPhotos.push({
+              uri:originFamilyPhotos[i].uri
+            });
+          }
+          var briefTeam = {
+            name: companyGroups[i].name,
+            cname: companyGroups[i].cname,
+            logo: companyGroups[i].logo,
+            groupType: companyGroups[i].group_type,
+            createTime: companyGroups[i].create_time,
+            brief: companyGroups[i].brief,
+            leaders: companyGroups[i].leader,
+            members: membersWithoutLeader.slice(0, 6 - companyGroups[i].leader.length),
+            memberCount: companyGroups[i].member.length,
+            homeCourts: companyGroups[i].home_court,
+            cid: companyGroups[i].cid,
+            familyPhotos: familyPhotos
+          };
+          formatCompanyGroups.push(briefTeam);
+        }
+        return res.status(200).send(formatCompanyGroups);
+      })
+      .then(null, function(err) {
+        log(err);
+        res.sendStatus(500);
+      });
+    },
     editTeamData : function(req, res) {
       var team = req.companyGroup;
       var role = auth.getRole(req.user, {

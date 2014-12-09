@@ -255,6 +255,15 @@ module.exports = function (app) {
     },
 
     updateValidate: function (req, res, next) {
+      var role = auth.getRole(req.user, {
+        companies: [req.resourceUser.cid],
+        users: [req.resourceUser._id]
+      });
+      var allow = auth.auth(role, ['editUser']);
+      if (!allow.editUser) {
+        res.sendStatus(403);
+        return;
+      }
       donlerValidator({
         nickname: {
           name: '昵称',
@@ -297,7 +306,6 @@ module.exports = function (app) {
     },
 
     updatePhoto: function (req, res, next) {
-      var user = req.resourceUser;
       uploader(req, {
         fieldName: 'photo',
         targetDir: '/public/img/user/photo',
