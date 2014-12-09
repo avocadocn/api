@@ -8,6 +8,7 @@ var serveStatic = require('serve-static');
 var morgan = require('morgan');
 var bodyParser = require('body-parser');
 var moment = require('moment');
+var cors = require('cors');
 
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/donler-beta');
@@ -42,6 +43,7 @@ app.set('root', __dirname);
 app.set('tokenSecret', 'donler');
 app.set('tokenExpires', moment().add('days', 7).valueOf());
 
+app.use(cors());
 app.use(morgan('dev'));
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded

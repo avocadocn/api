@@ -5,6 +5,7 @@
   "author": "CahaVar, Inc. <cahavar@55yali.com>",
   "dependencies": {
     "body-parser": "~1.9.3",
+    "cors": "~2.5.2",
     "nodemailer": "~0.6.1",
     "express": "~4.10.2",
     "mongoose": "~3.8.19",
