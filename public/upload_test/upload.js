@@ -96,5 +96,35 @@
 
   })();
 
+  (function () {
+
+    var teamLogoTestEle = $('#teamLogoTest');
+    var photo = teamLogoTestEle.find('.js_photo');
+    var teamId = teamLogoTestEle.find('.js_teamId');
+    var submit = teamLogoTestEle.find('.js_submit');
+
+    submit.click(function () {
+      var fd = new FormData($('#teamLogoForm')[0]);
+      $.ajax({
+        url: baseUrl + '/teams/' + teamId.val(),
+        type: 'PUT',
+        data: fd,
+        processData: false,
+        contentType: false,
+        headers: {
+          'x-access-token': tokenInput.val()
+        },
+        success: function (data, status) {
+          alert('success');
+          console.log(data, status);
+        },
+        error: function (data, status) {
+          console.log(data, status);
+        }
+      });
+    });
+
+  })();
+
 
 })(jQuery);

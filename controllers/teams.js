@@ -1,5 +1,7 @@
 'use strict';
 
+var path = require('path');
+
 var mongoose = require('mongoose');
 var User = mongoose.model('User'),
     Company = mongoose.model('Company'),
@@ -10,6 +12,7 @@ var User = mongoose.model('User'),
 
 var log = require('../services/error_log.js'),
     auth = require('../services/auth.js'),
+    uploader = require('../services/uploader.js'),
     tools = require('../tools/tools.js');
 
 module.exports = function (app) {
@@ -175,6 +178,23 @@ module.exports = function (app) {
         res.sendStatus(500);
       });
     },
+    updateTeamLogo: function (req, res, next) {
+      uploader.uploadImg(req, {
+        fieldName: 'logo',
+        targetDir: '/public/img/group/logo',
+        success: function (url, oriName) {
+          req.companyGroup.logo = path.join('/img/group/logo', url);
+          next();
+        },
+        error: function (err) {
+          if (err.type === 'notfound') {
+            next();
+          } else {
+            res.sendStatus(500);
+          }
+        }
+      });
+    },
     editTeamData : function(req, res) {
       var team = req.companyGroup;
       var role = auth.getRole(req.user, {
@@ -187,10 +207,6 @@ module.exports = function (app) {
       }
       if(req.body.name){
         team.name = req.body.name;
-      }
-      if(req.body.logo){
-        // team.logo = req.body.logo;
-        // logo todo
       }
       if(req.body.brief){
         team.brief = req.body.brief;
