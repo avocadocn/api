@@ -8,7 +8,7 @@ module.exports = function (app, ctrl) {
   app.post('/companies', ctrl.registerValidate, ctrl.register, ctrl.registerSave);
 
   app.get('/companies/:companyId', token.needToken, ctrl.getCompany);
-  app.put('/companies/:companyId', token.needToken, ctrl.getCompanyById, ctrl.updateCompanyValidate, ctrl.updateCompany);
+  app.put('/companies/:companyId', token.needToken, ctrl.getCompanyById, ctrl.updateCompanyValidate, ctrl.updateCompanyLogo, ctrl.updateCompany);
 
   app.post('/companies/validate', ctrl.companyInfoValidate);
   app.get('/companies/:companyId/statistics', token.needToken, ctrl.getCompanyStatistics);

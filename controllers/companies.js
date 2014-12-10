@@ -1,5 +1,9 @@
 'use strict';
 
+var crypto = require('crypto');
+var util = require('util');
+var path = require('path');
+
 var mongoose = require('mongoose');
 var Company = mongoose.model('Company');
 var User = mongoose.model('User');
@@ -7,15 +11,15 @@ var CompanyGroup = mongoose.model('CompanyGroup');
 var Department = mongoose.model('Department');
 var CompanyRegisterInviteCode = mongoose.model('CompanyRegisterInviteCode');
 var Campaign = mongoose.model('Campaign');
+
 var jwt = require('jsonwebtoken');
-var crypto = require('crypto');
-var util = require('util');
 var async = require('async');
 
 var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var auth = require('../services/auth.js');
 var donlerValidator = require('../services/donler_validator.js');
+var uploader = require('../services/uploader.js');
 
 
 
@@ -475,6 +479,23 @@ module.exports = function (app) {
         }
       });
     },
+    updateCompanyLogo: function (req, res, next) {
+      uploader.uploadImg(req, {
+        fieldName: 'logo',
+        targetDir: '/public/img/company/logo',
+        success: function (url, oriName) {
+          req.company.info.logo = path.join('/img/company/logo', url);
+          next();
+        },
+        error: function (err) {
+          if (err.type === 'notfound') {
+            next();
+          } else {
+            res.sendStatus(500);
+          }
+        }
+      });
+    },
     updateCompany: function (req, res) {
       var role = auth.getRole(req.user, {
         companies: [req.company._id]
@@ -484,7 +505,6 @@ module.exports = function (app) {
         res.sendStatus(403);
         return;
       }
-      console.log(req.body)
       var company = req.company;
       if (req.body.name) {
         company.info.official_name = req.body.name;
@@ -535,7 +555,6 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
-        console.log(company)
         res.sendStatus(200);
       });
     },
