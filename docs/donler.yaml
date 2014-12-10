@@ -1016,12 +1016,6 @@ paths:
           type: integer
           format: int32
           in: query
-        - name: provoke_flag
-          description: provoke_flag
-          required: false
-          type: integer
-          format: int32
-          in: query
         - name: join_flag
           description: join_flag
           required: false
@@ -2888,6 +2882,10 @@ definitions:
       entityType:
         type: string
         description: 小队类型
+      groupLevel:
+        type: integer
+        format: int32
+        description: 小队级别
       _id:
         type: string
         description: gid

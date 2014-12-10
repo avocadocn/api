@@ -14,18 +14,20 @@ var log = require('../services/error_log.js'),
     auth = require('../services/auth.js'),
     uploader = require('../services/uploader.js'),
     syncData = require('../services/sync_data.js'),
-    tools = require('../tools/tools.js');
+    tools = require('../tools/tools.js'),
+    async = require('async');
 
 module.exports = function (app) {
 
   return {
    
     createTeams : function(req, res) {
+      var groupLevel = req.body.selectedGroups[0].groupLevel;
       var role = auth.getRole(req.user, {
         companies:[req.body.companyId]
       });
       var allow = auth.auth(role,['createTeams']);
-      if(!allow.createTeams){
+      if(!allow.createTeams && (req.body.selectedGroups.length>1 || groupLevel!==0)){
         return res.status(403).send({msg: '权限错误'});
       }
       Company.findById(req.body.companyId).exec()
@@ -34,39 +36,68 @@ module.exports = function (app) {
           return res.status(400).send({ msg: '没有找到对应的公司' });
         } else {
           var selectedGroups = req.body.selectedGroups;
-          for (var i = 0; i < selectedGroups.length; i++) {
-            var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : company.info.official_name + '-' + selectedGroups[i].groupType + '队';
-            var companyGroup = new CompanyGroup();
+          var i = selectedGroups.length;
+          console.log(i)
+          async.whilst(
+              function () { return i >0; },
+              function (callback) {
+                i--;
+                console.log(i)
+                var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : company.info.official_name + '-' + selectedGroups[i].groupType + '队';
+                var companyGroup = new CompanyGroup();
 
-            companyGroup.cid = company._id;
-            companyGroup.cname = company.info.name;
-            companyGroup.gid = selectedGroups[i]._id;
-            companyGroup.group_type = selectedGroups[i].groupType;
-            companyGroup.name = tname;
-            companyGroup.logo = '/img/icons/group/' + selectedGroups[i].entityType.toLowerCase() + '_on.png';
-
-            companyGroup.save(function(err) {
-              if (err) {
-                log(err);
-                return res.status(500).send({msg:'保存小队失败'});
+                companyGroup.cid = company._id;
+                companyGroup.cname = company.info.name;
+                companyGroup.gid = selectedGroups[i]._id;
+                companyGroup.group_level = selectedGroups[i].groupLevel== 0 ? 0 : 1;
+                companyGroup.group_type = selectedGroups[i].groupType;
+                companyGroup.name = tname;
+                companyGroup.logo = '/img/icons/group/' + selectedGroups[i].entityType.toLowerCase() + '_on.png';
+                if(selectedGroups[i].groupLevel== 0 && req.user.provider=='user') {
+                  var member = {
+                    _id: req.user._id,
+                    nickname: req.user.nickname,
+                    photo: req.user.photo,
+                    join_time: new Date()
+                  }
+                  companyGroup.leader = [];
+                  companyGroup.member = [];
+                  companyGroup.leader.push(member);
+                  companyGroup.member.push(member);
+                } 
+                companyGroup.save(function(err) {
+                  if (err) {
+                    log(err);
+                    callback(err);
+                  }
+                  else{
+                    company.team.push({
+                      'gid': companyGroup.gid,
+                      'group_type': companyGroup.group_type,
+                      'name': tname,
+                      'id': companyGroup._id,
+                      'group_level': companyGroup.group_level
+                    });
+                    company.save(function(err){
+                      if(err){
+                        log(err);
+                        callback(err)
+                      }else{
+                        callback(null)
+                      }
+                    });
+                  }
+                });
+              },
+              function (err) {
+                if(err){
+                  return res.status(500).send({ msg: '保存失败' });
+                }
+                else{
+                  return res.status(200).send({ msg: '保存成功' });
+                }
               }
-            });
-
-            company.team.push({
-              'gid': selectedGroups[i]._id,
-              'group_type': selectedGroups[i].groupType,
-              'name': tname,
-              'id': companyGroup._id
-            });
-            company.save(function(err){
-              if(err){
-                log(err);
-                return res.status(500).send({msg:'保存公司失败'});
-              }else{
-                return res.status(200).send({msg:'保存成功'});
-              }
-            });
-          }
+          );
         }
       })
       .then(null, function (err) {

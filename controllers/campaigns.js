@@ -17,6 +17,60 @@ var logController = require('../controllers/log'),
     tools = require('../tools/tools.js');
 
 
+var searchCampaign = function(select_type, option, sort, limit, requestId, teamIds, callback){
+  var now = new Date();
+  var _option = {}; 
+  for (var attr in option){
+    _option[attr] = option[attr];
+  }
+  switch(select_type){
+    //全部
+    case '0':
+      return callback(err,[]);
+    break;
+    //即将开始的活动
+    case '1':
+      _option.start_time = { '$gte':now };
+      _option['campaign_unit.member._id'] = requestId;
+    break;
+    //正在进行的活动
+    case '2':
+      _option.start_time = { '$lt':now };
+      _option.end_time = { '$gte':now };
+      _option['campaign_unit.member._id'] = requestId;
+    break;
+    //已经结束的活动
+    case '3':
+      _option.end_time = { '$lte':now };
+      _option['campaign_unit.member._id'] = requestId;
+    break;
+    //新活动（未参加）
+    case '4':
+      _option.deadline = { '$gte':now };
+      _option['$or'] = [{'tid':{'$in':teamIds}},{'tid':{'$size':0}}];
+    break;
+    //未确认的挑战
+    case '5':
+      _option.confirm_status = false;
+      _option.start_time = { '$gte': now};
+      _option.campaign_type = {'$in':[4,5,7,9]};
+      _option.tid = {'$in':teamIds}
+    break;
+    default:
+    break;
+  }
+  Campaign
+  .find(_option)
+  .sort(sort)
+  .limit(limit)
+  .exec()
+  .then(function (campaign) {
+    callback(null,campaign)
+  })
+  .then(null, function (err) {
+    callback(err,[]);
+  });
+}
 module.exports = function (app) {
 
   return {
@@ -163,7 +217,7 @@ module.exports = function (app) {
           requestId = req.query.requestId,
           sort = req.query.sortBy || 'start_time',
           limit = parseInt(req.query.limit) || 0,
-          now = new Date(),reqModel;
+          reqModel,team_ids;
       switch(requestType){
         case 'company':
           reqModel = 'Company';
@@ -206,7 +260,7 @@ module.exports = function (app) {
             };
           break;
           case 'user':
-            var team_ids = [];
+            team_ids = [];
             for( var i = requestModal.team.length-1; i >=0 ; i--) {
               team_ids.push(requestModal.team[i]._id.toString());
             }
@@ -217,7 +271,7 @@ module.exports = function (app) {
             if(req.query.join_flag=='1'){
               option['campaign_unit.member._id'] = requestId;
             }
-            else{
+            else if (req.query.join_flag=='0') {
               option['$or'] = [{'tid':{'$in':team_ids}},{'tid':{'$size':0}}];
             }
           break;
@@ -230,45 +284,44 @@ module.exports = function (app) {
         if(req.query.from){
           option.end_time = { '$gte':new Date(parseInt(req.query.from)) };
         }
-        switch(req.query.select_type){
-          //即将开始的活动
-          case '1':
-            option.start_time = { '$gte':now };
-          break;
-          //正在进行的活动
-          case '2':
-            option.start_time = { '$lt':now };
-            option.end_time = { '$gte':now };
-          break;
-          //已经结束的活动
-          case '3':
-            option.end_time = { '$lte':now };
-          break;
-          default:
-          break;
+
+        if(req.query.select_type =='0'){
+          async.series([
+            function(callback){
+              searchCampaign('1', option, sort, limit, requestId, team_ids, callback);
+            },//即将开始的活动
+            function(callback){
+              searchCampaign('2', option, sort, limit, requestId, team_ids, callback);
+            },//正在进行的活动
+            function(callback){
+              searchCampaign('4', option, sort, limit, requestId, team_ids, callback);
+            },//新活动（未参加）
+            function(callback){
+              searchCampaign('5', option, sort, limit, requestId, team_ids, callback);
+            }//未确认的挑战
+          ],function(err, values){
+            if(err){
+              log(err);
+              return res.status(500).send({ msg: '服务器错误'});
+            }
+            else{
+              return res.status(200).send(values);
+            }
+          });
         }
-        //未确认的挑战
-        if(req.query.provoke_flag){
-          option.confirm_status = false;
-          option.start_time = { '$gte': now};
-          option.campaign_type = {'$in':[4,5,7,9]};
+        else {
+          searchCampaign(req.query.select_type, option, sort, limit, function(err, campaign) {
+            if(err) {
+              res.status(500).send('服务器错误');
+            }
+            else if (!campaign) {
+              res.status(404).send('未找到活动');
+            }
+            else{
+              res.status(200).send(campaign);
+            }
+          });
         }
-        Campaign
-        .find(option)
-        .sort(sort)
-        .limit(limit)
-        .exec()
-        .then(function (campaign) {
-          if (!campaign) {
-            res.status(404).send('未找到活动');
-          }
-          else{
-            res.status(200).send(campaign);
-          }
-        })
-        .then(null, function (err) {
-          res.status(500).send('服务器错误');
-        });
       })
       .then(null, function (err) {
         log(err);

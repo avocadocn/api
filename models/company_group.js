@@ -67,7 +67,9 @@ var CompanyGroup = new Schema({
         type: String,
         ref: 'Group'
     },
-
+    //0：个人小队
+    //1：官方小队
+    group_level: Number,
     // 如果是部门的小队，则为部门id，否则为false。
     // 如果为null或undefined，则需要查询部门，来确定是否是部门的小队。
     department: Schema.Types.Mixed,
