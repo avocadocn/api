@@ -220,7 +220,6 @@ module.exports = function (app) {
 
     },
 
-    // todo 待测试
     uploadPhoto: function (req, res) {
       var photoAlbum = req.photoAlbum;
 
@@ -234,10 +233,10 @@ module.exports = function (app) {
         return;
       }
 
-      // todo upload photo 待测试
-      uploader(req, {
+      uploader.uploadImg(req, {
         fieldName: 'photo',
-        targetDir: '/public/photo_album',
+        targetDir: '/public/img/photo_album',
+        subDir: req.user.getCid().toString(),
         saveOrigin: true,
         success: function (url, oriName, oriCallback) {
           var uploadUser;
@@ -255,7 +254,7 @@ module.exports = function (app) {
             }
           }
           var photo = {
-            uri: path.join('/photo_album', url),
+            uri: path.join('/img/photo_album', url),
             name: oriName,
             upload_user: uploadUser
           };
@@ -267,8 +266,10 @@ module.exports = function (app) {
               log(err);
               res.sendStatus(500);
             } else {
+              var now = new Date();
               var date_dir_name = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
-              oriCallback(path.join('/ori_img', date_dir_name), photo._id, function (err) {
+              var lastPhoto = photoAlbum.photos[photoAlbum.photos.length - 1];
+              oriCallback(path.join('/ori_img', date_dir_name), lastPhoto._id, function (err) {
                 if (err) {
                   log(err);
                 }

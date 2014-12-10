@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>file test</title>
+</head>
+<body>
+
+  <div>
+    <h1>Common headers</h1>
+    <hr/>
+    <label>token</label>
+    <input id="token" type="text" placeholder="token" required/>
+  </div>
+
+  <div id="photoAlbumTest">
+    <h1>相册测试</h1>
+    <p>照片</p>
+    <form id="photoAlbumForm" enctype="multipart/form-data">
+      <input class="js_photo" type="file" name="photo" required/>
+    </form>
+    <input class="js_photoAlbumId" type="text" name="photoAlbumId" placeholder="相册id" required/>
+    <button class="js_submit" type="button">上传</button>
+  </div>
+
+  <script src="./jquery-2.1.1.min.js"></script>
+  <script src="./upload.js"></script>
+</body>
+</html>

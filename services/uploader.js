@@ -19,9 +19,11 @@ var tempDir = path.join(yaliDir, 'temp_uploads');
  *    fieldName: 'photo', // 表单域名称
  *    targetDir: '/photos', // 目标文件夹路径，不能是绝对路径，根目录已设置为yali网站目录，如现在等同于yali/photos；
  *                          // 上传时，会自动在该目录下添加当前月份的子目录，如yali/photos/2014-9/
+ *    subDir: '123',
  *    saveOrigin: true, // 是否保留原图
  *    success: function (url, oriName, oriCallback) {
  *      // url为保存成功后的带日期目录的文件路径，如2014-9/21912323434.jpg
+ *      // 如果有设置subDir,则url为2014-9/123/21912323434.jpg
  *      // oriName为上传的源文件的名字
  *      oriCallback(path, name, function (err) {
  *        console.log(err);
@@ -35,7 +37,6 @@ var tempDir = path.join(yaliDir, 'temp_uploads');
  * @param {Object} options
  */
 exports.uploadImg = function (req, options) {
-
   var form = new multiparty.Form({
     uploadDir: tempDir
   });
@@ -46,9 +47,7 @@ exports.uploadImg = function (req, options) {
       options.error(err);
       return;
     }
-
-    var file = files[options.fieldName];
-
+    var file = files[options.fieldName][0];
     if (!file) {
       options.error({
         type: 'notfound',
@@ -56,18 +55,18 @@ exports.uploadImg = function (req, options) {
       });
       return;
     }
-
     try {
       var now = new Date();
       var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
-      var ext = mime.extension(file.originalFilename);
+      if (options.subDir) {
+        dateDirName = path.join(dateDirName, options.subDir);
+      }
+      var ext = mime.extension(file.headers['content-type']);
       var dateImgName = Date.now().toString() + '.' + ext;
-
       var imgDir = path.join(yaliDir, options.targetDir, dateDirName);
       if (!fs.existsSync(imgDir)) {
         mkdirp.sync(imgDir);
       }
-
       gm(file.path).write(path.join(imgDir, dateImgName), function(err) {
         if (err) {
           options.error(err);
@@ -75,24 +74,22 @@ exports.uploadImg = function (req, options) {
         }
 
         if (options.saveOrigin) {
-
           var saveOrigin = function (oriPath, oriName, oriCallback) {
             var oriDir = path.join(yaliDir, oriPath);
             if (!fs.existsSync(oriDir)) {
               mkdirp.sync(oriDir);
             }
-
-            fs.rename(file.path, path.join(yaliDir, oriPath, oriName + ext), function (err) {
+            fs.rename(file.path, path.join(yaliDir, oriPath, oriName + '.' + ext), function (err) {
               oriCallback(err);
             });
           };
-
           options.success(path.join(dateDirName, dateImgName), file.originalFilename, saveOrigin);
         } else {
           options.success(path.join(dateDirName, dateImgName), file.originalFilename);
         }
       });
     } catch (e) {
+      console.log(e.stack)
       options.error(e);
     }
 
