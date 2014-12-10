@@ -726,6 +726,10 @@ module.exports = function (app) {
     },
 
     logout: function (req, res) {
+      if (req.user.provider !== 'company') {
+        res.sendStatus(403);
+        return;
+      }
       req.user.app_token = null;
       req.user.token_device = null;
       req.user.save(function (err) {
