@@ -136,6 +136,7 @@ module.exports = function (app) {
       comment.content = content;
       comment.host_id = host_id;
       comment.poster = poster;
+      comment.create_date = Date.now();
 
       if (req.session.uploadData) {
         // 如果有上传照片的数据，依然要判断是否过期
@@ -166,7 +167,8 @@ module.exports = function (app) {
               campaign.latestComment = {
                 '_id': comment._id,
                 'poster': poster,
-                'content': content
+                'content': content,
+                'createDate': comment.create_date
               };
               //如果不在已评论过的人列表
               if(tools.arrayObjectIndexOf(campaign.commentMembers, req.user._id, '_id') === -1){
@@ -187,13 +189,12 @@ module.exports = function (app) {
                 revalentUids.push(campaign.commentMembers[i]._id);
               }
               var arrayMaxLength = 20;
-              User.find({'_id':{'$in':revalentUids}},{'commentCampaigns':1,'unjoinedCommentCampaigns':1},function(err,users){
+              User.find({'_id':{'$in':revalentUids}},{'commentCampaigns':1,'unjoinedCommentCampaigns':1},function(err,users) {
                 if(err){
                   console.log(err);
                 }else{
                   async.map(users,function(user,callback){
-                    //已参加
-                    if(campaign.whichUnit(user._id)) {
+                    if(campaign.whichUnit(user._id)) {//已参加
                       var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns,host_id,'_id');
                       if(campaignIndex === -1){//如果user中没有
                         //放到最前,数组长度到max值时去掉最后面的campaign
@@ -240,7 +241,7 @@ module.exports = function (app) {
                   },function(err, results) {
                     console.log('done');
                     return;
-                  })
+                  });
                 }
               })
             });

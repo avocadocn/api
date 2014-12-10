@@ -210,7 +210,11 @@ var Campaign = new Schema({
   latestComment: {
     _id: Schema.Types.ObjectId,
     poster:_member,
-    content: String
+    content: String,
+    createDate:{
+      type:Date,
+      default: Date.now
+    }
   }
 });
 
