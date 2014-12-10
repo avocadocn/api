@@ -306,11 +306,11 @@ module.exports = function (app) {
     },
 
     updatePhoto: function (req, res, next) {
-      uploader(req, {
+      uploader.uploadImg(req, {
         fieldName: 'photo',
         targetDir: '/public/img/user/photo',
         success: function (url, oriName) {
-          user.photo = path.join('/img/user/photo', url);
+          req.resourceUser.photo = path.join('/img/user/photo', url);
           next();
         },
         error: function (err) {
