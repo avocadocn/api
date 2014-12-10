@@ -20,6 +20,7 @@ var tokenService = require('../services/token.js');
 var auth = require('../services/auth.js');
 var donlerValidator = require('../services/donler_validator.js');
 var uploader = require('../services/uploader.js');
+var syncData = require('../services/sync_data.js');
 
 
 
@@ -480,6 +481,10 @@ module.exports = function (app) {
       });
     },
     updateCompanyLogo: function (req, res, next) {
+      if (req.headers['content-type'] !== 'multipart/form-data') {
+        next();
+        return;
+      }
       uploader.uploadImg(req, {
         fieldName: 'logo',
         targetDir: '/public/img/company/logo',
@@ -556,6 +561,9 @@ module.exports = function (app) {
           return;
         }
         res.sendStatus(200);
+        if (req.body.name) {
+          syncData.updateCname(company._id);
+        }
       });
     },
 

@@ -14,6 +14,7 @@ var emailService = require('../services/email.js');
 var uploader = require('../services/uploader.js');
 var auth = require('../services/auth.js');
 var tools = require('../tools/tools.js');
+var syncData = require('../services/sync_data.js');
 
 module.exports = function (app) {
 
@@ -306,11 +307,16 @@ module.exports = function (app) {
     },
 
     updatePhoto: function (req, res, next) {
+      if (req.headers['content-type'] !== 'multipart/form-data') {
+        next();
+        return;
+      }
       uploader.uploadImg(req, {
         fieldName: 'photo',
         targetDir: '/public/img/user/photo',
         success: function (url, oriName) {
           req.resourceUser.photo = path.join('/img/user/photo', url);
+          req.updatePhoto = true;
           next();
         },
         error: function (err) {
@@ -350,6 +356,12 @@ module.exports = function (app) {
           return;
         }
         res.sendStatus(200);
+        if (req.updatePhoto) {
+          syncData.updateUlogo(user._id);
+        }
+        if (req.body.nickname) {
+          syncData.updateUname(user._id);
+        }
       });
     },
 

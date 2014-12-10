@@ -13,6 +13,7 @@ var User = mongoose.model('User'),
 var log = require('../services/error_log.js'),
     auth = require('../services/auth.js'),
     uploader = require('../services/uploader.js'),
+    syncData = require('../services/sync_data.js'),
     tools = require('../tools/tools.js');
 
 module.exports = function (app) {
@@ -179,11 +180,16 @@ module.exports = function (app) {
       });
     },
     updateTeamLogo: function (req, res, next) {
+      if (req.headers['content-type'] !== 'multipart/form-data') {
+        next();
+        return;
+      }
       uploader.uploadImg(req, {
         fieldName: 'logo',
         targetDir: '/public/img/group/logo',
         success: function (url, oriName) {
           req.companyGroup.logo = path.join('/img/group/logo', url);
+          req.isUpdateLogo = true;
           next();
         },
         error: function (err) {
@@ -226,7 +232,14 @@ module.exports = function (app) {
           return res.status(500).send({msg:'保存错误'});
         }
         else{
-          return res.status(200).send({msg:'成功'});
+          res.status(200).send({msg:'成功'});
+
+          if (req.isUpdateLogo) {
+            syncData.updateTlogo(team._id);
+          }
+          if (req.body.name) {
+            syncData.updateTname(team._id);
+          }
         }
       });
     },
