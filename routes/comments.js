@@ -4,7 +4,7 @@ var token = require('../services/token');
 
 module.exports = function (app, ctrl) {
 
-  app.post('/comments', token.needToken, ctrl.canPublishComment, ctrl.createComments);
+  app.post('/comments/host_type/:hostType/host_id/:hostId', token.needToken, ctrl.canPublishComment, ctrl.getCampaignPhotoAlbum, ctrl.uploadPhotoForComment, ctrl.createComments);
   app.get('/comments', token.needToken, ctrl.getComments);
   app.delete('/comments/:commentId', token.needToken, ctrl.getCommentById, ctrl.deleteComment);
 };

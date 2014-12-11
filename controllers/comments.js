@@ -1,13 +1,18 @@
 'use strict';
 
+var path = require('path');
 var mongoose = require('mongoose');
 var Campaign = mongoose.model('Campaign'),
     Comment = mongoose.model('Comment'),
+    PhotoAlbum = mongoose.model('PhotoAlbum'),
     User = mongoose.model('User');
+var multiparty = require('multiparty'),
+    async = require('async');
 var auth = require('../services/auth.js'),
     log = require('../services/error_log.js'),
-    tools = require('../tools/tools.js'),
-    socketClient = require('../services/socketClient');
+    socketClient = require('../services/socketClient'),
+    uploader = require('../services/uploader.js'),
+    tools = require('../tools/tools.js');
 
 var shieldTip = "该评论已经被系统屏蔽";
 /**
@@ -194,10 +199,125 @@ module.exports = function (app) {
 
   return {
 
+    canPublishComment: function (req, res, next) {
+      var hostId = req.params.hostId;
+      var hostType = req.params.hostType;
+      switch (hostType) {
+      case 'campaign':
+        Campaign.findById(hostId).exec()
+          .then(function (campaign) {
+            if (!campaign) {
+              return res.status(403).send({ msg: '权限错误' });
+            }
+            var role = auth.getRole(req.user, {
+              companies: campaign.cid,
+              teams: campaign.tid
+            });
+            var allow = auth.auth(role, ['publishComment']);
+            if (!allow.publishComment) {
+              return res.status(403).send({ msg: '权限错误' });
+            }
+            req.campaign = campaign;
+            req.photoAlbumId = campaign.photo_album;
+            next();
+          })
+          .then(null, function (err) {
+            log(err);
+            res.sendStatus(500);
+          });
+        break;
+      default:
+        return res.status(403).send({ msg: '权限错误' });
+      }
+
+    },
+
+    getCampaignPhotoAlbum: function (req, res, next) {
+      // 如果不传照片就直接进入下一中间件
+      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
+        next();
+        return;
+      }
+      if (req.photoAlbumId) {
+        PhotoAlbum.findById(req.photoAlbumId).exec()
+          .then(function (photoAlbum) {
+            if (!photoAlbum) {
+              res.sendStatus(500);
+              return;
+            }
+            req.photoAlbum = photoAlbum;
+            next();
+          })
+          .then(null, function (err) {
+            log(err);
+            res.sendStatus(500);
+          });
+      } else {
+        next();
+      }
+    },
+
+    uploadPhotoForComment: function (req, res, next) {
+      if (!req.photoAlbum) {
+        // 不传照片的话直接到下一步
+        next();
+        return;
+      }
+
+      var photoAlbum = req.photoAlbum;
+
+      uploader.uploadImg(req, {
+        fieldName: 'photo',
+        targetDir: '/public/img/photo_album',
+        subDir: req.user.getCid().toString(),
+        saveOrigin: true,
+        success: function (url, oriName, oriCallback) {
+          // 此处不再判断，只有user可以上传，禁止hr上传
+          var uploadUser = {
+            _id: req.user._id,
+            name: req.user.nickname,
+            type: 'user'
+          };
+          var photo = {
+            uri: path.join('/img/photo_album', url),
+            name: oriName,
+            upload_user: uploadUser
+          };
+          photoAlbum.photos.push(photo);
+          photoAlbum.update_user = uploadUser;
+          photoAlbum.update_date = Date.now();
+          photoAlbum.correctPhotoCount();
+          photoAlbum.save(function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+            } else {
+              var now = new Date();
+              var date_dir_name = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
+              var lastPhoto = photoAlbum.photos[photoAlbum.photos.length - 1];
+              oriCallback(path.join('/ori_img', date_dir_name), lastPhoto._id, function (err) {
+                if (err) {
+                  log(err);
+                }
+              });
+              req.photoId = lastPhoto._id;
+              req.photoUrl = lastPhoto.uri;
+              next();
+            }
+          });
+
+        },
+        error: function (err) {
+          log(err);
+          res.sendStatus(500);
+        }
+      });
+
+    },
+
     createComments: function (req, res) {
-      var host_id = req.body.host_id;  //留言主体的id,这个主体可以是 一条活动、一张照片、一场比赛等等
-      var content = req.body.content;
-      var host_type = req.body.host_type.toLowerCase();
+      var host_id = req.params.hostId;  //留言主体的id,这个主体可以是 一条活动、一张照片、一场比赛等等
+      var host_type = req.params.hostType;
       var comment = new Comment();
       var poster = {
         '_id': req.user._id,
@@ -208,115 +328,86 @@ module.exports = function (app) {
         'photo': req.user.photo
       };
       comment.host_type = host_type;
-      comment.content = content;
       comment.host_id = host_id;
       comment.poster = poster;
       comment.create_date = Date.now();
-      // photo...todo
-      // if (req.session.uploadData) {
-      //   // 如果有上传照片的数据，依然要判断是否过期
-      //   var aMinuteAgo = Date.now() - moment.duration(1, 'minutes').valueOf();
-      //   aMinuteAgo = new Date(aMinuteAgo);
 
-      //   if (aMinuteAgo <= req.session.uploadData.date) {
-      //     // 在一分钟之内，上传的照片有效
-      //     comment.photos = req.session.uploadData.photos;
-      //   }
-      //   req.session.uploadData = null;
-      // }
-
+      if (req.photoUrl) {
+        comment.photos = [{
+          _id: req.photoId,
+          uri: req.photoUrl
+        }];
+      }
+      if (req.body && req.body.content) {
+        var content = req.body.content;
+        comment.content = content;
+      }
       comment.save(function (err) {
         if (err) {
           //'COMMENT_PUSH_ERROR'
           log(err);
           return res.status(500).send({msg: "COMMENT_PUSH_ERROR'"});
         } else {
-          res.status(202).send({'comment':comment});
-          if (host_type === "campaign" || host_type === "campaign_detail" || host_type === "competition") {
-            Campaign.findById(host_id,function(err, campaign){
-              campaign.comment_sum++;
-              var poster = {
-                '_id': req.user._id,
-                'nickname': req.user.nickname,
-                'photo': req.user.photo
-              };
-              campaign.latestComment = {
-                '_id': comment._id,
-                'poster': poster,
-                'content': content,
-                'createDate': comment.create_date
-              };
-              //如果不在已评论过的人列表
-              if(tools.arrayObjectIndexOf(campaign.commentMembers, req.user._id, '_id') === -1){
-                campaign.commentMembers.push(poster);
-              }
+          res.status(200).send({'comment': comment});
 
-              //for users操作 & socket
-              var revalentUids = [];
-              for(var i = 0; i<campaign.members.length; i++){
-                revalentUids.push(campaign.members[i]._id);
-              }
-              for(var i = 0; i<campaign.commentMembers.length;i++){
-                revalentUids.push(campaign.commentMembers[i]._id);
-              }
-              //---socket
-              socketPush(campaign, comment, revalentUids);
+          if (req.campaign) {
+            var campaign = req.campaign;
+            campaign.comment_sum++;
+            var poster = {
+              '_id': req.user._id,
+              'nickname': req.user.nickname,
+              'photo': req.user.photo
+            };
+            campaign.latestComment = {
+              '_id': comment._id,
+              'poster': poster,
+              'createDate': comment.create_date
+            };
+            if (content) {
+              campaign.latestComment.content = content;
+            }
+            //如果不在已评论过的人列表
+            if (tools.arrayObjectIndexOf(campaign.commentMembers, req.user._id, '_id') === -1) {
+              campaign.commentMembers.push(poster);
+            }
 
-              campaign.save(function(err){
-                if(err){
-                  log(err);
-                }
-              });
+            //for users操作 & socket
+            var revalentUids = [];
+            for(var i = 0; i<campaign.members.length; i++){
+              revalentUids.push(campaign.members[i]._id);
+            }
+            for(var i = 0; i<campaign.commentMembers.length;i++){
+              revalentUids.push(campaign.commentMembers[i]._id);
+            }
+            //---socket
+            socketPush(campaign, comment, revalentUids);
 
-              //users更新
-              var arrayMaxLength = 20;
-              User.find({'_id':{'$in':revalentUids}},{'commentCampaigns':1,'unjoinedCommentCampaigns':1},function(err,users) {
-                if(err){
-                  console.log(err);
-                }else{
-                  async.map(users,function(user,callback){
-                    updateUserCommentList(campaign, user, req.user._id, function(){
-                      callback();
-                    });
-                  },function(err, results) {
-                    console.log('done');
-                    return;
+            campaign.save(function (err) {
+              if (err) {
+                log(err);
+              }
+            });
+
+            var arrayMaxLength = 20;
+            User.find({'_id':{'$in':revalentUids}},{'commentCampaigns':1,'unjoinedCommentCampaigns':1},function(err,users) {
+              if(err){
+                console.log(err);
+              }else{
+                async.map(users,function(user,callback){
+                  updateUserCommentList(campaign, user, req.user._id, function(){
+                    callback();
                   });
-                }
-              });
+                },function(err, results) {
+                  console.log('done');
+                  return;
+                });
+              }
             });
           }
         }
       });
     },
-    canPublishComment: function(req, res, next) {
-      var host_id = req.body.host_id;
-      var host_type = req.body.host_type.toLowerCase();
-      switch (host_type) {
-        case 'campaign':
-          Campaign.findById(host_id).exec()
-          .then(function (campaign) {
-            if (!campaign) {
-              return res.status(403).send({msg: '权限错误'});
-            }
-            var allow = auth(req.user, {
-              companies: campaign.cid,
-              teams: campaign.tid
-            }, ['publishComment']);
-            if (allow.publishComment === false) {
-              return res.status(403).send({msg: '权限错误'});
-            } else {
-              next();
-            }
-          })
-          .then(null, function (err) {
-            next(err);
-          });
-          break;
-        default:
-          return res.status(403).send({msg: '权限错误'});
-      }
-    },
+
 
     getComments: function(req, res) {
       //获取评论，只有comment 无reply

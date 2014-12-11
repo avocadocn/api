@@ -2364,7 +2364,7 @@
         }
       }
     },
-    "/comments": {
+    "/comments/host_type/{hostType}/host_id/{hostId}": {
       "post": {
         "tags": [
           "comments"
@@ -2372,17 +2372,32 @@
         "summary": "发表评论",
         "operationId": "createComments",
         "consumes": [
-          "application/json"
+          "application/x-www-form-urlencoded"
         ],
         "parameters": [
           {
-            "name": "body",
-            "description": "评论信息",
+            "name": "hostType",
+            "type": "string",
+            "description": "hostType",
             "required": true,
-            "schema": {
-              "$ref": "PostComment"
-            },
-            "in": "body"
+            "in": "path",
+            "enum": [
+              "campaign"
+            ]
+          },
+          {
+            "name": "hostId",
+            "type": "string",
+            "description": "hostId",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "description": "评论内容",
+            "required": true,
+            "in": "formData"
           }
         ],
         "responses": {
@@ -2399,7 +2414,9 @@
             }
           }
         }
-      },
+      }
+    },
+    "/comments": {
       "get": {
         "tags": [
           "comments"

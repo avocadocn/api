@@ -261,6 +261,7 @@ module.exports = function (app) {
           photoAlbum.photos.push(photo);
           photoAlbum.update_user = uploadUser;
           photoAlbum.update_date = Date.now();
+          photoAlbum.correctPhotoCount();
           photoAlbum.save(function (err) {
             if (err) {
               log(err);
