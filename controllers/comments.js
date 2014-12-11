@@ -319,7 +319,22 @@ module.exports = function (app) {
     },
 
     getComments: function(req, res) {
-      //todo 获取评论，包括reply与comment
+      //获取评论，只有comment 无reply
+      Comment.getComments({
+        hostType: req.query.requestType,
+        hostId: req.query.requestId
+      }, req.query.createDate, req.query.limit, function (err, comments, nextStartDate) {
+        setDeleteAuth({
+          host_type: req.query.requestType,
+          host_id: req.query.requestId,
+          user: req.user,
+          comments: comments
+        }, function (err) {
+          if (err) console.log(err);
+          // 即使错误依然会做基本的权限设置（公司可删自己员工的，自己可以删自己的），所以依旧返回数据
+          res.send({'comments': comments, nextStartDate: nextStartDate});
+        });
+      });
     },
 
     deleteComment: function(req, res) {

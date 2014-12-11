@@ -1651,7 +1651,6 @@ paths:
           type: string
           in: query
           enum:
-            - comment
             - campaign
         - name: requestId
           description: 主题Id
@@ -1664,40 +1663,22 @@ paths:
           type: integer
           format: int32
           in: query
+        - name: createDate
+          description: 上一条评论的评论时间
+          required: false
+          type: date-time
+          in: query
       responses:
         "200":
           description: 成功
           schema:
-            type: array
-            items:
-              $ref: Comment
+            type: object
+            $ref: CommentsResponse
         default:
           description: error
           schema:
             $ref: Error
   "/comments/{commentId}":
-    get:
-      tags:
-        - comments
-      summary: 获取一条评论
-      operationId: getComment
-      consumes:
-        - application/json
-      parameters:
-        - name: commentId
-          description: 评论Id
-          required: true
-          type: string
-          in: path
-      responses:
-        "200":
-          description: 成功
-          schema:
-            $ref: Comment
-        default:
-          description: error
-          schema:
-            $ref: Error
     delete:
       tags:
         - comments
@@ -2772,6 +2753,16 @@ definitions:
               type: string
             uri:
               type: string
+  CommentsResponse:
+    title: CommentsResponse
+    type: object
+    properties:
+      comments:
+        type: array
+        items:
+          $ref: Comment
+      nextStartDate:
+        type: date-time
   Message:
     title: Message
     descriptions: message
