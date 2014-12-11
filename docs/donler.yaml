@@ -1626,7 +1626,7 @@ paths:
           description: 评论信息
           required: true
           schema:
-            $ref: Comment
+            $ref: PostComment
           in: body
       responses:
         "200":
@@ -2763,6 +2763,16 @@ definitions:
           $ref: Comment
       nextStartDate:
         type: date-time
+  PostComment:
+    title: PostComment
+    type: object
+    properties:
+      host_id:
+        type: string
+      content:
+        type: string
+      host_type:
+        type: string
   Message:
     title: Message
     descriptions: message
