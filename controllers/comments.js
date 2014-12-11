@@ -6,7 +6,8 @@ var Campaign = mongoose.model('Campaign'),
     User = mongoose.model('User');
 var auth = require('../services/auth.js'),
     log = require('../services/error_log.js'),
-    tools = require('../tools/tools.js');
+    tools = require('../tools/tools.js'),
+    socketClient = require('../services/socketClient');
 
 var shieldTip = "该评论已经被系统屏蔽";
 /**
@@ -114,6 +115,80 @@ var setDeleteAuth = function setDeleteAuth(data, callback) {
       break;
   }
 };
+//for push comment
+var updateUserCommentList = function(campaign, user, reqUserId ,callback){
+  if(campaign.whichUnit(user._id)) {//已参加
+    var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns,campaign._id,'_id');
+    if(campaignIndex === -1){//如果user中没有
+      //放到最前,数组长度到max值时去掉最后面的campaign
+      user.commentCampaigns.unshift({
+        '_id': campaign._id,
+        'unread': 0
+      });
+      if(user.commentCampaigns.length>arrayMaxLength){
+        user.commentCampaigns.length = arrayMaxLength;
+      }
+    }else{//如果存在于user中
+      //更新到最前,如果不是自己发的,unread数增加
+      if(user._id.toString() != reqUserId.toString())
+        user.commentCampaigns[campaignIndex].unread++;
+      var campaignNeedUpdate = user.commentCampaigns.splice(campaignIndex,1);
+      user.commentCampaigns.unshift(campaignNeedUpdate[0]);
+    }
+  }else{
+    var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns,campaign._id,'_id');
+    if(campaignIndex === -1){//如果user中没有
+      //放到最前,数组长度到max值时去掉最后面的campaign
+      user.unjoinedCommentCampaigns.unshift({
+        '_id': campaign._id,
+        'unread': 0
+      });
+      if(user.unjoinedCommentCampaigns.length>arrayMaxLength){
+        user.unjoinedCommentCampaigns.length = arrayMaxLength;
+      }
+    }else{//如果存在于user中
+      //更新到最前,如果不是自己发的,unread数增加
+      if(user._id.toString() != reqUserId.toString())
+        user.unjoinedCommentCampaigns[campaignIndex].unread++;
+      var campaignNeedUpdate = user.unjoinedCommentCampaigns.splice(campaignIndex,1);
+      user.unjoinedCommentCampaigns.unshift(campaignNeedUpdate[0]);
+    }
+  }
+  user.save(function(err){
+    if(err){
+      console.log('user save error:',err);
+    }else{
+      callback();
+    }
+  });
+};
+
+var socketPush = function(campaign, comment, revalentUids){
+  var commentCampaign = {
+    '_id':campaign._id,
+    'theme': campaign.theme,
+    'latestComment': campaign.latestComment
+  };
+  var ct = campaign.campaign_type;
+  if(ct===1){
+    commentCampaign.logo = campaign.campaign_unit[0].company.logo;
+  }
+  else if(ct===2||ct===6){//是单小队/部门活动
+    commentCampaign.logo = campaign.campaign_unit[0].team.logo;
+  }else{//是挑战
+    commentCampaign.logo = '/img/icons/vs.png';//图片todo
+  }
+  var socketComment = {
+    '_id': comment._id,
+    'poster': comment.poster,
+    'createDate': comment.create_date,
+    'content': comment.content
+  };
+  if(comment.photos){
+    socketComment.photos = comment.photos;
+  }
+  socketClient.pushComment(revalentUids, commentCampaign, socketComment);
+};
 
 module.exports = function (app) {
 
@@ -137,25 +212,26 @@ module.exports = function (app) {
       comment.host_id = host_id;
       comment.poster = poster;
       comment.create_date = Date.now();
+      // photo...todo
+      // if (req.session.uploadData) {
+      //   // 如果有上传照片的数据，依然要判断是否过期
+      //   var aMinuteAgo = Date.now() - moment.duration(1, 'minutes').valueOf();
+      //   aMinuteAgo = new Date(aMinuteAgo);
 
-      if (req.session.uploadData) {
-        // 如果有上传照片的数据，依然要判断是否过期
-        var aMinuteAgo = Date.now() - moment.duration(1, 'minutes').valueOf();
-        aMinuteAgo = new Date(aMinuteAgo);
-
-        if (aMinuteAgo <= req.session.uploadData.date) {
-          // 在一分钟之内，上传的照片有效
-          comment.photos = req.session.uploadData.photos;
-        }
-        req.session.uploadData = null;
-      }
+      //   if (aMinuteAgo <= req.session.uploadData.date) {
+      //     // 在一分钟之内，上传的照片有效
+      //     comment.photos = req.session.uploadData.photos;
+      //   }
+      //   req.session.uploadData = null;
+      // }
 
       comment.save(function (err) {
         if (err) {
           //'COMMENT_PUSH_ERROR'
           log(err);
-          return res.status(500).send("{{'COMMENT_PUSH_ERROR'|translate}}");
+          return res.status(500).send({msg: "COMMENT_PUSH_ERROR'"});
         } else {
+          res.status(202).send({'comment':comment});
           if (host_type === "campaign" || host_type === "campaign_detail" || host_type === "competition") {
             Campaign.findById(host_id,function(err, campaign){
               campaign.comment_sum++;
@@ -174,13 +250,8 @@ module.exports = function (app) {
               if(tools.arrayObjectIndexOf(campaign.commentMembers, req.user._id, '_id') === -1){
                 campaign.commentMembers.push(poster);
               }
-              campaign.save(function(err){
-                if(err){
-                  log(err);
-                }
-              });
 
-              //users操作
+              //for users操作 & socket
               var revalentUids = [];
               for(var i = 0; i<campaign.members.length; i++){
                 revalentUids.push(campaign.members[i]._id);
@@ -188,65 +259,32 @@ module.exports = function (app) {
               for(var i = 0; i<campaign.commentMembers.length;i++){
                 revalentUids.push(campaign.commentMembers[i]._id);
               }
+              //---socket
+              socketPush(campaign, comment, revalentUids);
+
+              campaign.save(function(err){
+                if(err){
+                  log(err);
+                }
+              });
+
+              //users更新
               var arrayMaxLength = 20;
               User.find({'_id':{'$in':revalentUids}},{'commentCampaigns':1,'unjoinedCommentCampaigns':1},function(err,users) {
                 if(err){
                   console.log(err);
                 }else{
                   async.map(users,function(user,callback){
-                    if(campaign.whichUnit(user._id)) {//已参加
-                      var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns,host_id,'_id');
-                      if(campaignIndex === -1){//如果user中没有
-                        //放到最前,数组长度到max值时去掉最后面的campaign
-                        user.commentCampaigns.unshift({
-                          '_id': host_id,
-                          'unread': 0
-                        });
-                        if(user.commentCampaigns.length>arrayMaxLength){
-                          user.commentCampaigns.length = arrayMaxLength;
-                        }
-                      }else{//如果存在于user中
-                        //更新到最前,如果不是自己发的,unread数增加
-                        if(user._id.toString() != req.user._id.toString())
-                          user.commentCampaigns[campaignIndex].unread++;
-                        var campaignNeedUpdate = user.commentCampaigns.splice(campaignIndex,1);
-                        user.commentCampaigns.unshift(campaignNeedUpdate[0]);
-                      }
-                    }else{
-                      var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns,host_id,'_id');
-                      if(campaignIndex === -1){//如果user中没有
-                        //放到最前,数组长度到max值时去掉最后面的campaign
-                        user.unjoinedCommentCampaigns.unshift({
-                          '_id': host_id,
-                          'unread': 0
-                        });
-                        if(user.unjoinedCommentCampaigns.length>arrayMaxLength){
-                          user.unjoinedCommentCampaigns.length = arrayMaxLength;
-                        }
-                      }else{//如果存在于user中
-                        //更新到最前,如果不是自己发的,unread数增加
-                        if(user._id.toString() != req.user._id.toString())
-                          user.unjoinedCommentCampaigns[campaignIndex].unread++;
-                        var campaignNeedUpdate = user.unjoinedCommentCampaigns.splice(campaignIndex,1);
-                        user.unjoinedCommentCampaigns.unshift(campaignNeedUpdate[0]);
-                      }
-                    }
-                    user.save(function(err){
-                      if(err){
-                        console.log('user save error:',err);
-                      }else{
-                        callback();
-                      }
+                    updateUserCommentList(campaign, user, req.user._id, function(){
+                      callback();
                     });
                   },function(err, results) {
                     console.log('done');
                     return;
                   });
                 }
-              })
+              });
             });
-          } else {
-            return res.status(200).send({'comment': comment});
           }
         }
       });
