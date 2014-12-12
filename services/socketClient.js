@@ -20,6 +20,6 @@ socket.on('connect',function(){
   console.log('connected to socket server');
 });
 
-exports.pushComment = function(uids,campaign,comment){
-  socket.emit('commentFromServer',uids,campaign,comment);
+exports.pushComment = function(joinedUids, unjoinedUids, campaign, comment){
+  socket.emit('commentFromServer', joinedUids, unjoinedUids, campaign, comment);
 };

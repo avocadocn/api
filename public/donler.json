@@ -2520,6 +2520,26 @@
         }
       }
     },
+    "/comments/list": {
+      "get": {
+        "tags": [
+          "comments"
+        ],
+        "summary": "获取讨论列表",
+        "operationId": "getCommentList",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "CommentCampaign"
+              }
+            }
+          }
+        }
+      }
+    },
     "/messages": {
       "post": {
         "tags": [
@@ -4614,6 +4634,53 @@
       "properties": {
         "pushStatus": {
           "type": "boolean"
+        }
+      }
+    },
+    "CommentCampaign": {
+      "title": "CommentCampaign",
+      "required": [
+        "_id",
+        "logo",
+        "theme",
+        "latestComment",
+        "unread"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "logo": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        },
+        "latestComment": {
+          "type": "object",
+          "$ref": "LatestComment"
+        },
+        "unread": {
+          "type": "number"
+        }
+      }
+    },
+    "LatestComment": {
+      "title": "LatestComment",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "poster": {
+          "type": "object",
+          "$ref": "Member"
+        },
+        "content": {
+          "type": "string"
+        },
+        "createDate": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     }

@@ -122,15 +122,16 @@ var setDeleteAuth = function setDeleteAuth(data, callback) {
 };
 //for push comment
 var updateUserCommentList = function(campaign, user, reqUserId ,callback){
+  var arrayMaxLength = 20;
   if(campaign.whichUnit(user._id)) {//已参加
-    var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns,campaign._id,'_id');
-    if(campaignIndex === -1){//如果user中没有
+    var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns, campaign._id, '_id');
+    if(campaignIndex === -1) {//如果user中没有
       //放到最前,数组长度到max值时去掉最后面的campaign
       user.commentCampaigns.unshift({
         '_id': campaign._id,
         'unread': 0
       });
-      if(user.commentCampaigns.length>arrayMaxLength){
+      if(user.commentCampaigns.length>arrayMaxLength) {
         user.commentCampaigns.length = arrayMaxLength;
       }
     }else{//如果存在于user中
@@ -140,15 +141,15 @@ var updateUserCommentList = function(campaign, user, reqUserId ,callback){
       var campaignNeedUpdate = user.commentCampaigns.splice(campaignIndex,1);
       user.commentCampaigns.unshift(campaignNeedUpdate[0]);
     }
-  }else{
-    var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns,campaign._id,'_id');
-    if(campaignIndex === -1){//如果user中没有
+  }else{//未参加
+    var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns, campaign._id, '_id');
+    if(campaignIndex === -1) {//如果user中没有
       //放到最前,数组长度到max值时去掉最后面的campaign
       user.unjoinedCommentCampaigns.unshift({
         '_id': campaign._id,
         'unread': 0
       });
-      if(user.unjoinedCommentCampaigns.length>arrayMaxLength){
+      if(user.unjoinedCommentCampaigns.length>arrayMaxLength) {
         user.unjoinedCommentCampaigns.length = arrayMaxLength;
       }
     }else{//如果存在于user中
@@ -168,7 +169,7 @@ var updateUserCommentList = function(campaign, user, reqUserId ,callback){
   });
 };
 
-var socketPush = function(campaign, comment, revalentUids){
+var socketPush = function(campaign, comment, joinedUids, unjoinedUids){
   var commentCampaign = {
     '_id':campaign._id,
     'theme': campaign.theme,
@@ -192,7 +193,7 @@ var socketPush = function(campaign, comment, revalentUids){
   if(comment.photos){
     socketComment.photos = comment.photos;
   }
-  socketClient.pushComment(revalentUids, commentCampaign, socketComment);
+  socketClient.pushComment(joinedUids, unjoinedUids, commentCampaign, socketComment);
 };
 
 module.exports = function (app) {
@@ -370,25 +371,28 @@ module.exports = function (app) {
             if (tools.arrayObjectIndexOf(campaign.commentMembers, req.user._id, '_id') === -1) {
               campaign.commentMembers.push(poster);
             }
-
             //for users操作 & socket
-            var revalentUids = [];
-            for(var i = 0; i<campaign.members.length; i++){
-              revalentUids.push(campaign.members[i]._id);
+            //参加的人
+            var joinedUids = [];
+            for(var i = 0; i<campaign.members.length; i++) {
+              joinedUids.push(campaign.members[i]._id.toString());
             }
-            for(var i = 0; i<campaign.commentMembers.length;i++){
-              revalentUids.push(campaign.commentMembers[i]._id);
+            //未参加
+            var unjoinedUids = [];
+            for(var i = 0; i<campaign.commentMembers.length;i++) {
+              if(joinedUids.indexOf(campaign.commentMembers[i]._id.toString()) === -1){
+                unjoinedUids.push(campaign.commentMembers[i]._id.toString());
+              }
             }
             //---socket
-            socketPush(campaign, comment, revalentUids);
+            socketPush(campaign, comment, joinedUids, unjoinedUids);
 
             campaign.save(function (err) {
               if (err) {
                 log(err);
               }
             });
-
-            var arrayMaxLength = 20;
+            var revalentUids = joinedUids.concat(unjoinedUids);
             User.find({'_id':{'$in':revalentUids}},{'commentCampaigns':1,'unjoinedCommentCampaigns':1},function(err,users) {
               if(err){
                 console.log(err);
@@ -499,6 +503,16 @@ module.exports = function (app) {
       })
       .then(null, function (err) {
         return res.status(500).send({msg: 'Comment not found'});
+      });
+    },
+    getCommentList: function(req, res) {
+      var campaigns = req.user.commentCampaigns;
+      var campaignIds = [];
+      for(var i = 0; i<campaigns.length; i++){
+        campaignIds.push(campaigns[i]._id);
+      }
+      Campaign.find({_id:{'$in':campaignIds}}, {}, function(err, commentCampaigns){
+
       });
     }
   };
