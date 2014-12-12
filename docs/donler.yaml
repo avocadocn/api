@@ -1726,13 +1726,22 @@ paths:
         - comments
       summary: 获取讨论列表
       operationId: getCommentList
+      parameters:
+        - name: type
+          description: 参加/未参加列表
+          required: true
+          type: string
+          enum:
+            - joined
+            - unjoined
+          in: query
       responses:
         "200":
           description: 成功
           schema:
-            type: array
-            items:
-              $ref: CommentCampaign
+            type: object
+            $ref: CommentsList
+            
 
   /messages:
     post:
@@ -3292,4 +3301,14 @@ definitions:
       createDate:
         type: string
         format: date-time
-
+  CommentsList:
+    title: CommentsList
+    required:
+      - commentCampaigns
+    properties:
+      commentCampaigns:
+        type: array
+        items:
+          $ref: CommentCampaign
+      newUnjoinedCampaignComment:
+        type: boolean

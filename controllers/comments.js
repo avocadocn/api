@@ -506,13 +506,57 @@ module.exports = function (app) {
       });
     },
     getCommentList: function(req, res) {
-      var campaigns = req.user.commentCampaigns;
+      if(req.query.type==='joined')
+        var campaigns = req.user.commentCampaigns;
+      else if(req.query.type === 'unjoined')
+        var campaigns = req.user.unjoinedCommentCampaigns;
       var campaignIds = [];
       for(var i = 0; i<campaigns.length; i++){
         campaignIds.push(campaigns[i]._id);
       }
-      Campaign.find({_id:{'$in':campaignIds}}, {}, function(err, commentCampaigns){
-
+      Campaign.find({_id:{'$in':campaignIds}}, function(err, commentCampaigns){
+        if(err){
+          log(err);
+          return res.status(500).send({msg: 'campaign find err'});
+        }else{
+          var formatCommentCampaigns = [];
+          for(var i = 0; i<commentCampaigns.length; i++){
+            var campaign = commentCampaigns[i];
+            var logo = '';
+            var ct = campaign.campaign_type;
+            if(ct===1){
+              logo = campaign.campaign_unit[0].company.logo;
+            }
+            else if(ct===2||ct===6){//是单小队/部门活动
+              logo = campaign.campaign_unit[0].team.logo;
+            }else{//是挑战
+              logo = '/img/icons/vs.png';//图片todo
+            }
+            var indexOfUser = tools.arrayObjectIndexOf(campaigns, campaign._id ,'_id');
+            console.log(indexOfUser);
+            var unread = campaigns[indexOfUser];
+            formatCommentCampaigns.push({
+              _id: campaign._id,
+              theme: campaign.theme,
+              latestComment: campaign.latestComment,
+              unread: unread,
+              logo: logo
+            });
+          }
+          if(req.query.type==='joined'){
+            var unjoinedCampaigns = req.user.unjoinedCommentCampaigns;
+            var unreadUnjoined = false; // 是否有未读的维灿活动讨论
+            for(var i =0; i<unjoinedCampaigns.length; i++){
+              if(unjoinedCampaigns[i].unread){
+                unreadUnjoined = true;
+                break;
+              }
+            }
+            return res.status(200).send({'commentCampaigns':formatCommentCampaigns,'newUnjoinedCampaignComment':unreadUnjoined})
+          }else{
+            return res.status(200).send({'commentCampaigns':formatCommentCampaigns})
+          }
+        }
       });
     }
   };
