@@ -17,7 +17,7 @@ var logController = require('../controllers/log'),
     tools = require('../tools/tools.js');
 
 
-var searchCampaign = function(select_type, option, sort, limit, requestId, teamIds, callback){
+var searchCampaign = function(select_type, option, sort, limit, requestId, teamIds, populate, callback){
   var now = new Date();
   var _option = {}; 
   for (var attr in option){
@@ -63,6 +63,7 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
   .find(_option)
   .sort(sort)
   .limit(limit)
+  .populate(populate)
   .exec()
   .then(function (campaign) {
     callback(null,campaign)
@@ -217,6 +218,7 @@ module.exports = function (app) {
           requestId = req.query.requestId,
           sort = req.query.sortBy || 'start_time',
           limit = parseInt(req.query.limit) || 0,
+          populate =req.query.populate || '',
           reqModel,team_ids;
       switch(requestType){
         case 'company':
@@ -288,16 +290,16 @@ module.exports = function (app) {
         if(req.query.select_type =='0'){
           async.series([
             function(callback){
-              searchCampaign('1', option, sort, limit, requestId, team_ids, callback);
+              searchCampaign('1', option, sort, limit, requestId, team_ids, populate, callback);
             },//即将开始的活动
             function(callback){
-              searchCampaign('2', option, sort, limit, requestId, team_ids, callback);
+              searchCampaign('2', option, sort, limit, requestId, team_ids, populate, callback);
             },//正在进行的活动
             function(callback){
-              searchCampaign('4', option, sort, limit, requestId, team_ids, callback);
+              searchCampaign('4', option, sort, limit, requestId, team_ids, populate, callback);
             },//新活动（未参加）
             function(callback){
-              searchCampaign('5', option, sort, limit, requestId, team_ids, callback);
+              searchCampaign('5', option, sort, limit, requestId, team_ids, populate, callback);
             }//未确认的挑战
           ],function(err, values){
             if(err){

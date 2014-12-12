@@ -1033,6 +1033,14 @@ paths:
           type: integer
           format: int32
           in: query
+        - name: populate
+          description: populate
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: ssv
+          in: query
       responses:
         "200":
           description: 成功
