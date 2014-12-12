@@ -46,11 +46,19 @@ var registeredTasks = {
   getUserAllCampaignsForCalendar: {
     user: ['self']
   },
-  joinCompanyCampaign: {
-    company: ['member']
+  joinCompanyCampaign: function (role) {
+    if (!role.user && role.company=='member') {
+      return true;
+    } else {
+      return false;
+    }
   },
-  joinTeamCampaign: {
-    team: ['leader', 'member']
+  joinTeamCampaign: function (role) {
+    if (!role.user && (role.team=='leader' || role.team=='member')) {
+      return true;
+    } else {
+      return false;
+    }
   },
   quitCampaign: {
     user: ['self']

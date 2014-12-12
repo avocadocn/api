@@ -23,6 +23,7 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
   for (var attr in option){
     _option[attr] = option[attr];
   }
+  var populate = populate.split(',').join(' ');
   switch(select_type){
     //全部
     case '0':
@@ -72,6 +73,158 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
     callback(err,[]);
   });
 }
+/**
+ * 格式化距离开始时间还有多久
+ * @param  {Date} start_time 活动开始时间
+ * @param  {Date} end_time   活动结束时间
+ * @return {Object}          start_flag:活动是否已经开始,
+                              remind_text:提示文字,
+                              start_time_text: 距离开始的时间
+ */
+var formatTime = function(start_time,end_time){
+  var remind_text, start_time_text,start_flag;
+  var now = new Date();
+  var diff_end = now - end_time;
+  if (diff_end >= 0) {
+    // 活动已结束
+    remind_text = '活动已结束';
+    start_time_text = '';
+    start_flag = -1;
+  } else {
+    // 活动未结束
+    var temp_start_time = new Date(start_time);
+    var during = moment.duration(moment(now).diff(temp_start_time));
+    var years = Math.abs(during.years());
+    var months = Math.abs(during.months());
+    var days = Math.floor(Math.abs(during.asDays()));
+    var hours = Math.abs(during.hours());
+    var minutes = Math.abs(during.minutes());
+    var seconds = Math.abs(during.seconds());
+
+    temp_start_time.setHours(hours);
+    temp_start_time.setMinutes(minutes);
+    temp_start_time.setSeconds(seconds);
+
+    // 活动已开始
+    if (during >= 0) {
+      start_flag = 1;
+      remind_text = '活动已开始';
+    } else {
+      // 活动未开始
+      start_flag = 0;
+      remind_text = '距离活动开始还有';
+      if(days>=1){
+        start_time_text =  days + '天';
+      }
+      else if(hours>=1){
+        start_time_text = hours + '小时';
+      }
+      else if(minutes>=1){
+        start_time_text =  minutes + '分'  ;
+      }
+      else{
+        start_time_text = seconds + '秒';
+      }
+
+    }
+  }
+  return { start_flag:start_flag,
+            remind_text:remind_text,
+            start_time_text: start_time_text
+          }
+}
+/**
+ * 格式化两个时间距离还有多久
+ * @param  {Date} start_time 开始时间
+ * @param  {Date} end_time   结束时间
+ * @return {String}          相差时间的中文格式化
+ */
+var formatrestTime = function(start_time,end_time){
+  var restTime;
+  var temp_start_time = new Date(start_time);
+  var temp_end_time = new Date(end_time);
+  var during = moment.duration(moment(temp_end_time).diff(temp_start_time));
+  var years = Math.abs(during.years());
+  var months = Math.abs(during.months());
+  var days = Math.floor(Math.abs(during.asDays()));
+  var hours = Math.abs(during.hours());
+  var minutes = Math.abs(during.minutes());
+  var seconds = Math.abs(during.seconds());
+
+  if(days>=3){
+    restTime =  days + '天';
+  }
+  else if(days>=1){
+    restTime = days + '天' + (hours ? hours + '小时' : '') ;
+  }
+  else if(hours>=1){
+    restTime = hours + '小时'  + minutes + '分';
+  }
+  else{
+    restTime = (minutes ?  minutes + '分' : '' ) + seconds + '秒';
+  }
+  return restTime;
+}
+/**
+ * [formatCampaign description]
+ * @param  {[type]} campaign [description]
+ * @param  {[type]} pageType [description]
+ * @param  {[type]} role     [description]
+ * @param  {[type]} user     [description]
+ * @param  {[type]} other    [description]
+ * @return {[type]}          [description]
+ */
+var formatCampaign = function(campaign,pageType,user,other){
+  var _other = other ? other :{};
+  var campaigns = [];
+  var now = new Date();
+  campaign.forEach(function(_campaign,_index){
+    var ct = _campaign.campaign_type;
+    var temp = {
+      '_id':_campaign._id,
+      'active':_campaign.active,
+      'confirm_status':_campaign.confirm_status,
+      'theme':_campaign.theme,
+      'content':_campaign.content ? _campaign.content.replace(/<\/?[^>]*>/g, ''):'',
+      'member_max':_campaign.member_max,
+      'location':_campaign.location,
+      'start_time':_campaign.start_time,
+      'finish':_campaign.finish,
+      'end_time':_campaign.end_time,
+      'deadline':_campaign.deadline,
+      'comment_sum':_campaign.comment_sum,
+      'join_flag':tools.arrayObjectIndexOf(_campaign.members,user._id,'_id')>-1?1:-1,
+      'due_flag':now>_campaign.deadline ? 1 : 0,
+      'tags':_campaign.tags,
+      'campaign_mold':_campaign.mold,
+      'campaign_unit':_campaign.campaign_unit,
+      'photo_album':_campaign.photo_album
+    };
+    var _formatTime = formatTime(_campaign.start_time,_campaign.end_time);
+    temp.start_flag = _formatTime.start_flag;
+    temp.remind_text =_formatTime.remind_text;
+    temp.start_time_text = _formatTime.start_time_text;
+    temp.deadline_rest = formatrestTime(now,_campaign.deadline);
+    var memberIds = [];
+    _campaign.members.forEach(function (member) {
+      memberIds.push(member._id);
+    });
+    temp.components = _campaign.formatComponents();
+    var role = auth.getRole(user, {
+      companies: _campaign.cid,
+      teams: _campaign.tid,
+      users: memberIds
+    });
+    var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
+    var allow = auth.auth(role, [
+      'publishComment',joinTaskName
+    ]);
+
+    temp.allow = allow;
+    campaigns.push(temp);
+  });
+  return campaigns;
+};
 module.exports = function (app) {
 
   return {
@@ -241,7 +394,9 @@ module.exports = function (app) {
           return res.status(404).send('未找到该活动');
         }
         var role = auth.getRole(req.user, {
-          companies: [requestType=='company' ? requestId : requestModal.cid]
+          companies: [requestType=='company' ? requestId : requestModal.cid],
+          teams:[requestType=='team' ? requestId : ''],
+          users:[requestType=='user' ? requestId : '']
         });
         var allow = auth.auth(role, ['getCampaigns']);
         if(!allow.getCampaigns){
@@ -307,7 +462,11 @@ module.exports = function (app) {
               return res.status(500).send({ msg: '服务器错误'});
             }
             else{
-              return res.status(200).send(values);
+              var formatCampaigns = [];
+              values.forEach(function(value){
+                formatCampaigns.push(formatCampaign(value,requestType,req.user));
+              })
+              return res.status(200).send(formatCampaigns);
             }
           });
         }
@@ -320,7 +479,7 @@ module.exports = function (app) {
               res.status(404).send('未找到活动');
             }
             else{
-              res.status(200).send(campaign);
+              res.status(200).send(formatCampaign(campaign,requestType,req.user));
             }
           });
         }
@@ -445,7 +604,8 @@ module.exports = function (app) {
         else{
           var role = auth.getRole(req.user, {
             companies: campaign.cid,
-            teams: campaign.tid
+            teams: campaign.tid,
+            users:campaign.member
           });
           var taskName = campaign.campaign_type==1?'joinCampanyCampaign':'joinTeamCampaign';
           var allow = auth.auth(role, [taskName]);
@@ -470,16 +630,6 @@ module.exports = function (app) {
               }
             }
             var _join = function (unit) {
-              for (var i = 0; i < unit.member.length; i++) {
-                if (user._id.toString() === unit.member[i]._id.toString()) {
-                  // 用户已经参加该活动
-                  return {
-                    success: false,
-                    msg: '您已经参加该活动'
-                  };
-                }
-              }
-
               // 更新user的讨论列表
               var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns,campaign._id,'_id');
               if(campaignIndex>-1){

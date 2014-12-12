@@ -1513,7 +1513,6 @@
             "items": {
               "type": "string"
             },
-            "collectionFormat": "ssv",
             "in": "query"
           }
         ],
@@ -3019,6 +3018,10 @@
         "token": {
           "type": "string",
           "description": "access token, 有效期7天"
+        },
+        "id": {
+          "type": "string",
+          "description": "用户id"
         }
       }
     },

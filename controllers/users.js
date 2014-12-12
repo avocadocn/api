@@ -396,7 +396,8 @@ module.exports = function (app) {
               res.sendStatus(500);
             } else {
               res.status(200).send({
-                token: token
+                token: token,
+                id:user._id
               });
             }
           });

@@ -1039,7 +1039,6 @@ paths:
           type: array
           items:
             type: string
-          collectionFormat: ssv
           in: query
       responses:
         "200":
@@ -2063,6 +2062,9 @@ definitions:
       token:
         type: string
         description: "access token, 有效期7天"
+      id:
+        type: string
+        description: 用户id
   User:
     title: User
     type: object

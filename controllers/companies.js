@@ -714,7 +714,7 @@ module.exports = function (app) {
               log(err);
               res.sendStatus(500);
             } else {
-              res.status(200).send({ token: token });
+              res.status(200).send({ token: token,id:company._id });
             }
           });
 
