@@ -129,7 +129,7 @@ var updateUserCommentList = function(campaign, user, reqUserId ,callback){
       //放到最前,数组长度到max值时去掉最后面的campaign
       user.commentCampaigns.unshift({
         '_id': campaign._id,
-        'unread': 0
+        'unread': user._id.toString() == reqUserId.toString() ? 0 : 1
       });
       if(user.commentCampaigns.length>arrayMaxLength) {
         user.commentCampaigns.length = arrayMaxLength;
@@ -147,7 +147,7 @@ var updateUserCommentList = function(campaign, user, reqUserId ,callback){
       //放到最前,数组长度到max值时去掉最后面的campaign
       user.unjoinedCommentCampaigns.unshift({
         '_id': campaign._id,
-        'unread': 0
+        'unread': user._id.toString() == reqUserId.toString() ? 0 : 1
       });
       if(user.unjoinedCommentCampaigns.length>arrayMaxLength) {
         user.unjoinedCommentCampaigns.length = arrayMaxLength;
@@ -506,10 +506,12 @@ module.exports = function (app) {
       });
     },
     getCommentList: function(req, res) {
+      console.log(req.user._id);
+      var campaigns= [];
       if(req.query.type==='joined')
-        var campaigns = req.user.commentCampaigns;
+        campaigns = req.user.commentCampaigns;
       else if(req.query.type === 'unjoined')
-        var campaigns = req.user.unjoinedCommentCampaigns;
+        campaigns = req.user.unjoinedCommentCampaigns;
       var campaignIds = [];
       for(var i = 0; i<campaigns.length; i++){
         campaignIds.push(campaigns[i]._id);
@@ -533,8 +535,7 @@ module.exports = function (app) {
               logo = '/img/icons/vs.png';//图片todo
             }
             var indexOfUser = tools.arrayObjectIndexOf(campaigns, campaign._id ,'_id');
-            console.log(indexOfUser);
-            var unread = campaigns[indexOfUser];
+            var unread = campaigns[indexOfUser].unread;
             formatCommentCampaigns.push({
               _id: campaign._id,
               theme: campaign.theme,
