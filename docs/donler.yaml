@@ -166,26 +166,51 @@ paths:
         "204":
           description: 屏蔽成功
   "/users/{userId}/open":
-      post:
-        tags:
-          - users
-        summary: 解除屏蔽
-        operationId: deleteUser
-        parameters:
-          - name: userId
-            description: 用户id
-            required: true
-            type: string
-            in: path
-            default: 53aa707a11fd597b3e1be260
-        responses:
-          default:
-            description: error
-            schema:
-              $ref: Error
-          "204":
-            description: 解除屏蔽成功
-
+    post:
+      tags:
+        - users
+      summary: 解除屏蔽
+      operationId: deleteUser
+      parameters:
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+          default: 53aa707a11fd597b3e1be260
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "204":
+          description: 解除屏蔽成功
+  "/users/{userId}/photos":
+    get:
+      tags:
+        - photoAlbums
+      summary: 获取用户上传过的照片
+      parameters:
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+          default: 53aa707a11fd597b3e1be260
+        - name: start
+          description: 分页的查询时间
+          required: false
+          type: string
+          in: query
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: PhotoListData
+        default:
+          description: error
+          schema:
+            $ref: Error
   /companies:
     post:
       tags:
@@ -1619,7 +1644,6 @@ paths:
           description: error
           schema:
             $ref: Error
-
   "/comments/host_type/{hostType}/host_id/{hostId}":
     post:
       tags:
@@ -2877,20 +2901,6 @@ definitions:
           - department
           - company
           - global
-  PhotoAlbum:
-    title: PhotoAlbum
-    description: photo_albums
-    type: object
-    properties:
-      uri:
-        type: string
-  Photo:
-    title: Photo
-    description: photo
-    type: object
-    properties:
-      uri:
-        type: string
   Error:
     title: Error
     description: Error
@@ -3136,6 +3146,28 @@ definitions:
       name:
         type: string
         description: 照片名称
+
+  PhotoListData:
+    title: PhotoListData
+    type: object
+    required:
+      - photos
+      - hasNext
+      - nextDate
+    properties:
+      photos:
+        type: array
+        description: 照片
+        items:
+          $ref: PhotoForList
+      hasNext:
+        type: boolean
+        description: 是否还有照片
+      nextDate:
+        type: string
+        format: date-time
+        description: 下一页照片的查询起始时间
+
   PushData:
     title: PushData
     required:

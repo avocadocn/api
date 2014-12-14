@@ -5,6 +5,7 @@ var path = require('path');
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var Company = mongoose.model('Company');
+var Photo = mongoose.model('Photo');
 
 var jwt = require('jsonwebtoken');
 var log = require('../services/error_log.js');
@@ -469,7 +470,87 @@ module.exports = function (app) {
         }
         res.sendStatus(204);
       });
+    },
+
+    getUserPhotosValidate: function (req, res, next) {
+      donlerValidator({
+        start: {
+          name: '开始时间',
+          value: req.query.start,
+          validators: ['date']
+        }
+      }, 'fast', function (pass, msg) {
+        if (pass) {
+          next();
+        } else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+        }
+      });
+    },
+
+    getUserPhotos: function (req, res) {
+
+      var query = {
+        'upload_user._id': req.params.userId,
+        'hidden': false
+      };
+      if (req.query.start)  {
+        query.upload_date = {
+          '$lte': new Date(req.query.start).valueOf()
+        };
+      }
+
+      Photo.find(query)
+        .sort('-upload_date')
+        .limit(21)
+        .exec()
+        .then(function (photos) {
+          var aPhoto = photos[0];
+          var role = auth.getRole(req.user, {
+            companies: aPhoto.owner.companies,
+            teams: aPhoto.owner.teams,
+            users: [aPhoto.upload_user._id]
+          });
+          var allow = auth.auth(role, ['getUserPhotos']);
+          if (!allow.getUserPhotos) {
+            res.sendStatus(403);
+            return;
+          }
+
+          var resPhotos = [];
+          photos.forEach(function (photo) {
+            resPhotos.push({
+              _id: photo._id,
+              name: photo.name,
+              uri: photo.uri
+            });
+          });
+
+          if (resPhotos.length > 20) {
+            var nextPhoto = photos[20];
+            resPhotos = resPhotos.slice(0, 20);
+            res.status(200).send({
+              photos: resPhotos,
+              hasNext: true,
+              nextDate: nextPhoto.upload_date
+            });
+          } else {
+            res.status(200).send({
+              photos: resPhotos,
+              hasNext: false
+            });
+          }
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
     }
+
+
+
+
 
   };
 };

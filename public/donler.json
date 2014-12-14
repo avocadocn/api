@@ -275,6 +275,45 @@
         }
       }
     },
+    "/users/{userId}/photos": {
+      "get": {
+        "tags": [
+          "photoAlbums"
+        ],
+        "summary": "获取用户上传过的照片",
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "用户id",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "default": "53aa707a11fd597b3e1be260"
+          },
+          {
+            "name": "start",
+            "description": "分页的查询时间",
+            "required": false,
+            "type": "string",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "PhotoListData"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/companies": {
       "post": {
         "tags": [
@@ -4128,73 +4167,6 @@
         }
       }
     },
-    "PhotoAlbum": {
-      "title": "PhotoAlbum",
-      "type": "object",
-      "required": [
-        "_id",
-        "name",
-        "updateDate",
-        "updateUser",
-        "photoCount"
-      ],
-      "properties": {
-        "_id": {
-          "type": "string",
-          "description": "相册id"
-        },
-        "name": {
-          "type": "string",
-          "description": "相册名"
-        },
-        "updateDate": {
-          "type": "string",
-          "format": "date-time",
-          "description": "上次更新时间"
-        },
-        "updateUser": {
-          "$ref": "UpdateUser"
-        },
-        "photoCount": {
-          "type": "integer",
-          "format": "int32",
-          "description": "照片数"
-        }
-      }
-    },
-    "Photo": {
-      "title": "Photo",
-      "type": "object",
-      "required": [
-        "_id",
-        "uri",
-        "name",
-        "uploadUser",
-        "uploadDate"
-      ],
-      "properties": {
-        "_id": {
-          "type": "string",
-          "description": "照片id"
-        },
-        "uri": {
-          "type": "string",
-          "description": "照片uri"
-        },
-        "name": {
-          "type": "string",
-          "description": "照片名称"
-        },
-        "uploadUser": {
-          "$ref": "UpdateUser"
-        },
-        "uploadDate": {
-          "type": "string",
-          "description": "上传时间",
-          "format": "date-time"
-        }
-      }
-    },
     "Error": {
       "title": "Error",
       "description": "Error",
@@ -4434,6 +4406,73 @@
         }
       }
     },
+    "PhotoAlbum": {
+      "title": "PhotoAlbum",
+      "type": "object",
+      "required": [
+        "_id",
+        "name",
+        "updateDate",
+        "updateUser",
+        "photoCount"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "相册id"
+        },
+        "name": {
+          "type": "string",
+          "description": "相册名"
+        },
+        "updateDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "上次更新时间"
+        },
+        "updateUser": {
+          "$ref": "UpdateUser"
+        },
+        "photoCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "照片数"
+        }
+      }
+    },
+    "Photo": {
+      "title": "Photo",
+      "type": "object",
+      "required": [
+        "_id",
+        "uri",
+        "name",
+        "uploadUser",
+        "uploadDate"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "照片id"
+        },
+        "uri": {
+          "type": "string",
+          "description": "照片uri"
+        },
+        "name": {
+          "type": "string",
+          "description": "照片名称"
+        },
+        "uploadUser": {
+          "$ref": "UpdateUser"
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "上传时间",
+          "format": "date-time"
+        }
+      }
+    },
     "PhotoForList": {
       "title": "PhotoForList",
       "type": "object",
@@ -4454,6 +4493,33 @@
         "name": {
           "type": "string",
           "description": "照片名称"
+        }
+      }
+    },
+    "PhotoListData": {
+      "title": "PhotoListData",
+      "type": "object",
+      "required": [
+        "photos",
+        "hasNext",
+        "nextDate"
+      ],
+      "properties": {
+        "photos": {
+          "type": "array",
+          "description": "照片",
+          "items": {
+            "$ref": "PhotoForList"
+          }
+        },
+        "hasNext": {
+          "type": "boolean",
+          "description": "是否还有照片"
+        },
+        "nextDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "下一页照片的查询起始时间"
         }
       }
     },

@@ -233,6 +233,12 @@ var registeredTasks = {
     company: ['hr'],
     team: ['leader'],
     user: ['self']
+  },
+
+  // 获取一个用户的所有照片
+  getUserPhotos: {
+    company: ['hr', 'member'],
+    user: ['self']
   }
 
 };

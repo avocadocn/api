@@ -267,6 +267,19 @@ validators.number = function (name, value, callback) {
   }
 };
 
+validators.date = function (name, value, callback) {
+  if (!value) {
+    callback(true);
+    return;
+  }
+  if (!validatorModule.isDate(value)) {
+    var msg = util.format('%s不是有效的日期格式', name);
+    callback(false, msg);
+  } else {
+    callback(true);
+  }
+};
+
 /**
  * 验证省市区是否合法
  * @param {String} name 验证目标的名称，用于描述错误消息
