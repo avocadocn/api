@@ -1709,7 +1709,8 @@ paths:
         - name: createDate
           description: 上一条评论的评论时间
           required: false
-          type: date-time
+          type: string
+          format: date-time
           in: query
       responses:
         "200":
@@ -2812,15 +2813,12 @@ definitions:
         enum:
           - campaign
           - comment
-      pothos:
+      photos:
         type: array
         items:
           type: object
-          properties:
-            _id:
-              type: string
-            uri:
-              type: string
+          $ref: SimplePhoto
+         
   CommentsResponse:
     title: CommentsResponse
     type: object
@@ -2900,6 +2898,22 @@ definitions:
           - department
           - company
           - global
+  PhotoAlbum:
+    title: PhotoAlbum
+    description: photo_albums
+    type: object
+    properties:
+      uri:
+        type: string
+  SimplePhoto:
+    title: Photo
+    description: photo
+    type: object
+    properties:
+      _id:
+        type: string
+      uri:
+        type: string
   Error:
     title: Error
     description: Error
@@ -2993,7 +3007,7 @@ definitions:
         type: array
         description: 全家福
         items:
-          $ref: Photo
+          $ref: SimplePhoto
   HomeCourt:
     title: HomeCourt
     required:

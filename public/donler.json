@@ -2504,7 +2504,8 @@
             "name": "createDate",
             "description": "上一条评论的评论时间",
             "required": false,
-            "type": "date-time",
+            "type": "string",
+            "format": "date-time",
             "in": "query"
           }
         ],
@@ -4041,18 +4042,11 @@
             "comment"
           ]
         },
-        "pothos": {
+        "photos": {
           "type": "array",
           "items": {
             "type": "object",
-            "properties": {
-              "_id": {
-                "type": "string"
-              },
-              "uri": {
-                "type": "string"
-              }
-            }
+            "$ref": "SimplePhoto"
           }
         }
       }
@@ -4163,6 +4157,53 @@
             "company",
             "global"
           ]
+        }
+      }
+    },
+    "PhotoAlbum": {
+      "title": "PhotoAlbum",
+      "type": "object",
+      "required": [
+        "_id",
+        "name",
+        "updateDate",
+        "updateUser",
+        "photoCount"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "相册id"
+        },
+        "name": {
+          "type": "string",
+          "description": "相册名"
+        },
+        "updateDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "上次更新时间"
+        },
+        "updateUser": {
+          "$ref": "UpdateUser"
+        },
+        "photoCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "照片数"
+        }
+      }
+    },
+    "SimplePhoto": {
+      "title": "Photo",
+      "description": "photo",
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
         }
       }
     },
@@ -4289,7 +4330,7 @@
           "type": "array",
           "description": "全家福",
           "items": {
-            "$ref": "Photo"
+            "$ref": "SimplePhoto"
           }
         }
       }
@@ -4402,40 +4443,6 @@
         "type": {
           "type": "string",
           "description": "用户类型，'hr' or 'user'"
-        }
-      }
-    },
-    "PhotoAlbum": {
-      "title": "PhotoAlbum",
-      "type": "object",
-      "required": [
-        "_id",
-        "name",
-        "updateDate",
-        "updateUser",
-        "photoCount"
-      ],
-      "properties": {
-        "_id": {
-          "type": "string",
-          "description": "相册id"
-        },
-        "name": {
-          "type": "string",
-          "description": "相册名"
-        },
-        "updateDate": {
-          "type": "string",
-          "format": "date-time",
-          "description": "上次更新时间"
-        },
-        "updateUser": {
-          "$ref": "UpdateUser"
-        },
-        "photoCount": {
-          "type": "integer",
-          "format": "int32",
-          "description": "照片数"
         }
       }
     },
