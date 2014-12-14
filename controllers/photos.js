@@ -1,14 +1,17 @@
 'use strict';
 
+var fs = require('fs');
 var path = require('path');
 
 var mongoose = require('mongoose');
 var PhotoAlbum = mongoose.model('PhotoAlbum');
+var Photo = mongoose.model('Photo');
 
 var log = require('../services/error_log.js');
 var auth = require('../services/auth.js');
 var donlerValidator = require('../services/donler_validator.js');
 var uploader = require('../services/uploader.js');
+var tools = require('../tools/tools.js');
 
 module.exports = function (app) {
   return {
@@ -253,16 +256,17 @@ module.exports = function (app) {
               type: 'hr'
             }
           }
-          var photo = {
+          var photo = new Photo({
+            photo_album: photoAlbum._id,
+            owner: {
+              companies: photoAlbum.owner.companies,
+              teams: photoAlbum.owner.teams
+            },
             uri: path.join('/img/photo_album', url),
             name: oriName,
             upload_user: uploadUser
-          };
-          photoAlbum.photos.push(photo);
-          photoAlbum.update_user = uploadUser;
-          photoAlbum.update_date = Date.now();
-          photoAlbum.correctPhotoCount();
-          photoAlbum.save(function (err) {
+          });
+          photo.save(function (err) {
             if (err) {
               log(err);
               res.sendStatus(500);
@@ -276,8 +280,27 @@ module.exports = function (app) {
                 }
               });
               res.sendStatus(201);
+
+              // 照片保存成功后，意味着上传已经成功了，之后的更新相册数据的操作无论成功与否，都视为上传照片成功
+              photoAlbum.pushPhoto({
+                _id: photo._id,
+                uri: photo.uri,
+                upload_date: photo.upload_date,
+                click: photo.click,
+                name: photo.name
+              });
+              photoAlbum.update_user = uploadUser;
+              photoAlbum.update_date = Date.now();
+              photoAlbum.photo_count += 1;
+              photoAlbum.save(function (err) {
+                if (err) {
+                  log(err);
+                }
+              });
             }
           });
+
+
 
         },
         error: function (err) {
@@ -289,36 +312,57 @@ module.exports = function (app) {
     },
 
     getPhotos: function (req, res) {
-      var photoAlbum = req.photoAlbum;
-      var photos = photoAlbum.getPhotos();
-      var resPhotos = [];
-      photos.forEach(function (photo) {
-        resPhotos.push({
-          _id: photo._id,
-          url: photo.uri,
-          name: photo.name
+      Photo.find({
+        'photo_album': req.params.photoAlbumId,
+        'hidden': false
+      }, {
+        '_id': true,
+        'uri': true,
+        'name': true
+      })
+        .sort('-upload_date')
+        .exec()
+        .then(function (photos) {
+          res.status(200).send(photos);
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
         });
-      });
-      res.status(200).send(resPhotos);
     },
 
     getPhoto: function (req, res) {
-      var photoAlbum = req.photoAlbum;
+      Photo
+        .findOne({
+          _id: req.params.photoId,
+          hidden: false
+        }, {
+          '_id': true,
+          'uri': true,
+          'name': true,
+          'upload_user': true,
+          'upload_date': true
+        })
+        .exec()
+        .then(function (photo) {
+          if (!photo) {
+            res.sendStatus(404);
+            return;
+          }
 
-      var photo = photoAlbum.getPhoto(req.params.photoId);
-      if (!photo) {
-        res.sendStatus(404);
-        return;
-      }
-
-      var resPhoto = {
-        _id: photo._id,
-        url: photo.uri,
-        name: photo.name,
-        uploadUser: photo.upload_user,
-        uploadDate: photo.upload_date
-      };
-      res.status(200).send(resPhoto);
+          var resPhoto = {
+            _id: photo._id,
+            uri: photo.uri,
+            name: photo.name,
+            uploadUser: photo.upload_user,
+            uploadDate: photo.upload_date
+          };
+          res.status(200).send(resPhoto);
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
 
     },
 
@@ -341,66 +385,124 @@ module.exports = function (app) {
     },
 
     editPhoto: function (req, res) {
-      var photoAlbum = req.photoAlbum;
+      Photo.findOne({
+        _id: req.params.photoId,
+        hidden: false
+      }).exec()
+        .then(function (photo) {
+          if (!photo) {
+            res.sendStatus(404);
+            return;
+          }
 
-      var photo = photoAlbum.getPhoto(req.params.photoId);
-      if (!photo) {
-        res.sendStatus(404);
-        return;
-      }
+          var role = auth.getRole(req.user, {
+            companies: photo.owner.companies,
+            teams: photo.owner.teams,
+            users: [photo.upload_user._id]
+          });
+          var allow = auth.auth(role, ['editPhoto']);
+          if (!allow.editPhoto) {
+            res.sendStatus(403);
+            return;
+          }
 
-      var role = auth.getRole(req.user, {
-        companies: photoAlbum.owner.companies,
-        teams: photoAlbum.owner.teams,
-        users: [photo.upload_user._id]
-      });
-      var allow = auth.auth(role, ['editPhoto']);
-      if (!allow.editPhoto) {
-        res.sendStatus(403);
-        return;
-      }
-
-      photo.name = req.body.name;
-      photoAlbum.save(function (err) {
-        if (err) {
+          photo.name = req.body.name;
+          photo.save(function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+            } else {
+              res.sendStatus(200);
+            }
+          });
+        })
+        .then(null, function (err) {
           log(err);
           res.sendStatus(500);
-        } else {
-          res.sendStatus(200);
-        }
-      });
+        });
 
     },
 
     deletePhoto: function (req, res) {
       var photoAlbum = req.photoAlbum;
 
-      var photo = photoAlbum.getPhoto(req.params.photoId);
-      if (!photo) {
-        res.sendStatus(404);
-        return;
-      }
+      Photo.findOne({
+        _id: req.params.photoId,
+        hidden: false
+      }).exec()
+        .then(function (photo) {
+          if (!photo) {
+            res.sendStatus(404);
+            return;
+          }
 
-      var role = auth.getRole(req.user, {
-        companies: photoAlbum.owner.companies,
-        teams: photoAlbum.owner.teams,
-        users: [photo.upload_user._id]
-      });
-      var allow = auth.auth(role, ['deletePhoto']);
-      if (!allow.deletePhoto) {
-        res.sendStatus(403);
-        return;
-      }
+          var role = auth.getRole(req.user, {
+            companies: photo.owner.companies,
+            teams: photo.owner.teams,
+            users: [photo.upload_user._id]
+          });
+          var allow = auth.auth(role, ['deletePhoto']);
+          if (!allow.deletePhoto) {
+            res.sendStatus(403);
+            return;
+          }
 
-      photo.hidden = true;
-      photoAlbum.save(function (err) {
-        if (err) {
+          photo.hidden = true;
+          photo.save(function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+            } else {
+              res.sendStatus(200);
+            }
+          });
+
+          // 后续的照片文件相关操作及更新相册照片计数
+          var yaliDir = uploader.yaliDir;
+
+          var result = photo.uri.match(/^([\s\S]+)\/(([-\w]+)\.[\w]+)$/);
+          var imgPath = result[1], imgFilename = result[2], imgName = result[3];
+
+          var oriPath = path.join(yaliDir, 'public', imgPath);
+          var sizePath = path.join(oriPath, 'size');
+
+          var removeSizeFiles = fs.readdirSync(sizePath).filter(function (item) {
+            if (item.indexOf(imgName) === -1) {
+              return false;
+            } else {
+              return true;
+            }
+          });
+
+          removeSizeFiles.forEach(function (filename) {
+            fs.unlinkSync(path.join(sizePath, filename));
+          });
+
+          var now = new Date();
+          var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
+          var moveTargetDir = path.join(yaliDir, 'img_trash', dateDirName);
+          if (!fs.existsSync(moveTargetDir)) {
+            mkdirp.sync(moveTargetDir);
+          }
+          // 将上传的图片移至备份目录
+          fs.renameSync(path.join(yaliDir, 'public', photo.uri), path.join(moveTargetDir, imgFilename));
+
+          if (tools.arrayObjectIndexOf(photoAlbum.photos, photo._id, '_id') !== -1) {
+            photoAlbum.reliable = false;
+          }
+          photoAlbum.photo_count--;
+          photoAlbum.save(function(err) {
+            // 即使更新相册照片数量失败了，依然算作是删除成功。
+            console.log(err);
+          });
+
+
+        })
+        .then(null, function (err) {
           log(err);
           res.sendStatus(500);
-        } else {
-          res.sendStatus(200);
-        }
-      });
+        });
+
     }
 
   };

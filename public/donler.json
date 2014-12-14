@@ -4167,7 +4167,7 @@
       "type": "object",
       "required": [
         "_id",
-        "url",
+        "uri",
         "name",
         "uploadUser",
         "uploadDate"
@@ -4177,9 +4177,9 @@
           "type": "string",
           "description": "照片id"
         },
-        "url": {
+        "uri": {
           "type": "string",
-          "description": "照片url"
+          "description": "照片uri"
         },
         "name": {
           "type": "string",
@@ -4439,7 +4439,7 @@
       "type": "object",
       "required": [
         "_id",
-        "url",
+        "uri",
         "name"
       ],
       "properties": {
@@ -4447,9 +4447,9 @@
           "type": "string",
           "description": "照片id"
         },
-        "url": {
+        "uri": {
           "type": "string",
-          "description": "照片url"
+          "description": "照片uri"
         },
         "name": {
           "type": "string",

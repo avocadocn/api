@@ -3098,7 +3098,7 @@ definitions:
     type: object
     required:
       - _id
-      - url
+      - uri
       - name
       - uploadUser
       - uploadDate
@@ -3106,9 +3106,9 @@ definitions:
       _id:
         type: string
         description: 照片id
-      url:
+      uri:
         type: string
-        description: 照片url
+        description: 照片uri
       name:
         type: string
         description: 照片名称
@@ -3124,15 +3124,15 @@ definitions:
     type: object
     required:
       - _id
-      - url
+      - uri
       - name
     properties:
       _id:
         type: string
         description: 照片id
-      url:
+      uri:
         type: string
-        description: 照片url
+        description: 照片uri
       name:
         type: string
         description: 照片名称

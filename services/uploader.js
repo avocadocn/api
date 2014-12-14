@@ -10,7 +10,8 @@ var mkdirp = require('mkdirp');
 // 要求api项目与yali项目在同一目录下
 var yaliDir = path.join(__dirname, '../../yali/');
 var tempDir = path.join(yaliDir, 'temp_uploads');
-
+exports.yaliDir = yaliDir;
+exports.tempDir = tempDir;
 
 /**
  * 上传照片到某个目录
