@@ -1808,8 +1808,7 @@
           "200": {
             "description": "成功",
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "$ref": "Campaign"
             }
           },
           "default": {

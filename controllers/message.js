@@ -17,9 +17,51 @@ var time_out = 72*24*3600;
 
 module.exports = function (app) {
   return {
-    sendMessage: function(req, res) {
-      //TODO:
-      res.sendStatus(200);
+    //private
+    //sendToOne
+    sendMessage: function(param) {
+      var MC={
+        'type':'private',
+        'caption':param.caption,
+        'content':param.content,
+        'sender':param.sender,
+        'team':param.team,
+        'specific_type':param.campaign_id == null ? {'value':2} : ({'value':2,'child_type':param.team[0].status}),
+        'company_id':param.company_id,
+        'campaign_id':param.campaign_id,
+        'deadline':(new Date())+time_out
+      };
+      MessageContent.create(MC,function(err,message){
+        if(err){
+          log(err);
+        } else {
+          var counter = {'i':0};
+          async.whilst(
+            function() { return counter.i < param.receiver.length},
+            function(__callback){
+              var M = {
+                'type':param.type,
+                'rec_id':param.receiver[counter.i]._id,
+                'MessageContent':message_content._id,
+                'specific_type':MC.specific_type,
+                'status':'unread'
+              };
+              Message.create(M,function(err,message){
+                if(err){
+                  log(err);
+                } else {
+                  _counter.i++;__callback();
+                }
+              })
+            },
+            function(err){
+              if(err){
+               log(err)
+              }
+            }
+          );
+        }
+      })
     },
     getMessageList: function(req, res) {
       var requestType = req.query.requestType;
