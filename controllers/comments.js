@@ -290,7 +290,7 @@ module.exports = function (app) {
             name: oriName,
             upload_user: uploadUser
           });
-          req.photoUri = photo.uri;
+          req.photo = photo;
           photo.save(function (err) {
             if (err) {
               log(err);
@@ -350,10 +350,10 @@ module.exports = function (app) {
       comment.poster = poster;
       comment.create_date = Date.now();
 
-      if (req.photoUri) {
+      if (req.photo) {
         comment.photos = [{
-          _id: req.photoId,
-          uri: req.photoUri
+          _id: req.photo._id,
+          uri: req.photo.uri
         }];
       }
       if (req.body && req.body.content) {
@@ -450,6 +450,72 @@ module.exports = function (app) {
     },
 
     deleteComment: function(req, res) {
+
+      var deleteCommentPhotos = function (photoIds, callback) {
+        Photo.find({
+          _id: { $in: photoIds },
+          hidden: false
+        }).exec()
+          .then(function (photos) {
+            async.map(photos, function (photo, itemCallback) {
+              var result = photo.uri.match(/^([\s\S]+)\/(([-\w]+)\.[\w]+)$/);
+              var imgPath = result[1], imgFilename = result[2], imgName = result[3];
+
+              var oriPath = path.join(uploader.yaliDir, 'public', imgPath);
+              var sizePath = path.join(oriPath, 'size');
+
+              var removeSizeFiles = fs.readdirSync(sizePath).filter(function (item) {
+                if (item.indexOf(imgName) === -1) {
+                  return false;
+                } else {
+                  return true;
+                }
+              });
+
+              removeSizeFiles.forEach(function (filename) {
+                fs.unlinkSync(path.join(sizePath, filename));
+              });
+
+              var now = new Date();
+              var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
+              var moveTargeDir = path.join(uploader.yaliDir, 'img_trash', dateDirName);
+              if (!fs.existsSync(moveTargeDir)) {
+                mkdirp.sync(moveTargeDir);
+              }
+              // 将上传的图片移至备份目录
+              fs.renameSync(path.join(uploader.yaliDir, 'public', photo.uri), path.join(moveTargeDir, imgFilename));
+
+              photo.hidden = true;
+              photo.save(itemCallback);
+            }, function (err) {
+              callback(err);
+              // 只要更新了照片，就认为是已经删除成功了，不需要判断相册的照片计数是否也更新成功。
+              PhotoAlbum.findOne({
+                'photos._id': photoIds[0]
+              }).exec()
+                .then(function (photoAlbum) {
+                  photoAlbum.photo_count -= photoIds.length;
+                  photoAlbum.reliable = false;
+                  photoAlbum.save(function (err) {
+                    if (err) {
+                      console.log(err);
+                    }
+                  });
+                })
+                .then(null, function (err) {
+                  console.log(err);
+                });
+
+            });
+          })
+          .then(null, function (err) {
+            callback(err);
+          });
+
+      };
+
+
+
       var comment = req.comment;
       setDeleteAuth({
         host_type: comment.host_type,
@@ -484,7 +550,11 @@ module.exports = function (app) {
             }
             // 同时在相册移除相应的照片
             if (comment.photos && comment.photos.length > 0) {
-              photo_album_ctrl.deletePhotos(comment.photos, function (err) {
+              var photoIds = [];
+              comment.photos.forEach(function (photo) {
+                photoIds.push(photo._id);
+              });
+              deleteCommentPhotos(photoIds, function (err) {
                 if (err) {
                   log(err);
                 }
