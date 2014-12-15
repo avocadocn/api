@@ -50,6 +50,7 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
     case '4':
       _option.deadline = { '$gte':now };
       _option['$or'] = [{'tid':{'$in':teamIds}},{'tid':{'$size':0}}];
+      _option['$nor'] = [{'campaign_unit.member._id':requestId}];
     break;
     //未确认的挑战
     case '5':
@@ -80,58 +81,81 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
  * @param  {Date} end_time   活动结束时间
  * @return {Object}          start_flag:活动是否已经开始,
                               remind_text:提示文字,
-                              start_time_text: 距离开始的时间
+                              time_text: 距离开始（结束）的时间
  */
 var formatTime = function(start_time,end_time){
-  var remind_text, start_time_text,start_flag;
+  var remind_text, time_text,start_flag;
   var now = new Date();
   var diff_end = now - end_time;
   if (diff_end >= 0) {
     // 活动已结束
     remind_text = '活动已结束';
-    start_time_text = '';
+    time_text = '';
     start_flag = -1;
   } else {
     // 活动未结束
     var temp_start_time = new Date(start_time);
     var during = moment.duration(moment(now).diff(temp_start_time));
-    var years = Math.abs(during.years());
-    var months = Math.abs(during.months());
-    var days = Math.floor(Math.abs(during.asDays()));
-    var hours = Math.abs(during.hours());
-    var minutes = Math.abs(during.minutes());
-    var seconds = Math.abs(during.seconds());
-
-    temp_start_time.setHours(hours);
-    temp_start_time.setMinutes(minutes);
-    temp_start_time.setSeconds(seconds);
-
     // 活动已开始
     if (during >= 0) {
       start_flag = 1;
-      remind_text = '活动已开始';
+      remind_text = '距离活动结束还有';
+      var temp_end_time = new Date(end_time);
+      var during = moment.duration(moment(now).diff(temp_end_time));
+      var years = Math.abs(during.years());
+      var months = Math.abs(during.months());
+      var days = Math.floor(Math.abs(during.asDays()));
+      var hours = Math.abs(during.hours());
+      var minutes = Math.abs(during.minutes());
+      var seconds = Math.abs(during.seconds());
+
+      temp_end_time.setHours(hours);
+      temp_end_time.setMinutes(minutes);
+      temp_end_time.setSeconds(seconds);
+      if(days>=1){
+        time_text =  days + '天';
+      }
+      else if(hours>=1){
+        time_text = hours + '小时';
+      }
+      else if(minutes>=1){
+        time_text =  minutes + '分'  ;
+      }
+      else{
+        time_text = seconds + '秒';
+      }
     } else {
       // 活动未开始
+      var years = Math.abs(during.years());
+      var months = Math.abs(during.months());
+      var days = Math.floor(Math.abs(during.asDays()));
+      var hours = Math.abs(during.hours());
+      var minutes = Math.abs(during.minutes());
+      var seconds = Math.abs(during.seconds());
+
+      temp_start_time.setHours(hours);
+      temp_start_time.setMinutes(minutes);
+      temp_start_time.setSeconds(seconds);
       start_flag = 0;
       remind_text = '距离活动开始还有';
       if(days>=1){
-        start_time_text =  days + '天';
+        time_text =  days + '天';
       }
       else if(hours>=1){
-        start_time_text = hours + '小时';
+        time_text = hours + '小时';
       }
       else if(minutes>=1){
-        start_time_text =  minutes + '分'  ;
+        time_text =  minutes + '分'  ;
       }
       else{
-        start_time_text = seconds + '秒';
+        time_text = seconds + '秒';
       }
 
     }
   }
   return { start_flag:start_flag,
             remind_text:remind_text,
-            start_time_text: start_time_text
+            time_text: time_text
           }
 }
 /**
@@ -199,7 +223,7 @@ var formatCampaign = function(_campaign,user){
   var _formatTime = formatTime(_campaign.start_time,_campaign.end_time);
   temp.start_flag = _formatTime.start_flag;
   temp.remind_text =_formatTime.remind_text;
-  temp.start_time_text = _formatTime.start_time_text;
+  temp.time_text = _formatTime.time_text;
   temp.deadline_rest = formatrestTime(now,_campaign.deadline);
   var memberIds = [];
   _campaign.members.forEach(function (member) {
@@ -508,9 +532,10 @@ module.exports = function (app) {
       });
     },
     getCampaignById: function (req, res) {
+      var populate = req.query.populate ? req.query.populate.split(',').join(' ') : '';
       Campaign
       .findById(req.params.campaignId)
-      //.populate('photo_album')
+      .populate(populate)
       .exec()
       .then(function (campaign) {
         if (!campaign) {

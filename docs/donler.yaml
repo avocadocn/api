@@ -1096,6 +1096,13 @@ paths:
           required: true
           type: string
           in: path
+        - name: populate
+          description: populate
+          required: false
+          type: array
+          items:
+            type: string
+          in: query
       responses:
         "200":
           description: 成功
