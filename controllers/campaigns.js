@@ -206,6 +206,7 @@ var formatCampaign = function(_campaign,user){
     'theme':_campaign.theme,
     'content':_campaign.content ? _campaign.content.replace(/<\/?[^>]*>/g, ''):'',
     'member_max':_campaign.member_max,
+    'members_count':_campaign.members.length,
     'location':_campaign.location,
     'start_time':_campaign.start_time,
     'finish':_campaign.finish,
@@ -879,6 +880,9 @@ module.exports = function (app) {
               campaign.campaign_unit[0].start_confirm = false;
               campaign.active = false;
               dealUnitIndex = 0;
+              break;
+            default:
+              return res.status(400).send({msg:'处理类型错误'});
               break;
           }
           var role = auth.getRole(req.user, {
