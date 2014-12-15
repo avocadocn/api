@@ -801,8 +801,19 @@
         "summary": "获取公司小队数据",
         "parameters": [
           {
-            "name": "companyId",
-            "description": "公司id",
+            "name": "hostType",
+            "description": "谁的小队",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "company",
+              "user"
+            ],
+            "in": "query"
+          },
+          {
+            "name": "hostId",
+            "description": "持有者id",
             "required": false,
             "type": "string",
             "in": "query"

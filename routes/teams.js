@@ -5,7 +5,7 @@ var getById  = require('../middlewares/getById');
 
 module.exports = function (app, ctrl) {
   app.post('/teams', token.needToken, ctrl.createTeams);
-  app.get('/teams', token.needToken, ctrl.getTeams);
+  app.get('/teams', token.needToken, ctrl.getTeamsValidate, ctrl.getTeamsSetQueryOptions, ctrl.getTeams);
   app.get('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.getTeam);
   app.put('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.updateTeamLogo, ctrl.editTeamData);
   app.delete('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.deleteTeam);
