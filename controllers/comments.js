@@ -197,6 +197,36 @@ var socketPush = function(campaign, comment, joinedUids, unjoinedUids){
   socketClient.pushComment(joinedUids, unjoinedUids, commentCampaign, socketComment);
 };
 
+/**
+ * [userReadComment description]
+ * @param  {object} user 用户
+ * @param  {string} campaignId 看的是哪个活动的评论
+ */
+var userReadComment = function (user, campaignId) {
+  var find = false;
+  for(var i=0; i<user.commentCampaigns.length; i++){
+    if(campaignId.toString()===user.commentCampaigns[i]._id.toString()) {
+      user.commentCampaigns[i].unread = 0;
+      find = true;
+      break;
+    }
+  }
+  if(!find){
+    for(var i=0; i<user.unjoinedCommentCampaigns.length; i++){
+      if(campaignId.toString()===user.unjoinedCommentCampaigns[i]._id.toString()) {
+        user.unjoinedCommentCampaigns[i].unread = 0;
+        find = true;
+        break;
+      }
+    }
+  }
+  user.save(function(err){
+    if(err){
+      console.log('user save error:',err);
+    }
+  });
+};
+
 module.exports = function (app) {
 
   return {
@@ -445,7 +475,8 @@ module.exports = function (app) {
         }, function (err) {
           if (err) console.log(err);
           // 即使错误依然会做基本的权限设置（公司可删自己员工的，自己可以删自己的），所以依旧返回数据
-          res.send({'comments': comments, nextStartDate: nextStartDate});
+          res.status(202).send({'comments': comments, nextStartDate: nextStartDate});
+          userReadComment(req.user, req.query.requestId);
         });
       });
     },
@@ -604,48 +635,59 @@ module.exports = function (app) {
       for(var i = 0; i<campaigns.length; i++){
         campaignIds.push(campaigns[i]._id);
       }
-      Campaign.find({_id:{'$in':campaignIds}}, function(err, commentCampaigns){
-        if(err){
-          log(err);
-          return res.status(500).send({msg: 'campaign find err'});
-        }else{
-          var formatCommentCampaigns = [];
-          for(var i = 0; i<commentCampaigns.length; i++){
-            var campaign = commentCampaigns[i];
-            var logo = '';
-            var ct = campaign.campaign_type;
-            if(ct===1){
-              logo = campaign.campaign_unit[0].company.logo;
-            }
-            else if(ct===2||ct===6){//是单小队/部门活动
-              logo = campaign.campaign_unit[0].team.logo;
-            }else{//是挑战
-              logo = '/img/icons/vs.png';//图片todo
-            }
-            var indexOfUser = tools.arrayObjectIndexOf(campaigns, campaign._id ,'_id');
-            var unread = campaigns[indexOfUser].unread;
-            formatCommentCampaigns.push({
-              _id: campaign._id,
-              theme: campaign.theme,
-              latestComment: campaign.latestComment,
-              unread: unread,
-              logo: logo
-            });
+      Campaign.find({_id:{'$in':campaignIds}})
+      .sort('-latestComment.createDate')
+      .exec()
+      .then(function(commentCampaigns){
+        var formatCommentCampaigns = [];
+        for(var i = 0; i<commentCampaigns.length; i++){
+          var campaign = commentCampaigns[i];
+          var logo = '';
+          var ct = campaign.campaign_type;
+          if(ct===1){
+            logo = campaign.campaign_unit[0].company.logo;
           }
-          if(req.query.type==='joined'){
-            var unjoinedCampaigns = req.user.unjoinedCommentCampaigns;
-            var unreadUnjoined = false; // 是否有未读的维灿活动讨论
-            for(var i =0; i<unjoinedCampaigns.length; i++){
-              if(unjoinedCampaigns[i].unread){
-                unreadUnjoined = true;
-                break;
-              }
-            }
-            return res.status(200).send({'commentCampaigns':formatCommentCampaigns,'newUnjoinedCampaignComment':unreadUnjoined})
-          }else{
-            return res.status(200).send({'commentCampaigns':formatCommentCampaigns})
+          else if(ct===2||ct===6){//是单小队/部门活动
+            logo = campaign.campaign_unit[0].team.logo;
+          }else{//是挑战
+            logo = '/img/icons/vs.png';//图片todo
           }
+          var indexOfUser = tools.arrayObjectIndexOf(campaigns, campaign._id ,'_id');
+          var unread = campaigns[indexOfUser].unread;
+          formatCommentCampaigns.push({
+            _id: campaign._id,
+            theme: campaign.theme,
+            latestComment: campaign.latestComment,
+            unread: unread,
+            logo: logo
+          });
         }
+        if(req.query.type==='joined'){
+          var unjoinedCampaigns = req.user.unjoinedCommentCampaigns;
+          var unreadUnjoined = false; // 是否有未读的未参加活动讨论
+          for(var i =0; i<unjoinedCampaigns.length; i++){
+            if(unjoinedCampaigns[i].unread){
+              unreadUnjoined = true;
+              break;
+            }
+          }
+          if(unjoinedCampaigns.length>0){
+            Campaign.findOne({_id:unjoinedCampaigns[0]._id}, {latestComment:1}, function(err, unjoinedCampaign){
+              if(err){
+                log(err);
+              }
+              return res.status(200).send({'commentCampaigns':formatCommentCampaigns, 'newUnjoinedCampaignComment':unreadUnjoined, 'latestUnjoinedCampaign':unjoinedCampaign});
+            });
+          }else{
+            return res.status(200).send({'commentCampaigns':formatCommentCampaigns});
+          }
+        }else{
+          return res.status(200).send({'commentCampaigns':formatCommentCampaigns})
+        }
+      })
+      .then(null, function (err) {
+        log(err);
+        return res.status(500).send({msg: 'Campaign not found'});
       });
     }
   };
