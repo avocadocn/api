@@ -4296,6 +4296,7 @@
     "Team": {
       "title": "Team",
       "required": [
+        "_id",
         "name",
         "cname",
         "logo",
@@ -4305,6 +4306,10 @@
         "family"
       ],
       "properties": {
+        "_id": {
+          "type": "string",
+          "description": "小队id"
+        },
         "name": {
           "type": "string",
           "description": "小队名称"

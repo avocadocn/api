@@ -254,6 +254,7 @@ module.exports = function (app) {
               });
             }
             var briefTeam = {
+              _id: companyGroups[i]._id,
               name: companyGroups[i].name,
               cname: companyGroups[i].cname,
               logo: companyGroups[i].logo,
