@@ -4303,7 +4303,8 @@
         "createTime",
         "brief",
         "homeCourts",
-        "family"
+        "family",
+        "campaignCount"
       ],
       "properties": {
         "_id": {
@@ -4362,6 +4363,14 @@
           "items": {
             "$ref": "SimplePhoto"
           }
+        },
+        "hasJoined": {
+          "type": "boolean",
+          "description": "是否已经加入该小队"
+        },
+        "campaignCount": {
+          "type": "number",
+          "description": "小队活动总数"
         }
       }
     },

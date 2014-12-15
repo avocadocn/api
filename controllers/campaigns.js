@@ -15,6 +15,7 @@ var logController = require('../controllers/log'),
     auth = require('../services/auth.js'),
     donlerValidator = require('../services/donler_validator.js'),
     log = require('../services/error_log.js'),
+    cache = require('../services/cache/Cache'),
     tools = require('../tools/tools.js');
 
 
@@ -277,7 +278,7 @@ module.exports = function (app) {
         },
         tid: {
           name: '小队tid',
-          value: req.body.nickname,
+          value: req.body.tid,
           validators: req.body.campaign_type ==1 ? []:['required']
         },
         theme: {
@@ -338,7 +339,7 @@ module.exports = function (app) {
               type: 'Campaign'
             },
             companies: campaign.cid,
-            teams:  campaign.tid,
+            teams:  campaign.tid
           },
           name: moment(campaign.start_time).format("YYYY-MM-DD ") + campaign.theme,
           update_user:_user,
@@ -351,8 +352,52 @@ module.exports = function (app) {
         }
         photo_album.owner.model._id=campaign._id;
 
-        //---save
+        // 如果不是公司活动，则将活动的简略信息保存到小队的数据模型中，以便获取最近的活动
+        // 这里即使更新失败也只是输出到日志，依然让活动发成功。
+        // todo 待测试
+        if (campaign.campaign_type !== 1) {
+          CompanyGroup.find({
+            _id: campaign.tid
+          }).exec()
+            .then(function (teams) {
+              teams.forEach(function (team) {
+                team.last_campaign = {
+                  _id: campaign._id,
+                  theme: campaign.theme,
+                  start_time: campaign.start_time
+                };
+              });
+              teams.save(function (err) {
+                if (err) {
+                  log(err);
+                }
+              });
+            })
+            .then(null, function (err) {
+              log(err);
+            });
 
+          // 更新小队的活动数到缓存中，即使失败了，依然让活动发成功
+          // todo 待测试
+          var cacheName = 'teamCampaignCount';
+          cache.createCache(cacheName);
+
+          campaign.tid.forEach(function (tid) {
+            Campaign.find({
+              tid: tid,
+              active: true
+            }).count(function (err, count) {
+              if (err) {
+                log(err);
+              } else {
+                cache.set(cacheName, tid.toString(), count);
+              }
+            });
+          });
+
+        }
+
+        //---save
         photo_album.save(function(err) {
           if(err) return res.status(500).send('保存相册失败');
           campaign.photo_album = photo_album._id;

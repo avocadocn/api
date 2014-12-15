@@ -4,18 +4,19 @@ var path = require('path');
 
 var mongoose = require('mongoose');
 var User = mongoose.model('User'),
-    Company = mongoose.model('Company'),
-    CompanyGroup = mongoose.model('CompanyGroup'),
-    Campaign = mongoose.model('Campaign'),
-    Group = mongoose.model('Group');
+  Company = mongoose.model('Company'),
+  CompanyGroup = mongoose.model('CompanyGroup'),
+  Campaign = mongoose.model('Campaign'),
+  Group = mongoose.model('Group');
 
 var log = require('../services/error_log.js'),
-    auth = require('../services/auth.js'),
-    uploader = require('../services/uploader.js'),
-    syncData = require('../services/sync_data.js'),
-    donlerValidator = require('../services/donler_validator.js'),
-    tools = require('../tools/tools.js'),
-    async = require('async');
+  cache = require('../services/cache/Cache'),
+  auth = require('../services/auth.js'),
+  uploader = require('../services/uploader.js'),
+  syncData = require('../services/sync_data.js'),
+  donlerValidator = require('../services/donler_validator.js'),
+  tools = require('../tools/tools.js'),
+  async = require('async');
 
 module.exports = function (app) {
 
@@ -266,8 +267,15 @@ module.exports = function (app) {
               memberCount: companyGroups[i].member.length,
               homeCourts: companyGroups[i].home_court,
               cid: companyGroups[i].cid,
-              familyPhotos: familyPhotos
+              familyPhotos: familyPhotos,
+              lastCampaign: companyGroups[i].last_campaign,
+              campaignCount: cache.get('campaignCount', companyGroups[i]._id.toString())
             };
+            // 判断用户是否加入了该小队
+            if (req.user.provider === 'user') {
+              briefTeam.hasJoined = companyGroups[i].hasMember(req.user._id);
+            }
+
             formatCompanyGroups.push(briefTeam);
           }
           return res.status(200).send(formatCompanyGroups);

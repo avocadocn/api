@@ -159,7 +159,12 @@ var CompanyGroup = new Schema({
             default: 0
         }
     },
-    family: [familyPhoto]
+    family: [familyPhoto],
+    last_campaign: {
+        _id: Schema.Types.Object,
+        theme: String,
+        start_time: Date
+    }
 });
 
 // CompanyGroup.plugin(mongoosePaginate);
@@ -182,6 +187,7 @@ CompanyGroup.methods = {
      * @return {Boolean}
      */
     hasMember: function (uid) {
+        console.log(this.member, this.leader, uid)
         for (var i = 0; i < this.member.length; i++) {
             if (uid.toString() === this.member[i]._id.toString()) {
                 return true;
