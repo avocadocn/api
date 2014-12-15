@@ -2813,6 +2813,9 @@ definitions:
         enum:
           - campaign
           - comment
+      create_date:
+        type: string
+        format: date-time
       photos:
         type: array
         items:
