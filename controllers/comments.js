@@ -5,9 +5,9 @@ var mongoose = require('mongoose');
 var Campaign = mongoose.model('Campaign'),
     Comment = mongoose.model('Comment'),
     PhotoAlbum = mongoose.model('PhotoAlbum'),
+    Photo = mongoose.model('Photo'),
     User = mongoose.model('User');
-var multiparty = require('multiparty'),
-    async = require('async');
+var async = require('async');
 var auth = require('../services/auth.js'),
     log = require('../services/error_log.js'),
     socketClient = require('../services/socketClient'),
@@ -279,31 +279,48 @@ module.exports = function (app) {
             name: req.user.nickname,
             type: 'user'
           };
-          var photo = {
+
+          var photo = new Photo({
+            photo_album: photoAlbum._id,
+            owner: {
+              companies: photoAlbum.owner.companies,
+              teams: photoAlbum.owner.teams
+            },
             uri: path.join('/img/photo_album', url),
             name: oriName,
             upload_user: uploadUser
-          };
-          photoAlbum.photos.push(photo);
-          photoAlbum.update_user = uploadUser;
-          photoAlbum.update_date = Date.now();
-          photoAlbum.correctPhotoCount();
-          photoAlbum.save(function (err) {
+          });
+          req.photoUri = photo.uri;
+          photo.save(function (err) {
             if (err) {
               log(err);
               res.sendStatus(500);
             } else {
               var now = new Date();
-              var date_dir_name = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
-              var lastPhoto = photoAlbum.photos[photoAlbum.photos.length - 1];
-              oriCallback(path.join('/ori_img', date_dir_name), lastPhoto._id, function (err) {
+              var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
+              oriCallback(path.join('/ori_img', dateDirName), photo._id, function (err) {
                 if (err) {
                   log(err);
                 }
               });
-              req.photoId = lastPhoto._id;
-              req.photoUrl = lastPhoto.uri;
               next();
+
+              // 照片保存成功后，意味着上传已经成功了，之后的更新相册数据的操作无论成功与否，都视为上传照片成功
+              photoAlbum.pushPhoto({
+                _id: photo._id,
+                uri: photo.uri,
+                upload_date: photo.upload_date,
+                click: photo.click,
+                name: photo.name
+              });
+              photoAlbum.update_user = uploadUser;
+              photoAlbum.update_date = Date.now();
+              photoAlbum.photo_count += 1;
+              photoAlbum.save(function (err) {
+                if (err) {
+                  log(err);
+                }
+              });
             }
           });
 
@@ -333,10 +350,10 @@ module.exports = function (app) {
       comment.poster = poster;
       comment.create_date = Date.now();
 
-      if (req.photoUrl) {
+      if (req.photoUri) {
         comment.photos = [{
           _id: req.photoId,
-          uri: req.photoUrl
+          uri: req.photoUri
         }];
       }
       if (req.body && req.body.content) {

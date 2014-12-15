@@ -272,9 +272,8 @@ module.exports = function (app) {
               res.sendStatus(500);
             } else {
               var now = new Date();
-              var date_dir_name = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
-              var lastPhoto = photoAlbum.photos[photoAlbum.photos.length - 1];
-              oriCallback(path.join('/ori_img', date_dir_name), lastPhoto._id, function (err) {
+              var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
+              oriCallback(path.join('/ori_img', dateDirName), photo._id, function (err) {
                 if (err) {
                   log(err);
                 }
