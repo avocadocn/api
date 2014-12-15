@@ -1,6 +1,7 @@
 'use strict';
 
-var path = require('path');
+var path = require('path'),
+    fs = require('fs');
 var mongoose = require('mongoose');
 var Campaign = mongoose.model('Campaign'),
     Comment = mongoose.model('Comment'),
