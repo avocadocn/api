@@ -25,7 +25,7 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
   for (var attr in option){
     _option[attr] = option[attr];
   }
-  var populate = populate.split(',').join(' ');
+  var populate = populate ? populate.split(',').join(' ') :'';
   switch(select_type){
     //全部
     case '0':

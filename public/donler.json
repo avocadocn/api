@@ -1493,7 +1493,7 @@
         "parameters": [
           {
             "name": "requestType",
-            "description": "requestType",
+            "description": "获取活动的主体类型：user,team,company",
             "required": true,
             "type": "string",
             "in": "query",
@@ -1505,7 +1505,7 @@
           },
           {
             "name": "requestId",
-            "description": "requestId",
+            "description": "获取活动的主体id",
             "required": true,
             "type": "string",
             "in": "query"

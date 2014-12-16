@@ -1020,7 +1020,7 @@ paths:
       operationId: getCampaign
       parameters:
         - name: requestType
-          description: requestType
+          description: '获取活动的主体类型：user,team,company'
           required: true
           type: string
           in: query
@@ -1029,45 +1029,45 @@ paths:
             - team
             - company
         - name: requestId
-          description: requestId
+          description: 获取活动的主体id
           required: true
           type: string
           in: query
         - name: from
-          description: from
+          description: 活动结束时间的最小值
           required: false
           type: string
           in: query
         - name: to
-          description: to
+          description: 活动开始时间的最大值
           required: false
           type: string
           in: query
         - name: select_type
-          description: select_type
+          description: '选择的活动类型--0:全部1:即将开始的活动2:正在进行的活动3:已经结束的活动4:新活动（未参加）5:未确认的挑战'
           required: false
           type: integer
           format: int32
           in: query
         - name: join_flag
-          description: join_flag
+          description: 是否为已经参加的活动
           required: false
           type: integer
           format: int32
           in: query
         - name: sortBy
-          description: sortBy
+          description: 排序的依据
           required: false
           type: string
           in: query
         - name: limit
-          description: limit
+          description: 限制数
           required: false
           type: integer
           format: int32
           in: query
         - name: populate
-          description: populate
+          description: populate的属性，数组，用，隔开
           required: false
           type: array
           items:
