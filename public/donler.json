@@ -1512,21 +1512,21 @@
           },
           {
             "name": "from",
-            "description": "from",
+            "description": "活动结束时间的最小值",
             "required": false,
             "type": "string",
             "in": "query"
           },
           {
             "name": "to",
-            "description": "to",
+            "description": "活动开始时间的最大值",
             "required": false,
             "type": "string",
             "in": "query"
           },
           {
             "name": "select_type",
-            "description": "select_type",
+            "description": "选择的活动类型--0:全部1:即将开始的活动2:正在进行的活动3:已经结束的活动4:新活动（未参加）5:未确认的挑战",
             "required": false,
             "type": "integer",
             "format": "int32",
@@ -1534,7 +1534,7 @@
           },
           {
             "name": "join_flag",
-            "description": "join_flag",
+            "description": "是否为已经参加的活动",
             "required": false,
             "type": "integer",
             "format": "int32",
@@ -1542,14 +1542,14 @@
           },
           {
             "name": "sortBy",
-            "description": "sortBy",
+            "description": "排序的依据",
             "required": false,
             "type": "string",
             "in": "query"
           },
           {
             "name": "limit",
-            "description": "limit",
+            "description": "限制数",
             "required": false,
             "type": "integer",
             "format": "int32",
@@ -1557,7 +1557,7 @@
           },
           {
             "name": "populate",
-            "description": "populate",
+            "description": "populate的属性，数组，用，隔开",
             "required": false,
             "type": "array",
             "items": {
