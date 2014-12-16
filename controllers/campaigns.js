@@ -962,7 +962,6 @@ module.exports = function (app) {
                 // 'receiver':{
                 //   '_id':rst[0].leader[0]._id
                 // },
-                'content':null,
                 'own_team':{
                   '_id':own_team._id,
                   'name':own_team.name,

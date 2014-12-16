@@ -29,7 +29,8 @@ module.exports = function (app) {
         'specific_type':param.campaign_id == null ? {'value':2} : ({'value':2,'child_type':param.team[0].status}),
         'company_id':param.company_id,
         'campaign_id':param.campaign_id,
-        'deadline':(new Date())+time_out
+        'deadline':(new Date())+time_out,
+        'auto':param.auto
       };
       MessageContent.create(MC,function(err,message){
         if(err){
@@ -67,42 +68,62 @@ module.exports = function (app) {
       var requestType = req.query.requestType;
       var requestId = req.query.requestId;
       var userInfo = {};
-      if(req.user.provider=='user'){
-        userInfo.users=[requestId]
+      if(requestType=='campaign'){
+        MessageContent.find({
+          'campaign_id': requestId,
+          'status': 'undelete',
+          'auto': false
+        })
+        .sort('-post_date')
+        .limit(req.query.limit || 0)
+        .exec()
+        .then(function (messageContents) {
+          res.status(200).send(messageContents);
+        })
+        .then(null, function (err) {
+          log(err);
+          return res.status(500).send({msg:err});
+        });
       }
       else{
-        userInfo.companies=[requestId]
+        if(req.user.provider=='user'){
+          userInfo.users=[requestId]
+        }
+        else{
+          userInfo.companies=[requestId]
+        }
+        var condition;
+        var role = auth.getRole(req.user, userInfo);
+        var allow = auth.auth(role, ['getPrivateMessage']);
+        if(!allow.getPrivateMessage){
+          return res.status(403).send({msg:'您没有权限获取该站内信列表'});
+        }
+        switch(requestType){
+          case 'private':
+            condition = {'type':{'$in':['private','global']},'rec_id':requestId,'status':{'$ne':'delete'}};
+          break;
+          case 'all':
+            condition = {'rec_id':requestId,'status':{'$ne':'delete'}};
+          break;
+          default:
+            condition = {'type':requestType,'rec_id':requestId,'status':{'$ne':'delete'}};
+          break;
+        }
+        Message
+        .find(condition)
+        .sort('-create_date')
+        .populate('MessageContent')
+        .limit(req.query.limit || 0)
+        .exec()
+        .then(function(messages){
+          res.status(200).send(messages);
+        })
+        .then(null,function(err){
+          log(err);
+          return res.status(500).send({msg:err});
+        });
       }
-      var condition;
-      var role = auth.getRole(req.user, userInfo);
-      var allow = auth.auth(role, ['getPrivateMessage']);
-      if(!allow.getPrivateMessage){
-        return res.status(403).send({msg:'您没有权限获取该站内信列表'});
-      }
-      switch(requestType){
-        case 'private':
-          condition = {'type':{'$in':['private','global']},'rec_id':requestId,'status':{'$ne':'delete'}};
-        break;
-        case 'all':
-          condition = {'rec_id':requestId,'status':{'$ne':'delete'}};
-        break;
-        default:
-          condition = {'type':requestType,'rec_id':requestId,'status':{'$ne':'delete'}};
-        break;
-      }
-      Message
-      .find(condition)
-      .sort('-create_date')
-      .populate('MessageContent')
-      .limit(req.query.limit || 0)
-      .exec()
-      .then(function(messages){
-        res.status(200).send(messages);
-      })
-      .then(null,function(err){
-        log(err);
-        return res.status(500).send({msg:err});
-      });
+
     },
     receiveMessage: function(req, res) {
       var condition;
@@ -304,6 +325,7 @@ module.exports = function (app) {
         }
       });
     }
+      
   }
 }
 

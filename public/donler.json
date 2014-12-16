@@ -2714,7 +2714,8 @@
               "private",
               "team",
               "all",
-              "global"
+              "global",
+              "campaign"
             ]
           },
           {
@@ -2727,7 +2728,7 @@
           {
             "name": "limit",
             "description": "数量限制",
-            "required": true,
+            "required": false,
             "type": "int32",
             "in": "query"
           }

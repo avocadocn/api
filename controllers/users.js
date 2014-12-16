@@ -398,7 +398,8 @@ module.exports = function (app) {
             } else {
               res.status(200).send({
                 token: token,
-                id:user._id
+                id:user._id,
+                cid:user.cid
               });
             }
           });

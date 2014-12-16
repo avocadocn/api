@@ -144,6 +144,7 @@ module.exports = function (app) {
         leaders: team.leader,
         members: membersWithoutLeader.slice(0, 6 - team.leader.length),
         // memberCount: team.member.length,
+        // campaignCount: team.score.campaign/10,
         homeCourts: team.home_court,
         cid: team.cid,
         familyPhotos: familyPhotos
@@ -157,11 +158,6 @@ module.exports = function (app) {
           name: 'hostType',
           value: req.query.hostType,
           validators: ['required', donlerValidator.enum(['company', 'user'])]
-        },
-        hostId: {
-          name: 'hostId',
-          value: req.query.hostId,
-          validators: ['required']
         }
       }, 'fast', function (pass, msg) {
         if (pass) {
@@ -178,7 +174,7 @@ module.exports = function (app) {
       req.options = options;
       switch (req.query.hostType) {
       case 'company':
-        options.cid = req.query.hostId;
+        options.cid = req.query.hostId || req.user.cid || req.user._id;
         if (req.user.provider === 'user') {
           options.active = true;
         }
@@ -200,7 +196,7 @@ module.exports = function (app) {
           };
         };
 
-        if (req.query.hostId === req.user._id.toString()) {
+        if (!req.query.hostId || req.query.hostId === req.user._id.toString()) {
           addIdsToOptions(req.user.team);
           next();
         } else {
@@ -266,6 +262,7 @@ module.exports = function (app) {
               leaders: companyGroups[i].leader,
               members: membersWithoutLeader.slice(0, 6 - companyGroups[i].leader.length),
               memberCount: companyGroups[i].member.length,
+              campaignCount: companyGroups[i].score.campaign/10,
               homeCourts: companyGroups[i].home_court,
               cid: companyGroups[i].cid,
               familyPhotos: familyPhotos,
@@ -276,7 +273,6 @@ module.exports = function (app) {
             if (req.user.provider === 'user') {
               briefTeam.hasJoined = companyGroups[i].hasMember(req.user._id);
             }
-
             formatCompanyGroups.push(briefTeam);
           }
           return res.status(200).send(formatCompanyGroups);

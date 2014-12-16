@@ -1856,6 +1856,7 @@ paths:
             - team
             - all
             - global
+            - campaign
         - name: requestId
           description: 主题Id
           required: true
@@ -1863,7 +1864,7 @@ paths:
           in: query
         - name: limit
           description: 数量限制
-          required: true
+          required: false
           type: integer
           type: int32
           in: query
