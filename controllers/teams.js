@@ -254,6 +254,7 @@ module.exports = function (app) {
                 uri: originFamilyPhotos[j].uri
               });
             }
+            cache.createCache('campaignCount');
             var briefTeam = {
               _id: companyGroups[i]._id,
               name: companyGroups[i].name,
