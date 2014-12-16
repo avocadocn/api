@@ -2988,6 +2988,7 @@ definitions:
       - brief
       - homeCourts
       - family
+      - memberCount
       - campaignCount
     properties:
       _id:
@@ -3035,6 +3036,9 @@ definitions:
       hasJoined:
         type: boolean
         description: 是否已经加入该小队
+      memberCount:
+        type: number
+        description: 小队成员数
       campaignCount:
         type: number
         description: 小队活动总数

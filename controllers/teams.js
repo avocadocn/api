@@ -144,7 +144,7 @@ module.exports = function (app) {
         brief: team.brief,
         leaders: team.leader,
         members: membersWithoutLeader.slice(0, 6 - team.leader.length),
-        // memberCount: team.member.length,
+        memberCount: team.member.length,
         // campaignCount: team.score.campaign/10,
         homeCourts: team.home_court,
         cid: team.cid,
