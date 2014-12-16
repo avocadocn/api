@@ -40,7 +40,9 @@ exports.collect = function (array, attrs) {
     toCollectAttrs = [attrs];
     break;
   case 3:
-    toCollectAttrs = arguments.slice(1, arguments.length - 1);
+    for (var i = 1; i < arguments.length; i++) {
+      toCollectAttrs.push(arguments[i]);
+    }
     break;
   default:
     return;
@@ -49,10 +51,11 @@ exports.collect = function (array, attrs) {
   var resArray = [];
   array.forEach(function (item) {
     var resItem = {};
-    for (var attr in toCollectAttrs) {
+    for (var i = 0; i < toCollectAttrs.length; i++) {
+      var attr = toCollectAttrs[i];
       resItem[attr] = item[attr];
     }
-    resArray.push(resArray);
+    resArray.push(resItem);
   });
   return resArray;
 };

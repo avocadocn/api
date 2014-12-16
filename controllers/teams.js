@@ -135,6 +135,7 @@ module.exports = function (app) {
         });
       }
       var briefTeam = {
+        _id: team._id,
         name: team.name,
         cname: team.cname,
         logo: team.logo,

@@ -4217,6 +4217,13 @@
           "type": "integer",
           "format": "int32",
           "description": "照片数"
+        },
+        "latestPhotos": {
+          "type": "array",
+          "description": "最近的照片列表，只有_id和uri属性",
+          "item": {
+            "$ref": "PhotoForList"
+          }
         }
       }
     },
@@ -4524,8 +4531,7 @@
       "type": "object",
       "required": [
         "_id",
-        "uri",
-        "name"
+        "uri"
       ],
       "properties": {
         "_id": {

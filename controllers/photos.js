@@ -116,25 +116,32 @@ module.exports = function (app) {
 
     getPhotoAlbums: function (req, res) {
       // 因为暂时req.query.ownerType只可能会是team，所以默认为team，直接查找小队相册
+      console.log(req.query.ownerId);
       PhotoAlbum.find({
-        teams: req.query.tid,
+        'owner.teams': req.query.ownerId,
         hidden: false
       }, {
-        _id: 1,
-        name: 1,
-        update_date: 1,
-        update_user: 1,
-        photo_count: 1
-      }).exec()
+        _id: true,
+        name: true,
+        update_date: true,
+        update_user: true,
+        photo_count: true,
+        photos: true
+      })
+        .sort('-create_date')
+        .limit(21) // todo 分页待做
+        .exec()
         .then(function (photoAlbums) {
           var resPhotoAlbums = [];
           photoAlbums.forEach(function (photoAlbum) {
+            var latestPhotos = tools.collect(photoAlbum.photos, '_id', 'uri');
             resPhotoAlbums.push({
               _id: photoAlbum._id,
               name: photoAlbum.name,
               updateDate: photoAlbum.update_date,
               updateUser: photoAlbum.update_user,
-              photoCount: photoAlbum.photo_count
+              photoCount: photoAlbum.photo_count,
+              latestPhotos: latestPhotos.slice(0, 8)
             });
           });
           res.status(200).send(resPhotoAlbums);
