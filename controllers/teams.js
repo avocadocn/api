@@ -262,7 +262,6 @@ module.exports = function (app) {
               leaders: companyGroups[i].leader,
               members: membersWithoutLeader.slice(0, 6 - companyGroups[i].leader.length),
               memberCount: companyGroups[i].member.length,
-              campaignCount: companyGroups[i].score.campaign/10,
               homeCourts: companyGroups[i].home_court,
               cid: companyGroups[i].cid,
               familyPhotos: familyPhotos,
