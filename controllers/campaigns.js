@@ -871,13 +871,13 @@ module.exports = function (app) {
                   });
                 } else {
                   var logBody = {
-                  'log_type':'quitCampaign',
-                  'userid' : user._id,
-                  'cid': user.cid,
-                  'role' : 'user',
-                  'campaignid' :campaign._id
-                }
-                logController.addLog(logBody);
+                    'log_type':'quitCampaign',
+                    'userid' : user._id,
+                    'cid': user.cid,
+                    'role' : 'user',
+                    'campaignid' :campaign._id
+                  }
+                  logController.addLog(logBody);
                   return res.status(200).send(formatCampaign(campaign,req.user));
                 }
               });

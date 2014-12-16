@@ -14,10 +14,11 @@ module.exports = function (app) {
     getTimelineRecord: function (req, res) {
       var reqModel,
           requestType = req.params.requestType,
-          requestId =req.params.requestId;
+          requestId = req.params.requestId;
       switch(requestType){
         case 'company':
           reqModel = 'Company';
+          requestId = req.params.requestId =='0' ?(req.user.cid.toString() || req.user._id.toString()) : req.params.requestId;
         break;
         case 'team':
           reqModel = 'CompanyGroup';
@@ -45,11 +46,11 @@ module.exports = function (app) {
         };
         if(req.params.requestType=='team'){
           cacheName ='TeamPageCampaignDateRecord';
-          options.tid = { $in: [mongoose.Types.ObjectId(req.params.requestId)] }
+          options.tid = { $in: [mongoose.Types.ObjectId(requestId)] }
         }
         else if(req.params.requestType=='user'){
           cacheName ='UserPageCampaignDateRecord';
-          options['campaign_unit.member._id'] = mongoose.Types.ObjectId(req.params.requestId);
+          options['campaign_unit.member._id'] = mongoose.Types.ObjectId(requestId);
           if(!req.query.unfinishFlag){
             options.finish=true;
             finishLimit ='1';
@@ -57,14 +58,14 @@ module.exports = function (app) {
         }
         else if(req.params.requestType=='company'){
           cacheName ='CompanyPageCampaignDateRecord';
-          options['cid'] = mongoose.Types.ObjectId(req.params.requestId);
+          options['cid'] = mongoose.Types.ObjectId(requestId);
           if(!req.query.unfinishFlag){
             options.finish=true;
             finishLimit ='1';
           }
         }
         cache.createCache(cacheName);
-        var dateRecord = cache.get(cacheName, req.params.requestId+finishLimit);
+        var dateRecord = cache.get(cacheName, requestId+finishLimit);
         if (dateRecord) {
           return res.status(200).send(dateRecord);
         } else {
@@ -122,7 +123,7 @@ module.exports = function (app) {
     getTimelineData: function(req, res){
       var reqModel,
         requestType = req.params.requestType,
-        requestId =req.params.requestId;
+        requestId = req.params.requestId =='0' ?(req.user.cid || req.user._id) : req.params.requestId;
       switch(requestType){
         case 'company':
           reqModel = 'Company';
