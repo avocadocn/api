@@ -1573,7 +1573,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: PhotoForList
+              $ref: Photo
         default:
           description: error
           schema:

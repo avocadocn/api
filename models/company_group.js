@@ -187,7 +187,6 @@ CompanyGroup.methods = {
      * @return {Boolean}
      */
     hasMember: function (uid) {
-        console.log(this.member, this.leader, uid)
         for (var i = 0; i < this.member.length; i++) {
             if (uid.toString() === this.member[i]._id.toString()) {
                 return true;

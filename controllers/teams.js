@@ -38,12 +38,10 @@ module.exports = function (app) {
         } else {
           var selectedGroups = req.body.selectedGroups;
           var i = selectedGroups.length;
-          console.log(i)
           async.whilst(
               function () { return i >0; },
               function (callback) {
                 i--;
-                console.log(i)
                 var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : company.info.official_name + '-' + selectedGroups[i].groupType + '队';
                 var companyGroup = new CompanyGroup();
 

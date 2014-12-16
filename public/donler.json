@@ -2301,7 +2301,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "PhotoForList"
+                "$ref": "Photo"
               }
             }
           },

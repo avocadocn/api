@@ -116,7 +116,6 @@ module.exports = function (app) {
 
     getPhotoAlbums: function (req, res) {
       // 因为暂时req.query.ownerType只可能会是team，所以默认为team，直接查找小队相册
-      console.log(req.query.ownerId);
       PhotoAlbum.find({
         'owner.teams': req.query.ownerId,
         hidden: false
@@ -324,7 +323,9 @@ module.exports = function (app) {
       }, {
         '_id': true,
         'uri': true,
-        'name': true
+        'name': true,
+        'upload_user': true,
+        'upload_date': true
       })
         .sort('-upload_date')
         .exec()
