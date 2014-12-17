@@ -47,26 +47,22 @@ module.exports = function (app) {
     },
 
     companyInfoValidate: function (req, res) {
-      var checkInfo,queryInfo;
-      if ( req.query.email ) {
-        checkInfo = 'login_email';
-        queryInfo = 'email';
+      var option;
+      if ( req.body.email ) {
+        option = {'login_email': req.body.email};
       }
       else if ( req.query.username ) {
-        checkInfo = 'username';
-        queryInfo = 'username';
+        option = {'username': req.body.username};
       }
-      else if ( req.query.name){
-        checkInfo = 'info.official_name';
-        queryInfo = 'name';
+      else if ( req.body.name){
+        option = {'info.name': req.body.name};
       }
       else{
         return res.status(400).send({msg:'数据输入有误'});
       }
-      Company.findOne({
-        checkInfo: req.body[queryInfo]
-      }, function(err, company) {
+      Company.findOne(option, function(err, company) {
         if (err || company) {
+          console.log(company);
           res.send({ validate:false, msg:'已经存在' });
         } else {
           res.send({ validate:true, msg:'可以使用' });
@@ -118,6 +114,7 @@ module.exports = function (app) {
       var inviteCodeValidate = function (name, value, callback) {
         if (!value) {
           callback(true);
+          return ;
         }
         CompanyRegisterInviteCode
           .findOne({

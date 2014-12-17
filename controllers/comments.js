@@ -625,7 +625,6 @@ module.exports = function (app) {
       });
     },
     getCommentList: function(req, res) {
-      console.log(req.user._id);
       var campaigns= [];
       if(req.query.type==='joined')
         campaigns = req.user.commentCampaigns;
