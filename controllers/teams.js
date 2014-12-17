@@ -610,19 +610,19 @@ module.exports = function (app) {
         }
       });
     },
-    getGroups : function(req, res) {
-      if(req.user.provider!=='company'){
+    getGroups: function (req, res) {
+      if (req.user.provider !== 'company') {
         return res.status(403).send({msg: '权限错误'});
       }
-      Group.find(null, function(err,group){
+      Group.find(null, function (err, group) {
         if (err) {
           log(err);
           return res.status(500).send({msg: 'group寻找错误'});
         }
         var _length = group.length;
         var groups = [];
-        for(var i = 0; i < _length; i++) {
-          if(group[i]._id!=='0'){
+        for (var i = 0; i < _length; i++) {
+          if (group[i]._id !== '0') {
             groups.push({
               '_id': group[i]._id,
               'groupType': group[i].group_type, //中文
@@ -633,6 +633,24 @@ module.exports = function (app) {
         }
         return res.status(200).send(groups);
       });
+    },
+
+    getMembers: function (req, res) {
+      CompanyGroup.findById(req.params.teamId).exec()
+        .then(function (team) {
+          if (!team) {
+            res.sendStatus(404);
+            return;
+          }
+          res.status(200).send(team.member);
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
     }
-  }
-}
+
+
+
+  };
+};

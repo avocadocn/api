@@ -859,6 +859,29 @@ paths:
           description: error
           schema:
             $ref: Error
+  "/teams/{teamId}/members":
+    get:
+      tags:
+        - teams
+      summary: 获取小队成员列表
+      parameters:
+        - name: teamId
+          description: 小队id
+          required: true
+          type: string
+          in: path
+          default: 53aa701011fd597b3e1be25d
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            item:
+              $ref: Member
+        default:
+          description: error
+          schema:
+            $ref: Error
 
   /groups:
     get:
@@ -1866,7 +1889,7 @@ paths:
           description: 数量限制
           required: false
           type: integer
-          type: int32
+          format: int32
           in: query
       responses:
         "200":
@@ -2847,7 +2870,8 @@ definitions:
         items:
           $ref: Comment
       nextStartDate:
-        type: date-time
+        type: string
+        format: date-time
   PostComment:
     title: PostComment
     type: object
@@ -3349,7 +3373,7 @@ definitions:
   PushStatusData:
     title: PushStatusData
     required:
-      -pushStatus
+      - pushStatus
     properties:
       pushStatus:
         type: boolean

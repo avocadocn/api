@@ -17,5 +17,6 @@ module.exports = function (app, ctrl) {
   app.put('/teams/:teamId/users/:userId', token.needToken, getById.getUserById, getById.getTeamById, ctrl.joinTeam);
   app.delete('/teams/:teamId/users/:userId', token.needToken, getById.getUserById, getById.getTeamById, ctrl.quitTeam);
   app.get('/teams/:teamId/tags', token.needToken, ctrl.getTeamTags);
+  app.get('/teams/:teamId/members', token.needToken, ctrl.getMembers);
   app.get('/groups', token.needToken, ctrl.getGroups);
 };

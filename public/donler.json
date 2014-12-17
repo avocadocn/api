@@ -1257,6 +1257,41 @@
         }
       }
     },
+    "/teams/{teamId}/members": {
+      "get": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "获取小队成员列表",
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队id",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "default": "53aa701011fd597b3e1be25d"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "item": {
+                "$ref": "Member"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/groups": {
       "get": {
         "tags": [
@@ -2729,7 +2764,8 @@
             "name": "limit",
             "description": "数量限制",
             "required": false,
-            "type": "int32",
+            "type": "integer",
+            "format": "int32",
             "in": "query"
           }
         ],
@@ -4088,7 +4124,8 @@
           }
         },
         "nextStartDate": {
-          "type": "date-time"
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -4767,7 +4804,9 @@
     },
     "PushStatusData": {
       "title": "PushStatusData",
-      "required": "-pushStatus",
+      "required": [
+        "pushStatus"
+      ],
       "properties": {
         "pushStatus": {
           "type": "boolean"
