@@ -503,7 +503,7 @@ module.exports = function (app) {
             option={
               'active':true,
               'cid': requestModal.cid
-            }
+            };
             if(req.query.join_flag=='1'){
               option['campaign_unit.member._id'] = requestId;
             }
@@ -555,18 +555,19 @@ module.exports = function (app) {
           });
         }
         else {
-          searchCampaign(req.query.select_type, option, sort, limit, function(err, campaigns) {
-            if(err) {
+          searchCampaign(req.query.select_type, option, sort, limit, null, null, populate, function (err, campaigns) {
+            if (err) {
+              log(err);
               res.status(500).send('服务器错误');
             }
-            else if (!campaign) {
+            else if (campaigns.length === 0) {
               res.status(404).send('未找到活动');
             }
-            else{
+            else {
               var formatCampaigns = [];
-              campaigns.forEach(function(campaign){
-                formatCampaigns.push(formatCampaign(campaign,req.user));
-              })
+              campaigns.forEach(function (campaign) {
+                formatCampaigns.push(formatCampaign(campaign, req.user));
+              });
               res.status(200).send(formatCampaigns);
             }
           });
