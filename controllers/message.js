@@ -73,7 +73,7 @@ module.exports = function (app) {
           'campaign_id': requestId,
           'status': 'undelete',
           'auto': false
-        })
+        },{'content':1,'sender':1,'post_date':1})
         .sort('-post_date')
         .limit(req.query.limit || 0)
         .exec()
