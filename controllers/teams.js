@@ -148,6 +148,10 @@ module.exports = function (app) {
         cid: team.cid,
         familyPhotos: familyPhotos
       };
+      // 判断用户是否加入了该小队
+      if (req.user.provider === 'user') {
+        briefTeam.hasJoined = team.hasMember(req.user._id);
+      }
       return res.status(200).send(briefTeam);
     },
 
