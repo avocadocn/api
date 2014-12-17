@@ -638,7 +638,7 @@ module.exports = function (app) {
       Campaign.find({_id:{'$in':campaignIds}})
       .sort('-latestComment.createDate')
       .exec()
-      .then(function(commentCampaigns){
+      .then(function (commentCampaigns) {
         var formatCommentCampaigns = [];
         for(var i = 0; i<commentCampaigns.length; i++){
           var campaign = commentCampaigns[i];
@@ -662,7 +662,7 @@ module.exports = function (app) {
             logo: logo
           });
         }
-        if(req.query.type==='joined'){
+        if(req.query.type==='joined') {
           var unjoinedCampaigns = req.user.unjoinedCommentCampaigns;
           var unreadUnjoined = false; // 是否有未读的未参加活动讨论
           for(var i =0; i<unjoinedCampaigns.length; i++){
@@ -672,7 +672,7 @@ module.exports = function (app) {
             }
           }
           if(unjoinedCampaigns.length>0){
-            Campaign.findOne({_id:unjoinedCampaigns[0]._id}, {latestComment:1}, function(err, unjoinedCampaign){
+            Campaign.findOne({'_id':unjoinedCampaigns[0]._id}, {'latestComment':1,'theme':1}, function(err, unjoinedCampaign){
               if(err){
                 log(err);
               }
