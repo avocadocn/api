@@ -954,12 +954,12 @@ module.exports = function (app) {
                 },
                 'type':'private',
                 'caption':campaign.theme,
-                'own':{
-                  '_id':req.user._id,
-                  'nickname':req.user.provider==='company'?req.user.info.official_name: req.user.nickname,
-                  'photo':req.user.provider==='company'? req.user.info.logo: req.user.photo,
-                  'role':req.user.provider==='company'? 'HR':'LEADER'
-                },
+                // 'own':{
+                //   '_id':req.user._id,
+                //   'nickname':req.user.provider==='company'?req.user.info.official_name: req.user.nickname,
+                //   'photo':req.user.provider==='company'? req.user.info.logo: req.user.photo,
+                //   'role':req.user.provider==='company'? 'HR':'LEADER'
+                // },
                 // 'receiver':{
                 //   '_id':rst[0].leader[0]._id
                 // },
@@ -987,7 +987,7 @@ module.exports = function (app) {
                     '_id':opposite_team.leader.length? opposite_team.leader[0]._id:''
                   }
                   param.team = [param.own_team,param.receive_team];
-                  messageController(app).sendMessage(param);
+                  messageController(app)._sendMessage(param);
                 }
               });
               //若接受,则发动态、加积分

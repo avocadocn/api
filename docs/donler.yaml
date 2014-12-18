@@ -1706,6 +1706,7 @@ paths:
           description: error
           schema:
             $ref: Error
+
   "/comments/host_type/{hostType}/host_id/{hostId}":
     post:
       tags:
@@ -1842,7 +1843,7 @@ paths:
           description: 站内信信息
           required: true
           schema:
-            $ref: Message
+            $ref: MessageForm
           in: body
       responses:
         "200":
@@ -2958,6 +2959,61 @@ definitions:
           child_type:
             type: integer
             format: int32
+  MessageForm:
+    title: MessageForm
+    descriptions: 发站内信的表单数据
+    type: object
+    properties:
+      rec_id:
+        type: string
+      type:
+        type: string
+        enum:
+          - private
+          - team
+          - department
+          - company
+          - global
+      capation:
+        type: string
+      content:
+        type: string
+      team:
+        type: array
+        items:
+          type: string
+      companyId:
+        type: string
+      campaignId:
+        type: string
+      specific_type:
+        type: object
+        properties:
+          value:
+            type: integer
+            format: int32
+          child_type:
+            type: integer
+            format: int32
+  MessageSpecificType:
+    title: MessageSpecificType
+    descriptions: 站内信的类型
+    type: object
+      properties:
+        value:
+          type: integer
+          format: int32
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+        child_type:
+          type: integer
+          format: int32
   MessageUpdateData:
     title: MessageUpdateData
     description: 更新站内信的数据

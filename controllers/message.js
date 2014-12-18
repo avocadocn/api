@@ -14,55 +14,189 @@ var log = require('../services/error_log.js'),
     auth = require('../services/auth.js');
 
 var time_out = 72*24*3600;
-
-module.exports = function (app) {
-  return {
-    //private
-    //sendToOne
-    sendMessage: function(param) {
+    /**
+     * [_sendMessage description]
+     * @param  {[type]} param [description]
+     *                   type
+     *                   specific_type
+     *                   caption
+     *                   content
+     *                   sender
+     *                   team
+     *                   campaign_id
+     *                   auto
+     *                   receiver
+     * @return {[type]}       [description]
+     */
+var __sendMessage = function(param,callback) {
+      callback = callback || function(err){};
       var MC={
-        'type':'private',
+        'type':param.type,
         'caption':param.caption,
         'content':param.content,
         'sender':param.sender,
+        'receiver':param.receiver,
         'team':param.team,
-        'specific_type':param.campaign_id == null ? {'value':2} : ({'value':2,'child_type':param.team[0].status}),
+        'specific_type':param.specific_type,
         'company_id':param.company_id,
         'campaign_id':param.campaign_id,
         'deadline':(new Date())+time_out,
         'auto':param.auto
       };
-      MessageContent.create(MC,function(err,message){
+      MessageContent.create(MC,function(err,message_content){
         if(err){
           log(err);
+          callback(err);
         } else {
-          var counter = {'i':0};
-          async.whilst(
-            function() { return counter.i < param.receiver.length},
-            function(__callback){
-              var M = {
-                'type':param.type,
-                'rec_id':param.receiver[counter.i]._id,
-                'MessageContent':message_content._id,
-                'specific_type':MC.specific_type,
-                'status':'unread'
-              };
-              Message.create(M,function(err,message){
+          if(MC.type!='global'&&MC.type!=='company') {
+            var counter = {'i':0};
+            async.whilst(
+              function() { return counter.i < param.receiver.length},
+              function(__callback){
+                var M = {
+                  'type':param.type,
+                  'rec_id':param.receiver[counter.i]._id,
+                  'MessageContent':message_content._id,
+                  'specific_type':MC.specific_type,
+                  'status':'unread'
+                };
+                Message.create(M,function(err,message){
+                  if(err){
+                    log(err);
+                  } else {
+                    counter.i++;__callback();
+                  }
+                })
+              },
+              function(err){
                 if(err){
-                  log(err);
-                } else {
-                  _counter.i++;__callback();
+                 log(err);
+                 callback(err);
                 }
-              })
-            },
-            function(err){
-              if(err){
-               log(err)
+                else{
+                  callback(null);
+                }
               }
-            }
-          );
+            );
+          }
+          else {
+            callback(null);
+          }
         }
       })
+    }
+module.exports = function (app) {
+
+  return {
+    //private
+    _sendMessage: __sendMessage,
+    sendMessage: function(req, res) {
+      var param = {
+        'type':req.body.type,
+        'caption':req.body.caption,
+        'content':req.body.content,
+        'specific_type': req.body.specific_type,
+        'company_id':req.body.companyId,
+        'campaign_id':req.body.campaignId,
+        'deadline':(new Date())+time_out,
+        'auto': false,
+        'sender':[
+        {
+          _id:req.user._id,
+          nickname:req.user.nickname || req.user.info.official_name,
+          photo:req.user.photo || req.user.info.logo,
+          role:req.user.provider=='company' ? 'HR' :'LEADER'
+        }]
+      }
+      var teamIds = req.body.team;
+      var role = auth.getRole(req.user, {
+        companies: req.body.companyId ? [req.body.companyId] : [],
+        teams: (teamIds &&teamIds.constructor === Array) ? teamIds :[]
+      });
+      var allow = auth.auth(role, ['publishTeamMessage']);
+      if(!allow.publishTeamMessage){
+        return res.status(403).send('您没有权限发此站内信');
+      }
+      async.parallel([
+        function(callback){
+          if(teamIds &&teamIds.constructor === Array){
+            CompanyGroup
+              .find({_id:{'$in':teamIds}})
+              .exec()
+              .then(function (companyGroups) {
+                param.team = [];
+                param.receiver =[];
+                teamIds.forEach(function(teamId){
+                  for(var i =0; i<companyGroups.length; i++){
+                    if(companyGroups[i]._id.toString()==teamId){
+                      param.team.push({
+                        _id : companyGroups[i]._id,
+                        name : companyGroups[i].name,
+                        logo : companyGroups[i].logo
+                      });
+                      if(param.type =='team'){
+                        companyGroups[i].member.forEach(function(member){
+                          param.receiver.push(member._id);
+                        });
+                      }
+                    }
+                  }
+                });
+                callback(null);
+              })
+              .then(null,function(err){
+                callback(err)
+              });
+          }
+          else{
+            callback(null)
+          }
+        },
+        function(callback){
+          if(req.body.campaignId || param.type =='private'){
+            Campaign
+              .findOne({_id:req.body.campaignId})
+              .exec()
+              .then(function (campaign) {
+                var role = auth.getRole(req.user, {
+                  companies: campaign.cid,
+                  teams: campaign.tid
+                });
+                var allow = auth.auth(role, ['publishTeamMessage']);
+                if(!allow.publishTeamMessage){
+                  return res.status(403).send('您没有权限发此站内信');
+                }
+                param.receiver =[];
+                campaign.members.forEach(function(member){
+                  param.receiver.push(member._id);
+                });
+                callback(null)
+              })
+              .then(null,function(err){
+                callback(err)
+              });
+          }
+          else{
+            callback(null)
+          }
+        }
+      ],function(err, values){
+        if(err){
+          log(err);
+          return res.status(500).send({ msg: '服务器错误'});
+        }
+        else{
+          __sendMessage(param,function(err){
+            if(err){
+              return res.status(500).send({ msg: '服务器错误'});
+            }
+            else {
+              return res.sendStatus(200);
+            }
+          })
+          
+        }
+      });
     },
     getMessageList: function(req, res) {
       var requestType = req.query.requestType;
