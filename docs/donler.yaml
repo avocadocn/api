@@ -2987,33 +2987,26 @@ definitions:
       campaignId:
         type: string
       specific_type:
-        type: object
-        properties:
-          value:
-            type: integer
-            format: int32
-          child_type:
-            type: integer
-            format: int32
+        $ref: MessageSpecificType
   MessageSpecificType:
     title: MessageSpecificType
     descriptions: 站内信的类型
     type: object
-      properties:
-        value:
-          type: integer
-          format: int32
-          enum:
-            - 0
-            - 1
-            - 2
-            - 3
-            - 4
-            - 5
-            - 6
-        child_type:
-          type: integer
-          format: int32
+    properties:
+      value:
+        type: integer
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+      child_type:
+        type: integer
+        format: int32
   MessageUpdateData:
     title: MessageUpdateData
     description: 更新站内信的数据

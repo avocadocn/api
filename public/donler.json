@@ -4289,17 +4289,7 @@
           "type": "string"
         },
         "specific_type": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "child_type": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
+          "$ref": "MessageSpecificType"
         }
       }
     },
@@ -4308,49 +4298,22 @@
       "descriptions": "站内信的类型",
       "type": "object",
       "properties": {
-        "rec_id": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
+        "value": {
+          "type": "integer",
+          "format": "int32",
           "enum": [
-            "private",
-            "team",
-            "department",
-            "company",
-            "global"
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
           ]
         },
-        "capation": {
-          "type": "string"
-        },
-        "content": {
-          "type": "string"
-        },
-        "team": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "companyId": {
-          "type": "string"
-        },
-        "campaignId": {
-          "type": "string"
-        },
-        "specific_type": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "child_type": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
+        "child_type": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
