@@ -200,6 +200,7 @@ var formatrestTime = function(start_time,end_time){
  */
 var formatCampaign = function(_campaign,user){
   var now = new Date();
+  var photos = _campaign.photo_album.photos;
   var temp = {
     '_id':_campaign._id,
     'active':_campaign.active,
@@ -219,8 +220,14 @@ var formatCampaign = function(_campaign,user){
     'tags':_campaign.tags,
     'campaign_mold':_campaign.campaign_mold,
     'campaign_unit':_campaign.campaign_unit,
-    'photo_album':_campaign.photo_album,
-    'campaign_type':_campaign.campaign_type
+    'photo_album': {
+      '_id': _campaign.photo_album._id,
+      'photos': photos.slice(-10, photos.length),
+      'name': _campaign.photo_album.name
+    },
+    'campaign_type':_campaign.campaign_type,
+    'is_start': _campaign.start_time <= Date.now(),
+    'is_end': _campaign.end_time <= Date.now()
   };
   var _formatTime = formatTime(_campaign.start_time,_campaign.end_time);
   temp.start_flag = _formatTime.start_flag;
@@ -239,7 +246,7 @@ var formatCampaign = function(_campaign,user){
   });
   var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
   var allow = auth.auth(role, [
-    'publishComment','quitCampaign',joinTaskName
+    'quitCampaign',joinTaskName
   ]);
   if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
     allow[joinTaskName]=false;
@@ -686,6 +693,7 @@ module.exports = function (app) {
     joinCampaign: function(req, res){
       Campaign
       .findById(req.params.campaignId)
+      .populate('photo_album')
       .exec()
       .then(function (campaign) {
         if (!campaign) {
@@ -815,6 +823,7 @@ module.exports = function (app) {
       }
       Campaign
       .findById(req.params.campaignId)
+      .populate('photo_album')
       .exec()
       .then(function (campaign) {
         if (!campaign) {
@@ -897,6 +906,7 @@ module.exports = function (app) {
       var campaignId = req.params.campaignId;
       Campaign
       .findById(campaignId)
+      .populate('photo_album')
       .exec()
       .then(function (campaign) {
         if (!campaign||!campaign.active) {
