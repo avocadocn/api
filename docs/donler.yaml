@@ -148,7 +148,7 @@ paths:
   /users/validate:
     post:
       tags:
-        - companies
+        - users
       summary: 验证邮箱是否已被使用并符合企业邮箱后缀
       consumes:
         - application/x-www-form-urlencoded
