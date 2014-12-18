@@ -4258,7 +4258,7 @@
         "latestPhotos": {
           "type": "array",
           "description": "最近的照片列表，只有_id和uri属性",
-          "item": {
+          "items": {
             "$ref": "PhotoForList"
           }
         }
