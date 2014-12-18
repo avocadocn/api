@@ -145,6 +145,31 @@ paths:
           description: error
           schema:
             $ref: Error
+  /users/validate:
+    post:
+      tags:
+        - companies
+      summary: 验证邮箱是否已被使用并符合企业邮箱后缀
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: email
+          description: 企业邮箱
+          type: string
+          in: formData
+        - name: cid
+          description: 企业id
+          type: string
+          in: formData
+      responses:
+        "200":
+          description: 验证完成
+          schema:
+            $ref: UserMailValidateResult
+        default:
+          description: error
+          schema:
+            $ref: Error
   "/users/{userId}/close":
     post:
       tags:
@@ -2368,6 +2393,24 @@ definitions:
       validate:
         description: 验证结果
         type: boolean
+      msg:
+        description: 验证结果描述
+        type: string
+  UserMailValidateResult:
+    title: UserMailValidateResult
+    type: object
+    required:
+      - active
+    properties:
+      active:
+        description: "验证结果,1为可以注册，2为已注册未激活，3已经注册并激活，4邮箱后缀不符合"
+        type: integer
+        format: int32
+        enum:
+          - 1
+          - 2
+          - 3
+          - 4
       msg:
         description: 验证结果描述
         type: string
