@@ -16,7 +16,7 @@ var validateHeaders = function (headers, tokenDevice) {
   for (var i = 0; i < headersKeys.length; i++) {
     var headersKey = headersKeys[i];
     var modelKey = modelKeys[i];
-    if (tokenDevice[modelKey] && headers[headersKey] !== tokenDevice[modelKey]) {
+    if (headers[headersKey] !== tokenDevice[modelKey]) {
       return false;
     }
   }
