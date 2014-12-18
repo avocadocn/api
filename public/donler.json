@@ -2969,6 +2969,40 @@
         }
       }
     },
+    "/search/companies": {
+      "post": {
+        "tags": [
+          "search"
+        ],
+        "summary": "根据关键词搜索公司",
+        "operationId": "searchCompanies",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "Keyword"
+            },
+            "in": "body",
+            "required": true,
+            "description": "关键词"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "CompanyBrief"
+              }
+            }
+          }
+        }
+      }
+    },
     "/region": {
       "get": {
         "tags": [
@@ -3476,8 +3510,15 @@
       ],
       "properties": {
         "validate": {
-          "description": "验证结果",
-          "type": "boolean"
+          "description": "验证结果,0为已存在,1为邮箱未激活,2为被屏蔽可使用,3为可以使用",
+          "type": "integer",
+          "format": "int32",
+          "enum": [
+            0,
+            1,
+            2,
+            3
+          ]
         },
         "msg": {
           "description": "验证结果描述",
@@ -3876,6 +3917,10 @@
         "logo": {
           "type": "string",
           "description": "公司头像"
+        },
+        "mail_active": {
+          "type": "boolean",
+          "description": "是否邮箱激活"
         }
       }
     },
@@ -5002,6 +5047,17 @@
         },
         "newUnjoinedCampaignComment": {
           "type": "boolean"
+        }
+      }
+    },
+    "Keyword": {
+      "title": "Keyword",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
         }
       }
     }

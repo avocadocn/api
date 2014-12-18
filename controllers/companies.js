@@ -62,10 +62,18 @@ module.exports = function (app) {
       }
       Company.findOne(option, function(err, company) {
         if (err || company) {
-          console.log(company);
-          res.send({ validate:false, msg:'已经存在' });
+          if(!req.body.name)
+            res.send({ validate:0, msg:'已经存在' });
+          else{//是验证的名字的话未验证邮箱提醒他去验证邮箱或给donler发送邮件
+            if(company.status.mail_active && company.status.active) //没被屏蔽，邮箱也验证了
+            res.send({ validate:0, msg:'已经存在'});
+            else if(!company.status.mail_active)
+              res.send({ validate:1, msg: '已被使用，未激活'});
+            else if(!company.status.active)
+              res.send({ validate:2, msg:'被屏蔽了，可使用'});
+          }
         } else {
-          res.send({ validate:true, msg:'可以使用' });
+          res.send({ validate:3, msg:'可以使用' });
         }
       });
     },

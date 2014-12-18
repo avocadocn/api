@@ -45,11 +45,11 @@ var CompanySchema = new Schema({
     department:[_department],
     //是否激活
     status: {
-        mail_active:{
+        mail_active:{//邮箱激活
             type: Boolean,
             default: false
         },
-        active: {
+        active: {//是否被后台屏蔽，屏蔽了为false
             type: Boolean,
             default: false
         },
