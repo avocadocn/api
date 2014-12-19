@@ -415,6 +415,13 @@
             "type": "string",
             "in": "path",
             "default": "53aa6fc011fd597b3e1be250"
+          },
+          {
+            "name": "resonseKey",
+            "description": "需要返回的key",
+            "required": false,
+            "type": "string",
+            "in": "query"
           }
         ],
         "responses": {

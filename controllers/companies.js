@@ -342,10 +342,21 @@ module.exports = function (app) {
           if (!company) {
             return res.status(404).send({ msg: '没有找到对应的公司' });
           }
+          
 
           var role = auth.getRole(req.user, {
             companies: [company._id]
           });
+          if(req.query.resonseKey==='inviteKey') {
+            if(role.company==='hr'||role.company==='member'){
+              return res.status(200).send({
+                staffInviteCode: company.invite_key
+              });
+            }else{
+              return res.status(403).send({msg:'权限错误'});
+            }
+          }
+
           switch (role.company) {
             case 'hr':
               res.status(200).send({
