@@ -3,7 +3,7 @@ info:
   title: Donler API v1
   description: Donler API v1
   version: 1.0.0
-host: "localhost:3002"
+host: "www.55yali.com:3002"
 schemes:
   - http
 produces:
