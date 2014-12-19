@@ -438,7 +438,7 @@ module.exports = function (app) {
             return res.status(401).send({ msg: '密码输入错误,请检查重试。' });
           }
 
-          if(!user.mail_active||!user.inviteKey) {
+          if(!user.mail_active||!user.invite_active) {
             return res.status(401).send({ msg: '账号未激活,请至邮箱点击链接激活。' });
           }
 
@@ -446,7 +446,7 @@ module.exports = function (app) {
             return res.status(401).send({ msg: '您的账号已被公司管理员禁用。' });
           }
 
-          if(!user.disabled) {
+          if(user.disabled) {
             return res.status(401).send({ msg: '账号已被关闭。'})
           }
           var token = jwt.sign({
