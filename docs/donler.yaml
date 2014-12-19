@@ -924,26 +924,26 @@ paths:
             $ref: Error
   "/teams/lead/list":
     get:
-    tags:
-      - teams
-    summary: 获取作为组长的小队列表
-    parameters:
-      - name: gid
-        description: 小队的gid，无则为全部
-        required: false
-        type: string
-        in: query
-    responses:
-      "200":
-        description: 小队数据
-        schema:
-          type: array
-          items:
-            $ref: TeamSimple
-      default:
-        description: error
-        schema:
-          $ref: Error
+      tags:
+        - teams
+      summary: 获取作为组长的小队列表
+      parameters:
+        - name: gid
+          description: 小队的gid，无则为全部
+          required: false
+          type: string
+          in: query
+      responses:
+        "200":
+          description: 小队数据
+          schema:
+            type: array
+            items:
+              $ref: TeamSimple
+        default:
+          description: error
+          schema:
+            $ref: Error
   /groups:
     get:
       tags:
