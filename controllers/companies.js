@@ -699,11 +699,19 @@ module.exports = function (app) {
       }).exec()
         .then(function (company) {
           if (!company) {
-            return res.status(401).send({ msg: '邮箱或密码错误' });
+            return res.status(401).send({ msg: '用户不存在，请检查您的用户名' });
           }
 
           if (!company.authenticate(req.body.password)) {
-            return res.status(401).send({ msg: '邮箱或密码错误' });
+            return res.status(401).send({ msg: '密码错误,请重新输入' });
+          }
+
+          if( !company.status.mail_active) {
+            return res.status(401).send({ msg: '您的公司账号尚未激活,请到邮箱内激活' });
+          }
+
+          if(!company.status.active) {
+            return res.status(401).send({ msg: '您的公司账号已被关闭' });
           }
 
           var token = jwt.sign({

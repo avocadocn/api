@@ -431,13 +431,24 @@ module.exports = function (app) {
       }).exec()
         .then(function (user) {
           if (!user) {
-            return res.status(401).send({ msg: '邮箱或密码错误' });
+            return res.status(401).send({ msg: '邮箱地址不存在,请检查或注册。' });
           }
 
           if (!user.authenticate(req.body.password)) {
-            return res.status(401).send({ msg: '邮箱或密码错误' });
+            return res.status(401).send({ msg: '密码输入错误,请检查重试。' });
           }
 
+          if(!user.mail_active||!user.inviteKey) {
+            return res.status(401).send({ msg: '账号未激活,请至邮箱点击链接激活。' });
+          }
+
+          if(!user.active) {
+            return res.status(401).send({ msg: '您的账号已被公司管理员禁用。' });
+          }
+
+          if(!user.disabled) {
+            return res.status(401).send({ msg: '账号已被关闭。'})
+          }
           var token = jwt.sign({
             type: "user",
             id: user._id.toString(),
