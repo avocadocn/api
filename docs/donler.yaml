@@ -2271,7 +2271,6 @@ definitions:
       - nickname
       - password
       - realname
-      - department
     properties:
       cid:
         description: 公司id

@@ -173,7 +173,7 @@ module.exports = function (app) {
         department: {
           name: '部门',
           value: req.body.department,
-          validators: ['required', validateDepartment]
+          validators: [validateDepartment]
         },
         phone: {
           name: '手机号码',
@@ -191,7 +191,7 @@ module.exports = function (app) {
     },
 
     register: function (req, res) {
-      var email = req.body.email + '@' + req.body.domain;
+      var email = req.body.email;
       var user = new User({
         email: email,
         username: email,

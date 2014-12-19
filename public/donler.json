@@ -3320,8 +3320,7 @@
         "domain",
         "nickname",
         "password",
-        "realname",
-        "department"
+        "realname"
       ],
       "properties": {
         "cid": {
