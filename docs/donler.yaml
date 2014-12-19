@@ -586,6 +586,16 @@ paths:
           required: false
           type: string
           in: query
+        - name: leadFlag
+          description: 是否只获取为组长的队伍（仅限user时）
+          required: false
+          type: boolean
+          in: query
+        - name: gid
+          description: 小队的gid，无则为全部
+          required: false
+          type: string
+          in: query
       responses:
         "200":
           description: 小队数据
@@ -912,7 +922,28 @@ paths:
           description: error
           schema:
             $ref: Error
-
+  "/teams/lead/list":
+    get:
+    tags:
+      - teams
+    summary: 获取作为组长的小队列表
+    parameters:
+      - name: gid
+        description: 小队的gid，无则为全部
+        required: false
+        type: string
+        in: query
+    responses:
+      "200":
+        description: 小队数据
+        schema:
+          type: array
+          items:
+            $ref: TeamSimple
+      default:
+        description: error
+        schema:
+          $ref: Error
   /groups:
     get:
       tags:
@@ -1310,7 +1341,40 @@ paths:
           description: error
           schema:
             $ref: Error
-
+  "/campaigns/mold/{requestType}/{requestId}":
+    get:
+      tags:
+        - campaigns
+      summary: 获取活动类型列表
+      operationId: getCampaignMolds
+      consumes:
+        - application/json
+      parameters:
+        - name: requestType
+          description: 主体类型
+          required: true
+          type: string
+          in: path
+          enum:
+            - user
+            - team
+            - company
+        - name: requestId
+          description: 主体Id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: CampaignMold
+        default:
+          description: error
+          schema:
+            $ref: Error
   "/components/ScoreBoard/{componentId}":
     get:
       tags:
@@ -3193,6 +3257,23 @@ definitions:
       _id:
         type: string
         description: gid
+  TeamSimple:
+    title: TeamSimple
+    required:
+      - _id
+      - name
+      - logo
+    properties:
+      _id:
+        type: string
+        description: 小队id
+      name:
+        type: string
+        description: 小队名称
+      logo:
+        type: string
+        description: logo
+
   Team:
     title: Team
     required:
@@ -3622,5 +3703,15 @@ definitions:
     required:
       - name
     properties:
+      name:
+        type: string
+  CampaignMold:
+    title: CampaignMold
+    required:
+      - _id
+      - name
+    properties:
+      _id:
+        type: string
       name:
         type: string

@@ -312,12 +312,13 @@ var _postCampaign = function (param, callback) {
             theme: campaign.theme,
             start_time: campaign.start_time
           };
+          team.save(function (err) {
+            if (err) {
+              log(err);
+            }
+          });
         });
-        teams.save(function (err) {
-          if (err) {
-            log(err);
-          }
-        });
+        
       })
       .then(null, function (err) {
         log(err);
@@ -1099,6 +1100,42 @@ module.exports = function (app) {
       .then(null, function (err) {
         log(err);
         res.status(500).send({msg:'服务器错误'});
+      });
+    },
+    getCampaignMolds: function(req, res) {
+      CampaignMold.find(null,{name:1},function(err,molds){
+        if(err){
+          return res.status(500).send({'msg':'获取活动类型失败!'});
+        }
+        else{
+          if(req.params.requestType==='team'){
+            CompanyGroup.findOne({'_id':req.params.requestId},{'group_type':1},function(err,team){
+              if(err){
+                log(err);
+                return res.status(500).send({'msg':'获取活动类型失败!'});
+              }
+              else{
+                //把跟自己小组类型相同的mold换到第0个
+                for(var i=0;i<molds.length;i++){
+                  if(molds[i].name===team.group_type){
+                    if(i===0)
+                      break;
+                    else{
+                      var temp = molds[0];
+                      molds[0]=molds[i];
+                      molds[i]=temp;
+                      break;
+                    }
+                  }
+                }
+                return res.send(molds);
+              }
+            });
+          }
+          else{
+            return res.send(molds);
+          }
+        }
       });
     }
   };

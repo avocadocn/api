@@ -187,7 +187,7 @@ module.exports = function (app) {
 
         var addIdsToOptions = function (userTeams) {
           var teams = userTeams.filter(function (team) {
-            if (team.group_type === 'virtual') {
+            if (team.group_type === 'virtual' || req.body.gid && req.body.gid!=team.gid ||req.body.leadFlag &&!team.leader) {
               return false;
             } else {
               return true;
@@ -652,6 +652,17 @@ module.exports = function (app) {
           log(err);
           res.sendStatus(500);
         });
+    },
+    getLedTeams: function(req, res) {
+      var options = {'cid':req.user.cid,'gid':req.query.gid || {'$ne':'0'},'leader._id':req.user._id};
+      CompanyGroup.find(options,{'logo':1,'cid':1,'name':1},function(err, companyGroups){
+        if(err){
+          console.log(err);
+          return res.status(500).send({'msg':'获取带领小队失败'});
+        }
+        else
+         return res.send(companyGroups);
+      });
     }
 
 

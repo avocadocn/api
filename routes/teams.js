@@ -19,4 +19,6 @@ module.exports = function (app, ctrl) {
   app.get('/teams/:teamId/tags', token.needToken, ctrl.getTeamTags);
   app.get('/teams/:teamId/members', token.needToken, ctrl.getMembers);
   app.get('/groups', token.needToken, ctrl.getGroups);
+  app.get('/teams/lead/list', token.needToken, ctrl.getLedTeams);
+  
 };

@@ -12,4 +12,5 @@ module.exports = function (app, ctrl) {
   app.post('/campaigns/:campaignId/users/:userId', token.needToken, ctrl.joinCampaign);
   app.delete('/campaigns/:campaignId/users/:userId', token.needToken, ctrl.quitCampaign);
   app.put('/campaigns/:campaignId/dealProvoke',token.needToken, ctrl.dealProvoke);
+  app.get('/campaigns/mold/:requestType/:requestId',token.needToken, ctrl.getCampaignMolds);
 };
