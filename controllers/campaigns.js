@@ -448,12 +448,12 @@ module.exports = function (app) {
         }
         var role = auth.getRole(req.user, {
           companies: [req.body.cid[0]],
-          teams: req.body.tid ? [req.body.tid[0]]:[]
+          teams: req.body.tid ? req.body.tid:[]
         });
         var taskName = req.body.campaign_type == 1 ? 'sponsorCompanyCampaign': 'sponsorTeamCampaign';
         var allow = auth.auth(role, [taskName]);
         if(!allow[taskName]){
-          return res.status(403).send('您没有权限发布该活动');
+          return res.status(403).send({msg:'您没有权限发布该活动'});
         }
         var param = req.body;
         async.parallel([
@@ -560,7 +560,7 @@ module.exports = function (app) {
       .exec()
       .then(function(requestModal){
         if(!requestModal){
-          return res.status(404).send('未找到该活动');
+          return res.status(404).send({msg:'未找到该活动'});
         }
         var role = auth.getRole(req.user, {
           companies: [requestType=='company' ? requestId : requestModal.cid],
@@ -569,7 +569,7 @@ module.exports = function (app) {
         });
         var allow = auth.auth(role, ['getCampaigns']);
         if(!allow.getCampaigns){
-          return res.status(403).send('您没有权限获取该活动');
+          return res.status(403).send({msg:'您没有权限获取该活动'});
         }
         switch(requestType){
           case 'company':
@@ -676,7 +676,7 @@ module.exports = function (app) {
       .exec()
       .then(function (campaign) {
         if (!campaign) {
-          res.status(404).send('未找到活动')
+          res.status(404).send({msg:'未找到活动'})
         }
         else{
           var role = auth.getRole(req.user, {
@@ -684,13 +684,13 @@ module.exports = function (app) {
           });
           var allow = auth.auth(role, ['getCampaigns']);
           if(!allow.getCampaigns){
-            return res.status(403).send('您没有权限获取该活动');
+            return res.status(403).send({msg:'您没有权限获取该活动'});
           }
           res.status(200).send(formatCampaign(campaign,req.user));
         }
       })
       .then(null, function (err) {
-        res.status(500).send('服务器错误');
+        res.status(500).send({msg:'服务器错误'});
       });
     },
     updateCampaign: function (req, res) {
@@ -699,7 +699,7 @@ module.exports = function (app) {
       .exec()
       .then(function (campaign) {
         if (!campaign) {
-          res.status(404).send('未找到活动')
+          res.status(404).send({msg:'未找到活动'})
         }
         else{
           var role = auth.getRole(req.user, {
@@ -709,7 +709,7 @@ module.exports = function (app) {
           var taskName = campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
           var allow = auth.auth(role, [taskName]);
           if(!allow[taskName]){
-            return res.status(403).send('您没有权限获取该活动');
+            return res.status(403).send({msg:'您没有权限获取该活动'});
           }
           if (req.body.content) {
             campaign.content=xss(req.body.content);
@@ -730,7 +730,7 @@ module.exports = function (app) {
           }
           campaign.save(function (err) {
             if (err) {
-              return res.status(500).send('数据保存错误');
+              return res.status(500).send({msg:'数据保存错误'});
             } else {
               return res.status(200).send(campaign);
             }
@@ -738,7 +738,7 @@ module.exports = function (app) {
         }
       })
       .then(null, function (err) {
-        res.status(500).send('服务器错误');
+        res.status(500).send({msg:'服务器错误'});
       });
     },
     closeCampaign: function (req, res) {
@@ -780,7 +780,7 @@ module.exports = function (app) {
       .exec()
       .then(function (campaign) {
         if (!campaign) {
-          res.status(404).send('未找到活动');
+          res.status(404).send({msg:'未找到活动'});
         }
         else{
           var role = auth.getRole(req.user, {
@@ -791,7 +791,7 @@ module.exports = function (app) {
           var taskName = campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
           var allow = auth.auth(role, [taskName]);
           if(!allow[taskName]){
-            return res.status(403).send('您没有权限参加该活动');
+            return res.status(403).send({msg:'您没有权限参加该活动'});
           }
           User.findById(req.params.userId)
           .exec()
@@ -887,13 +887,13 @@ module.exports = function (app) {
           })
           .then(null, function (err) {
             log(err)
-            res.status(500).send('服务器错误');
+            res.status(500).send({msg:'服务器错误'});
           });
         };
       })
       .then(null, function (err) {
         log(err)
-        res.status(500).send('服务器错误');
+        res.status(500).send({msg:'服务器错误'});
       });
     },
     quitCampaign: function(req,res){
@@ -902,7 +902,7 @@ module.exports = function (app) {
       });
       var allow = auth.auth(role, ['quitCampaign']);
       if(!allow.quitCampaign){
-        return res.status(403).send('您没有权限退出该活动');
+        return res.status(403).send({msg:'您没有权限退出该活动'});
       }
       Campaign
       .findById(req.params.campaignId)
@@ -910,7 +910,7 @@ module.exports = function (app) {
       .exec()
       .then(function (campaign) {
         if (!campaign) {
-          res.status(404).send('未找到活动');
+          res.status(404).send({msg:'未找到活动'});
         }
         else{
           User.findById(req.params.userId)
@@ -977,12 +977,12 @@ module.exports = function (app) {
             }
           })
           .then(null, function (err) {
-            res.status(500).send('服务器错误');
+            res.status(500).send({msg:'服务器错误'});
           });
         };
       })
       .then(null, function (err) {
-        res.status(500).send('服务器错误');
+        res.status(500).send({msg:'服务器错误'});
       });
     },
     dealProvoke: function(req, res){
@@ -993,7 +993,7 @@ module.exports = function (app) {
       .exec()
       .then(function (campaign) {
         if (!campaign||!campaign.active) {
-          res.status(404).send('未找到该挑战或该挑战已经被关闭')
+          res.status(404).send({msg:'未找到该挑战或该挑战已经被关闭'})
         }
         else{
           if (!campaign.isProvoke || campaign.campaign_unit.length<2) {
