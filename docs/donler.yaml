@@ -1510,6 +1510,11 @@ paths:
           type: string
           in: query
           required: true
+        - name: createDate
+          description: 作为分页依据的
+          type: string
+          format: data-time
+          in: query
       responses:
         "200":
           description: 成功
@@ -3350,6 +3355,10 @@ definitions:
       name:
         type: string
         description: 相册名
+      createDate:
+        type: string
+        format: date-time
+        description: 创建日期
       updateDate:
         type: string
         format: date-time

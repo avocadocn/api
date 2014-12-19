@@ -650,7 +650,7 @@ module.exports = function (app) {
               res.status(500).send('服务器错误');
             }
             else if (campaigns.length === 0) {
-              res.status(404).send('未找到活动');
+              res.status(200).send([]);
             }
             else {
               var formatCampaigns = [];
