@@ -149,7 +149,8 @@ paths:
     post:
       tags:
         - users
-      summary: 验证邮箱是否已被使用并符合企业邮箱后缀
+      operationId: userInfoValidate
+      summary: 验证个人邮箱以及邀请码
       consumes:
         - application/x-www-form-urlencoded
       parameters:
@@ -161,11 +162,15 @@ paths:
           description: 企业id
           type: string
           in: formData
+        - name: inviteKey
+          description: 邀请码
+          type: string
+          in: formData
       responses:
         "200":
           description: 验证完成
           schema:
-            $ref: UserMailValidateResult
+            $ref: UserValidateResult
         default:
           description: error
           schema:
@@ -2272,10 +2277,7 @@ definitions:
         description: 公司id
         type: string
       email:
-        description: 用户邮箱（不含@及其后面部分）
-        type: string
-      domain:
-        description: 邮箱域名
+        description: 用户邮箱
         type: string
       nickname:
         description: 昵称
@@ -2424,14 +2426,12 @@ definitions:
       msg:
         description: 验证结果描述
         type: string
-  UserMailValidateResult:
-    title: UserMailValidateResult
+  UserValidateResult:
+    title: UserValidateResult
     type: object
-    required:
-      - active
     properties:
       active:
-        description: "验证结果,1为可以注册，2为已注册未激活，3已经注册并激活，4邮箱后缀不符合"
+        description: "验证邮箱结果,1为可以注册，2为已注册未激活，3已经注册并激活，4邮箱后缀不符合"
         type: integer
         format: int32
         enum:
@@ -2439,6 +2439,13 @@ definitions:
           - 2
           - 3
           - 4
+      invitekeyCheck:
+        description: "验证激活码结果,1为正确,2为错误"
+        type: integer
+        format: int32
+        enum:
+          - 1
+          - 2
       msg:
         description: 验证结果描述
         type: string
