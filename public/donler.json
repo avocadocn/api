@@ -5,7 +5,7 @@
     "description": "Donler API v1",
     "version": "1.0.0"
   },
-  "host": "www.55yali.com:3002",
+  "host": "localhost:3002",
   "schemes": [
     "http"
   ],
@@ -1538,7 +1538,7 @@
             "description": "Campaign object that needs to be added to the store",
             "required": true,
             "schema": {
-              "$ref": "Campaign"
+              "$ref": "CampaignForm"
             },
             "in": "body"
           }
@@ -3776,6 +3776,84 @@
         "theme": {
           "description": "活动主题",
           "type": "string"
+        }
+      }
+    },
+    "CampaignForm": {
+      "title": "CampaignForm",
+      "required": [
+        "cid",
+        "campaign_type",
+        "theme",
+        "location",
+        "start_time",
+        "end_time",
+        "campaign_mold"
+      ],
+      "properties": {
+        "cid": {
+          "type": "array",
+          "description": "活动所属公司的id",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tid": {
+          "type": "array",
+          "description": "活动所属小队的id",
+          "items": {
+            "type": "string"
+          }
+        },
+        "campaign_type": {
+          "type": "integer",
+          "format": "int32",
+          "description": "活动的类型"
+        },
+        "theme": {
+          "type": "string",
+          "description": "活动主题"
+        },
+        "location": {
+          "$ref": "Location"
+        },
+        "start_time": {
+          "description": "活动开始时间",
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_time": {
+          "description": "活动结束时间",
+          "type": "string",
+          "format": "date-time"
+        },
+        "deadline": {
+          "description": "报名截止时间",
+          "type": "string",
+          "format": "date-time"
+        },
+        "campaign_mold": {
+          "description": "活动类型",
+          "type": "string"
+        },
+        "content": {
+          "description": "活动内容",
+          "type": "string"
+        },
+        "member_min": {
+          "description": "报名人数下限",
+          "type": "integer"
+        },
+        "member_max": {
+          "description": "报名人数上限",
+          "type": "integer"
+        },
+        "tags": {
+          "description": "标签",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
