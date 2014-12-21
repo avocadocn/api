@@ -164,7 +164,7 @@ var formatCampaign = function(_campaign,user){
   _campaign.members.forEach(function (member) {
     memberIds.push(member._id);
   });
-  temp.components = _campaign.formatComponents();
+  //temp.components = _campaign.formatComponents();
   var role = auth.getRole(user, {
     companies: _campaign.cid,
     teams: _campaign.tid,
@@ -172,7 +172,7 @@ var formatCampaign = function(_campaign,user){
   });
   var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
   var allow = auth.auth(role, [
-    'publishComment','quitCampaign',joinTaskName
+    'quitCampaign',joinTaskName
   ]);
   if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
     allow[joinTaskName]=false;
@@ -308,7 +308,7 @@ module.exports = function (app) {
         return res.status(500).send({msg: err });
       });
     },
-    getTimelineData: function(req, res){
+    getTimelineData: function(req, res) {
       var reqModel,
         requestType = req.params.requestType,
         requestId = req.params.requestId;
@@ -453,6 +453,70 @@ module.exports = function (app) {
           console.log(err);
           res.status(400).send({ msg: '获取活动失败' });
         });
+      })
+      .then(null, function (err) {
+        log(err);
+        return res.status(500).send({msg: err });
+      });
+    },
+    getTimeline: function(req, res) {
+
+      var reqModel,
+        requestType = req.params.requestType,
+        requestId = req.params.requestId;
+      switch(requestType){
+        case 'company':
+          reqModel = 'Company';
+          requestId = req.params.requestId =='0' ?(req.user.cid || req.user._id) : req.params.requestId;
+        break;
+        case 'team':
+          reqModel = 'CompanyGroup';
+        break;
+        case 'user':
+          reqModel = 'User';
+          requestId = req.params.requestId =='0' ?req.user._id : req.params.requestId;
+        break;
+        default:
+        break;
+      }
+      mongoose.model(reqModel)
+      .findById(requestId)
+      .exec()
+      .then(function(requestModal){
+        var role = auth.getRole(req.user, {
+          companies: [requestType=='company' ? requestId : requestModal.cid]
+        });
+        var allow = auth.auth(role, ['getCampaigns']);
+        if(!allow.getCampaigns){
+          return res.status(403).send('您没有权限获取该活动');
+        }
+        var options ={
+          'active':true,
+          'confirm_status': { '$ne': false } // 旧数据没有此属性，新数据默认为true
+        };
+        if(requestType=='team'){
+          options.tid = mongoose.Types.ObjectId(requestId);
+        }
+        else if(requestType=='user'){
+          options['campaign_unit.member._id'] = mongoose.Types.ObjectId(requestId);
+        }
+        else if(requestType=='company'){
+          options['cid'] = mongoose.Types.ObjectId(requestId);
+        }
+        Campaign.paginate(options,
+          parseInt(req.query.page) || 1,10,function(err,pageCount,results,itemCount) {
+            if(err){
+              log(err);
+              res.status(400).send({ msg: '获取活动失败' });
+            }
+            else{
+              var timeLine = [];
+              results.forEach(function(campaign) {
+                timeLine.push(formatCampaign(campaign,req.user));
+              });
+              return res.status(200).send(timeLine);
+            }
+          },{sortBy:{'start_time':-1}, populate: 'photo_album'});
       })
       .then(null, function (err) {
         log(err);

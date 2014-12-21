@@ -4,8 +4,8 @@
  * Module dependencies.
  */
 var mongoose = require('mongoose'),
-  Schema = mongoose.Schema;
-  // mongoosePaginate = require('mongoose-paginate');
+  Schema = mongoose.Schema,
+  mongoosePaginate = require('mongoose-paginate');
 
 /**
  * 用于子文档嵌套
@@ -230,7 +230,7 @@ Campaign.virtual('isProvoke').get(function () {
   
   return [4,5,7,9].indexOf(this.campaign_type)>-1;
 });
-// Campaign.plugin(mongoosePaginate);
+Campaign.plugin(mongoosePaginate);
 
 Campaign.methods = {
 

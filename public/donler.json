@@ -2259,6 +2259,63 @@
         }
       }
     },
+    "/timeline/{requestType}/{requestId}": {
+      "get": {
+        "tags": [
+          "timeline"
+        ],
+        "summary": "获取timline",
+        "operationId": "getTimelines",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "requestType",
+            "description": "主体类型",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "enum": [
+              "user",
+              "team",
+              "company"
+            ]
+          },
+          {
+            "name": "requestId",
+            "description": "主体Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "page",
+            "description": "页数",
+            "required": true,
+            "type": "integer",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "Campaign"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/photo_albums": {
       "post": {
         "tags": [
