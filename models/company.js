@@ -15,7 +15,10 @@ var _team = new Schema({
     name: String,
     id: {
         type: Schema.Types.ObjectId
-    }
+    },
+    //0：官方小队
+    //1：个人小队
+    group_level: Number
 });
 
 var _department = new Schema({

@@ -605,6 +605,7 @@ module.exports = function (app) {
         var formatCompanyGroups = [];
         for(var i = companyGroups.length-1; i>=0; i-- ) {
           var briefTeam = {
+            _id: companyGroups[i]._id,
             name: companyGroups[i].name,
             cid: companyGroups[i].cid,
             cname: companyGroups[i].cname,

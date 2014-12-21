@@ -3293,10 +3293,6 @@ definitions:
       entityType:
         type: string
         description: 小队类型
-      groupLevel:
-        type: integer
-        format: int32
-        description: 小队级别
       _id:
         type: string
         description: gid

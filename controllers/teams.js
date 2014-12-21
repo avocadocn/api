@@ -23,14 +23,18 @@ module.exports = function (app) {
   return {
    
     createTeams : function(req, res) {
-      var groupLevel = req.body.selectedGroups[0].groupLevel;
+      //权限判断
       var role = auth.getRole(req.user, {
         companies:[req.body.companyId]
       });
       var allow = auth.auth(role,['createTeams']);
-      if(!allow.createTeams && (req.body.selectedGroups.length>1 || groupLevel!==0)){
+      var groupLevel = role.company==='hr' ? 0 : 1; //0为官方
+      var createRule = {'limit':1};//暂时一人只能创建一个
+      var userCanNotCreate = groupLevel===1? (req.user.established_team && req.user.established_team.length>=createRule.limit ? true: false) : false;
+      if(!allow.createTeams || userCanNotCreate) {
         return res.status(403).send({msg: '权限错误'});
       }
+      //执行
       Company.findById(req.body.companyId).exec()
       .then(function (company) {
         if (!company) {
@@ -39,63 +43,88 @@ module.exports = function (app) {
           var selectedGroups = req.body.selectedGroups;
           var i = selectedGroups.length;
           async.whilst(
-              function () { return i >0; },
-              function (callback) {
-                i--;
-                var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : company.info.official_name + '-' + selectedGroups[i].groupType + '队';
-                var companyGroup = new CompanyGroup();
+            function () { return i >0; },
+            function (callback) {
+              i--;
+              var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : company.info.official_name + '-' + selectedGroups[i].groupType + '队';
+              var companyGroup = new CompanyGroup();
 
-                companyGroup.cid = company._id;
-                companyGroup.cname = company.info.name;
-                companyGroup.gid = selectedGroups[i]._id;
-                companyGroup.group_level = selectedGroups[i].groupLevel== 0 ? 0 : 1;
-                companyGroup.group_type = selectedGroups[i].groupType;
-                companyGroup.name = tname;
-                companyGroup.logo = '/img/icons/group/' + selectedGroups[i].entityType.toLowerCase() + '_on.png';
-                if(selectedGroups[i].groupLevel== 0 && req.user.provider=='user') {
-                  var member = {
-                    _id: req.user._id,
-                    nickname: req.user.nickname,
-                    photo: req.user.photo,
-                    join_time: new Date()
-                  }
-                  companyGroup.leader = [];
-                  companyGroup.member = [];
-                  companyGroup.leader.push(member);
-                  companyGroup.member.push(member);
-                } 
-                companyGroup.save(function(err) {
-                  if (err) {
-                    log(err);
-                    callback(err);
-                  }
-                  else{
-                    company.team.push({
-                      'gid': companyGroup.gid,
-                      'group_type': companyGroup.group_type,
-                      'name': tname,
-                      'id': companyGroup._id,
-                      'group_level': companyGroup.group_level
-                    });
-                    company.save(function(err){
-                      if(err){
-                        log(err);
-                        callback(err)
-                      }else{
-                        callback(null)
-                      }
-                    });
-                  }
-                });
-              },
-              function (err) {
-                if(err){
-                  return res.status(500).send({ msg: '保存失败' });
+              companyGroup.cid = company._id;
+              companyGroup.cname = company.info.name;
+              companyGroup.gid = selectedGroups[i]._id;
+              companyGroup.group_type = selectedGroups[i].groupType;
+              companyGroup.name = tname;
+              companyGroup.logo = '/img/icons/group/' + selectedGroups[i].entityType.toLowerCase() + '_on.png';
+              if(groupLevel===1){//个人小队保存谁发的并将此人设为队长.
+                companyGroup.poster = {role: 'Personal', _id: req.user._id};
+                var member = {
+                  _id: req.user._id,
+                  nickname: req.user.nickname,
+                  photo: req.user.photo,
+                  join_time: new Date()
+                }
+                companyGroup.leader = [];
+                companyGroup.member = [];
+                companyGroup.leader.push(member);
+                companyGroup.member.push(member);
+              }else{
+                companyGroup.poster = {role: 'HR'};
+              }
+              companyGroup.save(function(err) {
+                if (err) {
+                  log(err);
+                  callback(err);
                 }
                 else{
-                  return res.status(200).send({ msg: '保存成功' });
+                  company.team.push({
+                    'gid': companyGroup.gid,
+                    'group_type': companyGroup.group_type,
+                    'name': companyGroup.name,
+                    'id': companyGroup._id,
+                    'group_level': groupLevel
+                  });
+                  company.save(function(err){
+                    if(err){
+                      log(err);
+                      callback(err)
+                    }else{
+                      if(groupLevel===1) {//更新个人的team表
+                        var _team = {
+                          gid: companyGroup.gid,
+                          _id: companyGroup._id,
+                          group_type: companyGroup.group_type,
+                          entity_type: companyGroup.entity_type,
+                          name: companyGroup.name,
+                          leader: true,
+                          logo: companyGroup.logo
+                        }
+                        req.user.team.push(_team);
+                        req.user.established_team.push(_team);
+                        req.user.save(function(err) {
+                          if(err){
+                            log(err);
+                            callback(err);
+                          }else{
+                            callback(null);
+                          }
+                        });
+                      }else{
+                        callback(null);
+                      }
+                    }
+                  });
+
                 }
+              });
+            },
+            function (err) {
+              if(err){
+                return res.status(500).send({ msg: '保存失败' });
               }
+              else{
+                return res.status(200).send({ msg: '保存成功' });
+              }
+            }
           );
         }
       })

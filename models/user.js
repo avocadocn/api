@@ -126,7 +126,8 @@ var UserSchema = new Schema({
     cname: String,
     company_official_name: String,
     team: [_team],
-    app_token: String, // 保存上次登录的token，如果注销则清除。不可用之前的属性名，否则新api会造成判断的错误。
+    established_team: [_team],           //自己创建的小队
+    app_token: String,                  // 保存上次登录的token，如果注销则清除。不可用之前的属性名，否则新api会造成判断的错误。
     token_device: {
         platform: String,
         version: String,

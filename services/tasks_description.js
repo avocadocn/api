@@ -115,7 +115,7 @@ var registeredTasks = {
     company: ['hr']
   },
   createTeams:{
-    company: ['hr']
+    company: ['hr', 'member']
   },
   editTeam: {
     company: ['hr'],
