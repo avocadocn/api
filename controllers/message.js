@@ -244,18 +244,32 @@ module.exports = function (app) {
           break;
         }
         Message
-        .find(condition)
-        .sort('-create_date')
-        .populate('MessageContent')
-        .limit(req.query.limit || 0)
-        .exec()
-        .then(function(messages){
-          res.status(200).send(messages);
-        })
-        .then(null,function(err){
-          log(err);
-          return res.status(500).send({msg:err});
-        });
+          .find(condition)
+          .sort('-create_date')
+          .populate('MessageContent')
+          .limit(req.query.limit || 0)
+          .exec()
+          .then(function (messages) {
+            res.status(200).send(messages);
+
+            // 将未读的站内信标记为已读
+            var unreadMessages = messages.filter(function (message) {
+              return message.status === 'unread';
+            });
+            unreadMessages.forEach(function (message) {
+              message.status = 'read';
+              message.save(function (err) {
+                if (err) {
+                  console.log(err);
+                }
+              });
+            });
+
+          })
+          .then(null, function (err) {
+            log(err);
+            return res.status(500).send({msg: err});
+          });
       }
 
     },

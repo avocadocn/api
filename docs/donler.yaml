@@ -1949,7 +1949,7 @@ paths:
             - private
             - send
         - name: requestId
-          description: 主题Id
+          description: 主体Id
           required: true
           type: string
           in: query
