@@ -236,6 +236,23 @@ module.exports = function (app) {
 
     },
 
+    forgetPassword: function (req, res) {
+      User.findOne({email: req.body.email}, function(err, user) {
+        if(err || !user) {
+          return res.status(400).send({msg:'邮箱填写错误'});
+        } else {
+          emailService.sendStaffResetPwdMail(user.email, user._id.toString(), function(err) {
+            if(err) {
+              log(err);
+              res.sendStatus(500);
+            } else {
+              res.sendStatus(201);
+            }
+          });
+        }
+      });
+    },
+
     getUserById: function (req, res) {
       User.findById(req.params.userId).exec()
         .then(function (user) {

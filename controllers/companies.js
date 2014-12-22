@@ -16,6 +16,7 @@ var jwt = require('jsonwebtoken');
 var async = require('async');
 
 var log = require('../services/error_log.js');
+var emailService = require('../services/email.js');
 var tokenService = require('../services/token.js');
 var auth = require('../services/auth.js');
 var donlerValidator = require('../services/donler_validator.js');
@@ -330,6 +331,25 @@ module.exports = function (app) {
         res.sendStatus(201);
       });
 
+    },
+
+    forgetPassword: function (req, res) {
+      Company.findOne({
+        login_email: req.body.email
+      }, function(err, company) {
+        if (err || !company) {
+          return res.status(400).send({msg:'邮箱填写错误'});
+        } else {
+          emailService.sendCompanyResetPwdMail(company.login_email, company._id.toString(), function(err) {
+            if(err) {
+              log(err);
+              res.sendStatus(500);
+            } else {
+              res.sendStatus(201);
+            }
+          });
+        }
+      });
     },
 
     getCompany: function (req, res) {

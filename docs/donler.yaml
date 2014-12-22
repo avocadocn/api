@@ -175,6 +175,27 @@ paths:
           description: error
           schema:
             $ref: Error
+  "/users/forgetPassword":
+    post:
+      tags:
+        - users
+      summary: 用户忘记密码，发送邮件
+      operationId: userForgetPassword
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: email
+          description: 邮件
+          type: string
+          required: true
+          in: formData
+      responses:
+        "201":
+          description: 邮件发送成功
+        default:
+          description: error
+          schema:
+            $ref: Error
   "/users/{userId}/close":
     post:
       tags:
@@ -417,6 +438,27 @@ paths:
           description: 验证完成
           schema:
             $ref: ValidateResult
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/companies/forgetPassword":
+    post:
+      tags:
+        - companies
+      summary: hr忘记密码，发送邮件
+      operationId: companyForgetPassword
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: email
+          description: 邮件
+          type: string
+          required: true
+          in: formData
+      responses:
+        "201":
+          description: 邮件发送成功
         default:
           description: error
           schema:

@@ -11,6 +11,7 @@ module.exports = function (app, ctrl) {
   app.put('/companies/:companyId', token.needToken, ctrl.getCompanyById, ctrl.updateCompanyValidate, ctrl.updateCompanyLogo, ctrl.updateCompany);
 
   app.post('/companies/validate', ctrl.companyInfoValidate);
+  app.post('/companies/forgetPassword', ctrl.forgetPassword);
   app.get('/companies/:companyId/statistics', token.needToken, ctrl.getCompanyStatistics);
   app.get('/companies/:companyId/members', token.needToken, ctrl.getCompanyMembers);
   app.get('/companies/:companyId/departments', token.needToken, ctrl.getCompanyDepartments);

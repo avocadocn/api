@@ -644,7 +644,7 @@ module.exports = function (app) {
       });
     },
     getGroups: function (req, res) {
-      if (req.user.provider !== 'company') {
+      if (!req.user) {
         return res.status(403).send({msg: '权限错误'});
       }
       Group.find(null, function (err, group) {
