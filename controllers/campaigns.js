@@ -26,6 +26,7 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
   for (var attr in option){
     _option[attr] = option[attr];
   }
+  _option.confirm_status = select_type=='5'?false : true;
   var populate = populate ? populate.split(',').join(' ') :'';
   switch(select_type){
     //全部
@@ -36,6 +37,7 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
     case '1':
       _option.start_time = { '$gte':now };
       _option['campaign_unit.member._id'] = requestId;
+      
     break;
     //正在进行的活动
     case '2':
@@ -56,7 +58,6 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
     break;
     //未确认的挑战
     case '5':
-      _option.confirm_status = false;
       _option.start_time = { '$gte': now};
       _option.campaign_type = {'$in':[4,5,7,9]};
       _option.tid = {'$in':teamIds}
