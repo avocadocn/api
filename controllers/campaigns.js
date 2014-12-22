@@ -273,6 +273,7 @@ var _postCampaign = function (param, callback) {
   for (var attr in param) {
     campaign[attr] = param[attr];
   }
+  campaign.deadline = param.deadline ? param.deadline : param.end_time;
   var _user={
     '_id':campaign.poster.uid||campaign.poster.cid,
     'name':campaign.poster.uid ? campaign.poster.nickname:campaign.poster.cname,
@@ -472,7 +473,7 @@ module.exports = function (app) {
           function(callback){
             if(param.tid){
               CompanyGroup
-                .findOne({_id:param.tid})
+                .find({_id:{'$in':param.tid}})
                 .exec()
                 .then(function (companyGroups) {
                   callback(null,companyGroups)
@@ -504,18 +505,14 @@ module.exports = function (app) {
                   break;
                 }
               };
-              console.log(param.tid)
-              if(param.tid){
-                for (var j = values[1].length - 1; j >= 0; j--) {
-                  console.log(j)
-                  if(values[1][j]._id.toString()===param.tid[index]){
-                    unit.team = {
-                      _id: values[1][j]._id,
-                      name: values[1][j].name,
-                      logo: values[1][j].logo
-                    }
-                    break;
+              for (var j = values[1].length - 1; j >= 0; j--) {
+                if(values[1][j]._id.toString()===param.tid[index]){
+                  unit.team = {
+                    _id: values[1][j]._id,
+                    name: values[1][j].name,
+                    logo: values[1][j].logo
                   }
+                  break;
                 }
               }
               param.campaign_unit.push(unit);
