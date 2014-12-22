@@ -153,7 +153,9 @@ var formatCampaign = function(_campaign,user){
     'campaign_mold':_campaign.campaign_mold,
     'campaign_unit':_campaign.campaign_unit,
     'photo_album':_campaign.photo_album,
-    'campaign_type':_campaign.campaign_type
+    'campaign_type':_campaign.campaign_type,
+    'is_start': _campaign.start_time <= Date.now(),
+    'is_end': _campaign.end_time <= Date.now()
   };
   var _formatTime = formatTime(_campaign.start_time,_campaign.end_time);
   temp.start_flag = _formatTime.start_flag;
