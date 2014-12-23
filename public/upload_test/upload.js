@@ -3,7 +3,25 @@
 (function ($) {
 
   var baseUrl = 'http://localhost:3002'
-  var tokenInput = $('#token');
+  var tokenInput = $('#x-access-token');
+  var appIdInput = $('#x-app-id');
+  var apiKeyInput = $('#x-api-key');
+  var deviceIdInput = $('#x-device-id');
+  var deviceTypeInput = $('#x-device-type');
+  var platformInput = $('#x-platform');
+  var versionInput = $('#x-version');
+
+  var getCommonHeaders = function () {
+    return {
+      'x-access-token': tokenInput.val(),
+      'x-app-id': appIdInput.val(),
+      'x-api-key': apiKeyInput.val(),
+      'x-device-id': deviceIdInput.val(),
+      'x-device-type': deviceTypeInput.val(),
+      'x-platform': platformInput.val(),
+      'x-version': versionInput.val()
+    };
+  };
 
   (function () {
     var photoAlbumTestEle = $('#photoAlbumTest');
@@ -18,9 +36,7 @@
         data: fd,
         processData: false,
         contentType: false,
-        headers: {
-          'x-access-token': tokenInput.val()
-        },
+        headers: getCommonHeaders(),
         success: function (data, status) {
           alert('success');
           console.log(data, status);
@@ -49,9 +65,7 @@
         data: fd,
         processData: false,
         contentType: false,
-        headers: {
-          'x-access-token': tokenInput.val()
-        },
+        headers: getCommonHeaders(),
         success: function (data, status) {
           alert('success');
           console.log(data, status);
@@ -78,9 +92,7 @@
         data: fd,
         processData: false,
         contentType: false,
-        headers: {
-          'x-access-token': tokenInput.val()
-        },
+        headers: getCommonHeaders(),
         success: function (data, status) {
           alert('success');
           console.log(data, status);
@@ -107,9 +119,7 @@
         data: fd,
         processData: false,
         contentType: false,
-        headers: {
-          'x-access-token': tokenInput.val()
-        },
+        headers: getCommonHeaders(),
         success: function (data, status) {
           alert('success');
           console.log(data, status);
@@ -137,9 +147,7 @@
         data: fd,
         processData: false,
         contentType: false,
-        headers: {
-          'x-access-token': tokenInput.val()
-        },
+        headers: getCommonHeaders(),
         success: function (data, status) {
           alert('success');
           console.log(data, status);

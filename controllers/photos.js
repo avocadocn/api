@@ -249,12 +249,15 @@ module.exports = function (app) {
         res.sendStatus(403);
         return;
       }
-
+      var imgSize;
       uploader.uploadImg(req, {
         fieldName: 'photo',
         targetDir: '/public/img/photo_album',
         subDir: req.user.getCid().toString(),
         saveOrigin: true,
+        getSize: function (size) {
+          imgSize = size;
+        },
         success: function (url, oriName, oriCallback) {
           var uploadUser;
           if (req.user.provider === 'user') {
@@ -277,6 +280,8 @@ module.exports = function (app) {
               teams: photoAlbum.owner.teams
             },
             uri: path.join('/img/photo_album', url),
+            width: imgSize.width,
+            height: imgSize.height,
             name: oriName,
             upload_user: uploadUser
           });
@@ -312,9 +317,6 @@ module.exports = function (app) {
               });
             }
           });
-
-
-
         },
         error: function (err) {
           log(err);

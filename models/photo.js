@@ -10,6 +10,8 @@ var Photo = new Schema({
     teams: [Schema.Types.ObjectId]
   },
   uri: String,
+  width: Number,
+  height: Number,
   upload_date: {
     type: Date,
     default: Date.now
