@@ -43,7 +43,9 @@ var Comment = new Schema({
   //2014/10以后代码中不会有message、campaign_detail了～
   photos: [{
     _id: Schema.Types.ObjectId,
-    uri: String
+    uri: String,
+    width: Number,
+    height: Number
   }]
 });
 
