@@ -5068,6 +5068,14 @@
           "type": "string",
           "description": "照片uri"
         },
+        "width": {
+          "type": "number",
+          "format": "int32"
+        },
+        "height": {
+          "type": "number",
+          "format": "int32"
+        },
         "name": {
           "type": "string",
           "description": "照片名称"

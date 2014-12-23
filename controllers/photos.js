@@ -333,6 +333,8 @@ module.exports = function (app) {
       }, {
         '_id': true,
         'uri': true,
+        'width': true,
+        'height': true,
         'name': true,
         'upload_user': true,
         'upload_date': true

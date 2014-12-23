@@ -75,6 +75,12 @@
         window.authorizations.add(name, new ApiKeyAuthorization(name, $(this).val(), "header"));
       });
 
+      var inputs = $('#donler_headers_form input');
+      for (var i = 0; i < inputs.length; i++) {
+        var input = inputs[i];
+        window.authorizations.add(input.id, new ApiKeyAuthorization(input.id, input.value, "header"));
+      }
+
       // if you have an apiKey you would like to pre-populate on the page for demonstration purposes...
       /*
         var apiKey = "myApiKeyXXXX123456789";
@@ -103,27 +109,27 @@
     <h1>common headers</h1>
     <div class="donler_headers">
       <label for="x-app-id">x-app-id</label>
-      <input type="text" id="x-app-id" placeholder="app id"/>
+      <input type="text" id="x-app-id" value="id1a2b3c4d5e6f" placeholder="app id"/>
     </div>
     <div class="donler_headers">
       <label for="x-api-key">x-api-key</label>
-      <input type="text" id="x-api-key" placeholder="api key"/>
+      <input type="text" id="x-api-key" value="key1a2b3c4d5e6f" placeholder="api key"/>
     </div>
     <div class="donler_headers">
       <label for="x-device-id">x-device-id</label>
-      <input type="text" id="x-device-id" placeholder="设备id"/>
+      <input type="text" id="x-device-id" value="did1a2b3c4d5e6f" placeholder="设备id"/>
     </div>
     <div class="donler_headers">
       <label for="x-device-type">x-device-type</label>
-      <input type="text" id="x-device-type" placeholder="设备型号"/>
+      <input type="text" id="x-device-type" value="iphone 6" placeholder="设备型号"/>
     </div>
     <div class="donler_headers">
       <label for="x-platform">x-platform</label>
-      <input type="text" id="x-platform" placeholder="平台系统"/>
+      <input type="text" id="x-platform" value="ios" placeholder="平台系统"/>
     </div>
     <div class="donler_headers">
       <label for="x-version">x-version</label>
-      <input type="text" id="x-version" placeholder="平台版本"/>
+      <input type="text" id="x-version" value="8.0" placeholder="平台版本"/>
     </div>
     <div class="donler_headers">
       <label for="x-access-token">x-access-token</label>
