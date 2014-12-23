@@ -778,9 +778,12 @@ module.exports = function (app) {
       .exec()
       .then(function (campaign) {
         if (!campaign) {
-          res.status(404).send({msg:'未找到活动'});
+          return res.status(404).send({msg:'未找到活动'});
         }
         else{
+          if (!campaign.confirm_status) {
+            return res.status(400).send({msg:'该活动还未应战，无法参加'});
+          }
           var role = auth.getRole(req.user, {
             companies: campaign.cid,
             teams: campaign.tid,
