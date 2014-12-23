@@ -195,9 +195,8 @@ var formatrestTime = function(start_time,end_time){
 }
 /**
  * [formatCampaign description]
- * @param  {[type]} campaign [description]
- * @param  {[type]} role     [description]
- * @param  {[type]} user     [description]
+ * @param  {[type]} campaign 需要格式化的活动
+ * @param  {[type]} user     所比较的用户
  * @return {[type]}          [description]
  */
 var formatCampaign = function(_campaign,user){
@@ -689,7 +688,50 @@ module.exports = function (app) {
           if(!allow.getCampaigns){
             return res.status(403).send({msg:'您没有权限获取该活动'});
           }
-          res.status(200).send(formatCampaign(campaign,req.user));
+          async.series([
+            function(callback){
+              var _formatCampaign = formatCampaign(campaign,req.user);
+              callback(null,_formatCampaign);
+            },//格式化活动
+            function(callback){
+              if(campaign.tid) {
+                CompanyGroup.find({
+                  _id: {'$in':campaign.tid}
+                }).exec()
+                  .then(function (teams) {
+                    var members = campaign.members;
+                    for (var i = 0; i < members.length; i++) {
+                      var member = members[i];
+                      for (var j = 0; j < teams.length; j++) {
+                        var index = tools.arrayObjectIndexOf(teams[j].leader, member._id, '_id');
+                        if (index !== -1) {
+                          member.set('isLeader',true,{strict:false});
+                          break;
+                        }
+                      }
+                    }
+                    callback(null,members);
+                  })
+                  .then(null, function (err) {
+                    log(err);
+                    callback(err);
+                  });
+                }
+                else {
+                  callback(null,campaign.members);
+                }
+            }
+          ],function(err, values){
+            if(err){
+              log(err);
+              return res.status(500).send({ msg: '服务器错误'});
+            }
+            else{
+              var formatCampaign = values[0];
+              formatCampaign.members = values[1];
+              return res.status(200).send(formatCampaign);
+            }
+          });
         }
       })
       .then(null, function (err) {
