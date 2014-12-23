@@ -699,18 +699,23 @@ module.exports = function (app) {
                   _id: {'$in':campaign.tid}
                 }).exec()
                   .then(function (teams) {
-                    var members = campaign.members;
-                    for (var i = 0; i < members.length; i++) {
-                      var member = members[i];
-                      for (var j = 0; j < teams.length; j++) {
-                        var index = tools.arrayObjectIndexOf(teams[j].leader, member._id, '_id');
-                        if (index !== -1) {
-                          member.set('isLeader',true,{strict:false});
-                          break;
+                    var campaign_unit = campaign.campaign_unit;
+                    for (var i = 0; i < campaign_unit.length; i++) {
+                      var unit = campaign_unit[i];
+                      for(var j=0; j<unit.member.length; j++) {
+                        var member = unit.member[j];
+                        for (var k = 0; k < teams.length; k++) {
+                          var index = tools.arrayObjectIndexOf(teams[k].leader, member._id, '_id');
+                          if (index !== -1) {
+                            console.log(teams[k].leader, member._id)
+                            member.set('isLeader',true,{strict:false});
+                            break;
+                          }
                         }
                       }
                     }
-                    callback(null,members);
+                    console.log(campaign_unit)
+                    callback(null,campaign_unit);
                   })
                   .then(null, function (err) {
                     log(err);
@@ -718,7 +723,7 @@ module.exports = function (app) {
                   });
                 }
                 else {
-                  callback(null,campaign.members);
+                  callback(null,campaign.campaign_unit);
                 }
             }
           ],function(err, values){
@@ -728,7 +733,7 @@ module.exports = function (app) {
             }
             else{
               var formatCampaign = values[0];
-              formatCampaign.members = values[1];
+              formatCampaign.campaign_unit = values[1];
               return res.status(200).send(formatCampaign);
             }
           });
