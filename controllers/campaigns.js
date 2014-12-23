@@ -245,23 +245,28 @@ var formatCampaign = function(_campaign,user){
     teams: _campaign.tid,
     users: memberIds
   });
-  var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
-  var allow = auth.auth(role, [
-    'quitCampaign',joinTaskName
-  ]);
-  if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
-    allow[joinTaskName]=false;
-  }
-  if(role.team=='leader' && [4,5,7,9].indexOf(_campaign.campaign_type)>-1){
-    var provokeRole = auth.getRole(user, {
-      companies: _campaign.cid,
-      teams: [_campaign.tid[0]]
-    });
-    var provokeAllow = auth.auth(provokeRole, [
-      'sponsorProvoke'
+  if(_campaign.confirm_status) {
+    var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
+    var allow = auth.auth(role, [
+      'quitCampaign',joinTaskName
     ]);
-    allow.quitProvoke = provokeAllow.sponsorProvoke;
-    allow.dealProvoke = !provokeAllow.sponsorProvoke;
+    if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
+      allow[joinTaskName]=false;
+    }
+  }
+  else {
+    if(role.team=='leader' && [4,5,7,9].indexOf(_campaign.campaign_type)>-1){
+      var provokeRole = auth.getRole(user, {
+        companies: _campaign.cid,
+        teams: [_campaign.tid[0]]
+      });
+      var provokeAllow = auth.auth(provokeRole, [
+        'sponsorProvoke'
+      ]);
+      var allow = {};
+      allow.quitProvoke = provokeAllow.sponsorProvoke;
+      allow.dealProvoke = !provokeAllow.sponsorProvoke;
+    }
   }
 
   temp.allow = allow;
