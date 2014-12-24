@@ -141,7 +141,7 @@
         "summary": "修改用户数据",
         "operationId": "editUserData",
         "consumes": [
-          "multipart/form-data"
+          "application/x-www-form-urlencoded"
         ],
         "parameters": [
           {
@@ -157,13 +157,6 @@
             "description": "昵称",
             "required": false,
             "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "photo",
-            "description": "头像",
-            "required": false,
-            "type": "file",
             "in": "formData"
           },
           {
@@ -200,6 +193,14 @@
             "required": false,
             "type": "string",
             "in": "formData"
+          },
+          {
+            "name": "birthday",
+            "description": "生日",
+            "required": false,
+            "type": "string",
+            "in": "formData",
+            "format": "date-time"
           }
         ],
         "responses": {

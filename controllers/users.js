@@ -368,6 +368,11 @@ module.exports = function (app) {
           name: 'qq',
           value: req.body.qq,
           validators: ['number']
+        },
+        birthday: {
+          name: '生日',
+          value: req.body.birthday,
+          validators: ['date']
         }
       }, 'complete', function (pass, msg) {
         if (pass) {
@@ -421,6 +426,9 @@ module.exports = function (app) {
       }
       if (req.body.qq) {
         user.qq = req.body.qq;
+      }
+      if (req.body.birthday) {
+        user.birthday = new Date(req.body.birthday);
       }
       user.save(function (err) {
         if (err) {
