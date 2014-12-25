@@ -145,7 +145,7 @@ var formatTime = function(start_time,end_time){
         time_text =  days + '天';
       }
       else if(hours>=1){
-        time_text = hours + '小时';
+        time_text = hours + '时';
       }
       else if(minutes>=1){
         time_text =  minutes + '分'  ;
