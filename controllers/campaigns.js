@@ -255,6 +255,7 @@ var formatCampaign = function(_campaign,user){
   }
   else {
     if(role.team=='leader' && [4,5,7,9].indexOf(_campaign.campaign_type)>-1){
+      var allow = {};
       var provokeRole = auth.getRole(user, {
         companies: _campaign.cid,
         teams: [_campaign.tid[0]]
@@ -262,9 +263,15 @@ var formatCampaign = function(_campaign,user){
       var provokeAllow = auth.auth(provokeRole, [
         'sponsorProvoke'
       ]);
-      var allow = {};
       allow.quitProvoke = provokeAllow.sponsorProvoke;
-      allow.dealProvoke = !provokeAllow.sponsorProvoke;
+      provokeRole = auth.getRole(user, {
+        companies: _campaign.cid,
+        teams: [_campaign.tid[1]]
+      });
+      provokeAllow = auth.auth(provokeRole, [
+        'sponsorProvoke'
+      ]);
+      allow.dealProvoke = provokeAllow.sponsorProvoke;
     }
   }
 
