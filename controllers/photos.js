@@ -10,6 +10,7 @@ var Photo = mongoose.model('Photo');
 var log = require('../services/error_log.js');
 var auth = require('../services/auth.js');
 var donlerValidator = require('../services/donler_validator.js');
+var userScore = require('../services/user_score.js');
 var uploader = require('../services/uploader.js');
 var tools = require('../tools/tools.js');
 
@@ -20,7 +21,7 @@ module.exports = function (app) {
       PhotoAlbum.findOne({
         _id: req.params.photoAlbumId,
         hidden: false
-    }).exec()
+      }).exec()
         .then(function (photoAlbum) {
           if (!photoAlbum) {
             res.sendStatus(404);
@@ -266,6 +267,17 @@ module.exports = function (app) {
               name: req.user.nickname,
               type: 'user'
             };
+
+            // todo 判断是否是官方小队
+            // 添加积分
+            userScore.addScore(req.user, {
+              uploadPhotoToOfficialTeam: 1
+            }, function (err) {
+              if (err) {
+                log(err);
+              }
+            });
+
           } else if (req.user.provider === 'company') {
             uploadUser = {
               _id: req.user._id,

@@ -3531,6 +3531,10 @@
             }
           }
         },
+        "score": {
+          "type": "number",
+          "description": "积分"
+        },
         "tids": {
           "type": "array",
           "description": "小队id数组",

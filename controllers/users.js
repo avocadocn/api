@@ -291,7 +291,8 @@ module.exports = function (app) {
                 briefName: user.cname
               },
               tids: tids,
-              lastCommentTime: user.last_comment_time
+              lastCommentTime: user.last_comment_time,
+              score: user.score.total || 0
             };
             res.status(200).send(completeData);
           } else if (allow.getUserBriefData) {
@@ -307,7 +308,8 @@ module.exports = function (app) {
               bloodType: user.bloodType,
               introduce: user.introduce,
               phone: user.phone,
-              qq: user.qq
+              qq: user.qq,
+              score: user.score.total || 0
             };
             res.status(200).send(briefData);
           } else if (allow.getUserMinData) {

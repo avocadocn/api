@@ -15,6 +15,7 @@ var log = require('../services/error_log.js'),
   uploader = require('../services/uploader.js'),
   syncData = require('../services/sync_data.js'),
   donlerValidator = require('../services/donler_validator.js'),
+  userScore = require('../services/user_score.js'),
   tools = require('../tools/tools.js'),
   async = require('async');
 
@@ -534,17 +535,29 @@ module.exports = function (app) {
           'name':team.name,
           'logo':team.logo
         });
-        team.save(function(err){
-          if(err){
+        team.save(function (err) {
+          if (err) {
             log(err);
             return res.status(500).send({msg:'保存错误'});
-          }else{
-            user.save(function (uErr){
-              if(uErr){
-                log(uErr);
-                return res.status(500).send({msg:'保存错误'});
+          } else {
+            userScore.addScore(user, {
+              joinOfficialTeam: 1
+            }, {
+              save: false
+            }, function (err, user) {
+              if (err) {
+                log(err);
+                return;
               }
-              return res.status(200).send({msg:'加入成功'});
+
+              user.save(function (uErr){
+                if(uErr){
+                  log(uErr);
+                  return res.status(500).send({msg:'保存错误'});
+                }
+                return res.status(200).send({msg:'加入成功'});
+              });
+
             });
           }
         });
@@ -610,13 +623,27 @@ module.exports = function (app) {
           log(err);
           return res.status(500).send({msg:'保存错误'});
         }else{
-          user.save(function (uErr){
-            if(uErr){
-              log(uErr);
-              return res.status(500).send({msg:'保存错误'});
+
+          userScore.addScore(user, {
+            quitOfficialTeam: 1
+          }, {
+            save: false
+          }, function (err, user) {
+            if (err) {
+              log(err);
+              return;
             }
-            return res.status(200).send({msg:'退出成功'});
+
+            user.save(function (uErr){
+              if(uErr){
+                log(uErr);
+                return res.status(500).send({msg:'保存错误'});
+              }
+              return res.status(200).send({msg:'退出成功'});
+            });
+
           });
+
         }
       });
 

@@ -152,7 +152,19 @@ var UserSchema = new Schema({
     },
     last_comment_time: Date,
     commentCampaigns: [latestCommentCampaign],//参加了的讨论列表
-    unjoinedCommentCampaigns: [latestCommentCampaign] //未参加的讨论列表
+    unjoinedCommentCampaigns: [latestCommentCampaign], //未参加的讨论列表
+    score: {
+        // 积分总数
+        total: {
+            type: Number,
+            default: 0
+        },
+        // items是获得积分的项目，如参加小队，参加活动等
+        items: [{
+            name: String,
+            score: Number
+        }]
+    }
 });
 
 /**
