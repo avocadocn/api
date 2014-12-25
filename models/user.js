@@ -182,7 +182,7 @@ var UserSchema = new Schema({
         uploadPhotoToOfficialTeam: {
             type: Number,
             default: 0
-        },
+        }
     }
 });
 

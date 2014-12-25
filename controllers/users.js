@@ -307,6 +307,11 @@ module.exports = function (app) {
               birthday: user.birthday,
               bloodType: user.bloodType,
               introduce: user.introduce,
+              company: {
+                _id: user.cid,
+                name: user.company_official_name,
+                briefName: user.cname
+              },
               phone: user.phone,
               qq: user.qq,
               score: user.score.total || 0
