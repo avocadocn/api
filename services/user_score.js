@@ -55,38 +55,15 @@ exports.addScore = function (user, itemsObj, options, callback) {
     if (!user.score) {
       user.score = {
         total: 0,
-        items: []
+        officialCampaignSucceded: 0,
+        joinOfficialTeam: 0,
+        quitOfficialTeam: 0,
+        uploadPhotoToOfficialTeam: 0
       }
     }
-    if (!user.score.items) {
-      user.score.items = [];
-    }
-
-    // 获取user.score中的项目
-    var getItem = function (itemName) {
-      var item;
-      for (var i = 0; i < user.score.items.length; i++) {
-        var scoreItem = user.score.items[i];
-        if (scoreItem.name === itemName) {
-          item = scoreItem;
-          break;
-        }
-      }
-      if (!item) {
-        item = {
-          name: itemName,
-          score: 0
-        };
-        user.score.items.push(item);
-      }
-
-      return item;
-    }
-
     var sum = 0;
     for (var key in scoresObj) {
-      var item = getItem(key);
-      item.score += scoresObj[key];
+      user.score[key] += scoresObj[key];
       sum += scoresObj[key];
     }
     user.score.total += sum;
