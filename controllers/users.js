@@ -408,7 +408,7 @@ module.exports = function (app) {
     },
 
     updatePhoto: function (req, res, next) {
-      if (req.headers['content-type'] !== 'multipart/form-data') {
+      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
         next();
         return;
       }
@@ -424,6 +424,7 @@ module.exports = function (app) {
           if (err.type === 'notfound') {
             next();
           } else {
+            log(err);
             res.sendStatus(500);
           }
         }
