@@ -253,6 +253,17 @@ module.exports = function (app) {
       });
     },
 
+    sendFeedback: function (req, res) {
+      emailService.sendFeedBackMail(req.user.username, req.body.content, function(err) {
+        if(err) {
+          log(err);
+          res.sendStatus(500);
+        } else {
+          res.sendStatus(201);
+        }
+      });
+    },
+
     getUserById: function (req, res) {
       User.findById(req.params.userId).exec()
         .then(function (user) {
@@ -267,8 +278,8 @@ module.exports = function (app) {
           var allow = auth.auth(role, ['getUserCompleteData', 'getUserBriefData', 'getUserMinData']);
           if (allow.getUserCompleteData) {
             var tids = [];
-            user.team.forEach(function (team) {
-              tids.push(team._id);
+            user.team.forEach(function (team) {//不拿部门和公司
+              if(team.entity_type!='virtual') tids.push(team._id);
             });
 
             var completeData = {

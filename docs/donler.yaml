@@ -197,6 +197,27 @@ paths:
           description: error
           schema:
             $ref: Error
+  "/users/sendFeedback":
+    post:
+      tags:
+        - users
+      summary: 用户发送反馈
+      operationId: sendFeedback
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: content
+          description: 反馈内容
+          type: string
+          required: true
+          in: formData
+      responses:
+        "201":
+          description: 邮件发送成功
+        default:
+          description: error
+          schema:
+            $ref: Error
   "/users/{userId}/close":
     post:
       tags:
