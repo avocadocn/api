@@ -436,7 +436,9 @@ module.exports = function (app) {
         user.nickname = req.body.nickname;
       }
       if (req.body.password) {
-        user.password = req.body.password;
+        if(user.authenticate(req.body.originPassword)) user.password = req.body.password;
+        else
+          return res.status(400).send({msg:'原密码填写错误'});
       }
       if (req.body.realname) {
         user.realname = req.body.realname;

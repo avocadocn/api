@@ -120,6 +120,11 @@ paths:
           required: false
           type: string
           in: formData
+        - name: originPassword
+          description: 原密码
+          required: false
+          type: string
+          in: formData
         - name: realname
           description: 真实姓名
           required: false
