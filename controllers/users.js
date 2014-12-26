@@ -265,12 +265,17 @@ module.exports = function (app) {
     },
 
     getUserById: function (req, res) {
+      //获取免打扰开关
+      if(req.query.responseKey==='pushToggle') {
+        var user = {'pushToggle' : req.user.push_toggle};
+        return res.status(200).send(user);
+      }
+      //非获取免打扰
       User.findById(req.params.userId).exec()
         .then(function (user) {
           if (!user) {
             return res.status(404).send({ msg: "找不到该用户" });
           }
-
           var role = auth.getRole(req.user, {
             companies: [user.cid],
             users: [user._id]
@@ -447,6 +452,9 @@ module.exports = function (app) {
       }
       if (req.body.birthday) {
         user.birthday = new Date(req.body.birthday);
+      }
+      if (req.body.pushToggle!==null) {
+        user.push_toggle = req.body.pushToggle;
       }
       user.save(function (err) {
         if (err) {

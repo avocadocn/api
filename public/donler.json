@@ -117,6 +117,16 @@
             "type": "string",
             "in": "path",
             "default": "53aa707a11fd597b3e1be260"
+          },
+          {
+            "name": "reponseKey",
+            "description": "需要返回的key",
+            "required": false,
+            "type": "string",
+            "in": "query",
+            "enum": [
+              "pushToggle"
+            ]
           }
         ],
         "responses": {
@@ -201,6 +211,13 @@
             "type": "string",
             "in": "formData",
             "format": "date-time"
+          },
+          {
+            "name": "pushToggle",
+            "description": "免打扰",
+            "required": false,
+            "type": "boolean",
+            "in": "formData"
           }
         ],
         "responses": {
@@ -1442,7 +1459,7 @@
             "description": "成功",
             "schema": {
               "type": "array",
-              "item": {
+              "items": {
                 "$ref": "Member"
               }
             }

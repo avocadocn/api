@@ -142,7 +142,7 @@ var UserSchema = new Schema({
         default: false
     },
     device:[_device],
-    push_toggle:{                   //推送开关
+    push_toggle:{                   //免打扰开关 false为接收push
         type:Boolean,
         default:false
     },
