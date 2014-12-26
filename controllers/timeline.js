@@ -50,7 +50,7 @@ var formatTime = function(start_time,end_time){
         time_text =  days + '天';
       }
       else if(hours>=1){
-        time_text = hours + '小时';
+        time_text = hours + '时';
       }
       else if(minutes>=1){
         time_text =  minutes + '分'  ;
@@ -76,7 +76,7 @@ var formatTime = function(start_time,end_time){
         time_text =  days + '天';
       }
       else if(hours>=1){
-        time_text = hours + '小时';
+        time_text = hours + '时';
       }
       else if(minutes>=1){
         time_text =  minutes + '分'  ;
@@ -133,6 +133,7 @@ var formatrestTime = function(start_time,end_time){
  */
 var formatCampaign = function(_campaign,user){
   var now = new Date();
+  var photos = _campaign.photo_album.photos || [];
   var temp = {
     '_id':_campaign._id,
     'active':_campaign.active,
@@ -152,7 +153,11 @@ var formatCampaign = function(_campaign,user){
     'tags':_campaign.tags,
     'campaign_mold':_campaign.campaign_mold,
     'campaign_unit':_campaign.campaign_unit,
-    'photo_album':_campaign.photo_album,
+    'photo_album': {
+      '_id': _campaign.photo_album._id,
+      'photos': photos.slice(-10, photos.length),
+      'name': _campaign.photo_album.name
+    },
     'campaign_type':_campaign.campaign_type,
     'is_start': _campaign.start_time <= Date.now(),
     'is_end': _campaign.end_time <= Date.now()
@@ -166,29 +171,40 @@ var formatCampaign = function(_campaign,user){
   _campaign.members.forEach(function (member) {
     memberIds.push(member._id);
   });
-  //temp.components = _campaign.formatComponents();
   var role = auth.getRole(user, {
     companies: _campaign.cid,
     teams: _campaign.tid,
     users: memberIds
   });
-  var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
-  var allow = auth.auth(role, [
-    'quitCampaign',joinTaskName
-  ]);
-  if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
-    allow[joinTaskName]=false;
-  }
-  if(role.team=='leader' && [4,5,7,9].indexOf(_campaign.campaign_type)>-1){
-    var provokeRole = auth.getRole(user, {
-      companies: _campaign.cid,
-      teams: [_campaign.tid[0]]
-    });
-    var provokeAllow = auth.auth(provokeRole, [
-      'sponsorProvoke'
+  if(_campaign.confirm_status) {
+    var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
+    var allow = auth.auth(role, [
+      'quitCampaign',joinTaskName
     ]);
-    allow.quitProvoke = provokeAllow.sponsorProvoke;
-    allow.dealProvoke = !provokeAllow.sponsorProvoke;
+    if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
+      allow[joinTaskName]=false;
+    }
+  }
+  else {
+    if(role.team=='leader' && [4,5,7,9].indexOf(_campaign.campaign_type)>-1){
+      var allow = {};
+      var provokeRole = auth.getRole(user, {
+        companies: _campaign.cid,
+        teams: [_campaign.tid[0]]
+      });
+      var provokeAllow = auth.auth(provokeRole, [
+        'sponsorProvoke'
+      ]);
+      allow.quitProvoke = provokeAllow.sponsorProvoke;
+      provokeRole = auth.getRole(user, {
+        companies: _campaign.cid,
+        teams: [_campaign.tid[1]]
+      });
+      provokeAllow = auth.auth(provokeRole, [
+        'sponsorProvoke'
+      ]);
+      allow.dealProvoke = provokeAllow.sponsorProvoke;
+    }
   }
 
   temp.allow = allow;
@@ -241,19 +257,15 @@ module.exports = function (app) {
         else if(req.params.requestType=='user'){
           cacheName ='UserPageCampaignDateRecord';
           options['campaign_unit.member._id'] = mongoose.Types.ObjectId(requestId);
-          if(!req.query.unfinishFlag){
-            options.finish=true;
-            finishLimit ='1';
-          }
         }
         else if(req.params.requestType=='company'){
           cacheName ='CompanyPageCampaignDateRecord';
           options['cid'] = mongoose.Types.ObjectId(requestId);
-          if(!req.query.unfinishFlag){
+        }
+        if(!req.query.unfinishFlag){
             options.finish=true;
             finishLimit ='1';
           }
-        }
         cache.createCache(cacheName);
         var dateRecord = cache.get(cacheName, requestId+finishLimit);
         if (dateRecord) {
@@ -504,6 +516,9 @@ module.exports = function (app) {
         }
         else if(requestType=='company'){
           options['cid'] = mongoose.Types.ObjectId(requestId);
+        }
+        if(!req.query.unfinishFlag){
+          options.finish=true;
         }
         Campaign.paginate(options,
           parseInt(req.query.page) || 1,10,function(err,pageCount,results,itemCount) {

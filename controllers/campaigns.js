@@ -119,7 +119,7 @@ var formatTime = function(start_time,end_time){
         time_text =  days + '天';
       }
       else if(hours>=1){
-        time_text = hours + '小时';
+        time_text = hours + '时';
       }
       else if(minutes>=1){
         time_text =  minutes + '分'  ;
@@ -254,8 +254,9 @@ var formatCampaign = function(_campaign,user){
     }
   }
   else {
+    var allow = {};
     if(role.team=='leader' && [4,5,7,9].indexOf(_campaign.campaign_type)>-1){
-      var allow = {};
+
       var provokeRole = auth.getRole(user, {
         companies: _campaign.cid,
         teams: [_campaign.tid[0]]

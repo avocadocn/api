@@ -233,7 +233,7 @@ donlerValidator.combineMsg = function (msg) {
 };
 
 validators.required = function (name, value, callback) {
-  if (!value || value === '') {
+  if (value==undefined) {
     var msg = util.format('%s不能为空', name);
     callback(false, msg);
   } else {
