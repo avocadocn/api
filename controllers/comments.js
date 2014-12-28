@@ -390,7 +390,9 @@ module.exports = function (app) {
       if (req.photo) {
         comment.photos = [{
           _id: req.photo._id,
-          uri: req.photo.uri
+          uri: req.photo.uri,
+          width: req.photo.width,
+          height: req.photo.height
         }];
       }
       if (req.body && req.body.content) {
