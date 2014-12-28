@@ -244,7 +244,8 @@ var formatCampaign = function(_campaign,user){
     'photo_album': {
       '_id': _campaign.photo_album._id,
       'photos': photos.slice(-10, photos.length),
-      'name': _campaign.photo_album.name
+      'name': _campaign.photo_album.name,
+      'moreFlag':photos.length>10
     },
     'campaign_type':_campaign.campaign_type,
     'is_start': _campaign.start_time <= Date.now(),
