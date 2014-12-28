@@ -120,7 +120,11 @@ module.exports = function (app) {
 
       var query = {
         'owner.teams': req.query.ownerId,
-        hidden: false
+        'hidden': false,
+        '$nor': [
+          { 'owner.model': 'Campaign' },
+          { 'photo_count': 0 }
+        ]
       };
       if (req.query.createDate) {
         query.create_date = { '$lt': new Date(req.query.createDate) };
