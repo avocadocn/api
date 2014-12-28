@@ -193,6 +193,26 @@ var formatrestTime = function(start_time,end_time){
   }
   return restTime;
 }
+var sortByUploadDate = function(a, b) {
+  console.log(b.upload_date - a.upload_date)
+  return  b.upload_date - a.upload_date;
+};
+/**
+ * 按照点击数由大到小排序照片
+ * @param  {Object} a Photo model
+ * @param  {Object} b
+ * @return {Boolean}
+ */
+var sortByClick = function(a, b) {
+  // 兼容旧数据，旧的数据没有click属性
+  if (!a.click) {
+    a.click = 0;
+  }
+  if (!b.click) {
+    b.click = 0;
+  }
+  return b.click - a.click;
+};
 /**
  * [formatCampaign description]
  * @param  {[type]} campaign 需要格式化的活动
@@ -202,6 +222,7 @@ var formatrestTime = function(start_time,end_time){
 var formatCampaign = function(_campaign,user){
   var now = new Date();
   var photos = _campaign.photo_album.photos || [];
+  photos.sort(sortByUploadDate);
   var temp = {
     '_id':_campaign._id,
     'active':_campaign.active,

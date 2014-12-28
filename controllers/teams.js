@@ -254,6 +254,7 @@ module.exports = function (app) {
     getTeams: function(req, res) {
       CompanyGroup
         .find(req.options)
+        .sort('-score.total')
         .exec()
         .then(function (companyGroups) {
           var formatCompanyGroups = [];
@@ -283,7 +284,6 @@ module.exports = function (app) {
                 uri: originFamilyPhotos[j].uri
               });
             }
-            cache.createCache('campaignCount');
             var briefTeam = {
               _id: companyGroups[i]._id,
               name: companyGroups[i].name,
@@ -299,7 +299,7 @@ module.exports = function (app) {
               cid: companyGroups[i].cid,
               familyPhotos: familyPhotos,
               lastCampaign: companyGroups[i].last_campaign,
-              campaignCount: cache.get('campaignCount', companyGroups[i]._id.toString())
+              score: companyGroups[i].score
             };
             // 判断用户是否加入了该小队
             if (req.user.provider === 'user') {
