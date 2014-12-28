@@ -358,7 +358,19 @@ module.exports = function (app) {
         .sort('-upload_date')
         .exec()
         .then(function (photos) {
-          res.status(200).send(photos);
+          var resPhotos = [];
+          photos.forEach(function (photo) {
+            resPhotos.push({
+              _id: photo._id,
+              uri: photo.uri,
+              width: photo.width,
+              height: photo.height,
+              name: photo.name,
+              uploadUser: photo.upload_user,
+              uploadDate: photo.upload_date
+            });
+          });
+          res.status(200).send(resPhotos);
         })
         .then(null, function (err) {
           log(err);
