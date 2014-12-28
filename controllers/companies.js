@@ -22,6 +22,7 @@ var auth = require('../services/auth.js');
 var donlerValidator = require('../services/donler_validator.js');
 var uploader = require('../services/uploader.js');
 var syncData = require('../services/sync_data.js');
+var tools = require('../tools/tools.js');
 
 
 
@@ -248,11 +249,10 @@ module.exports = function (app) {
       });
 
       //生成随机邀请码
-      var salt = new Buffer(crypto.randomBytes(16).toString('base64'), 'base64');
-      company.invite_key = crypto.pbkdf2Sync(Date.now().toString(), salt, 10000, 6).toString('base64');
+      company.invite_key = tools.randomAlphaNumeric(8);
       req.company = company;
 
-      // todo 添加3个企业注册邀请码
+      // 添加3个企业注册邀请码
       company.register_invite_code = [];
       var code_count = 0;
       async.whilst(
