@@ -189,7 +189,8 @@ var socketPush = function(campaign, comment, joinedUids, unjoinedUids){
     '_id': comment._id,
     'poster': comment.poster,
     'createDate': comment.create_date,
-    'content': comment.content
+    'content': comment.content,
+    'randomId': comment.randomId
   };
   if(comment.photos){
     socketComment.photos = comment.photos;
@@ -299,13 +300,15 @@ module.exports = function (app) {
       var photoAlbum = req.photoAlbum;
 
       var imgSize;
+      var randomId;
       uploader.uploadImg(req, {
         fieldName: 'photo',
         targetDir: '/public/img/photo_album',
         subDir: req.user.getCid().toString(),
         saveOrigin: true,
         getFields: function (fields) {
-          // console.log(fields);
+          randomId = fields.randomId[0];
+          req.randomId = randomId;
         },
         getSize: function (size) {
           imgSize = size;
@@ -389,7 +392,6 @@ module.exports = function (app) {
       comment.host_id = host_id;
       comment.poster = poster;
       comment.create_date = Date.now();
-
       if (req.photo) {
         comment.photos = [{
           _id: req.photo._id,
@@ -444,6 +446,13 @@ module.exports = function (app) {
               }
             }
             //---socket
+            if(req.body.randomId){
+              comment.randomId=req.body.randomId;
+            }
+            if (req.randomId) {
+              comment.randomId=req.randomId;
+            }
+            // console.log(comment);
             socketPush(campaign, comment, joinedUids, unjoinedUids);
 
             campaign.save(function (err) {
