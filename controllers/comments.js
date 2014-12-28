@@ -304,6 +304,9 @@ module.exports = function (app) {
         targetDir: '/public/img/photo_album',
         subDir: req.user.getCid().toString(),
         saveOrigin: true,
+        getFields: function (fields) {
+          // console.log(fields);
+        },
         getSize: function (size) {
           imgSize = size;
         },

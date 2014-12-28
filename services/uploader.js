@@ -25,6 +25,9 @@ exports.tempDir = tempDir;
  *    subDir: '123',
  *    saveOrigin: true, // 是否保留原图
  *
+ *    // 获取请求中的其它参数
+ *    getFields: function (fields) {
+ *    },
  *    // (必需)上传成功的回调
  *    success: function (url, oriName, oriCallback) {
  *      // url为保存成功后的带日期目录的文件路径，如2014-9/21912323434.jpg
@@ -52,6 +55,10 @@ exports.uploadImg = function (req, options) {
   });
 
   form.parse(req, function (err, fields, files) {
+
+    if (options.getFields) {
+      options.getFields(fields);
+    }
 
     if (err) {
       options.error(err);
