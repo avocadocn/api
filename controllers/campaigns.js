@@ -194,7 +194,6 @@ var formatrestTime = function(start_time,end_time){
   return restTime;
 }
 var sortByUploadDate = function(a, b) {
-  console.log(b.upload_date - a.upload_date)
   return  b.upload_date - a.upload_date;
 };
 /**
