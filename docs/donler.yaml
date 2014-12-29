@@ -3855,10 +3855,10 @@ definitions:
         type: boolean
   Keyword:
     title: Keyword
-    required:
-      - name
     properties:
       name:
+        type: string
+      email:
         type: string
   CampaignMold:
     title: CampaignMold

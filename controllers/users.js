@@ -45,11 +45,11 @@ module.exports = function (app) {
       var email = req.body.email;
       var cid = req.body.cid;
       var inviteKey = req.body.inviteKey;
-      if(!cid) {
-        return res.status(400).send({msg:'数据输入有误'});
-      }
+      // if(!cid) {
+      //   return res.status(400).send({msg:'数据输入有误'});
+      // }
       if(email){
-        User.findOne({cid:cid,username:email},{mail_active:1}).exec().then(function(user){
+        User.findOne({username:email},{mail_active:1}).exec().then(function(user){
           if(user){
             if(user.mail_active) {
               //这个邮箱已激活、并注册完毕
@@ -61,23 +61,23 @@ module.exports = function (app) {
             }
           }
           else{
-            Company.findOne({'_id':cid},function(err,company){
-              if(company.email.domain.indexOf(email.split("@")[1])===-1){
-                //这个邮箱后缀不对
-                return res.status(200).send({'active':4});
-              }
-              else{
-                //这个邮箱没用过,可以注册
-                return res.status(200).send({'active':1});
-              }
-            });
+            // Company.findOne({'_id':cid},function(err,company){
+            //   if(company.email.domain.indexOf(email.split("@")[1])===-1){
+            //     //这个邮箱后缀不对
+            //     return res.status(200).send({'active':4});
+            //   }
+            //   else{
+            //这个邮箱没用过,可以注册
+            return res.status(200).send({'active':1});
+            //   }
+            // });
           }
         })
         .then(null,function(err){
           log(err);
           return res.status(500).send({'msg':'数据库错误'});
         });
-      }else if(inviteKey) {
+      }else if(inviteKey && cid) {
         Company.findOne({_id:cid}).exec().then(function(company){
           if(company){
             if(inviteKey===company.invite_key){
