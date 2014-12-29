@@ -13,7 +13,17 @@ var Photo = new Schema({
     type: Number,
     default: 0
   },
-  name: String
+  width: Number,
+  height: Number,
+  name: String,
+  upload_user: {
+    _id: Schema.Types.ObjectId,
+    name: String,
+    type: {
+      type: String,
+      enum: ['user', 'hr']
+    }
+  }
 });
 
 

@@ -321,7 +321,10 @@ module.exports = function (app) {
                 uri: photo.uri,
                 upload_date: photo.upload_date,
                 click: photo.click,
-                name: photo.name
+                name: photo.name,
+                width: photo.width,
+                height: photo.height,
+                upload_user: photo.upload_user
               });
               photoAlbum.update_user = uploadUser;
               photoAlbum.update_date = Date.now();

@@ -45,7 +45,15 @@ var Comment = new Schema({
     _id: Schema.Types.ObjectId,
     uri: String,
     width: Number,
-    height: Number
+    height: Number,
+    upload_user: {
+      _id: Schema.Types.ObjectId,
+      name: String,
+      type: {
+        type: String,
+        enum: ['user', 'hr']
+      }
+    }
   }]
 });
 
