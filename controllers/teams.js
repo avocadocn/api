@@ -18,31 +18,33 @@ var log = require('../services/error_log.js'),
   userScore = require('../services/user_score.js'),
   tools = require('../tools/tools.js'),
   async = require('async');
-
+var personalTeamScoreLimit = 10;
 module.exports = function (app) {
 
   return {
    
     createTeams : function(req, res) {
       //权限判断
+      var companyId = req.body.companyId || req.user.cid || req.user._id;
       var role = auth.getRole(req.user, {
-        companies:[req.body.companyId]
+        companies:[companyId]
       });
       var allow = auth.auth(role,['createTeams']);
       var groupLevel = role.company==='hr' ? 0 : 1; //0为官方
       var createRule = {'limit':1};//暂时一人只能创建一个
-      var userCanNotCreate = groupLevel===1? (req.user.established_team && req.user.established_team.length>=createRule.limit ? true: false) : false;
+      var userCanNotCreate = groupLevel===1? (req.user.score.total < personalTeamScoreLimit || req.user.established_team && req.user.established_team.length>=createRule.limit ? true: false) : false;
       if(!allow.createTeams || userCanNotCreate) {
         return res.status(403).send({msg: '权限错误'});
       }
       //执行
-      Company.findById(req.body.companyId).exec()
+      Company.findById(companyId).exec()
       .then(function (company) {
         if (!company) {
           return res.status(400).send({ msg: '没有找到对应的公司' });
         } else {
           var selectedGroups = req.body.selectedGroups;
           var i = selectedGroups.length;
+          var teamId;
           async.whilst(
             function () { return i >0; },
             function (callback) {
@@ -106,6 +108,7 @@ module.exports = function (app) {
                             log(err);
                             callback(err);
                           }else{
+                            teamId = companyGroup._id;
                             callback(null);
                           }
                         });
@@ -123,7 +126,14 @@ module.exports = function (app) {
                 return res.status(500).send({ msg: '保存失败' });
               }
               else{
-                return res.status(200).send({ msg: '保存成功' });
+                var result = {}
+                if(groupLevel===1) {
+                  result.teamId = teamId;
+                }
+                else{
+                  result.msg='保存成功';
+                }
+                return res.status(200).send(result);
               }
             }
           );
@@ -176,8 +186,17 @@ module.exports = function (app) {
         // campaignCount: team.score.campaign/10,
         homeCourts: team.home_court,
         cid: team.cid,
-        familyPhotos: familyPhotos
+        familyPhotos: familyPhotos,
+        score: team.score,
+        officialTeam: team.poster.role=='Personal' ? false : true
       };
+      if(team.poster.role=='Personal') {
+        briefTeam.poster = {
+          _id:team.poster._id._id,
+          nickname: team.poster._id.nickname,
+          photo: team.poster._id.photo
+        }
+      }
       // 判断用户是否加入了该小队
       if (req.user.provider === 'user') {
         briefTeam.hasJoined = team.hasMember(req.user._id);
@@ -206,7 +225,6 @@ module.exports = function (app) {
       var options = {
         gid: {'$ne':'0'}
       };
-      console.log(req.query.personalFlag, typeof req.query.personalFlag)
       if(req.query.personalFlag=='true') {
         options['poster.role'] ='Personal';
       }
@@ -263,6 +281,7 @@ module.exports = function (app) {
     getTeams: function(req, res) {
       CompanyGroup
         .find(req.options)
+        .populate('poster._id')
         .sort('-score.total')
         .exec()
         .then(function (companyGroups) {
@@ -308,8 +327,16 @@ module.exports = function (app) {
               cid: companyGroups[i].cid,
               familyPhotos: familyPhotos,
               lastCampaign: companyGroups[i].last_campaign,
-              score: companyGroups[i].score
+              score: companyGroups[i].score,
+              officialTeam: companyGroups[i].poster.role=='Personal' ? false : true
             };
+            if(companyGroups[i].poster.role=='Personal') {
+              briefTeam.poster = {
+                _id:companyGroups[i].poster._id._id,
+                nickname: companyGroups[i].poster._id.nickname,
+                photo: companyGroups[i].poster._id.photo
+              }
+            }
             // 判断用户是否加入了该小队
             if (req.user.provider === 'user') {
               briefTeam.hasJoined = companyGroups[i].hasMember(req.user._id);

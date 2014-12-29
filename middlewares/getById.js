@@ -14,7 +14,7 @@ module.exports = {
       return res.status(400).send({ msg: 'teamId不能为空' });
     }
 
-    CompanyGroup.findById(req.params.teamId).exec()
+    CompanyGroup.findById(req.params.teamId).populate('poster._id').exec()
     .then(function (companyGroup) {
       if (!companyGroup) {
         res.status(400).send({ msg: '没有找到对应的小队' });
