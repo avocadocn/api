@@ -359,23 +359,23 @@ var _postCampaign = function (param, callback) {
         log(err);
       });
 
-    // 更新小队的活动数到缓存中，即使失败了，依然让活动发成功
-    // todo 待测试
-    var cacheName = 'teamCampaignCount';
-    cache.createCache(cacheName);
+    // // 更新小队的活动数到缓存中，即使失败了，依然让活动发成功
+    // // todo 待测试
+    // var cacheName = 'teamCampaignCount';
+    // cache.createCache(cacheName);
 
-    campaign.tid.forEach(function (tid) {
-      Campaign.find({
-        tid: tid,
-        active: true
-      }).count(function (err, count) {
-        if (err) {
-          log(err);
-        } else {
-          cache.set(cacheName, tid.toString(), count);
-        }
-      });
-    });
+    // campaign.tid.forEach(function (tid) {
+    //   Campaign.find({
+    //     tid: tid,
+    //     active: true
+    //   }).count(function (err, count) {
+    //     if (err) {
+    //       log(err);
+    //     } else {
+    //       cache.set(cacheName, tid.toString(), count);
+    //     }
+    //   });
+    // });
 
   }
   //---save

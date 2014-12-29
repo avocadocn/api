@@ -1005,6 +1005,13 @@
             "required": false,
             "type": "string",
             "in": "query"
+          },
+          {
+            "name": "personalFlag",
+            "description": "是否只获取个人小队，是则获取个人小队，否则为官方小队，空为全部",
+            "required": false,
+            "type": "boolean",
+            "in": "query"
           }
         ],
         "responses": {

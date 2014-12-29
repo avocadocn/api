@@ -203,7 +203,16 @@ module.exports = function (app) {
     },
 
     getTeamsSetQueryOptions: function (req, res, next) {
-      var options = {};
+      var options = {
+        gid: {'$ne':'0'}
+      };
+      console.log(req.query.personalFlag, typeof req.query.personalFlag)
+      if(req.query.personalFlag=='true') {
+        options['poster.role'] ='Personal';
+      }
+      else if(req.query.personalFlag!=undefined) {
+        options['poster.role'] ='HR';
+      }
       req.options = options;
       switch (req.query.hostType) {
       case 'company':
