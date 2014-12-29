@@ -1152,6 +1152,39 @@
         }
       }
     },
+    "/teams/{teamId}/update": {
+      "put": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "升级个人小队",
+        "operationId": "updatePersonalTeam",
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队Id",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "default": "53aa701011fd597b3e1be25d"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/teams/{teamId}/actions/open": {
       "post": {
         "tags": [

@@ -67,6 +67,8 @@ var CompanyGroup = new Schema({
         type: String,
         ref: 'Group'
     },
+    //仅个人小队有该属性
+    level:Number,
     poster:{
         role: {
             type: String,
@@ -183,7 +185,26 @@ CompanyGroup.virtual('groupType').set(function(groupType) {
 }).get(function(){
     return this.group_type;
 });
-
+CompanyGroup.virtual('memberLimit').get(function(){
+    var memberLimit;
+    if(this.level ==1){
+        memberLimit = 10;
+    }
+    switch(this.level) {
+        case 1:
+            memberLimit = 10;
+            break;
+        case 2:
+            memberLimit = 20;
+            break;
+        case 3:
+            memberLimit = 50;
+            break;
+        default:
+            memberLimit = 0;
+    }
+    return memberLimit;
+});
 /**
  * methods:
  */
@@ -205,6 +226,31 @@ CompanyGroup.methods = {
             }
         }
         return false;
+    },
+    updateLevel: function(score) {
+        switch(this.level) {
+            case 1:
+                if(score>=200){
+                    this.level =2;
+                    return true;
+                }
+                else {
+                    return false;
+                }
+                break;
+            case 2:
+                if(score>=500){
+                    this.level =3;
+                    return true;
+                }
+                else {
+                    return false;
+                }
+                break;
+            case 3:
+            default:
+                return false;
+    }
     }
 };
 

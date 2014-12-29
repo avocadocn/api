@@ -239,6 +239,10 @@ var registeredTasks = {
   getUserPhotos: {
     company: ['hr', 'member'],
     user: ['self']
+  },
+  // 升级个人小队
+  updateTeam: {
+    team: ['leader']
   }
 
 };

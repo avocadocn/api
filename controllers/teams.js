@@ -70,6 +70,7 @@ module.exports = function (app) {
                 companyGroup.member = [];
                 companyGroup.leader.push(member);
                 companyGroup.member.push(member);
+                companyGroup.level = 1;
               }else{
                 companyGroup.poster = {role: 'HR'};
               }
@@ -196,6 +197,7 @@ module.exports = function (app) {
           nickname: team.poster._id.nickname,
           photo: team.poster._id.photo
         }
+        briefTeam.level = team.level;
       }
       // 判断用户是否加入了该小队
       if (req.user.provider === 'user') {
@@ -336,6 +338,7 @@ module.exports = function (app) {
                 nickname: companyGroups[i].poster._id.nickname,
                 photo: companyGroups[i].poster._id.photo
               }
+              briefTeam.level = companyGroups[i].level;
             }
             // 判断用户是否加入了该小队
             if (req.user.provider === 'user') {
@@ -547,6 +550,9 @@ module.exports = function (app) {
       if(!requestAllow.joinTeamOperation){
         return res.status(403).send({msg: '权限错误'});
       }
+      if(team.memberLimit>0 &&team.memberLimit<= team.member.length){
+        return res.status(400).send({msg: '小队人数已经达到上限'});
+      }
       var resourceRole = auth.getRole(user,{
         companies:[user.getCid()],
         teams:[team._id],
@@ -755,9 +761,37 @@ module.exports = function (app) {
         else
          return res.send(companyGroups);
       });
+    },
+    updatePersonalTeam: function(req, res) {
+      var team = req.companyGroup;
+      if(!team.poster._id) {
+        return res.status(400).send({msg:'该小队为官方小队无法进行升级'});
+      }
+      var requestRole = auth.getRole(req.user, {
+        teams:[team._id]
+      });
+      var requestAllow = auth.auth(requestRole,['updateTeam']);
+      if(!requestAllow.updateTeam){
+        return res.status(403).send({msg: '您没有权限进行升级'});
+      }
+      var score = req.user.score.total;
+      if(team.updateLevel(score)){
+        team.save(function(err){
+          if(!err) {
+            return res.send({msg:'小队升级成功',level:team.level});
+          }
+          else {
+            return res.status(400).send({msg:'小队升级失败'});
+          }
+        })
+      }
+      else {
+        return res.status(403).send({msg:'您的积分不足，无法进行升级'});
+      }
+      
     }
-
 
 
   };
 };
+
