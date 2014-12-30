@@ -618,7 +618,6 @@ module.exports = function (app) {
       else{
         option.gid = '0';
       }
-      console.log(req.query.type);
       if(req.query.type === 'official' ) {
         option.poster = {role : 'HR'};
       }else if(req.query.type === 'unofficial') {

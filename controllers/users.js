@@ -459,6 +459,9 @@ module.exports = function (app) {
       if (req.body.pushToggle!==null) {
         user.push_toggle = req.body.pushToggle;
       }
+      if (req.body.introduce!==null) {
+        user.introduce = req.body.introduce;
+      }
       user.save(function (err) {
         if (err) {
           log(err);

@@ -196,7 +196,7 @@ module.exports = function (app) {
       // 判断用户是否加入了该小队
       if (req.user.provider === 'user') {
         briefTeam.hasJoined = team.hasMember(req.user._id);
-        briefTeam.isLeader = companyGroups[i].isLeader(req.user._id);
+        briefTeam.isLeader = team.isLeader(req.user._id);
       }
       return res.status(200).send(briefTeam);
     },
