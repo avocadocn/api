@@ -522,6 +522,15 @@ paths:
             - department
             - team
           in: query
+        - name: type
+          description: 获取类型
+          required: true
+          type: string
+          enum:
+            - all
+            - official
+            - unofficial
+          in: query
       responses:
         "200":
           description: 统计数据
