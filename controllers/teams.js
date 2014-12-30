@@ -18,7 +18,7 @@ var log = require('../services/error_log.js'),
   userScore = require('../services/user_score.js'),
   tools = require('../tools/tools.js'),
   async = require('async');
-var personalTeamScoreLimit = 10;
+var personalTeamScoreLimit = 100;
 module.exports = function (app) {
 
   return {
@@ -196,6 +196,7 @@ module.exports = function (app) {
       // 判断用户是否加入了该小队
       if (req.user.provider === 'user') {
         briefTeam.hasJoined = team.hasMember(req.user._id);
+        briefTeam.isLeader = companyGroups[i].isLeader(req.user._id);
       }
       return res.status(200).send(briefTeam);
     },
@@ -337,6 +338,7 @@ module.exports = function (app) {
             // 判断用户是否加入了该小队
             if (req.user.provider === 'user') {
               briefTeam.hasJoined = companyGroups[i].hasMember(req.user._id);
+              briefTeam.isLeader = companyGroups[i].isLeader(req.user._id);
             }
             formatCompanyGroups.push(briefTeam);
           }

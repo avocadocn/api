@@ -227,6 +227,19 @@ CompanyGroup.methods = {
         }
         return false;
     },
+    /**
+     * 用户是否是这个队的成员
+     * @param  {String}  uid
+     * @return {Boolean}
+     */
+    isLeader: function (uid) {
+        for (var i = 0; i < this.leader.length; i++) {
+            if (uid.toString() === this.leader[i]._id.toString()) {
+                return true;
+            }
+        }
+        return false;
+    },
     updateLevel: function(score) {
         switch(this.level) {
             case 1:
