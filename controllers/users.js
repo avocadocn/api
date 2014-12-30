@@ -308,7 +308,8 @@ module.exports = function (app) {
               },
               tids: tids,
               lastCommentTime: user.last_comment_time,
-              score: user.score.total || 0
+              score: user.score.total || 0,
+              tags: user.tags
             };
             res.status(200).send(completeData);
           } else if (allow.getUserBriefData) {
@@ -330,7 +331,8 @@ module.exports = function (app) {
               },
               phone: user.phone,
               qq: user.qq,
-              score: user.score.total || 0
+              score: user.score.total || 0,
+              tags: user.tags
             };
             res.status(200).send(briefData);
           } else if (allow.getUserMinData) {
@@ -396,6 +398,11 @@ module.exports = function (app) {
           name: '生日',
           value: req.body.birthday,
           validators: ['date']
+        },
+        tag: {
+          name: '标签',
+          value: req.body.tag,
+          validators: [donlerValidator.minLength(1), donlerValidator.maxLength(20)]
         }
       }, 'complete', function (pass, msg) {
         if (pass) {
@@ -461,6 +468,15 @@ module.exports = function (app) {
       }
       if (req.body.introduce!==null) {
         user.introduce = req.body.introduce;
+      }
+      if(req.body.tag) {
+        var tag = req.body.tag;
+        if(user.tags.indexOf(tag)===-1) user.tags.push(tag);
+      }
+      if(req.body.deleteTag) {
+        var tag = req.body.deleteTag;
+        var index = user.tags.indexOf(tag);
+        if(index>-1) user.tags.splice(index, 1);
       }
       user.save(function (err) {
         if (err) {

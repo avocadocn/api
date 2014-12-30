@@ -183,7 +183,9 @@ var UserSchema = new Schema({
             type: Number,
             default: 0
         }
-    }
+    },
+    //自己写的标签
+    tags: [String]
 });
 
 /**

@@ -225,6 +225,20 @@
             "required": false,
             "type": "boolean",
             "in": "formData"
+          },
+          {
+            "name": "tag",
+            "description": "增加的tag",
+            "required": false,
+            "type": "string",
+            "in": "formData"
+          },
+          {
+            "name": "deleteTag",
+            "description": "要删除的tag",
+            "required": false,
+            "type": "string",
+            "in": "formData"
           }
         ],
         "responses": {
@@ -3687,6 +3701,13 @@
           "type": "string",
           "format": "date-time",
           "description": "上次发表评论的时间"
+        },
+        "tags": {
+          "type": "array",
+          "description": "个人标签",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
