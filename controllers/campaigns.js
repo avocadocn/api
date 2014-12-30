@@ -736,14 +736,12 @@ module.exports = function (app) {
                         for (var k = 0; k < teams.length; k++) {
                           var index = tools.arrayObjectIndexOf(teams[k].leader, member._id, '_id');
                           if (index !== -1) {
-                            console.log(teams[k].leader, member._id)
                             member.set('isLeader',true,{strict:false});
                             break;
                           }
                         }
                       }
                     }
-                    console.log(campaign_unit)
                     callback(null,campaign_unit);
                   })
                   .then(null, function (err) {

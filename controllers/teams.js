@@ -80,6 +80,7 @@ module.exports = function (app) {
                   callback(err);
                 }
                 else{
+                  teamId = companyGroup._id;
                   company.team.push({
                     'gid': companyGroup.gid,
                     'group_type': companyGroup.group_type,
@@ -109,7 +110,6 @@ module.exports = function (app) {
                             log(err);
                             callback(err);
                           }else{
-                            teamId = companyGroup._id;
                             callback(null);
                           }
                         });
@@ -127,13 +127,7 @@ module.exports = function (app) {
                 return res.status(500).send({ msg: '保存失败' });
               }
               else{
-                var result = {}
-                if(groupLevel===1) {
-                  result.teamId = teamId;
-                }
-                else{
-                  result.msg='保存成功';
-                }
+                var result = {teamId : teamId, msg: '保存成功'};
                 return res.status(200).send(result);
               }
             }
