@@ -229,6 +229,7 @@ var formatCampaign = function(_campaign,user){
     'theme':_campaign.theme,
     'content':_campaign.content ? _campaign.content.replace(/<\/?[^>]*>/g, ''):'',
     'member_max':_campaign.member_max,
+    'member_min':_campaign.member_min,
     'members_count':_campaign.members.length,
     'location':_campaign.location,
     'start_time':_campaign.start_time,
@@ -266,9 +267,9 @@ var formatCampaign = function(_campaign,user){
     users: memberIds
   });
   if(_campaign.confirm_status) {
-    var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
+    var joinTaskName = _campaign.campaign_type==1?'Company':'Team';
     var allow = auth.auth(role, [
-      'quitCampaign',joinTaskName
+      'quitCampaign','join' + joinTaskName + 'Campaign','edit' + joinTaskName + 'Campaign'
     ]);
     if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
       allow[joinTaskName]=false;
