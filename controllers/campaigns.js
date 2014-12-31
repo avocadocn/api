@@ -12,11 +12,11 @@ var moment = require('moment'),
     xss = require('xss');
 var logController = require('../controllers/log'),
     messageController = require('../controllers/message'),
-    pushContoller = require('../controllers/push'),
     auth = require('../services/auth.js'),
     donlerValidator = require('../services/donler_validator.js'),
     log = require('../services/error_log.js'),
     cache = require('../services/cache/Cache'),
+    pushService = require('../services/push.js'),
     tools = require('../tools/tools.js');
 
 
@@ -313,30 +313,30 @@ var _postCampaign = function (param, callback) {
     campaign[attr] = param[attr];
   }
   campaign.deadline = param.deadline ? param.deadline : param.end_time;
-  var _user={
-    '_id':campaign.poster.uid||campaign.poster.cid,
-    'name':campaign.poster.uid ? campaign.poster.nickname:campaign.poster.cname,
-    'type':campaign.poster.uid ? 'hr':'user'
+  var _user = {
+    '_id': campaign.poster.uid || campaign.poster.cid,
+    'name': campaign.poster.uid ? campaign.poster.nickname : campaign.poster.cname,
+    'type': campaign.poster.uid ? 'hr' : 'user'
   };
-  var photoInfo= {
+  var photoInfo = {
     owner: {
       model: {
         // _id: campaign._id,
         type: 'Campaign'
       },
       companies: campaign.cid,
-      teams:  campaign.tid
+      teams: campaign.tid
     },
     name: moment(campaign.start_time).format("YYYY-MM-DD ") + campaign.theme,
-    update_user:_user,
-    create_user:_user
+    update_user: _user,
+    create_user: _user
   };
   //---Photo
   var photo_album = new PhotoAlbum();
-  for (var attr in photoInfo){
-    photo_album[attr]=photoInfo[attr];
+  for (var attr in photoInfo) {
+    photo_album[attr] = photoInfo[attr];
   }
-  photo_album.owner.model._id=campaign._id;
+  photo_album.owner.model._id = campaign._id;
 
   // 如果不是公司活动，则将活动的简略信息保存到小队的数据模型中，以便获取最近的活动
   // 这里即使更新失败也只是输出到日志，依然让活动发成功。
@@ -358,7 +358,7 @@ var _postCampaign = function (param, callback) {
             }
           });
         });
-        
+
       })
       .then(null, function (err) {
         log(err);
@@ -384,53 +384,102 @@ var _postCampaign = function (param, callback) {
 
   }
   //---save
-  photo_album.save(function(err) {
-    if(err){
+  photo_album.save(function (err) {
+    if (err) {
       log(err)
-      return callback('保存相册失败');
+      callback('保存相册失败');
+      return;
     }
-    else {
-      campaign.photo_album = photo_album._id;
 
-      campaign.components = [];
-      campaign.modularization = true;
-      var componentNames = [];
-      CampaignMold.findOne({'name':campaign.campaign_mold},function(err,mold){
-        if(err) return callback('查找活动类型失败');
-        else{
-          componentNames = mold.module;
-          if(campaign.campaign_unit.length!==2){//单组去除比分板
-            var scoreIndex = componentNames.indexOf('ScoreBoard');
-            if(scoreIndex>-1)
-              componentNames.splice(scoreIndex,1);
+    campaign.photo_album = photo_album._id;
+
+    campaign.components = [];
+    campaign.modularization = true;
+    var componentNames = [];
+    CampaignMold.findOne({'name': campaign.campaign_mold}, function (err, mold) {
+      if (err) {
+        callback('查找活动类型失败');
+        return;
+      }
+
+      componentNames = mold.module;
+      if (campaign.campaign_unit.length !== 2) {//单组去除比分板
+        var scoreIndex = componentNames.indexOf('ScoreBoard');
+        if (scoreIndex > -1)
+          componentNames.splice(scoreIndex, 1);
+      }
+      async.map(componentNames, function (componentName, asyncCallback) {
+        mongoose.model(componentName).establish(campaign, function (err, component) {
+          if (err) {
+            asyncCallback(err);
           }
-          async.map(componentNames, function (componentName, asyncCallback) {
-            mongoose.model(componentName).establish(campaign, function (err, component) {
-              if (err) { asyncCallback(err); }
-              else {
-                campaign.components.push({
-                  name: componentName,
-                  _id: component._id
-                });
-                asyncCallback(null, component);
+          else {
+            campaign.components.push({
+              name: componentName,
+              _id: component._id
+            });
+            asyncCallback(null, component);
+          }
+        });
+      }, function (err, results) {
+        if (err) {
+          callback('创建活动组件失败');
+          return;
+        }
+        campaign.save(function (err) {
+          if (err) {
+            callback('保存活动失败');
+            return;
+          }
+          // todo test push
+          var pushData;
+          if (campaign.campaign_type === 1) {
+            pushData = {
+              name: 'companyCampaign',
+              target: {
+                cid: campaign.cid
+              },
+              msg: {
+                body: '您有新活动: ' + campaign.theme,
+                description: '您有新活动: ' + campaign.theme,
+                title: '您的公司有新活动'
+              }
+            };
+          } else {
+            // 不是公司活动且不是挑战
+            if (campaign.confirm_status === true) {
+              pushData = {
+                name: 'teamCampaign',
+                target: {
+                  tid: campaign.tid
+                },
+                msg: {
+                  title: '您的小队有新活动',
+                  body: '您有新活动: ' + campaign.theme,
+                  description: '您有新活动: ' + campaign.theme
+                }
+              }
+            }
+          }
+
+          if (pushData) {
+            pushService.push(pushData, function (err) {
+              if (err) {
+                console.log(err);
+                if (err.stack) {
+                  console.log(err.stack);
+                }
               }
             });
-          }, function (err, results) {
-            if (err) { return callback('创建活动组件失败'); }
-            else {
-              campaign.save(function(err) {
-                if(err) callback('保存活动失败');
-                else {
-                  return callback(null,{'campaign_id':campaign._id,'photo_album_id':photo_album._id});
-                }
+          }
 
-              });
+          callback(null, {'campaign_id': campaign._id, 'photo_album_id': photo_album._id});
 
-            }
-          });
-        }
+        });
+
       });
-    }
+    });
+
 
   });
 };
@@ -1173,7 +1222,25 @@ module.exports = function (app) {
               });
               //若接受,则发动态、加积分
               if(status ===1){
-                pushContoller(app).campaign(campaignId);
+                // todo test push
+                pushService.push({
+                  name: 'teamCampaign',
+                  target: {
+                    tid: campaign.tid
+                  },
+                  msg: {
+                    title: '您的小队有新活动',
+                    body: '您有新活动: ' + campaign.theme,
+                    description: '您有新活动: ' + campaign.theme
+                  }
+                }, function (err) {
+                  if (err) {
+                    console.log(err);
+                    if (err.stack) {
+                      console.log(err.stack);
+                    }
+                  }
+                });
                 CompanyGroup.update({'_id':{'$in':campaign.tid}},{'$inc':{'score.provoke':15}},function (err,team){
                   if(err){
                     log('RESPONSE_PROVOKE_POINT_FAILED!',err);

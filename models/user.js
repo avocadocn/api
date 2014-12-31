@@ -133,6 +133,7 @@ var UserSchema = new Schema({
         version: String,
         device_id: String,
         device_type: String,
+        device_token: String,
         app_id: String,
         api_key: String
     }, // 上次登录的设备信息，如果注销则清除。

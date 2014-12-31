@@ -3,8 +3,8 @@
 var jwt = require('jsonwebtoken');
 var mongoose = require('mongoose');
 
-var headersKeys = ['x-app-id', 'x-api-key', 'x-device-id', 'x-device-type', 'x-platform', 'x-version'];
-var modelKeys = ['app_id', 'api_key', 'device_id', 'device_type', 'platform', 'version'];
+var headersKeys = ['x-app-id', 'x-api-key', 'x-device-id', 'x-device-type', 'x-platform', 'x-version', 'x-device-token'];
+var modelKeys = ['app_id', 'api_key', 'device_id', 'device_type', 'platform', 'version', 'device_token'];
 
 /**
  * 验证headers是否和user的tokenDevice一致
