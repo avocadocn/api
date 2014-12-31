@@ -166,6 +166,10 @@ var CompanyGroup = new Schema({
         last_month_member: {
             type: Number,
             default: 0
+        },
+        total_campaign: {
+            type: Number,
+            default: 0
         }
     },
     family: [familyPhoto],
