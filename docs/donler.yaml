@@ -173,6 +173,31 @@ paths:
           description: error
           schema:
             $ref: Error
+  /users/list/{companyId}:
+    get:
+      tags:
+        - users
+      operationId: getUserList
+      summary: 获取通讯录
+      produces:
+        - application/json
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+          default: 53aa6fc011fd597b3e1be250
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            type: array
+            $ref: User
+        default:
+          description: error
+          schema:
+            $ref: Error
   /users/validate:
     post:
       tags:
