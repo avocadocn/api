@@ -358,7 +358,7 @@ module.exports = function (app) {
       if(req.user.cid.toString() !== req.params.companyId){
         return res.sendStatus(403);
       }else{
-        User.find({'cid':req.params.companyId},{'email':1,'nickname':1})
+        User.find({'cid':req.params.companyId, 'active':true, 'mail_active':true},{'email':1,'nickname':1})
         .sort('nickname')
         .exec()
         .then(function (users){
