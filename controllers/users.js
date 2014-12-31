@@ -309,7 +309,8 @@ module.exports = function (app) {
               tids: tids,
               lastCommentTime: user.last_comment_time,
               score: user.score.total || 0,
-              tags: user.tags
+              tags: user.tags,
+              campaignCount:user.campaignCount || 0
             };
             res.status(200).send(completeData);
           } else if (allow.getUserBriefData) {

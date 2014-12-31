@@ -185,7 +185,8 @@ var UserSchema = new Schema({
         }
     },
     //自己写的标签
-    tags: [String]
+    tags: [String],
+    campaignCount:Number
 });
 
 /**

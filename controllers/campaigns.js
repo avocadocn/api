@@ -267,12 +267,16 @@ var formatCampaign = function(_campaign,user){
     users: memberIds
   });
   if(_campaign.confirm_status) {
-    var joinTaskName = _campaign.campaign_type==1?'Company':'Team';
+    var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
+    var edieTaskName = _campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
     var allow = auth.auth(role, [
-      'quitCampaign','join' + joinTaskName + 'Campaign','edit' + joinTaskName + 'Campaign'
+      'quitCampaign',joinTaskName,edieTaskName
     ]);
     if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
       allow[joinTaskName]=false;
+    }
+    if(_campaign.start_time<now ) {
+      allow[edieTaskName]=false;
     }
   }
   else {
@@ -788,6 +792,9 @@ module.exports = function (app) {
           var allow = auth.auth(role, [taskName]);
           if(!allow[taskName]){
             return res.status(403).send({msg:'您没有权限获取该活动'});
+          }
+          if(campaign.start_time<new Date()){
+            return res.status(400).send({msg:'活动已经开始，无法进行编辑'});
           }
           if (req.body.content) {
             campaign.content=xss(req.body.content);
