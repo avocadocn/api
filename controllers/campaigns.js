@@ -439,6 +439,7 @@ var _postCampaign = function (param, callback) {
               target: {
                 cid: campaign.cid
               },
+              campaignId: campaign._id,
               msg: {
                 body: '您有新活动: ' + campaign.theme,
                 description: '您有新活动: ' + campaign.theme,
@@ -453,6 +454,7 @@ var _postCampaign = function (param, callback) {
                 target: {
                   tid: campaign.tid
                 },
+                campaignId: campaign._id,
                 msg: {
                   title: '您的小队有新活动',
                   body: '您有新活动: ' + campaign.theme,
@@ -1228,6 +1230,7 @@ module.exports = function (app) {
                   target: {
                     tid: campaign.tid
                   },
+                  campaignId: campaign._id,
                   msg: {
                     title: '您的小队有新活动',
                     body: '您有新活动: ' + campaign.theme,

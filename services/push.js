@@ -20,6 +20,7 @@ var pushApi = '/push';
  *      // tid: [tid1, tid2] 小队活动需要提供此属性
  *      // uid: [uid1, uid2] 推送给个人需要提供此属性
  *    },
+ *    campaignId: campaign._id, // 如果是推送活动消息，则需要提供此属性
  *    msg: {
  *      body: '',
  *      title: '',
