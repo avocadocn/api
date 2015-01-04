@@ -295,6 +295,42 @@ UserSchema.methods = {
 
     getCid: function () {
         return this.cid;
+    },
+
+    /**
+     * 添加设备信息到用户的设备记录中
+     * @param {Object} headers req.headers
+     */
+    addDevice: function (headers) {
+        var headersKeys = ['x-device-id', 'x-device-type', 'x-platform', 'x-version', 'x-device-token'];
+        var modelKeys = ['device_id', 'device_type', 'platform', 'version', 'token'];
+        var device = {};
+        for (var i = 0; i < headersKeys.length; i++) {
+            var headersKey = headersKeys[i];
+            var modelKey = modelKeys[i];
+            if (headers[headersKey]) {
+              device[modelKey] = headers[headersKey];
+            } else {
+              device[modelKey] = null;
+            }
+        }
+        if (!this.device) {
+            this.device = [];
+        }
+        for (var i = 0; i < this.device.length; i++) {
+            var historyDevice = this.device[i];
+            if (historyDevice.device_id === device.device_id
+                && historyDevice.platform === device.platform
+                && historyDevice.version === device.version) {
+                if (historyDevice.platform === 'iOS' && historyDevice.token === device.token) {
+                    return;
+                } else {
+                    // todo compare other platform
+                    return;
+                }
+            }
+        }
+        this.device.push(device);
     }
 };
 

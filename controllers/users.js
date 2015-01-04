@@ -548,6 +548,7 @@ module.exports = function (app) {
 
           user.app_token = token;
           user.token_device = tokenService.createTokenDevice(req.headers);
+          user.addDevice(req.headers);
           user.save(function (err) {
             if (err) {
               log(err);
