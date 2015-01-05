@@ -354,7 +354,8 @@ module.exports = function (app) {
                 uri: photo.uri,
                 upload_date: photo.upload_date,
                 click: photo.click,
-                name: photo.name
+                name: photo.name,
+                upload_user: photo.upload_user
               });
               photoAlbum.update_user = uploadUser;
               photoAlbum.update_date = Date.now();
@@ -397,7 +398,8 @@ module.exports = function (app) {
           _id: req.photo._id,
           uri: req.photo.uri,
           width: req.photo.width,
-          height: req.photo.height
+          height: req.photo.height,
+          upload_user: req.photo.upload_user
         }];
       }
       if (req.body && req.body.content) {
