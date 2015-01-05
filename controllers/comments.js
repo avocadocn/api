@@ -399,7 +399,11 @@ module.exports = function (app) {
           uri: req.photo.uri,
           width: req.photo.width,
           height: req.photo.height,
-          upload_user: req.photo.upload_user
+          upload_user: {
+            _id: req.photo.upload_user._id,
+            name: req.photo.upload_user.name,
+            type: req.photo.upload_user.type
+          }
         }];
       }
       if (req.body && req.body.content) {
