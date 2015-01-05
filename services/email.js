@@ -6,9 +6,10 @@ var log = require('./error_log.js');
 
 var serviceWebpower = require('./email_services/webpower.js');
 var service163 = require('./email_services/163.js');
+var serviceSendcloud = require('./email_services/sendcloud.js');
 
 /**
- * 可以是'webpower','163'; 默认设为'webpower'
+ * 可以是'webpower','163', 'sendcloud'; 默认设为'webpower'
  * @type {string}
  */
 var smtp = 'webpower';
@@ -39,6 +40,9 @@ var getService = function (config) {
     return serviceWebpower;
   case '163':
     return service163;
+  case 'sendcloud':
+    console.log('use sendcloud')
+    return serviceSendcloud;
   default :
     return null;
   }

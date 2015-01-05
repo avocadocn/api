@@ -41,7 +41,7 @@ var Config = new Schema({
 
   smtp: {
     type: String,
-    enum: ['163', 'webpower']
+    enum: ['163', 'webpower', 'sendcloud']
   }
 });
 
