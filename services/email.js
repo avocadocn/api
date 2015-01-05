@@ -41,7 +41,6 @@ var getService = function (config) {
   case '163':
     return service163;
   case 'sendcloud':
-    console.log('use sendcloud')
     return serviceSendcloud;
   default :
     return null;
