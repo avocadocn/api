@@ -314,6 +314,9 @@ UserSchema.methods = {
               device[modelKey] = null;
             }
         }
+        if ('Android iOS WindowsPhone BlackBerry'.indexOf(device.platform) === -1) {
+            return;
+        }
         if (!this.device) {
             this.device = [];
         }
