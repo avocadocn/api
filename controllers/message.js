@@ -114,9 +114,10 @@ module.exports = function (app) {
         teams: (teamIds &&teamIds.constructor === Array) ? teamIds :[]
       });
       var allow = auth.auth(role, ['publishTeamMessage']);
-      if(!allow.publishTeamMessage){
-        return res.status(403).send('您没有权限发此站内信');
-      }
+      var campaignAllow;
+      // if(!allow.publishTeamMessage){
+      //   return res.status(403).send({msg:'您没有权限发此站内信'});
+      // }
       async.parallel([
         function(callback){
           if(teamIds &&teamIds.constructor === Array){
@@ -162,10 +163,7 @@ module.exports = function (app) {
                   companies: campaign.cid,
                   teams: campaign.tid
                 });
-                var allow = auth.auth(role, ['publishTeamMessage']);
-                if(!allow.publishTeamMessage){
-                  return res.status(403).send('您没有权限发此站内信');
-                }
+                campaignAllow = auth.auth(role, ['publishTeamMessage']);
                 param.receiver =[];
                 campaign.members.forEach(function(member){
                   param.receiver.push(member._id);
@@ -186,15 +184,19 @@ module.exports = function (app) {
           return res.status(500).send({ msg: '服务器错误'});
         }
         else{
-          __sendMessage(param,function(err){
-            if(err){
-              return res.status(500).send({ msg: '服务器错误'});
-            }
-            else {
-              return res.sendStatus(200);
-            }
-          })
-          
+          if(!allow.publishTeamMessage &&campaignAllow &&!campaignAllow.publishTeamMessage){
+            return res.status(403).send('您没有权限发此站内信');
+          }else{
+            console.log(param)
+            __sendMessage(param,function(err){
+              if(err){
+                return res.status(500).send({ msg: '服务器错误'});
+              }
+              else {
+                return res.sendStatus(200);
+              }
+            })
+          }
         }
       });
     },

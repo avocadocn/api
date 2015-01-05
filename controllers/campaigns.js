@@ -268,15 +268,15 @@ var formatCampaign = function(_campaign,user){
   });
   if(_campaign.confirm_status) {
     var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
-    var edieTaskName = _campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
+    var editTaskName = _campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
     var allow = auth.auth(role, [
-      'quitCampaign','publishCampaignMessage',joinTaskName,edieTaskName
+      'quitCampaign','publishCampaignMessage',joinTaskName,editTaskName
     ]);
     if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
       allow[joinTaskName]=false;
     }
     if(_campaign.start_time<now ) {
-      allow[edieTaskName]=false;
+      allow[editTaskName]=false;
     }
   }
   else {
