@@ -270,7 +270,7 @@ var formatCampaign = function(_campaign,user){
     var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
     var edieTaskName = _campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
     var allow = auth.auth(role, [
-      'quitCampaign',joinTaskName,edieTaskName
+      'quitCampaign','publishCampaignMessage',joinTaskName,edieTaskName
     ]);
     if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
       allow[joinTaskName]=false;

@@ -135,6 +135,10 @@ var registeredTasks = {
     company: ['hr'],
     team: ['leader']
   },
+  publishCampaignMessage: {
+    company: ['hr'],
+    team: ['leader']
+  },
   editGroupInfo:{
     company:['hr'],
     team:['leader']
