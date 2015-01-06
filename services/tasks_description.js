@@ -147,6 +147,7 @@ var registeredTasks = {
   recommandTeamToLeader:{
     team:['member']
   },
+  // 编辑小队全家福（包括上传、选择、取消选择，删除）
   editTeamFamily: {
     company: ['hr'],
     team: ['leader']

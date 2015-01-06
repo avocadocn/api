@@ -458,8 +458,52 @@ module.exports = function (app) {
         })
       }
     },
-    uploadFamilyPhotos : function(req, res) {
-      //上传 todo
+    uploadFamilyPhotos: function (req, res) {
+      var team = req.companyGroup;
+      var role = auth.getRole(req.user, {
+        companies: [team.cid],
+        teams: [team._id]
+      });
+      var allow = auth.auth(role, ['editTeamFamily']);
+      if (!allow.editTeamFamily) {
+        res.status(403).send({ msg: '权限错误' });
+        return;
+      }
+
+      uploader.uploadImg(req, {
+        fieldName: 'photo',
+        targetDir: '/public/img/group/family',
+        subDir: team._id.toString(),
+        success: function (url) {
+          var uploadUser = {
+            _id: req.user._id
+          };
+          if (req.user.provider === 'company') {
+            uploadUser.name = req.user.info.name;
+            uploadUser.photo = req.user.info.logo;
+          } else if (req.user.provider === 'user') {
+            uploadUser.name = req.user.nickname;
+            uploadUser.photo = req.user.photo;
+          }
+          team.family.push({
+            uri: path.join('/img/group/family', url),
+            upload_user: uploadUser
+          });
+          team.save(function (err) {
+            if (err) {
+              log(err);
+              res.status(500).send({ msg: '服务器错误' });
+            } else {
+              res.status(200).send({ msg: '上传成功' });
+            }
+          });
+        },
+        error: function (err) {
+          log(err);
+          res.status(500).send({ msg: '服务器错误' });
+        }
+      });
+
     },
     getFamilyPhotos : function(req, res) {
       var team = req.companyGroup;

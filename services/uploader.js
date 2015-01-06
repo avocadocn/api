@@ -108,6 +108,9 @@ exports.uploadImg = function (req, options) {
             options.success(path.join(dateDirName, dateImgName), file.originalFilename, saveOrigin);
           } else {
             options.success(path.join(dateDirName, dateImgName), file.originalFilename);
+              fs.unlink(file.path, function (err) {
+              console.log(err);
+            });
           }
         };
 
