@@ -3653,6 +3653,8 @@ definitions:
       _id:
         type: string
         description: 相册id
+      owner:
+        $ref: PhotoAlbumOwner
       name:
         type: string
         description: 相册名
@@ -3675,6 +3677,42 @@ definitions:
         description: 最近的照片列表，只有_id和uri属性
         items:
           $ref: PhotoForList
+
+  PhotoAlbumOwner:
+    title: PhotoAlbumOwner
+    type: object
+    required:
+      - model
+      - companies
+      - teams
+    properties:
+      model:
+        $ref: PhotoAlbumOwnerModel
+      companies:
+        type: array
+        items:
+          type: string
+          description: 相册所属公司的id
+      teams:
+        type: array
+        items:
+          type: string
+          description: 相册所属小队的id
+
+  PhotoAlbumOwnerModel:
+    title: PhotoAlbumOwnerModel
+    type: object
+    required:
+      - _id
+      - type
+    properties:
+      _id:
+        type: string
+      type:
+        type: string
+        enum:
+          - Campaign
+          - CompanyGroup
 
   Photo:
     title: Photo

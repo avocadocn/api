@@ -4934,6 +4934,9 @@
           "type": "string",
           "description": "相册id"
         },
+        "owner": {
+          "$ref": "PhotoAlbumOwner"
+        },
         "name": {
           "type": "string",
           "description": "相册名"
@@ -5250,6 +5253,54 @@
         "type": {
           "type": "string",
           "description": "用户类型，'hr' or 'user'"
+        }
+      }
+    },
+    "PhotoAlbumOwner": {
+      "title": "PhotoAlbumOwner",
+      "type": "object",
+      "required": [
+        "model",
+        "companies",
+        "teams"
+      ],
+      "properties": {
+        "model": {
+          "$ref": "PhotoAlbumOwnerModel"
+        },
+        "companies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "相册所属公司的id"
+          }
+        },
+        "teams": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "相册所属小队的id"
+          }
+        }
+      }
+    },
+    "PhotoAlbumOwnerModel": {
+      "title": "PhotoAlbumOwnerModel",
+      "type": "object",
+      "required": [
+        "_id",
+        "type"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "Campaign",
+            "CompanyGroup"
+          ]
         }
       }
     },

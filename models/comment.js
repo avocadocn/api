@@ -53,6 +53,10 @@ var Comment = new Schema({
         type: String,
         enum: ['user', 'hr']
       }
+    },
+    upload_date: {
+      type: Date,
+      default: Date.now
     }
   }]
 });

@@ -168,6 +168,7 @@ module.exports = function (app) {
       var photoAlbum = req.photoAlbum;
       var resPhotoAlbum = {
         _id: photoAlbum._id,
+        owner: photoAlbum.owner,
         name: photoAlbum.name,
         updateDate: photoAlbum.update_date,
         updateUser: photoAlbum.update_user,
