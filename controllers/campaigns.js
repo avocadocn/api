@@ -11,6 +11,7 @@ var moment = require('moment'),
     async = require('async'),
     xss = require('xss');
 var logController = require('../controllers/log'),
+    updateLatestPhotoService = require('../services/update_latestphotos.js'),
     messageController = require('../controllers/message'),
     auth = require('../services/auth.js'),
     donlerValidator = require('../services/donler_validator.js'),
@@ -220,8 +221,7 @@ var sortByClick = function(a, b) {
  */
 var formatCampaign = function(_campaign,user){
   var now = new Date();
-  var photos = _campaign.photo_album.photos || [];
-  photos.sort(sortByUploadDate);
+  var photos = updateLatestPhotoService.getLatestPhotos(_campaign.photo_album, 10)
   var temp = {
     '_id':_campaign._id,
     'active':_campaign.active,
@@ -244,7 +244,7 @@ var formatCampaign = function(_campaign,user){
     'campaign_unit':_campaign.campaign_unit,
     'photo_album': {
       '_id': _campaign.photo_album._id,
-      'photos': photos.slice(-10, photos.length),
+      'photos': photos,
       'name': _campaign.photo_album.name,
       'moreFlag':photos.length>10
     },
