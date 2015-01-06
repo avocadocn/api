@@ -324,7 +324,11 @@ module.exports = function (app) {
                 name: photo.name,
                 width: photo.width,
                 height: photo.height,
-                upload_user: photo.upload_user
+                upload_user: {
+                  _id: photo.upload_user,
+                  name: photo.name,
+                  type: photo.type
+                }
               });
               photoAlbum.update_user = uploadUser;
               photoAlbum.update_date = Date.now();
