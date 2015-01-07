@@ -28,15 +28,19 @@ exports.sendStaffResetPwdMail = function (email, uid, host, callback) {
   var from = '动梨<service@donler.com>';
   var to = email;
   var subject = '动梨密码重置';
-  var content = '<p>我们收到您在动梨的密码重置申请信息，请点击下面的链接来重置密码（30分钟内有效）：</p>' +
-    '<a style="text-decoration: none; word-break: break-all;" href="http://' + host + '/users/resetPwd?key=' + encrypt.encrypt(uid, secret) +
-    '&uid=' + uid + '&time=' + encrypt.encrypt(new Date().toString(), secret) +
-    '">重置密码</a>';
-
+  var description = '我们收到您在动梨的密码重置申请信息，请点击下面的链接来重置密码（30分钟内有效）：';
+  var link = 'http://' + host + '/users/resetPwd?key=' + encrypt.encrypt(uid, secret)
+    + '&uid=' + uid + '&time=' + encrypt.encrypt(new Date().toString(), secret);
   fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
     if (err) throw err;
     var fn = jade.compile(data);
-    var html = fn({'title': '重置密码', 'host': siteProtocol + host, 'who': email, 'content': content});
+    var html = fn({
+      'title': '重置密码',
+      'host': siteProtocol + host,
+      'who': email,
+      'description': description,
+      'link': link
+    });
     transport.sendMail({
       from: from,
       to: to,
@@ -50,14 +54,19 @@ exports.sendCompanyResetPwdMail = function (email, uid, host, callback) {
   var from = '动梨<service@donler.com>';
   var to = email;
   var subject = '动梨密码重置';
-  var content = '<p>我们收到您在动梨的密码重置申请信息，请点击下面的链接来重置密码（30分钟内有效）：</p>' +
-    '<a style="text-decoration: none; word-break: break-all;" href="http://' + host + '/company/resetPwd?key=' + encrypt.encrypt(uid, secret) +
-    '&uid=' + uid + '&time=' + encrypt.encrypt(new Date().toString(), secret) +
-    '">重置密码</a>';
+  var description = '我们收到您在动梨的密码重置申请信息，请点击下面的链接来重置密码（30分钟内有效）：';
+  var link = 'http://' + host + '/company/resetPwd?key=' + encrypt.encrypt(uid, secret) +
+    '&uid=' + uid + '&time=' + encrypt.encrypt(new Date().toString(), secret);
   fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
     if (err) throw err;
     var fn = jade.compile(data);
-    var html = fn({'title': '重置密码', 'host': siteProtocol + host, 'who': email, 'content': content});
+    var html = fn({
+      'title': '重置密码',
+      'host': siteProtocol + host,
+      'who': email,
+      'description': description,
+      'link': link
+    });
     transport.sendMail({
       from: from,
       to: to,
@@ -71,14 +80,20 @@ exports.sendStaffActiveMail = function (email, uid, cid, host, callback) {
   var from = '动梨<service@donler.com>';
   var to = email;
   var subject = '动梨账号激活';
-  var content = '<p>我们收到您在动梨的申请信息，请点击下面的链接来激活帐户：</p>' +
-    '<a style="text-decoration: none; word-break: break-all;" href="http://' + host + '/users/setProfile?key=' + encrypt.encrypt(uid, secret) +
-    '&uid=' + uid + '&cid=' + cid + '">激活账号</a>';
+  var description = '我们收到您在动梨的申请信息，请点击下面的链接来激活帐户：';
+  var link = 'http://' + host + '/users/setProfile?key=' + encrypt.encrypt(uid, secret) +
+    '&uid=' + uid + '&cid=' + cid;
 
   fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
     if (err) throw err;
     var fn = jade.compile(data);
-    var html = fn({'title': '注册激活', 'host': siteProtocol + host, 'who': email, 'content': content});
+    var html = fn({
+      'title': '注册激活',
+      'host': siteProtocol + host,
+      'who': email,
+      'description': description,
+      'link': link
+    });
     transport.sendMail({
       from: from,
       to: to,
@@ -89,17 +104,24 @@ exports.sendStaffActiveMail = function (email, uid, cid, host, callback) {
 };
 
 // 现在不需要，该邮件在后台发
+// todo 因为现在不需要，2015-01-07做了改动，未能测试。如果需要调用此方法，需要先测试。
 exports.sendCompanyActiveMail = function (email, cid, host, callback) {
   var from = '动梨<service@donler.com>';
   var to = email;
   var subject = email + ' 动梨账号激活';
-  var content = '<p>我们收到您在动梨的申请信息，请点击下面的链接来激活帐户：</p>' +
-    '<a style="text-decoration: none; word-break: break-all;" href="http://' + host + '/company/validate?key=' + encrypt.encrypt(cid, secret) + '&id=' + cid + '">激活账号</a>';
+  var description = '我们收到您在动梨的申请信息，请点击下面的链接来激活帐户：';
+  var link = 'http://' + host + '/company/validate?key=' + encrypt.encrypt(cid, secret) + '&id=' + cid;
 
   fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
     if (err) throw err;
     var fn = jade.compile(data);
-    var html = fn({'title': '注册激活', 'host': siteProtocol + host, 'who': email, 'content': content});
+    var html = fn({
+      'title': '注册激活',
+      'host': siteProtocol + host,
+      'who': email,
+      'description': description,
+      'link': link
+    });
     transport.sendMail({
       from: from,
       to: to,
@@ -113,14 +135,19 @@ exports.sendNewStaffActiveMail = function (email, uid, cid, host, callback) {
   var from = '动梨<service@donler.com>';
   var to = email;
   var subject = '动梨账号激活';
-  var content = '<p>我们收到您在动梨的申请信息，请点击下面的链接来激活帐户：</p>' +
-    '<a style="text-decoration: none; word-break: break-all;" href="http://' + host + '/users/mailActive?key=' + encrypt.encrypt(uid, secret) +
-    '&uid=' + uid + '&cid=' + cid + '">激活账号</a>';
+  var description = '我们收到您在动梨的申请信息，请点击下面的链接来激活帐户：';
+  var link = 'http://' + host + '/users/mailActive?key=' + encrypt.encrypt(uid, secret) + '&uid=' + uid + '&cid=' + cid;
 
   fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
     if (err) throw err;
     var fn = jade.compile(data);
-    var html = fn({'title': '注册激活', 'host': siteProtocol + host, 'who': email, 'content': content});
+    var html = fn({
+      'title': '注册激活',
+      'host': siteProtocol + host,
+      'who': email,
+      'description': description,
+      'link': link
+    });
     transport.sendMail({
       from: from,
       to: to,

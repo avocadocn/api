@@ -10,7 +10,9 @@ html
         span(style="font-size:24px") Hi,
         span= who
       hr
-      div!= content
+      div
+        p #{description}
+        a(style="text-decoration: none; word-break: break-all;" href="#{link}") #{link}
       .instrction(style="margin-top: 40px;")
         p(style="color: #3bbee8;height:40px; line-height:40px; padding-left:40px; background:url(http://donlercom.qiniudn.com/img/icons/1_03.png) no-repeat left center; background-size: 40px;")
           span(style="font-size:24px; padding-left:10px;") 动梨 “活动管理”
