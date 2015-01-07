@@ -351,7 +351,7 @@ module.exports = function (app) {
         });
     },
     updateTeamLogo: function (req, res, next) {
-      if (req.headers['content-type'] !== 'multipart/form-data') {
+      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
         next();
         return;
       }
