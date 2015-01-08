@@ -68,11 +68,12 @@ var UserSchema = new Schema({
         type: Boolean,
         default: false
     },
+    //已不需要
     //是否填了公司验证码
-    invite_active:{
-        type:Boolean,
-        default: true
-    },
+    // invite_active:{
+    //     type:Boolean,
+    //     default: true
+    // },
     hashed_password: String,
     provider: {
         type: String,
