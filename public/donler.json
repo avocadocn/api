@@ -1164,7 +1164,7 @@
             "in": "formData"
           },
           {
-            "name": "homeCourt",
+            "name": "homeCourts",
             "description": "主场信息",
             "required": false,
             "type": "array",

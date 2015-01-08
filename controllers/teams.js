@@ -388,8 +388,8 @@ module.exports = function (app) {
       if(req.body.brief){
         team.brief = req.body.brief;
       }
-      if(req.body.homeCourt){
-        var homecourts = req.body.homecourt;
+      if(req.body.homeCourts){
+        var homecourts = req.body.homeCourts;
         homecourts.forEach(function (homecourt) {
           if (!homecourt.loc || !homecourt.loc.coordinates || homecourt.loc.coordinates.length === 0) {
             delete homecourt.loc;

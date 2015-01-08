@@ -796,7 +796,7 @@ paths:
           type: string
           in: formData
         # todo:此处导致swagger编辑器报错
-        - name: homeCourt
+        - name: homeCourts
           description: 主场信息
           required: false
           type: array
