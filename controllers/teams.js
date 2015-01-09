@@ -516,7 +516,7 @@ module.exports = function (app) {
         return res.status(403).send({msg: '权限错误'});
       }
       var originFamilyPhotos = team.family.filter(function(photo){
-        return !photo.hidden;
+        return (!photo.hidden && photo.select);
       });
       var familyPhotos = [];
       for(var i=0;i<originFamilyPhotos.length;i++){
