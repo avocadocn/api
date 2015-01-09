@@ -82,6 +82,9 @@ var updateIfNotReliable = function (photoAlbums, callback) {
 };
 
 exports.getLatestPhotos = function (photoAlbum, count, callback) {
+  if(!photoAlbum.photos){
+    photoAlbum.photos = [];
+  }
   if (!count) {
     count = 4;
   } else if (count > photoAlbum.photos.length) {
