@@ -625,6 +625,7 @@ module.exports = function (app) {
       }
       CompanyGroup
       .find(option)
+      .sort('score.total')
       .exec()
       .then(function(companyGroups) {
         var formatCompanyGroups = [];

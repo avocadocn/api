@@ -382,19 +382,24 @@ module.exports = function (app) {
       if(!allow.editTeamCampaign){
         return res.status(403).send({msg: '权限错误'});
       }
+      var teamNameChanged = false;
       if(req.body.name){
-        team.name = req.body.name;
+        if(team.name!==req.body.name){
+          team.name = req.body.name;
+          teamNameChanged = true;
+        }
       }
       if(req.body.brief){
         team.brief = req.body.brief;
       }
       if(req.body.homeCourts){
-        var homecourts = req.body.homeCourts;
-        homecourts.forEach(function (homecourt) {
-          if (!homecourt.loc || !homecourt.loc.coordinates || homecourt.loc.coordinates.length === 0) {
-            delete homecourt.loc;
+        var homecourts = req.body.homeCourts || [];
+        for(var i=homecourts.length-1; i>=0; i--) {
+          var homecourt = homecourts[i];
+          if (!homecourt.name || !homecourt.loc || !homecourt.loc.coordinates || homecourt.loc.coordinates.length === 0) {
+            homecourts.splice(i,1);
           }
-        });
+        }
         team.home_court = homecourts;
       }
       team.save(function(err){
@@ -408,7 +413,7 @@ module.exports = function (app) {
           if (req.isUpdateLogo) {
             syncData.updateTlogo(team._id);
           }
-          if (req.body.name) {
+          if (teamNameChanged) {
             syncData.updateTname(team._id);
           }
         }
