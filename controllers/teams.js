@@ -599,9 +599,9 @@ module.exports = function (app) {
       if(team.memberLimit>0 &&team.memberLimit<= team.member.length){
         return res.status(400).send({msg: '小队人数已经达到上限'});
       }
-      var resourceRole = auth.getRole(user,{
-        companies:[user.getCid()],
-        teams:[team._id],
+      var resourceRole = auth.getRole(user, {
+        companies: [team.cid],
+        teams: [team._id]
       });
       var resourceAllow = auth.auth(resourceRole, ['joinTeam'])
       if(!resourceAllow.joinTeam){
@@ -663,7 +663,7 @@ module.exports = function (app) {
         return res.status(403).send({msg: '权限错误'});
       }
       var resourceRole = auth.getRole(user,{
-        companies:[user.getCid()],
+        companies:[team.cid],
         teams:[team._id]
       });
       var resourceAllow = auth.auth(resourceRole, ['quitTeam'])
