@@ -363,6 +363,8 @@ module.exports = function (app) {
               photoAlbum.pushPhoto({
                 _id: photo._id,
                 uri: photo.uri,
+                width: photo.width,
+                height: photo.height,
                 upload_date: photo.upload_date,
                 click: photo.click,
                 name: photo.name,
