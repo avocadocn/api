@@ -882,7 +882,7 @@ module.exports = function (app) {
       .findById(req.params.campaignId)
       .exec()
       .then(function (campaign) {
-        if (!campaign || campaign.active) {
+        if (!campaign || !campaign.active) {
           res.status(404).send('未找到可以关闭的活动')
         }
         else{
