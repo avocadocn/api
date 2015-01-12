@@ -232,6 +232,8 @@ donlerValidator.combineMsg = function (msg) {
   return resMsg;
 };
 
+
+
 validators.required = function (name, value, callback) {
   if (value==undefined) {
     var msg = util.format('%s不能为空', name);
@@ -263,6 +265,19 @@ validators.number = function (name, value, callback) {
     var msg = util.format('%s必须是数字', name);
     callback(false, msg);
   } else {
+    callback(true);
+  }
+};
+
+validators.sex = function (name, value, callback) {
+  if(!value) {
+    callback(true);
+    return;
+  }
+  if( value!='男' && value!='女') {
+    var msg = util.format('%s无效', name);
+    callback(false, msg);
+  }else {
     callback(true);
   }
 };

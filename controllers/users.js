@@ -314,6 +314,10 @@ module.exports = function (app) {
             };
             res.status(200).send(completeData);
           } else if (allow.getUserBriefData) {
+            var tids = [];
+            user.team.forEach(function (team) {//不拿部门和公司
+              if(team.entity_type!='virtual') tids.push(team._id);
+            });
             var briefData = {
               _id: user._id,
               email: user.email,
@@ -333,7 +337,9 @@ module.exports = function (app) {
               phone: user.phone,
               qq: user.qq,
               score: user.score.total || 0,
-              tags: user.tags
+              tags: user.tags,
+              campaignCount: user.campaignCount || 0,
+              tids: tids
             };
             res.status(200).send(briefData);
           } else if (allow.getUserMinData) {
@@ -430,6 +436,11 @@ module.exports = function (app) {
           name: '标签',
           value: req.body.tag,
           validators: [donlerValidator.minLength(1), donlerValidator.maxLength(20)]
+        },
+        sex: {
+          name: '性别',
+          value: req.body.sex,
+          validators: ['sex']
         }
       }, 'complete', function (pass, msg) {
         if (pass) {
@@ -504,6 +515,9 @@ module.exports = function (app) {
         var tag = req.body.deleteTag;
         var index = user.tags.indexOf(tag);
         if(index>-1) user.tags.splice(index, 1);
+      }
+      if(req.body.sex) {
+        user.sex = req.body.sex;
       }
       user.save(function (err) {
         if (err) {
