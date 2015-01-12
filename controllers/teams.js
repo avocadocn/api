@@ -141,7 +141,6 @@ module.exports = function (app) {
     },
     getTeam : function(req, res) {
       var team = req.companyGroup;
-
       var membersWithoutLeader = [];
       team.member.forEach(function (member) {
         var isLeader = false;
@@ -378,7 +377,7 @@ module.exports = function (app) {
         companies:[team.cid],
         teams:[req.params.teamId]
       });
-      var allow = auth.auth(role,['editTeamCampaign']);
+      var allow = auth.auth(role,['editTeamCampaign','appointLeader']);
       if(!allow.editTeamCampaign){
         return res.status(403).send({msg: '权限错误'});
       }
@@ -401,6 +400,71 @@ module.exports = function (app) {
           }
         }
         team.home_court = homecourts;
+      }
+      //更新个人资料接口
+      /**
+       * [updateLeader description]
+       * @param  {string}  uid            用户Id
+       * @param  {Boolean} isOriginLeader 是否是原来的队长
+       * @param  {Object}  team           小队
+       */
+      var updateLeader = function (uid, isOriginLeader, team) {
+        User.findOne({_id:uid},function(err, user){
+          if(err){
+            log(err);
+          }else{
+            if(isOriginLeader){//如果被撤销了队长，把那个队的leader设为false
+              var index = tools.arrayObjectIndexOf(user.team, team._id, '_id');
+              if(index!==-1){
+                user.team[index].leader = false;
+              }
+              //如果一个队的队长都不是了,就贬为平民T^T
+              var index = tools.arrayObjectIndexOf(user.team, true, 'leader');
+              if(index===-1){
+                user.role = 'EMPLOYEE';
+              }
+            }else{//如果被任命了
+              user.role = 'LEADER';
+              var index = tools.arrayObjectIndexOf(user.team, team._id, '_id');
+              if(index>-1){//如果本来就在这个队
+                user.team[index].leader = true;//把leader属性置true
+              }else{//不在这个队就加到teams里去
+                user.team.push({
+                  gid: team.gid,
+                  _id: team._id,
+                  group_type: team.group_type,
+                  entity_type: team.entity_type,
+                  name: team.name,
+                  leader: true,
+                  logo: team.logo
+                });
+              }
+            }
+            user.save(function(err){
+              if(err) log(err);
+            });
+          }
+        });
+      };
+      var leader = req.body.leader;
+      if(allow.appointLeader && leader){
+        //如果有原来的人把原来的那个人的资料改了
+        if(team.leader&&team.leader.length>0) {
+          for(var i=0; i<team.leader.length; i++) {
+            updateLeader(team.leader[i]._id, true, team);
+          }
+        }
+        //把新队长资料改了
+        updateLeader(req.body.leader._id, false, team);
+
+        //把小队资料改了
+        var index = tools.arrayObjectIndexOf(team.member ,leader._id ,'_id')
+        if(index === -1){
+          team.member.push(leader);
+          team.leader.push(leader);
+        }else{
+          team.leader = [team.member[index]];//为了保证join_time属性正确.
+        }
       }
       team.save(function(err){
         if(err){
@@ -790,7 +854,7 @@ module.exports = function (app) {
             res.sendStatus(404);
             return;
           }
-          res.status(200).send(team.member);
+          res.status(200).send({'members':team.member,'leaders':team.leader});
         })
         .then(null, function (err) {
           log(err);

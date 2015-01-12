@@ -355,20 +355,29 @@ module.exports = function (app) {
     },
 
     getCompanyUsers: function (req, res) {
-      if(req.user.cid.toString() !== req.params.companyId){
-        return res.sendStatus(403);
-      }else{
-        User.find({'cid':req.params.companyId, 'active':true, 'mail_active':true},{'email':1,'nickname':1})
-        .sort('nickname')
-        .exec()
-        .then(function (users){
-          return res.status(200).send(users);
-        })
-        .then(null, function (err){
-          log(err);
-          return res.status(500).send({msg:'查询错误'});
-        })
+      var findOptions = {'cid':req.params.companyId,'active':true};
+      var outputOptions = {};
+      if(req.user.provider==='company') { //hr取来任命队长用
+        if(req.user._id.toString() !== req.params.companyId) return res.sendStatus(403);
+        else {
+          outputOptions = {'nickname':1,'photo':1};
+        }
       }
+      else if(req.user.cid.toString() !== req.params.companyId){
+        return res.sendStatus(403);
+      }else{//用户取来通讯录用
+        outputOptions = {'email':1,'nickname':1};
+      }
+      User.find(findOptions,outputOptions)
+      .sort('nickname')
+      .exec()
+      .then(function (users){
+        return res.status(200).send(users);
+      })
+      .then(null, function (err){
+        log(err);
+        return res.status(500).send({msg:'查询错误'});
+      })
     },
 
     updateValidate: function (req, res, next) {

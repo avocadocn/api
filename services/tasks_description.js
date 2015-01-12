@@ -248,6 +248,11 @@ var registeredTasks = {
   // 升级个人小队
   updateTeam: {
     team: ['leader']
+  },
+
+  // 任命队长
+  appointLeader: {
+    company: ['hr']
   }
 
 };

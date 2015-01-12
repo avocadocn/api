@@ -1568,10 +1568,7 @@
           "200": {
             "description": "成功",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "Member"
-              }
+              "$ref": "TeamMembers"
             }
           },
           "default": {
@@ -5142,6 +5139,29 @@
         "campaignCount": {
           "type": "number",
           "description": "小队活动总数"
+        }
+      }
+    },
+    "TeamMembers": {
+      "title": "TeamMembers",
+      "required": [
+        "members",
+        "leaders"
+      ],
+      "properties": {
+        "members": {
+          "type": "array",
+          "description": "成员列表",
+          "items": {
+            "$ref": "Member"
+          }
+        },
+        "leaders": {
+          "type": "array",
+          "description": "队长信息",
+          "items": {
+            "$ref": "Member"
+          }
         }
       }
     },

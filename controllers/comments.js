@@ -153,7 +153,6 @@ var updateUserCommentList = function(campaign, user, reqUserId ,callback){
       user.commentCampaigns.unshift(campaignNeedUpdate[0]);
     }
   }else{//未参加
-    console.log('...');
     var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns, campaign._id, '_id');
     if(campaignIndex === -1) {//如果user中没有
       //放到最前,数组长度到max值时去掉最后面的campaign
