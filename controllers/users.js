@@ -361,7 +361,7 @@ module.exports = function (app) {
     },
 
     getCompanyUsers: function (req, res) {
-      var findOptions = {'cid':req.params.companyId,'active':true};
+      var findOptions = {'cid':req.params.companyId, 'active':true, 'mail_active':true};
       var outputOptions = {};
       if(req.user.provider==='company') { //hr取来任命队长用
         if(req.user._id.toString() !== req.params.companyId) return res.sendStatus(403);
