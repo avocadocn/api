@@ -568,10 +568,8 @@ module.exports = function (app) {
             id: user._id.toString(),
             exp: app.get('tokenExpires')
           }, app.get('tokenSecret'));
-
-          user.app_token = token;
-          user.token_device = tokenService.createTokenDevice(req.headers);
-          user.addDevice(req.headers);
+          var pushInfo = req.body.pushInfo ||{};
+          user.addDevice(req.headers, token, pushInfo);
           user.save(function (err) {
             if (err) {
               log(err);
@@ -597,8 +595,7 @@ module.exports = function (app) {
         res.sendStatus(403);
         return;
       }
-      req.user.app_token = null;
-      req.user.token_device = null;
+      req.user.removeDevice(req.headers);
       req.user.save(function (err) {
         if (err) {
           log(err);

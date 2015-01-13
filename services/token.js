@@ -3,24 +3,30 @@
 var jwt = require('jsonwebtoken');
 var mongoose = require('mongoose');
 
-var headersKeys = ['x-app-id', 'x-api-key', 'x-device-id', 'x-device-type', 'x-platform', 'x-version', 'x-device-token'];
-var modelKeys = ['app_id', 'api_key', 'device_id', 'device_type', 'platform', 'version', 'device_token'];
+var headersKeys = ['x-app-id', 'x-api-key', 'x-device-id', 'x-device-type', 'x-platform', 'x-version'];
+var modelKeys = ['app_id', 'api_key', 'device_id', 'device_type', 'platform', 'version'];
 
 /**
- * 验证headers是否和user的tokenDevice一致
+ * 验证headers是否和user的device中的一个平台的一致
  * @param  {Object} headers     req.headers
- * @param  {Object} tokenDevice req.user.token_device
+ * @param  {Array} device req.user.device
  * @return {Boolean}             如果一致，返回true，否则返回false
  */
-var validateHeaders = function (headers, tokenDevice) {
-  for (var i = 0; i < headersKeys.length; i++) {
-    var headersKey = headersKeys[i];
-    var modelKey = modelKeys[i];
-    if (headers[headersKey] != tokenDevice[modelKey]) {
-      return false;
+var validateHeaders = function (headers, device) {
+  for(var i=0; i<device.length; i++) {
+    if(headers['x-platform']==device[i]['platform']){
+      for (var j = 0; j < headersKeys.length; j++) {
+        var headersKey = headersKeys[j];
+        var modelKey = modelKeys[j];
+        if (headers[headersKey] != device[i][modelKey]) {
+          return false;
+        }
+      }
+      return true;
     }
   }
-  return true;
+
+  return false;
 };
 
 /**
@@ -86,7 +92,7 @@ exports.needToken = function (req, res, next) {
         if (!user) {
           return res.sendStatus(401);
         }
-        if (user.app_token !== req.headers['x-access-token'] || !validateHeaders(req.headers, user.token_device)) {
+        if (!validateHeaders(req.headers, user.device)) {
           return res.sendStatus(401);
         }
         req.user = user;

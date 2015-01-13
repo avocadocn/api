@@ -15,8 +15,12 @@ var _device = new Schema({
     version:String,
     device_id:String,
     device_type:String,            //同一platform设备的类型(比如ios系统有iPhone和iPad)
-    token:String,                  //只有APN推送才会用到
+    access_token:String,           //每次登录时生成
+    ios_token:String,              //只有iosd的APN推送才会用到
     user_id:String,                //只有Android的百度云推送才会用到
+    channle_id:String,             //只有Android的百度云推送才会用到
+    app_id: String,
+    api_key: String,
     update_date:{
         type: Date,
         default: Date.now
@@ -128,16 +132,6 @@ var UserSchema = new Schema({
     company_official_name: String,
     team: [_team],
     established_team: [_team],           //自己创建的小队
-    app_token: String,                  // 保存上次登录的token，如果注销则清除。不可用之前的属性名，否则新api会造成判断的错误。
-    token_device: {
-        platform: String,
-        version: String,
-        device_id: String,
-        device_type: String,
-        device_token: String,
-        app_id: String,
-        api_key: String
-    }, // 上次登录的设备信息，如果注销则清除。
     //本系统是否关闭此人
     disabled:{
         type: Boolean,
@@ -301,10 +295,53 @@ UserSchema.methods = {
     /**
      * 添加设备信息到用户的设备记录中
      * @param {Object} headers req.headers
+     * @param {Object} token 生成的新token
+     * @param {Object} pushData push的相关数据
      */
-    addDevice: function (headers) {
-        var headersKeys = ['x-device-id', 'x-device-type', 'x-platform', 'x-version', 'x-device-token'];
-        var modelKeys = ['device_id', 'device_type', 'platform', 'version', 'token'];
+    addDevice: function (headers, access_token, pushData) {
+        var headersKeys = ['x-app-id', 'x-api-key', 'x-device-id', 'x-device-type', 'x-platform', 'x-version'];
+        var modelKeys = ['app_id', 'api_key', 'device_id', 'device_type', 'platform', 'version'];
+        var device = {};
+        for (var i = 0; i < headersKeys.length; i++) {
+            var headersKey = headersKeys[i];
+            var modelKey = modelKeys[i];
+            if (headers[headersKey]) {
+              device[modelKey] = headers[headersKey];
+            } else {
+              device[modelKey] = null;
+            }
+        }
+        device.access_token = access_token;
+        if ('Android iOS WindowsPhone BlackBerry'.indexOf(device.platform) === -1) {
+            return;
+        }
+        if(device.platform=='iOS' && pushData.ios_token){
+            device.ios_token = pushData.ios_token;
+        }
+        else if(device.platform=='Android' && pushData.user_id&&pushData.channel_id){
+            device.user_id = pushData.user_id;
+            device.channel_id = pushData.channel_id;
+        }
+        if (!this.device) {
+            this.device = [];
+        }
+        for (var i = 0; i < this.device.length; i++) {
+            var historyDevice = this.device[i];
+            if (historyDevice.platform === device.platform) {
+                this.device.splice(i,1);
+                break;
+            }
+        }
+        this.device.push(device);
+    },
+    /**
+     * 移除用户的设备记录中的设备信息
+     * @param  {[type]} headers [description]
+     * @return {[type]}         [description]
+     */
+    removeDevice:function(headers) {
+        var headersKeys = ['x-device-id', 'x-device-type', 'x-platform', 'x-version'];
+        var modelKeys = ['device_id', 'device_type', 'platform', 'version'];
         var device = {};
         for (var i = 0; i < headersKeys.length; i++) {
             var headersKey = headersKeys[i];
@@ -323,18 +360,11 @@ UserSchema.methods = {
         }
         for (var i = 0; i < this.device.length; i++) {
             var historyDevice = this.device[i];
-            if (historyDevice.device_id === device.device_id
-                && historyDevice.platform === device.platform
-                && historyDevice.version === device.version) {
-                if (historyDevice.platform === 'iOS' && historyDevice.token === device.token) {
-                    return;
-                } else {
-                    // todo compare other platform
-                    return;
-                }
+            if (historyDevice.platform === device.platform) {
+                this.device.splice(i,1);
+                break;
             }
         }
-        this.device.push(device);
     }
 };
 

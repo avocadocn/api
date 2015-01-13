@@ -2434,12 +2434,29 @@ definitions:
     required:
       - email
       - password
+      - pushInfo
     properties:
       email:
         description: 用户邮箱
         type: string
       password:
         description: 密码
+        type: string
+      pushInfo:
+        description: "push信息，ios包含ios_token,android包含user_id,channel_id"
+        $ref: pushInfo
+  pushInfo:
+    title: pushInfo
+    type: object
+    properties:
+      ios_token:
+        description: ios的设备token
+        type: string
+      user_id:
+        description: 百度云的userID
+        type: string
+      channel_id:
+        description: 百度云的channelID
         type: string
   CompanyLoginForm:
     title: CompanyLoginForm
