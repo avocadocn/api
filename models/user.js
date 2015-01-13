@@ -8,10 +8,7 @@ var mongoose = require('mongoose'),
     crypto = require('crypto');
 
 var _device = new Schema({
-    platform:{
-        type:String,
-        enum:['Android','iOS','WindowsPhone','BlackBerry']
-    },
+    platform:String,
     version:String,
     device_id:String,
     device_type:String,            //同一platform设备的类型(比如ios系统有iPhone和iPad)
@@ -312,9 +309,9 @@ UserSchema.methods = {
             }
         }
         device.access_token = access_token;
-        if ('Android iOS WindowsPhone BlackBerry'.indexOf(device.platform) === -1) {
-            return;
-        }
+        // if ('Android iOS WindowsPhone BlackBerry'.indexOf(device.platform) === -1) {
+        //     return;
+        // }
         if(device.platform=='iOS' && pushData.ios_token){
             device.ios_token = pushData.ios_token;
         }
@@ -351,9 +348,6 @@ UserSchema.methods = {
             } else {
               device[modelKey] = null;
             }
-        }
-        if ('Android iOS WindowsPhone BlackBerry'.indexOf(device.platform) === -1) {
-            return;
         }
         if (!this.device) {
             this.device = [];
