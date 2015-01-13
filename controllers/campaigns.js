@@ -951,15 +951,15 @@ module.exports = function (app) {
             }
             var _join = function (unit) {
               // 更新user的讨论列表
-              var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns,campaign._id,'_id');
-              if(campaignIndex>-1){
-                var campaignNeedUpdate = user.unjoinedCommentCampaigns.splice(campaignIndex,1);
-                user.commentCampaigns.push(campaignNeedUpdate[0]);
-                user.save(function (err) {
-                  if (err)
-                    console.log(err);
-                });
-              }
+              // var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns,campaign._id,'_id');
+              // if(campaignIndex>-1){
+              //   var campaignNeedUpdate = user.unjoinedCommentCampaigns.splice(campaignIndex,1);
+              //   user.commentCampaigns.push(campaignNeedUpdate[0]);
+              //   user.save(function (err) {
+              //     if (err)
+              //       console.log(err);
+              //   });
+              // }
 
               for (var i = 0; i < unit.member_quit.length; i++) {
                 if (user._id.toString() === unit.member_quit[i]._id.toString()) {
@@ -1071,15 +1071,15 @@ module.exports = function (app) {
                   unit.member_quit.push(member);
 
                   //
-                  var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns,campaign._id,'_id');
-                  if(campaignIndex > -1){
-                    var campaignNeedUpdate = user.commentCampaigns.splice(campaignIndex,1);
-                    user.unjoinedCommentCampaigns.push(campaignNeedUpdate[0]);
-                    user.save(function (err) {
-                      if (err)
-                        console.log(err);
-                    });
-                  }
+                  // var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns,campaign._id,'_id');
+                  // if(campaignIndex > -1){
+                  //   var campaignNeedUpdate = user.commentCampaigns.splice(campaignIndex,1);
+                  //   user.unjoinedCommentCampaigns.push(campaignNeedUpdate[0]);
+                  //   user.save(function (err) {
+                  //     if (err)
+                  //       console.log(err);
+                  //   });
+                  // }
                   return true;
                 }
               }
