@@ -306,6 +306,42 @@ var formatCampaign = function(_campaign,user){
 
   return temp;
 };
+/**
+ * 格式化活动的小队信息，增加是否为队长属性
+ * @param  {[type]} campaign    [description]
+ * @param  {[type]} user        [description]
+ * @param  {[type]} callbackFun [description]
+ * @return {[type]}             [description]
+ */
+var _formatCampaignUnit = function (campaign,callback) {
+  if(campaign.tid) {
+    CompanyGroup.find({
+      _id: {'$in':campaign.tid}
+    })
+    .exec()
+    .then(function (teams) {
+      var campaign_unit = campaign.campaign_unit;
+      for (var i = 0; i < campaign_unit.length; i++) {
+        var unit = campaign_unit[i];
+        for(var j=0; j<unit.member.length; j++) {
+          var member = unit.member[j];
+          for (var k = 0; k < teams.length; k++) {
+            var index = tools.arrayObjectIndexOf(teams[k].leader, member._id, '_id');
+            if (index !== -1) {
+              member.set('isLeader',true,{strict:false});
+              break;
+            }
+          }
+        }
+      }
+      callback(null,campaign_unit);
+    })
+    .then(null, function (err) {
+      log(err);
+      callback(err);
+    });
+  }
+}
 var _postCampaign = function (param, callback) {
   var campaign = new Campaign();
   campaign.active = true;
@@ -779,35 +815,7 @@ module.exports = function (app) {
               callback(null,_formatCampaign);
             },//格式化活动
             function(callback){
-              if(campaign.tid) {
-                CompanyGroup.find({
-                  _id: {'$in':campaign.tid}
-                }).exec()
-                  .then(function (teams) {
-                    var campaign_unit = campaign.campaign_unit;
-                    for (var i = 0; i < campaign_unit.length; i++) {
-                      var unit = campaign_unit[i];
-                      for(var j=0; j<unit.member.length; j++) {
-                        var member = unit.member[j];
-                        for (var k = 0; k < teams.length; k++) {
-                          var index = tools.arrayObjectIndexOf(teams[k].leader, member._id, '_id');
-                          if (index !== -1) {
-                            member.set('isLeader',true,{strict:false});
-                            break;
-                          }
-                        }
-                      }
-                    }
-                    callback(null,campaign_unit);
-                  })
-                  .then(null, function (err) {
-                    log(err);
-                    callback(err);
-                  });
-                }
-                else {
-                  callback(null,campaign.campaign_unit);
-                }
+              _formatCampaignUnit(campaign,callback);
             }
           ],function(err, values){
             if(err){
@@ -1018,8 +1026,26 @@ module.exports = function (app) {
                     'role' : 'user',
                     'campaignid' :campaign._id
                   }
-                logController.addLog(logBody);
-                  return res.status(200).send(formatCampaign(campaign,req.user));
+                  logController.addLog(logBody);
+                  async.series([
+                    function(callback){
+                      var _formatCampaign = formatCampaign(campaign,req.user);
+                      callback(null,_formatCampaign);
+                    },//格式化活动
+                    function(callback){
+                      _formatCampaignUnit(campaign,callback);
+                    }
+                  ],function(err, values){
+                    if(err){
+                      log(err);
+                      return res.status(500).send({ msg: '服务器错误'});
+                    }
+                    else{
+                      var formatCampaign = values[0];
+                      formatCampaign.campaign_unit = values[1];
+                      return res.status(200).send(formatCampaign);
+                    }
+                  });
                 }
               });
             }
@@ -1110,7 +1136,25 @@ module.exports = function (app) {
                     'campaignid' :campaign._id
                   }
                   logController.addLog(logBody);
-                  return res.status(200).send(formatCampaign(campaign,req.user));
+                  async.series([
+                    function(callback){
+                      var _formatCampaign = formatCampaign(campaign,req.user);
+                      callback(null,_formatCampaign);
+                    },//格式化活动
+                    function(callback){
+                      _formatCampaignUnit(campaign,callback);
+                    }
+                  ],function(err, values){
+                    if(err){
+                      log(err);
+                      return res.status(500).send({ msg: '服务器错误'});
+                    }
+                    else{
+                      var formatCampaign = values[0];
+                      formatCampaign.campaign_unit = values[1];
+                      return res.status(200).send(formatCampaign);
+                    }
+                  });
                 }
               });
             }
