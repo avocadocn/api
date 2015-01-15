@@ -231,6 +231,7 @@ var formatCampaign = function(_campaign,user){
   var temp = {
     '_id':_campaign._id,
     'active':_campaign.active,
+    'create_time':_campaign.create_time,
     'confirm_status':_campaign.confirm_status,
     'theme':_campaign.theme,
     'content':_campaign.content ? _campaign.content.replace(/<\/?[^>]*>/g, ''):'',
