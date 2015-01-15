@@ -281,6 +281,9 @@ var formatCampaign = function(_campaign,user){
     if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
       allow[joinTaskName]=false;
     }
+    if(_campaign.deadline < now) {
+       allow.quitCampaign=false;
+    }
     if(_campaign.start_time<now ) {
       allow[editTaskName]=false;
     }
