@@ -15,7 +15,7 @@ var _device = new Schema({
     access_token:String,           //每次登录时生成
     ios_token:String,              //只有iosd的APN推送才会用到
     user_id:String,                //只有Android的百度云推送才会用到
-    channle_id:String,             //只有Android的百度云推送才会用到
+    channel_id:String,             //只有Android的百度云推送才会用到
     app_id: String,
     api_key: String,
     update_date:{
@@ -354,7 +354,7 @@ UserSchema.methods = {
         }
         for (var i = 0; i < this.device.length; i++) {
             var historyDevice = this.device[i];
-            if (historyDevice.platform === device.platform) {
+            if (historyDevice.platform === device.platform && historyDevice.device_id === device.device_id) {
                 this.device.splice(i,1);
                 break;
             }
