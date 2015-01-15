@@ -85,15 +85,15 @@ exports.needToken = function (req, res, next) {
       model = mongoose.model('Company');
     }
     if (!model) {
-      return res.sendStatus(401);
+      return res.status(401).send({msg:'您没有登录或者登录超时，请重新登录'});
     }
     model.findById(req.tokenUser.id).exec()
       .then(function (user) {
         if (!user) {
-          return res.sendStatus(401);
+          return res.status(401).send({msg:'您没有登录或者登录超时，请重新登录'});
         }
         if (!validateHeaders(req.headers, user.device)) {
-          return res.sendStatus(401);
+          return res.status(401).send({msg:'您没有登录或者登录超时，请重新登录'});
         }
         req.user = user;
         next();
@@ -104,6 +104,6 @@ exports.needToken = function (req, res, next) {
         res.sendStatus(500);
       });
   } else {
-    res.sendStatus(401);
+    res.status(401).send({msg:'您没有登录或者登录超时，请重新登录'});
   }
 };
