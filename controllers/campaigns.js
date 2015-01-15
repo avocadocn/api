@@ -27,7 +27,13 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
   for (var attr in option){
     _option[attr] = option[attr];
   }
-  _option.confirm_status = select_type=='5'?false : true;
+  if (select_type === '5') {
+    _option.confirm_status = false;
+  } else {
+    _option.confirm_status = {
+      '$ne': false
+    };
+  }
   var populate = populate ? populate.split(',').join(' ') :'';
   switch(select_type){
     //全部
@@ -732,6 +738,9 @@ module.exports = function (app) {
         }
         if(req.query.from){
           option.end_time = { '$gte':new Date(parseInt(req.query.from)) };
+        }
+        if (req.query.nextPageStartId) {
+          option._id = { '$lte': req.query.nextPageStartId };
         }
 
         if(req.query.select_type =='0'){
