@@ -757,9 +757,7 @@ module.exports = function (app) {
             id: company._id.toString(),
             exp: app.get('tokenExpires')
           }, app.get('tokenSecret'));
-
-          company.app_token = token;
-          company.token_device = tokenService.createTokenDevice(req.headers);
+          company.addDevice(req.headers, token);
           company.save(function (err) {
             if (err) {
               log(err);
@@ -781,8 +779,7 @@ module.exports = function (app) {
         res.sendStatus(403);
         return;
       }
-      req.user.app_token = null;
-      req.user.token_device = null;
+      req.user.removeDevice(req.headers);
       req.user.save(function (err) {
         if (err) {
           log(err);

@@ -7,7 +7,19 @@ var mongoose = require('mongoose'),
     Schema = mongoose.Schema,
     crypto = require('crypto');
 
-
+var _device = new Schema({
+    platform:String,
+    version:String,
+    device_id:String,
+    device_type:String,            //同一platform设备的类型(比如ios系统有iPhone和iPad)
+    access_token:String,           //每次登录时生成
+    app_id: String,
+    api_key: String,
+    update_date:{
+        type: Date,
+        default: Date.now
+    }
+});
 //小队信息
 var _team = new Schema({
     gid : String,
@@ -106,15 +118,7 @@ var CompanySchema = new Schema({
     register_invite_code: [String],
     // 企业给用户的邀请码
     invite_key: String,
-    app_token: String, // 保存上次登录的token，如果注销则清除。
-    token_device: {
-        platform: String,
-        version: String,
-        device_id: String,
-        device_type: String,
-        app_id: String,
-        api_key: String
-    } // 上次登录的设备信息，如果注销则清除。
+    device: []
 });
 
 /**
@@ -208,6 +212,69 @@ CompanySchema.methods = {
 
     getCid: function () {
         return this._id;
+    },
+    /**
+     * 添加设备信息到用户的设备记录中
+     * @param {Object} headers req.headers
+     * @param {Object} token 生成的新token
+     */
+    addDevice: function (headers, access_token) {
+        var headersKeys = ['x-app-id', 'x-api-key', 'x-device-id', 'x-device-type', 'x-platform', 'x-version'];
+        var modelKeys = ['app_id', 'api_key', 'device_id', 'device_type', 'platform', 'version'];
+        var device = {};
+        for (var i = 0; i < headersKeys.length; i++) {
+            var headersKey = headersKeys[i];
+            var modelKey = modelKeys[i];
+            if (headers[headersKey]) {
+              device[modelKey] = headers[headersKey];
+            } else {
+              device[modelKey] = null;
+            }
+        }
+        device.access_token = access_token;
+        // if ('Android iOS WindowsPhone BlackBerry'.indexOf(device.platform) === -1) {
+        //     return;
+        // }
+        if (!this.device) {
+            this.device = [];
+        }
+        for (var i = 0; i < this.device.length; i++) {
+            var historyDevice = this.device[i];
+            if (historyDevice.platform === device.platform) {
+                this.device.splice(i,1);
+                break;
+            }
+        }
+        this.device.push(device);
+    },
+    /**
+     * 移除用户的设备记录中的设备信息
+     * @param  {[type]} headers [description]
+     * @return {[type]}         [description]
+     */
+    removeDevice:function(headers) {
+        var headersKeys = ['x-device-id', 'x-device-type', 'x-platform', 'x-version'];
+        var modelKeys = ['device_id', 'device_type', 'platform', 'version'];
+        var device = {};
+        for (var i = 0; i < headersKeys.length; i++) {
+            var headersKey = headersKeys[i];
+            var modelKey = modelKeys[i];
+            if (headers[headersKey]) {
+              device[modelKey] = headers[headersKey];
+            } else {
+              device[modelKey] = null;
+            }
+        }
+        if (!this.device) {
+            this.device = [];
+        }
+        for (var i = 0; i < this.device.length; i++) {
+            var historyDevice = this.device[i];
+            if (historyDevice.platform === device.platform && historyDevice.device_id === device.device_id) {
+                this.device.splice(i,1);
+                break;
+            }
+        }
     }
 };
 
