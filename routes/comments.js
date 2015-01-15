@@ -8,4 +8,5 @@ module.exports = function (app, ctrl) {
   app.get('/comments', token.needToken, ctrl.getComments);
   app.delete('/comments/:commentId', token.needToken, ctrl.getCommentById, ctrl.deleteComment);
   app.get('/comments/list', token.needToken, ctrl.getCommentList);
+  app.post('/comments/read', token.needToken, ctrl.readComments);
 };

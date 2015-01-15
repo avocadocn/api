@@ -213,7 +213,7 @@ var socketPush = function(campaign, comment, joinedUids, unjoinedUids){
  * @param  {object} user 用户
  * @param  {string} campaignId 看的是哪个活动的评论
  */
-var userReadComment = function (user, campaignId) {
+var userReadComment = function (user, campaignId, callback) {
   var find = false;
   for(var i=0; i<user.commentCampaigns.length; i++){
     if(campaignId.toString()===user.commentCampaigns[i]._id.toString()) {
@@ -235,6 +235,7 @@ var userReadComment = function (user, campaignId) {
     if(err){
       console.log('user save error:',err);
     }
+    callback();
   });
 };
 
@@ -539,8 +540,14 @@ module.exports = function (app) {
           if (err) console.log(err);
           // 即使错误依然会做基本的权限设置（公司可删自己员工的，自己可以删自己的），所以依旧返回数据
           res.status(202).send({'comments': comments, nextStartDate: nextStartDate});
-          userReadComment(req.user, req.query.requestId);
+          userReadComment(req.user, req.query.requestId, function(){});
         });
+      });
+    },
+    readComments: function(req, res) {
+      var host_id = req.body.requestId;
+      userReadComment(req.user, host_id, function() {
+        return res.status(200).send();
       });
     },
 
