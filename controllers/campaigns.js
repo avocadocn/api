@@ -981,7 +981,15 @@ module.exports = function (app) {
               //       console.log(err);
               //   });
               // }
-
+              for (var i = 0; i < unit.member.length; i++) {
+                if (user._id.toString() === unit.member[i]._id.toString()) {
+                  // 用户已经参加该活动
+                  return {
+                    success: false,
+                    msg: '您已经参加该活动'
+                  };
+                }
+              }
               for (var i = 0; i < unit.member_quit.length; i++) {
                 if (user._id.toString() === unit.member_quit[i]._id.toString()) {
                   var member = (unit.member_quit.splice(i, 1))[0];
