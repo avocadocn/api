@@ -68,5 +68,6 @@ walk('./routes', function (file, path) {
 });
 
 app.use(serveStatic('public'));
+module.exports = app;
 app.listen(3002);
 console.log('api server listen at port 3002');
