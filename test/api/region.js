@@ -1,4 +1,4 @@
-var app = require('../../app.js')
+var app = require('../../config/express.js')
   , request = require('supertest');
 
 request = request(app);

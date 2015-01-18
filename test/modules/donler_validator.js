@@ -1,7 +1,9 @@
-var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/donler-beta-test');
-require('../../models/region.js');
-var donlerValidator = require('../../services/donler_validator.js');
+var path = require('path');
+
+var common = require('./common.js');
+var mongoose = common.mongoose;
+
+var donlerValidator = require(path.join(common.config.rootPath, 'services/donler_validator.js'));
 
 describe('donlerValidator', function () {
 
