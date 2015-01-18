@@ -1,12 +1,14 @@
 'use strict';
 
+var resources = require('../resources/campaigns');
 var token = require('../services/token');
+var auth = require('../services/auth');
 
 module.exports = function (app, ctrl) {
 
   app.post('/campaigns', token.needToken, ctrl.postCampaign);
-  app.get('/campaigns', token.needToken, ctrl.getCampaign);
-  app.get('/campaigns/:campaignId',token.needToken, ctrl.getCampaignById);
+  app.get('/campaigns', token.needToken, ctrl.getCampaignList);
+  app.get('/campaigns/:campaignId',token.needToken, resources.getCampaignByParamId, auth.authMiddleware(['getCampaigns']), ctrl.getCampaign);
   app.put('/campaigns/:campaignId',token.needToken, ctrl.updateCampaign);
   app.delete('/campaigns/:campaignId', token.needToken, ctrl.closeCampaign);
   app.post('/campaigns/:campaignId/users/:userId', token.needToken, ctrl.joinCampaign);

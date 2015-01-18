@@ -666,7 +666,7 @@ module.exports = function (app) {
       });
       
     },
-    getCampaign: function (req, res) {
+    getCampaignList: function (req, res) {
       var option,
           requestType = req.query.requestType,
           requestId = req.query.requestId,
@@ -803,47 +803,26 @@ module.exports = function (app) {
         return res.status(500).send({msg: err });
       });
     },
-    getCampaignById: function (req, res) {
-      var populate = req.query.populate ? req.query.populate.split(',').join(' ') : '';
-      Campaign
-      .findById(req.params.campaignId)
-      .populate(populate)
-      .exec()
-      .then(function (campaign) {
-        if (!campaign) {
-          res.status(404).send({msg:'未找到活动'})
+    getCampaign: function (req, res) {
+      var campaign = req.campaign;
+      async.series([
+        function(callback){
+          var _formatCampaign = formatCampaign(campaign,req.user);
+          callback(null,_formatCampaign);
+        },//格式化活动
+        function(callback){
+          _formatCampaignUnit(campaign,callback);
+        }
+      ],function(err, values){
+        if(err){
+          log(err);
+          return res.status(500).send({ msg: '服务器错误'});
         }
         else{
-          var role = auth.getRole(req.user, {
-            companies: campaign.cid
-          });
-          var allow = auth.auth(role, ['getCampaigns']);
-          if(!allow.getCampaigns){
-            return res.status(403).send({msg:'您没有权限获取该活动'});
-          }
-          async.series([
-            function(callback){
-              var _formatCampaign = formatCampaign(campaign,req.user);
-              callback(null,_formatCampaign);
-            },//格式化活动
-            function(callback){
-              _formatCampaignUnit(campaign,callback);
-            }
-          ],function(err, values){
-            if(err){
-              log(err);
-              return res.status(500).send({ msg: '服务器错误'});
-            }
-            else{
-              var formatCampaign = values[0];
-              formatCampaign.campaign_unit = values[1];
-              return res.status(200).send(formatCampaign);
-            }
-          });
+          var formatCampaign = values[0];
+          formatCampaign.campaign_unit = values[1];
+          return res.status(200).send(formatCampaign);
         }
-      })
-      .then(null, function (err) {
-        res.status(500).send({msg:'服务器错误'});
       });
     },
     updateCampaign: function (req, res) {

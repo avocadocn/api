@@ -18,6 +18,7 @@ mongoose.connect(config.db);
 
 // custom middlewares
 var token = require(path.join(rootPath, 'services/token.js'));
+var errorHandle = require(path.join(rootPath, 'services/error_handle.js'));
 
 var walk = function(path, callback) {
   fs.readdirSync(path).forEach(function(file) {
@@ -69,6 +70,8 @@ walk(path.join(rootPath, 'routes/'), function (file, path) {
   }
   require(path)(app, ctrl);
 });
+
+app.use(errorHandle);
 
 app.use(serveStatic(path.join(rootPath, 'public/')));
 module.exports = app;
