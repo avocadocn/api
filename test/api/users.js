@@ -1,18 +1,15 @@
-var app = require('../../config/express.js')
-  , request = require('supertest');
+var app = require('../../config/express.js'),
+  request = require('supertest')(app);
 
-request = request(app);
+var jwt = require('jsonwebtoken');
 
 var common = require('./common.js');
 
 describe('api users', function () {
 
-
-
   describe('post /users/login', function () {
 
     it('should login success if email and password are correct', function (done) {
-
       var data = common.getData();
       var user = data.companies[0].users[0];
 
@@ -26,22 +23,45 @@ describe('api users', function () {
           res.body.cid.should.equal(user.cid.toString());
           res.body.id.should.equal(user.id);
 
-          // todo validate token
+          jwt.verify(res.body.token, common.config.token.secret, function (err, decoded) {
+            if (err) {
+              console.log(err);
+              err.should.not.be.ok;
+            } else {
+              decoded.id.should.equal(user.id);
+              decoded.type.should.equal('user')
+            }
+            done();
+          });
 
-          done();
         });
     });
 
     it('should login failed if password is incorrect', function (done) {
+      var data = common.getData();
+      var user = data.companies[0].users[0];
 
       request.post('/users/login')
         .send({
-          email: 'cahavar@55yali.com',
+          email: user.email,
           password: '123456'
         })
         .expect(401)
         .end(function (err, res) {
-          res.body.msg.should.equal('密码输入错误,请检查重试。')
+          res.body.msg.should.equal('密码输入错误,请检查重试。');
+          done();
+        });
+    });
+
+    it('should login failed if email is not exists', function (done) {
+      request.post('/users/login')
+        .send({
+          email: 'unexits',
+          password: '123456'
+        })
+        .expect(401)
+        .end(function (err, res) {
+          res.body.msg.should.equal('邮箱地址不存在,请检查或注册。');
           done();
         });
     });

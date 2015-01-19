@@ -274,4 +274,4 @@ exports.getData = function () {
 };
 
 exports.mongoose = mongoose;
-
+exports.config = config;

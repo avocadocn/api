@@ -1,11 +1,10 @@
-var app = require('../../config/express.js')
-  , request = require('supertest');
-
-request = request(app);
+var app = require('../../config/express.js'),
+  request = require('supertest')(app);
 
 var common = require('./common.js');
 
 describe('api region', function () {
+
   describe('get /region', function () {
     it('it should be region json data', function (done) {
       request.get('/region')
