@@ -48,7 +48,6 @@
     "test-tap": "mocha --require test/support/env --reporter tap --check-leaks test/modules/ test/api/",
     "test-tap-modules": "mocha --require test/support/env --reporter tap --check-leaks test/modules/",
     "test-tap-api": "mocha --require test/support/env --reporter tap --check-leaks test/api/",
-    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --require test/support/env --report lcovonly -- --reporter spec --check-leaks test/modules/",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --require test/support/env --reporter dot --check-leaks test/modules/ test/api/"
   }
 }
