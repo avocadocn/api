@@ -5,7 +5,7 @@ var mongoose = common.mongoose;
 
 var donlerValidator = require(path.join(common.config.rootPath, 'services/donler_validator.js'));
 
-describe('donlerValidator', function () {
+describe('services.donlerValidator', function () {
 
   describe('async validate task', function () {
 

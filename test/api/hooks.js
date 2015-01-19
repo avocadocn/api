@@ -5,6 +5,7 @@ beforeEach(function (done) {
     if (err) {
       console.log(err.stack);
     }
+    console.log('finish hooks');
     done();
   });
 });

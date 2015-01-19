@@ -5,7 +5,7 @@ request = request(app);
 
 var common = require('./common.js');
 
-describe('region api', function () {
+describe('api region', function () {
   describe('get /region', function () {
     it('it should be region json data', function (done) {
       request.get('/region')
