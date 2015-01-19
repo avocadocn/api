@@ -3,6 +3,7 @@ var app = require('../../config/express.js')
 
 request = request(app);
 
+var common = require('./common.js');
 
 describe('region api', function () {
   describe('get /region', function () {

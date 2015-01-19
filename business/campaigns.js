@@ -4,7 +4,7 @@ var moment = require('moment');
 
 var tools = require('../tools/tools.js');
 var updateLatestPhotoService = require('../services/update_latestphotos');
-var auth = require('../services/auth.js')
+var auth = require('../services/auth.js');
 
 /**
  * 将活动数据结构转换为前端需要的形式，主要是添加开始结束及权限等标记
