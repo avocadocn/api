@@ -18,7 +18,8 @@ var logController = require('../controllers/log'),
     log = require('../services/error_log.js'),
     cache = require('../services/cache/Cache'),
     pushService = require('../services/push.js'),
-    tools = require('../tools/tools.js');
+    tools = require('../tools/tools.js'),
+    campaignBusiness = require('../business/campaigns');
 
 
 var searchCampaign = function(select_type, option, sort, limit, requestId, teamIds, populate, callback){
@@ -807,8 +808,11 @@ module.exports = function (app) {
       var campaign = req.campaign;
       async.series([
         function(callback){
-          var _formatCampaign = formatCampaign(campaign,req.user);
-          callback(null,_formatCampaign);
+          //var _formatCampaign = formatCampaign(campaign,req.user);
+          //callback(null,_formatCampaign);
+          campaignBusiness.formatCampaign(campaign, req.user, function (err, resCampaign) {
+            callback(null, resCampaign);
+          });
         },//格式化活动
         function(callback){
           _formatCampaignUnit(campaign,callback);
