@@ -50,7 +50,13 @@ app.set('tokenExpires', config.token.expires);
 app.use(cors({
   methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']
 }));
-app.use(morgan('dev'));
+
+if (config.env === 'development') {
+  app.use(morgan('dev'));
+} else if (config.env === 'production') {
+  app.use(morgan('combined'));
+}
+
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
