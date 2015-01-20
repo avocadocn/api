@@ -1,6 +1,6 @@
 var path = require('path');
 
-var common = require('./common.js');
+var common = require('../support/common.js');
 var mongoose = common.mongoose;
 
 var donlerValidator = require(path.join(common.config.rootPath, 'services/donler_validator.js'));

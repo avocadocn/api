@@ -3,7 +3,7 @@ var app = require('../../config/express.js'),
 
 var jwt = require('jsonwebtoken');
 
-var common = require('./common.js');
+var common = require('../support/common.js');
 
 describe('api users', function () {
 

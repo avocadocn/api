@@ -1,6 +1,6 @@
 'use strict';
 
-var common = require('./common');
+var common = require('../support/common');
 var mongoose = common.mongoose;
 var async = require('async');
 var User  = mongoose.model('User');

@@ -1,7 +1,7 @@
 var app = require('../../config/express.js'),
   request = require('supertest')(app);
 
-var common = require('./common.js');
+var common = require('../support/common.js');
 
 describe('api campaigns', function () {
 

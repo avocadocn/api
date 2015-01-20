@@ -6,7 +6,7 @@
 
 var user   = require('./user-test.js');
 var company   = require('./company-test.js');
-var canmpaign   = require('./canmpaign-test.js');
+var campaign   = require('./campaign-test.js');
 
 var userNum = 1;
 var companyNum = 10;

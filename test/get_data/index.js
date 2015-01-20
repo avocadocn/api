@@ -1,30 +1,8 @@
-var fs = require('fs');
-var path = require('path');
-var mongoose = require('mongoose');
+var common = require('../support/common.js');
+
+var mongoose = common.mongoose;
 var async = require('async');
 
-var config = require(path.join(__dirname, '../../config/config.js'));
-mongoose.createConnection(config.db);
-
-var walk = function(path, callback) {
-  fs.readdirSync(path).forEach(function(file) {
-    var newPath = path + '/' + file;
-    var stat = fs.statSync(newPath);
-    if (stat.isFile()) {
-      if (/(.*)\.(js$)/.test(file)) {
-        if (callback) {
-          callback(file, newPath)
-        } else {
-          require(newPath);
-        }
-      }
-    } else if (stat.isDirectory()) {
-      walk(newPath, callback);
-    }
-  });
-};
-// 初始化 mongoose models
-walk(path.join(config.rootPath, 'models/'));
 
 /**
  * 用于测试断言的数据
@@ -302,9 +280,6 @@ exports.getDataFromDB = function (callback) {
  * 获取已经从数据库获取到的数据
  * @returns {Object}
  */
-exports.getData = function () {
+module.exports = function () {
   return data;
 };
-
-exports.mongoose = mongoose;
-exports.config = config;

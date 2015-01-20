@@ -1,7 +1,7 @@
-var common = require('./common.js');
+var getData = require('../get_data');
 
 before(function (done) {
-  common.getDataFromDB(function (err) {
+  getData(function (err) {
     if (err) {
       console.log(err.stack);
     }

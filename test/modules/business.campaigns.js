@@ -1,7 +1,7 @@
 var path = require('path');
 var util = require('util');
 
-var common = require('./common.js');
+var common = require('../support/common.js');
 var campaignBusiness = require(path.join(common.config.rootPath, 'business/campaigns.js'));
 
 describe('business.campaign', function () {
