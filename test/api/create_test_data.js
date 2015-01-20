@@ -6,8 +6,6 @@ var async = require('async');
 var User  = mongoose.model('User');
 var Chance = require('chance');
 
-var async = require('async');
-
 /**
  * 生成公司数据
  * @param {Function} callback 形式为function(err, companies){}
