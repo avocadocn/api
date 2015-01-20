@@ -20,6 +20,7 @@ describe('api users', function () {
         })
         .expect(200)
         .end(function (err, res) {
+          if (err) return done(err);
           res.body.cid.should.equal(user.cid.toString());
           res.body.id.should.equal(user.id);
 
@@ -48,6 +49,7 @@ describe('api users', function () {
         })
         .expect(401)
         .end(function (err, res) {
+          if (err) return done(err);
           res.body.msg.should.equal('密码输入错误,请检查重试。');
           done();
         });
@@ -61,11 +63,55 @@ describe('api users', function () {
         })
         .expect(401)
         .end(function (err, res) {
+          if (err) return done(err);
           res.body.msg.should.equal('邮箱地址不存在,请检查或注册。');
           done();
         });
     });
 
   });
+
+  describe('post /users/logou', function () {
+
+    var accessToken;
+    beforeEach(function (done) {
+      var data = common.getData();
+      var user = data.companies[0].users[0];
+      request.post('/users/login')
+        .send({
+          email: user.email,
+          password: '55yali'
+        })
+        .end(function (err, res) {
+          if (err) return done(err);
+          if (res.statusCode === 200) {
+            accessToken = res.body.token;
+          }
+          done();
+        });
+    });
+
+    it('should logout success if token is correct', function (done) {
+      request.post('/users/logout')
+        .set('x-access-token', accessToken)
+        .expect(204)
+        .end(function (err, res) {
+          if (err) return done(err);
+          done();
+        });
+    });
+
+    it('should receive 401 if token is incorrect', function (done) {
+      request.post('/users/logout')
+        .set('x-access-token', 'random')
+        .expect(401)
+        .end(function (err, res) {
+          if (err) return done(err);
+          done();
+        });
+    });
+
+  });
+
 
 });

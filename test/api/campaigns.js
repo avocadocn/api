@@ -16,6 +16,7 @@ describe('api campaigns', function () {
         password: '55yali'
       })
       .end(function (err, res) {
+        if (err) return done(err);
         if (res.statusCode === 200) {
           accessToken = res.body.token;
         }
@@ -33,6 +34,7 @@ describe('api campaigns', function () {
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
+          if (err) return done(err);
           res.body._id.should.equal(campaign.id);
           done();
         });
