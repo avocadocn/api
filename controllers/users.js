@@ -201,8 +201,7 @@ module.exports = function (app) {
         password: req.body.password,
         realname: req.body.realname,
         phone: req.body.phone,
-        role: 'EMPLOYEE',
-        invite_active: false
+        role: 'EMPLOYEE'
       });
 
       var inviteKeyValid = false;

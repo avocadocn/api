@@ -54,7 +54,7 @@ var UserSchema = new Schema({
     username: {
         type: String,
         unique: true
-    },
+    },//登录用的用户名=email
     email: {
         type: String,
         unique: true
@@ -76,11 +76,13 @@ var UserSchema = new Schema({
     //     default: true
     // },
     hashed_password: String,
+    //标记是user or company, company也有对应属性
     provider: {
         type: String,
         default: 'user'
     },
     salt: String,
+    //头像
     photo: {
         type: String,
         default: '/img/icons/default_user_photo.png'
@@ -92,7 +94,7 @@ var UserSchema = new Schema({
         name : String,
         _id : Schema.Types.ObjectId
     },
-    position: String,
+    position: String,//职位？已不用
     sex: {
         type: String,
         enum: ['男', '女']
@@ -104,13 +106,16 @@ var UserSchema = new Schema({
         type: String,
         enum: ['AB', 'A', 'B', 'O' ]
     },
+    //个人简介
     introduce: {
         type: String
     },
+    //注册日期
     register_date: {
         type: Date,
         default: Date.now
     },
+    //手机
     phone: {
         type: String
     },
@@ -121,12 +126,13 @@ var UserSchema = new Schema({
         type: String,
         enum: ['LEADER','EMPLOYEE']      //队长 普通员工
     },
+    //公司_id
     cid: {
         type: Schema.Types.ObjectId,
         ref: 'Company'
     },
-    cname: String,
-    company_official_name: String,
+    cname: String,// 公司全称
+    company_official_name: String,//公司简称
     team: [_team],
     established_team: [_team],           //自己创建的小队
     //本系统是否关闭此人
@@ -139,11 +145,12 @@ var UserSchema = new Schema({
         type:Boolean,
         default:false
     },
+    //暂时不用,顶置campaign
     top_campaign:{
         type: Schema.Types.ObjectId,
         ref: 'Campaign'
     },
-    last_comment_time: Date,
+    last_comment_time: Date,//个人首页需要用的
     commentCampaigns: [latestCommentCampaign],//参加了的讨论列表
     unjoinedCommentCampaigns: [latestCommentCampaign], //未参加的讨论列表
     score: {
@@ -179,6 +186,7 @@ var UserSchema = new Schema({
     },
     //自己写的标签
     tags: [String],
+    //参加过多少campaign
     campaignCount:Number
 });
 
