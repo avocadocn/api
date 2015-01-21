@@ -1,9 +1,11 @@
 'use strict';
 
 var chance = require('./chance.js');
+var common = require('../support/common.js');
+var mongoose = common.mongoose;
+var Company = mongoose.model('Company');
 /**
  * 生成公司数据
- *
  * @param {Function} callback 形式为function(err, companies){}
  */
 var createCompanies = function(callback) {
@@ -11,9 +13,10 @@ var createCompanies = function(callback) {
   // The number of companies that you want to create
   var num = 3;
   for (var i = 0; i < num; i++) {
+    // 非异步方法
     chance.generateCompanyData(function(err, result) {
       var company = new Company({
-        username: data.username,
+        username: result.username,
         login_email: result.email,
         email: {
           domain: [result.email.split('@')[1]]
@@ -43,8 +46,9 @@ var createCompanies = function(callback) {
 
       // Insert the company data to MongoDB 
       company.save(function(err) {
-        if (err) console.log(err);
-        process.exit(0);
+        if (err) {
+          console.log(err.stack);
+        }
       });
 
       companies.push(company);

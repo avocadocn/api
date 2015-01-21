@@ -9,12 +9,10 @@ var morgan = require('morgan');
 var bodyParser = require('body-parser');
 var moment = require('moment');
 var cors = require('cors');
-var mongoose = require('mongoose');
+var mongoose = require(path.join(__dirname, 'db.js'));
 
 var rootPath = path.join(__dirname, '../');
 var config = require(path.join(rootPath, 'config/config.js'));
-
-mongoose.connect(config.db);
 
 // custom middlewares
 var token = require(path.join(rootPath, 'services/token.js'));
@@ -37,8 +35,6 @@ var walk = function(path, callback) {
     }
   });
 };
-// 初始化 mongoose models
-walk(path.join(rootPath, 'models/'));
 
 var app = express();
 
