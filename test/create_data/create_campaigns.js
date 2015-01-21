@@ -1,5 +1,5 @@
 'use strict';
-var common = require('../api/common');
+var common = require('../support/common');
 var mongoose = common.mongoose;
 var Campaign = mongoose.model('Campaign'),
     PhotoAlbum = mongoose.model('PhotoAlbum'),
@@ -259,7 +259,6 @@ var createCampaigns = function (companyDataList, callback) {
           uid: companyDataList[0].teams[0].leader[0]._id,
           nickname: companyDataList[0].teams[0].leader[0].nickname,
           role: 'LEADER'
-          }
         }
         var campaignUnits = [{
           company:{
@@ -334,7 +333,6 @@ var createCampaigns = function (companyDataList, callback) {
           uid: companyDataList[0].teams[1].leader[0]._id,
           nickname: companyDataList[0].teams[1].leader[0].nickname,
           role: 'LEADER'
-          }
         }
         var teamOneUsers = [];
         companyDataList[0].teams[1].users.forEach(function(user){
@@ -479,7 +477,6 @@ var createCampaigns = function (companyDataList, callback) {
       uid: companyDataList[0].teams[1].leader[0]._id,
       nickname: companyDataList[0].teams[1].leader[0].nickname,
       role: 'LEADER'
-      }
     }
     var teamOneUsers = [];
     companyDataList[0].teams[0].users.forEach(function(user){
@@ -611,6 +608,6 @@ var createCampaigns = function (companyDataList, callback) {
     });
   }
 
-};
+}
 
 module.exports = createCampaigns;

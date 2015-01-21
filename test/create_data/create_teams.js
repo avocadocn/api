@@ -5,6 +5,7 @@ var common = require('../support/common');
 var mongoose = common.mongoose;
 var CompanyGroup = mongoose.model('CompanyGroup');
 
+
 /**
  * 为公司生成小队
  * 生成至少4个小队，t0为类型A，t1~t3为类型B
