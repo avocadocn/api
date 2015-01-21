@@ -126,7 +126,7 @@ var Campaign = new Schema({
   poster: {
     cid: String,                       //活动发起者所属的公司
     cname: String,
-    tname: String,
+    // tname: String,  //poster 怎么会有tname这个东西呢
     uid: String,
     nickname: String,
     role: {
