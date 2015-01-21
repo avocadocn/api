@@ -45,27 +45,25 @@ module.exports = function (callback) {
             }
           }, function (err, results) {
 
-            
-
-            // 将小队和用户数据往下传递
-            waterfallCallback(err, {
-              teams: results.teams,
-              users: results.users
+            results.teams.forEach(function (team) {
+              resCompanyData.teams.push({
+                model: team,
+                users: [],
+                leaders: [],
+                campaigns: []
+              });
             });
+            resCompanyData.users = results.users;
+            waterfallCallback(err);
           });
         },
-        function (data, waterfallCallback) {
+        function (waterfallCallback) {
           // 用户加入小队
-          addUsersToTeams(data.users, data.teams, function (err) {
-            waterfallCallback(err, {
-              teams: data.teams,
-              users: data.users
-            });
-          });
+          addUsersToTeams(resCompanyData, waterfallCallback);
         },
-        function (data, waterfallCallback) {
+        function (waterfallCallback) {
           // 生成除跨公司挑战外的活动并让部分成员加入
-          createCampaigns(companyData, function (err, companyData) {
+          createCampaigns([resCompanyData], function (err, companyData) {
             waterfallCallback(err, companyData);
           });
         }
@@ -75,7 +73,7 @@ module.exports = function (callback) {
       });
     }, function (err, results) {
       // 生成跨公司的挑战数据
-      createCompanyProvokes(results, function (err, companyDataList) {
+      createCampaigns(results, function (err, companyDataList) {
         callback(err, companyDataList);
       });
     });

@@ -1,5 +1,39 @@
 'use strict';
 var async = require('async');
+
+/**
+ * 让公司部分员工加入小队
+ * example:
+ *  var companyData = {
+ *    model: doc,
+ *    teams: [{
+ *      model: doc,
+ *      campaigns: [],
+ *      users: [],
+ *      leaders: []
+ *    }],
+ *    users: [doc]
+ *  }
+ *  addUsersToTeams(companyData, function(err) {
+ *    //companyData: {
+ *    //  model: doc,
+ *    //  teams: [{
+ *    //    model: doc,
+ *    //    campaigns: [],
+ *    //    users: [doc],
+ *    //    leaders: [doc]
+ *    //  }],
+ *    //  users: [doc]
+ *    //}
+ *  });
+ *
+ * @param {Object} companyData 公司数据
+ * @param {Function} callback 执行完后的回调函数
+ */
+//var addUsersToTeams = function (companyData, callback) {
+//
+//}
+
 /**
  * 让公司的部分员工加入几个小队
  * @param {Array} users 公司的所有成员
