@@ -4,7 +4,6 @@ var chance = require('./chance.js');
 var common = require('../support/common');
 var mongoose = common.mongoose;
 var CompanyGroup = mongoose.model('CompanyGroup');
-var _team = mongoose.model('_team');
 
 /**
  * 为公司生成小队
@@ -52,12 +51,12 @@ var createTeams = function(company, callback) {
       team.save(function(err) {
       });
       
-      var _team = new _team({
+      var _team = {
         gid : team.gid,
         group_type: team.group_type,
         name: team.name,
         id: team._id,
-      });
+      };
 
       teams.push(team);
       _teams.push(_team);
