@@ -11,6 +11,21 @@ var createUsers = require('./create_users.js');
 var addUsersToTeams = require('./add_users_to_teams.js');
 var createCampaigns = require('./create_campaigns.js');
 
+/**
+ * 公司数据列表，保存公司及其员工、小队、活动数据
+ *  [{
+ *    model: doc, // mongoose.model('Company')
+ *    teams: [{
+ *      model: doc, // mongoose.model('Team')
+ *      campaigns: [doc], // mongoose.model('Campaign')
+ *      users: [doc], // mongoose.model('User')
+ *      leaders: [doc] // mongoose.model('User')
+ *    }],
+ *    users: [doc], // mongoose.model('User')
+ *    campaigns: [doc] // mongoose.model('Campaign')
+ *  }]
+ * @type {Array}
+ */
 var resCompanyDataList = [];
 
 /**
