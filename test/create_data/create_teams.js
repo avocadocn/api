@@ -4,6 +4,7 @@ var chance = require('./chance.js');
 var common = require('../support/common');
 var mongoose = common.mongoose;
 var CompanyGroup = mongoose.model('CompanyGroup');
+var _team = mongoose.model('_team');
 
 /**
  * 为公司生成小队
@@ -13,6 +14,7 @@ var CompanyGroup = mongoose.model('CompanyGroup');
  */
 var createTeams = function(company, callback) {
   var teams = [];
+  var _teams = [];
   // The number of teams that you want to create
   var num = 6;
 
@@ -45,16 +47,27 @@ var createTeams = function(company, callback) {
           district: company.info.city.district
         }
       });
+      
       // Insert the company data to MongoDB
       team.save(function(err) {
-        if (err) {
-          console.log(err.stack);
-        }
+      });
+      
+      var _team = new _team({
+        gid : team.gid,
+        group_type: team.group_type,
+        name: team.name,
+        id: team._id,
       });
 
       teams.push(team);
+      _teams.push(_team);
+
     });
   }
+  company.team = _teams;
+  company.save(function(err){
+
+  });
 
   callback(null, teams);
 
