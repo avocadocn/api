@@ -11,13 +11,13 @@ var createUsers = require('./create_users.js');
 var addUsersToTeams = require('./add_users_to_teams.js');
 var createCampaigns = require('./create_campaigns.js');
 
+var resCompanyDataList = [];
+
 /**
  * 生成测试数据
- * @param {Function} callback 完成后的回调函数，形式为function(err, companyDataList){}
+ * @param {Function} callback 完成后的回调函数，形式为function(err){}
  */
-module.exports = function (callback) {
-
-  var resCompanyDataList = [];
+exports.createData = function (callback) {
 
   createCompanies(function (err, companies) {
     // 为每个公司生成小队、用户、活动等数据
@@ -74,10 +74,15 @@ module.exports = function (callback) {
     }, function (err, results) {
       // 生成跨公司的挑战数据
       createCampaigns(results, function (err, companyDataList) {
-        callback(err, companyDataList);
+        resCompanyDataList = companyDataList;
+        callback(err);
       });
     });
 
   });
 
+};
+
+exports.getData = function () {
+  return resCompanyDataList;
 };

@@ -1,7 +1,7 @@
-var getData = require('../get_data');
+var createDataModule = require('../create_data');
 
 before(function (done) {
-  getData(function (err) {
+  createDataModule.createData(function (err) {
     if (err) {
       console.log(err.stack);
     }

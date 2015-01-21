@@ -3,14 +3,15 @@ var app = require('../../config/express.js'),
 
 var jwt = require('jsonwebtoken');
 
-var common = require('../support/common.js');
+var dataService = require('../create_data');
+var common = require('../support/common');
 
 describe('api users', function () {
 
   describe('post /users/login', function () {
 
     it('should login success if email and password are correct', function (done) {
-      var data = common.getData();
+      var data = dataService.getData();
       var user = data.companies[0].users[0];
 
       request.post('/users/login')
@@ -39,7 +40,7 @@ describe('api users', function () {
     });
 
     it('should login failed if password is incorrect', function (done) {
-      var data = common.getData();
+      var data = dataService.getData();
       var user = data.companies[0].users[0];
 
       request.post('/users/login')
@@ -75,7 +76,7 @@ describe('api users', function () {
 
     var accessToken;
     beforeEach(function (done) {
-      var data = common.getData();
+      var data = dataService.getData();
       var user = data.companies[0].users[0];
       request.post('/users/login')
         .send({

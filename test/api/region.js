@@ -1,7 +1,7 @@
 var app = require('../../config/express.js'),
   request = require('supertest')(app);
 
-var common = require('../support/common.js');
+var dataService = require('../create_data');
 
 describe('api region', function () {
 
