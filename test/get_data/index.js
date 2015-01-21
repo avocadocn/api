@@ -21,6 +21,32 @@ var async = require('async');
  *    }]
  *    // 其它数据待补充
  *  }
+ *
+ * 数据说明（待定，未使用）：
+ *  companies[0]有4个特殊的小队，teams[0]是类型A，teams[1]、teams[2]和teams[3]为类型B；
+ *  users[0]为teams[0]的队长
+ *  users[1]为teams[1]的队长
+ *  users[2]为teams[2]和teams[3]的队长
+ *  users[3]不是队长
+ *  对于公司活动和小队内部活动:
+ *  campaigns[0]: 即将开始，没有人参加的活动
+ *  campaigns[1]: 即将开始，有人参加的活动
+ *  campaigns[2]: 正在进行的活动的活动
+ *  campaigns[3]: 已结束的活动
+ *  campaigns[4]: 已关闭的活动
+ *  小队挑战:
+ *  teams[1]:
+ *    campaigns[5]: teams[1]对teams[2]发起的挑战，未应战
+ *    campaigns[6]: teams[1]对teams[2]发起的挑战，已被接受，未开始
+ *    campaigns[7]: teams[1]对teams[2]发起的挑战，被拒绝
+ *  teams[2]:
+ *    campaigns[5]: teams[2]对teams[3]发起的挑战，未应战
+ *
+ *  companies[1]有1个小队，teams[0]为类型B，users[0]为teams[0]的队长
+ *    teams[0]:
+ *      campaigns[0]: ...
+ *
+ *  注：以下方法需要修改以获取符合上述要求的数据
  */
 var data = {};
 
