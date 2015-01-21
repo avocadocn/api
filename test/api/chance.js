@@ -44,125 +44,301 @@ var _region = [{"name" : "安徽省", "id" : "C62A0E03-74B0-0001-3869-592A1EB023
  *
  **/
 exports.generateCompanyData = function(callback) {
-	// Instantiate Chance
-	var chance = new Chance();
-	
-	// Generate a random name
-	var name = chance.string({length: 10});// length: specify a length of string
+  // Instantiate Chance
+  var chance = new Chance();
+
+  // Generate a random username
+  var username = chance.string();
+
+  // Generate a random name
+  var name = chance.string({
+    length: 10
+  }); // length: specify a length of string
 
 
-	// Genarate a random email
-	var email = chance.email({domain: '55yali.com'})// domain: specify a domain
+  // Genarate a random email
+  var email = chance.email({
+      domain: '55yali.com'
+    }) // domain: specify a domain
 
-	// Generate a random contacts 
-	var contacts = chance.name();
+  // Generate a random contacts 
+  var contacts = chance.name();
 
-	// Generate a random province-city-district
-	var chance = new Chance();
+  // Generate a random province-city-district
+  var chance = new Chance();
 
-	var provinceId = chance.integer({min: 0, max: 30});// a random province id
-	var provinceName = _region[provinceId].name;
+  var provinceId = chance.integer({
+    min: 0,
+    max: 30
+  }); // a random province id
+  var provinceName = _region[provinceId].name;
 
-	var cityId = chance.integer({min: 0, max: _region[provinceId].city.length - 1});// a random city id
-	var cityName = _region[provinceId].city[cityId].name;
+  var cityId = chance.integer({
+    min: 0,
+    max: _region[provinceId].city.length - 1
+  }); // a random city id
+  var cityName = _region[provinceId].city[cityId].name;
 
-	var districtId = chance.integer({min: 0, max: _region[provinceId].city[cityId].district.length - 1});// a random district id
-	var districtName = _region[provinceId].city[cityId].district[districtId].name;
+  var districtId = chance.integer({
+    min: 0,
+    max: _region[provinceId].city[cityId].district.length - 1
+  }); // a random district id
+  var districtName = _region[provinceId].city[cityId].district[districtId].name;
 
-	// Generate a random phone number
-	var phone = chance.string({length: 11, pool: '123456789'});//no zero
+  // Generate a random phone number
+  var phone = chance.string({
+    length: 11,
+    pool: '123456789'
+  }); //no zero
 
-	// Generate a random landline
-	var areacode = chance.string({length: 4, pool: '0123456789'});
-	var tel = chance.string({pool: '0123456789'});
-	var extension = chance.string({pool: '0123456789'});
+  // Generate a random landline
+  var areacode = chance.string({
+    length: 4,
+    pool: '0123456789'
+  });
+  var tel = chance.string({
+    pool: '0123456789'
+  });
+  var extension = chance.string({
+    pool: '0123456789'
+  });
 
-	var data = {};
+  var data = {};
 
-	data.name 			= 	name;
-	data.province 		= 	provinceName;
-	data.city 			= 	cityName;
-	data.district 		= 	districtName;
-	data.address 		= 	provinceName + cityName + districtName;
-	data.areacode 		= 	areacode;
-	data.tel	 		= 	tel;
-	data.extension 		= 	extension;
-	data.contacts 		= 	contacts;
-	data.phone 			= 	phone;
-	data.email 			= 	email;
-	data.login_email 	= 	email;
+  data.username = username;
+  data.name = name;
+  data.province = provinceName;
+  data.city = cityName;
+  data.district = districtName;
+  data.address = provinceName + cityName + districtName;
+  data.areacode = areacode;
+  data.tel = tel;
+  data.extension = extension;
+  data.contacts = contacts;
+  data.phone = phone;
+  data.email = email;
+  data.login_email = email;
 
-	callback(null, data);
+  callback(null, data);
 }
 
 exports.generateUserData = function(domain, callback) {
-	// Instantiate Chance
-	var chance = new Chance();
+  // Instantiate Chance
+  var chance = new Chance();
 
-	// Genarate a random email
-	var email = chance.email({domain: domain})// domain: specify a domain
+  // Genarate a random email
+  var email = chance.email({
+      domain: domain
+    }) // domain: specify a domain
 
-	// Generate a random name
-	var name = chance.string({length: 10});// length: specify a length of string
+  // Generate a random name
+  var name = chance.string({
+    length: 10
+  }); // length: specify a length of string
 
-	// Generate a random nickname 
-	var nickname = chance.name();
+  // Generate a random nickname 
+  var nickname = chance.name();
 
-    // Generate a random nickname 
-	var realname = chance.name();
+  // Generate a random nickname 
+  var realname = chance.name();
 
-	// Generate a random password
-	var password = '55yali';//chance.string();
-    
-    // Generate a random phone number
-	var phone = chance.string({length: 11, pool: '123456789'});//no zero
+  // Generate a random password
+  var password = '55yali'; //chance.string();
 
-	var data = {};
-	data.email 		= 	email;
-	data.name  		= 	name;
-	data.nickname 	= 	nickname;
-	data.password 	= 	password;
-	data.realname 	= 	realname;
-	data.phone 		= 	phone;
+  // Generate a random phone number
+  var phone = chance.string({
+    length: 11,
+    pool: '123456789'
+  }); //no zero
 
-	callback(null, data);
+  var data = {};
+  data.email = email;
+  data.name = name;
+  data.nickname = nickname;
+  data.password = password;
+  data.realname = realname;
+  data.phone = phone;
+
+  callback(null, data);
 
 }
 
 exports.generateCampaignData = function(callback) {
-	// Instantiate Chance
-	var chance = new Chance();
+  // Instantiate Chance
+  var chance = new Chance();
 
-	// Generate a random theme
-	var theme = chance.string({length: 10});// length: specify a length of string
+  // Generate a random theme
+  var theme = chance.string({
+    length: 10
+  }); // length: specify a length of string
 
-	// Genarate a random content
-	var content = chance.sentence();
+  // Genarate a random content
+  var content = chance.sentence();
 
-	// Generate a random min member 
-	var memberMin = chance.integer({min: 0, max: 10});
+  // Generate a random min member 
+  var memberMin = chance.integer({
+    min: 0,
+    max: 10
+  });
 
-	// Generate a random max member 
-	var memberMax = chance.integer({min: 10, max: 100});
+  // Generate a random max member 
+  var memberMax = chance.integer({
+    min: 10,
+    max: 100
+  });
 
-    // Generate a random start-time 
-	var startTime = chance.date({year: 2015, month: 0});
+  // Generate a random start-time 
+  var startTime = chance.date({
+    year: 2015,
+    month: 0
+  });
 
-	// Generate a random end-time
-	var endTime = chance.date({year: 2015, month: 2});
+  // Generate a random end-time
+  var endTime = chance.date({
+    year: 2015,
+    month: 2
+  });
 
-    // Generate a random deadline
-	var deadline = chance.date({year: 2015, month: 1});
+  // Generate a random deadline
+  var deadline = chance.date({
+    year: 2015,
+    month: 1
+  });
 
-	var data = {};
-	data.theme 			= 	theme;
-	data.content  		= 	content;
-	data.memberMin 		= 	memberMin;
-	data.memberMax 		= 	memberMax;
-	data.startTime 		= 	startTime;
-	data.endTime 		= 	endTime;
-	data.deadline      	= 	deadline;
+  var data = {};
+  data.theme = theme;
+  data.content = content;
+  data.memberMin = memberMin;
+  data.memberMax = memberMax;
+  data.startTime = startTime;
+  data.endTime = endTime;
+  data.deadline = deadline;
 
-	callback(null, data);
+  callback(null, data);
 }
 
+var _group = [{
+  '_id': '0',
+  'group_type': '虚拟组',
+  'entity_type': 'virtual',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '1',
+  'group_type': '羽毛球',
+  'entity_type': 'Badminton',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '2',
+  'group_type': '篮球',
+  'entity_type': 'BasketBall',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '3',
+  'group_type': '阅读',
+  'entity_type': 'Reading',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '4',
+  'group_type': '自行车',
+  'entity_type': 'Bicycle',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '5',
+  'group_type': '台球',
+  'entity_type': 'TableTennis',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '6',
+  'group_type': '钓鱼',
+  'entity_type': 'Fishing',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '7',
+  'group_type': '足球',
+  'entity_type': 'FootBall',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '8',
+  'group_type': 'k歌',
+  'entity_type': 'KTV',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '9',
+  'group_type': '户外',
+  'entity_type': 'OutDoor',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '10',
+  'group_type': '乒乓球',
+  'entity_type': 'PingPong',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '11',
+  'group_type': '跑步',
+  'entity_type': 'Running',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}, {
+  '_id': '12',
+  'group_type': '游泳',
+  'entity_type': 'Swimming',
+  'icon': 'default',
+  'active': true,
+  'group_rule': 'default'
+}];
+/**
+ * The function produces a random team data with the chance.
+ *
+ **/
+exports.generateTeamData = function(callback) {
+  // Instantiate Chance
+  var chance = new Chance();
+
+  // Generate a random gid, group_type, entity_type
+  var id = chance.integer({
+    min: 0,
+    max: 12
+  });
+
+  var gid = _group[id]._id;
+  var group_type = _group[id].group_type;
+  var entity_type = _group[id].entity_type;
+
+  // Genarate a random name
+  var name = chance.string();
+
+  // Genarate a random brief
+  var brief = chance.sentence();
+
+  var data = {};
+  data.gid = gid;
+  data.group_type = group_type;
+  data.entity_type = entity_type;
+  data.brief = brief;
+  data.name = name;
+
+  callback(null, data);
+}
