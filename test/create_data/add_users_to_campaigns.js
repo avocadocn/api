@@ -9,6 +9,9 @@
  */
 var addUsersToCampaigns = function (users, campaigns, callback) {
   // todo
+
+
+
 };
 
 module.exports = addUsersToCampaigns;

@@ -71,7 +71,10 @@ module.exports = function (callback) {
             campaigns.concat(results.createCompanyCampaigns, results.createTeamCampaigns, results.createInnerProvokes);
             addUsersToCampaigns(data.users, campaigns, function (err) {
               // 将小队数据传递给结果处理函数
-              waterfallCallback(err, data.teams);
+              waterfallCallback(err, {
+                teams: data.teams,
+                users: data.users
+              });
             });
 
           });
@@ -80,7 +83,8 @@ module.exports = function (callback) {
         // mapCallback 公司及小队数据，以便生成跨公司挑战
         mapCallback(err, {
           company: company,
-          teams: result
+          teams: result.teams,
+          users: result.users
         });
       });
     }, function (err, results) {
