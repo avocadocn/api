@@ -128,10 +128,9 @@ var createNewUser = function(opts, callback) {
   });
   user.save(function(err) {
     if(err){
-      callback(err)
-      else{
-        callback(null, user);
-      }
+      callback(err);
+    }else{
+      callback(null, user);
     }
   });
 }
@@ -167,7 +166,7 @@ var createUsers = function (company, callback) {
       if(err) {
         console.log(err);
       } else {
-        callback(users);
+        callback(null, users);
       }
     }
   );
