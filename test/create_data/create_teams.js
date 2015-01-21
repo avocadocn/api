@@ -4,6 +4,7 @@ var chance = require('./chance.js');
 
 /**
  * 为公司生成小队
+ * 生成至少4个小队，t0为类型A，t1~t3为类型B
  * @param {Object} company
  * @param {Function} callback 形式为function(err, teams){}
  */

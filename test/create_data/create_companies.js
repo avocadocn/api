@@ -3,6 +3,7 @@
 var chance = require('./chance.js');
 /**
  * 生成公司数据
+ *
  * @param {Function} callback 形式为function(err, companies){}
  */
 var createCompanies = function(callback) {
