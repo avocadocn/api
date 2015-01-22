@@ -34,10 +34,18 @@ var resCompanyDataList = [];
  */
 exports.createData = function (callback) {
 
+  console.log('开始创建公司');
   createCompanies(function (err, companies) {
+    if (err) {
+      console.error('创建公司数据失败');
+      callback(err);
+      return;
+    }
+    console.log('成功创建了', companies.length, '个公司');
+    console.log('开始为每个公司生成小队、用户、活动等数据')
     // 为每个公司生成小队、用户、活动等数据
     async.map(companies, function (company, mapCallback) {
-
+      console.log('开始生成公司', company.info.name, '的数据');
       var resCompanyData = {
         model: company,
         teams: [],
@@ -52,14 +60,21 @@ exports.createData = function (callback) {
           async.parallel({
             teams: function (parallelCallback) {
               // 生成小队数据
+              console.log('开始生成小队数据');
               createTeams(company, parallelCallback);
             },
             users: function (parallelCallback) {
               // 生成用户数据
+              console.log('开始生成用户数据');
               createUsers(company, parallelCallback);
             }
           }, function (err, results) {
-
+            if (err) {
+              console.log('生成小队或用户数据失败');
+              callback(err);
+              return;
+            }
+            console.log('成功生成小队和用户的数据');
             results.teams.forEach(function (team) {
               resCompanyData.teams.push({
                 model: team,
@@ -69,28 +84,48 @@ exports.createData = function (callback) {
               });
             });
             resCompanyData.users = results.users;
-            waterfallCallback(err);
+            waterfallCallback();
           });
         },
         function (waterfallCallback) {
           // 用户加入小队
+          console.log('让公司的用户加入小队');
           addUsersToTeams(resCompanyData, waterfallCallback);
         },
         function (waterfallCallback) {
           // 生成除跨公司挑战外的活动并让部分成员加入
+          console.log('加入小队成功，开始生成除跨公司挑战外的活动');
           createCampaigns([resCompanyData], function (err, companyData) {
             waterfallCallback(err, companyData);
           });
         }
       ], function (err, result) {
+        if (err) {
+          console.error('生成公司', company.info.name, '的活动失败');
+          callback(err);
+          return;
+        }
         // mapCallback 公司及小队数据，以便生成跨公司挑战
-        mapCallback(err, result);
+        console.log('成功生成公司', company.info.name, '的数据');
+        mapCallback(null, result);
       });
     }, function (err, results) {
-      // 生成跨公司的挑战数据
-      createCampaigns(results, function (err, companyDataList) {
-        resCompanyDataList = companyDataList;
+      if (err) {
+        console.error('生成公司', company.info.name, '的数据失败');
         callback(err);
+        return;
+      }
+      // 生成跨公司的挑战数据
+      console.log('开始生成跨公司挑战的数据');
+      createCampaigns(results, function (err, companyDataList) {
+        if (err) {
+          console.log('生成跨公司挑战数据失败');
+          callback(err);
+          return;
+        }
+        resCompanyDataList = companyDataList;
+        console.log('成功生成所有测试数据');
+        callback();
       });
     });
 
