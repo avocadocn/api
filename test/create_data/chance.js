@@ -82,11 +82,12 @@ exports.generateCompanyData = function(callback) {
   }); // a random city id
   var cityName = _region[provinceId].city[cityId].name;
 
+  var districtLength = _region[provinceId].city[cityId].district.length;
   var districtId = chance.integer({
     min: 0,
     max: _region[provinceId].city[cityId].district.length ? 0: _region[provinceId].city[cityId].district.length-1
   }); // a random district id
-  var districtName = districtId ? _region[provinceId].city[cityId].district[districtId].name : '';
+  var districtName = districtLength ? _region[provinceId].city[cityId].district[districtId].name : '';
 
   // Generate a random phone number
   var phone = chance.string({

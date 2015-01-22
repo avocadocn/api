@@ -43,7 +43,7 @@ var addUsersToTeams = function (companyData, callback) {
   };
   var userLength = companyData.users.length;
   var teamLength = companyData.teams.length;
-  for(var i =companyData.users.length; i<userLength; i++) {//其他人数据初始化
+  for(var i =companyData.users.length; i>3; i--) {//其他人数据初始化
     relationship[i]=[];
     for(var j = 0; j<teamLength; j++){
       relationship[i].push(random0or1());
@@ -53,26 +53,36 @@ var addUsersToTeams = function (companyData, callback) {
 
   //根据relationship修改user、teams
   for(var i=0; i<userLength; i++) {
+    if(!relationship[i]) relationship[i]=[];
     for(var j=0; j<teamLength; j++) {
       if(relationship[i][j]&&relationship[i][j]>0) {
+        //修改users
         companyData.users[i].team.push({
-          gid : companyData.teams[j].gid,
-          _id : companyData.teams[j]._id,
-          group_type : companyData.teams[j].group_type,
-          entity_type : companyData.teams[j].entity_type,
-          name : companyData.teams[j].name,
+          gid : companyData.teams[j].model.gid,
+          _id : companyData.teams[j].model._id,
+          group_type : companyData.teams[j].model.group_type,
+          entity_type : companyData.teams[j].model.entity_type,
+          name : companyData.teams[j].model.name,
           leader : relationship[i][j]===2,
-          logo : companyData.teams[j].logo
+          logo : companyData.teams[j].model.logo
         });
-        if(relationship[i][j]===2) users[i].role = 'LEADER';
+        if(relationship[i][j]===2) companyData.users[i].role = 'LEADER';
+        //修改team的model
         var member =  {
           _id : companyData.users[i]._id,
           nickname: companyData.users[i].nickname,
           photo: companyData.users[i].photo
         };
-        companyData.teams[j].member.push(member);
+        companyData.teams[j].model.member.push(member);
+        //修改team的model外的users
+        // companyData.teams[j].users.push(companyData.users[i]);
+        // 不能在这里push进去，因为users还未更新完。只能for循环两次了...
         if(relationship[i][j]===2) {
-          companyData.teams[j].leader.push(member);
+          //修改team的model
+          companyData.teams[j].model.leader.push(member);
+          //修改team的model外的leaders
+          // companyData.teams[j].leaders.push(companyData.users[i]);
+          // 不能在这里push进去，因为users还未更新完。只能for循环两次了...
         }
       }
     }
@@ -82,8 +92,20 @@ var addUsersToTeams = function (companyData, callback) {
       }
     });
   }
+  for(var i=0; i<userLength; i++) {
+    for(var j=0; j<teamLength; j++) {
+      if(relationship[i][j]&&relationship[i][j]>0) {
+        companyData.teams[j].users.push(companyData.users[i]);
+        if(relationship[i][j]===2) {
+          companyData.teams[j].leaders.push(companyData.users[i]);
+        }
+      }
+    }
+  }
+  console.log(companyData.teams);
+
   for(var k =0; k<teamLength; k++) {
-    companyData.teams[k].save(function(err) {
+    companyData.teams[k].model.save(function(err) {
       if(err) {
         console.log(err);
       }
