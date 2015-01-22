@@ -44,7 +44,6 @@ var _region = [{"name" : "安徽省", "id" : "C62A0E03-74B0-0001-3869-592A1EB023
  *
  **/
 exports.generateCompanyData = function(callback) {
-<<<<<<< HEAD
   // Instantiate Chance
   var chance = new Chance();
 
