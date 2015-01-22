@@ -102,7 +102,6 @@ var addUsersToTeams = function (companyData, callback) {
       }
     }
   }
-  console.log(companyData.teams);
 
   for(var k =0; k<teamLength; k++) {
     companyData.teams[k].model.save(function(err) {
