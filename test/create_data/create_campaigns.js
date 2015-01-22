@@ -267,7 +267,7 @@ var createCampaign = function (options, callback) {
  *    //  campaigns: [doc]
  *    //}]
  *  });
- * @param {Array} companyDataList
+ * @param {Array} companyDataList长度为1时返回对象，否则返回数组
  * @param callback
  */
 var createCampaigns = function (companyDataList, callback) {
@@ -549,12 +549,11 @@ var createCampaigns = function (companyDataList, callback) {
       }
     },
     function(err, results) {
-      callback(err,companyDataList)
+      callback(err,companyDataList[0])
     });
   }
   //跨公司挑战
   else {
-    console.log(companyDataList);
     var campaign_mold = companyDataList[0].teams[0].model.group_type;
     var poster = {
       cid: companyDataList[0].model._id,                       //活动发起者所属的公司
@@ -689,7 +688,6 @@ var createCampaigns = function (companyDataList, callback) {
     // optional callback
     function(err, results){
       companyDataList[0].teams[0].campaigns = results;
-      console.log(results)
       callback(err, companyDataList);
     });
   }
