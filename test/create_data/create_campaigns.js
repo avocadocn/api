@@ -110,7 +110,7 @@ var molds = [
  * @param  {Function} callback      [description]
  * @return {[type]}                 [description]
  */
-var createCampaign = function (options, callback) {
+var createCampaign = function (options, _callback) {
   var _options = {
     campaign_mold : options.campaign_mold || '其他',
     confirm_status : options.confirm_status==undefined || options.confirm_status,
@@ -196,7 +196,7 @@ var createCampaign = function (options, callback) {
   photo_album.save(function (err) {
     if (err) {
       console.log(err)
-      callback('保存相册失败');
+      _callback('保存相册失败');
       return;
     }
 
@@ -227,18 +227,22 @@ var createCampaign = function (options, callback) {
       });
     }, function (err, results) {
       if (err) {
-        callback('创建活动组件失败');
+        console.log(err)
+        _callback('创建活动组件失败');
         return;
       }
-      campaign.save(function (err) {
-        if (err) {
-          callback('保存活动失败');
-          return;
-        }
-        callback(null, campaign);
-
-      });
-
+      else{
+        campaign.save(function (err) {
+          if (err) {
+            console.log(err)
+            _callback('保存活动失败');
+            return;
+          }
+          else{
+            _callback(null, campaign);
+          }
+        });
+      }
     });
 
 
@@ -275,7 +279,7 @@ var createCampaigns = function (companyDataList, callback) {
   if(companyDataList.length ==1 ) {
     async.parallel({
       //创建公司活动
-      companyCampaign: function(callback){
+      companyCampaign: function(parallelCallback){
         var users = [];
         companyDataList[0].users.forEach(function(user){
           users.push({
@@ -300,30 +304,30 @@ var createCampaigns = function (companyDataList, callback) {
         }];
         async.parallel([
           //未开始
-          function(callback){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 1, start_confirm: true, poster: poster, statusType: 1}, callback);
+          function(cb){
+            createCampaign({campaignUnits: campaignUnits, campaign_type: 1, start_confirm: true, poster: poster, statusType: 1}, cb);
           },
           //正在进行
-          function(callback){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 1, start_confirm: true, poster: poster, statusType: 2}, callback);
+          function(cb){
+            createCampaign({campaignUnits: campaignUnits, campaign_type: 1, start_confirm: true, poster: poster, statusType: 2}, cb);
           },
           //已经结束
-          function(callback){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 1, start_confirm: true, poster: poster, statusType: 3}, callback);
+          function(cb){
+            createCampaign({campaignUnits: campaignUnits, campaign_type: 1, start_confirm: true, poster: poster, statusType: 3}, cb);
           },
           //已经关闭
-          function(callback){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 1, start_confirm: true, poster: poster, statusType: 4}, callback);
+          function(cb){
+            createCampaign({campaignUnits: campaignUnits, campaign_type: 1, start_confirm: true, poster: poster, statusType: 4}, cb);
           }
         ],
-        // optional callback
+        // optional cb
         function(err, results){
           companyDataList[0].campaigns = results;
-          callback(err, 'companyCampaign');
+          parallelCallback(err, 'companyCampaign');
         });
       },
       //创建小队活动
-      teamCampaign: function(callback){
+      teamCampaign: function(parallelCallback){
         var users = [];
         companyDataList[0].teams[0].users.forEach(function(user){
           users.push({
@@ -362,7 +366,7 @@ var createCampaigns = function (companyDataList, callback) {
         async.parallel([
           //hr发送
             //未开始
-            function(callback){
+            function(cb){
               createCampaign({
                 campaignUnits: campaignUnits,
                 campaign_type: 2,
@@ -370,46 +374,46 @@ var createCampaigns = function (companyDataList, callback) {
                 poster: hrPoster,
                 campaign_mold: campaign_mold,
                 statusType: 1
-              }, callback);
+              }, cb);
             },
             //正在进行
-            function(callback){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 2}, callback);
+            function(cb){
+              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 2}, cb);
             },
             //已经结束
-            function(callback){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 3}, callback);
+            function(cb){
+              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 3}, cb);
             },
             //已经关闭
-            function(callback){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 4}, callback);
+            function(cb){
+              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 4}, cb);
             },
           //队长发送
             //未开始
-            function(callback){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 1}, callback);
+            function(cb){
+              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 1}, cb);
             },
             //正在进行
-            function(callback){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 2}, callback);
+            function(cb){
+              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 2}, cb);
             },
             //已经结束
-            function(callback){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 3}, callback);
+            function(cb){
+              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 3}, cb);
             },
             //已经关闭
-            function(callback){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 4}, callback);
+            function(cb){
+              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 4}, cb);
             }
         ],
-        // optional callback
+        // optional parallelCallback
         function(err, results){
           companyDataList[0].teams[0].campaigns = results;
-          callback(err, 'teamCampaignCampaign');
+          parallelCallback(err, 'teamCampaignCampaign');
         });
       },
       //创建小队间挑战
-      teamProvoke: function(callback){
+      teamProvoke: function(parallelCallback){
         var campaign_mold = companyDataList[0].teams[0].model.group_type;
         var poster = {
           cid: companyDataList[0].model._id,                       //活动发起者所属的公司
@@ -463,23 +467,23 @@ var createCampaigns = function (companyDataList, callback) {
         }];
         async.parallel([
           //未开始
-          function(callback){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 1}, callback);
+          function(cb){
+            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 1}, cb);
           },
           //正在进行
-          function(callback){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 2}, callback);
+          function(cb){
+            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 2}, cb);
           },
           //已经结束
-          function(callback){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 3}, callback);
+          function(cb){
+            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 3}, cb);
           },
           //已经关闭
-          function(callback){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 4}, callback);
+          function(cb){
+            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
           },
           //取消应战
-          function(callback){
+          function(cb){
             var _campaignUnits = [{
               company:{
                 _id:companyDataList[0].model._id,
@@ -507,10 +511,10 @@ var createCampaigns = function (companyDataList, callback) {
               member:teamTwoUsers,
               start_confirm: false
             }]
-            createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, callback);
+            createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
           },
           //拒绝应战
-          function(callback){
+          function(cb){
             var _campaignUnits = [{
               company:{
                 _id:companyDataList[0].model._id,
@@ -538,13 +542,13 @@ var createCampaigns = function (companyDataList, callback) {
               member:teamTwoUsers,
               start_confirm: false
             }]
-            createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, callback);
+            createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
           }
         ],
         // optional callback
         function(err, results){
           companyDataList[0].teams[0].campaigns = results;
-          callback(err, 'teamProvoke');
+          parallelCallback(err, 'teamProvoke');
         });
       }
     },
@@ -607,23 +611,23 @@ var createCampaigns = function (companyDataList, callback) {
     }];
     async.parallel([
       //未开始
-      function(callback){
-        createCampaign({campaignUnits: campaignUnits, campaign_type: 5, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 1}, callback);
+      function(cb){
+        createCampaign({campaignUnits: campaignUnits, campaign_type: 5, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 1}, cb);
       },
       //正在进行
-      function(callback){
-        createCampaign({campaignUnits: campaignUnits, campaign_type: 5, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 2}, callback);
+      function(cb){
+        createCampaign({campaignUnits: campaignUnits, campaign_type: 5, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 2}, cb);
       },
       //已经结束
-      function(callback){
-        createCampaign({campaignUnits: campaignUnits, campaign_type: 5, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 3}, callback);
+      function(cb){
+        createCampaign({campaignUnits: campaignUnits, campaign_type: 5, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 3}, cb);
       },
       //已经关闭
-      function(callback){
-        createCampaign({campaignUnits: campaignUnits, campaign_type: 5, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 4}, callback);
+      function(cb){
+        createCampaign({campaignUnits: campaignUnits, campaign_type: 5, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
       },
       //取消应战
-      function(callback){
+      function(cb){
         var _campaignUnits = [{
           company:{
             _id:companyDataList[0].model._id,
@@ -651,10 +655,10 @@ var createCampaigns = function (companyDataList, callback) {
           member:teamTwoUsers,
           start_confirm: false
         }]
-        createCampaign({campaignUnits: _campaignUnits, campaign_type: 5, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, callback);
+        createCampaign({campaignUnits: _campaignUnits, campaign_type: 5, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
       },
       //拒绝应战
-      function(callback){
+      function(cb){
         var _campaignUnits = [{
           company:{
             _id:companyDataList[0].model._id,
@@ -682,7 +686,7 @@ var createCampaigns = function (companyDataList, callback) {
           member:teamTwoUsers,
           start_confirm: false
         }]
-        createCampaign({campaignUnits: _campaignUnits, campaign_type: 5, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, callback);
+        createCampaign({campaignUnits: _campaignUnits, campaign_type: 5, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
       }
     ],
     // optional callback

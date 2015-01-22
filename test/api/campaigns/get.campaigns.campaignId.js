@@ -10,7 +10,7 @@ module.exports = function () {
 
     before(function (done) {
       var data = dataService.getData();
-      var user = data.companies[0].users[0];
+      var user = data[0].users[0];
       request.post('/users/login')
         .send({
           email: user.email,
@@ -28,7 +28,7 @@ module.exports = function () {
 
     it('should get campaign', function (done) {
       var data = dataService.getData();
-      var campaign = data.companies[0].campaigns[0];
+      var campaign = data[0].campaigns[0];
       request.get('/campaigns/' + campaign.id)
         .set('x-access-token', accessToken)
         .expect(200)

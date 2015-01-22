@@ -26,7 +26,6 @@ module.exports = function () {
       testFormatTime(now + day * 20, now + day *30, { remind_text: '距离活动开始还有', start_flag: 0, time_text: '19天' });
       testFormatTime(now + hour * 20, now + day, { remind_text: '距离活动开始还有', start_flag: 0, time_text: '19时' });
       testFormatTime(now + minutes * 20, now + day, { remind_text: '距离活动开始还有', start_flag: 0, time_text: '19分' });
-      testFormatTime(now + seconds * 20, now + day, { remind_text: '距离活动开始还有', start_flag: 0, time_text: '19秒' });
     });
     describe('formatRestTime', function () {
 
