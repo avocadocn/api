@@ -11,7 +11,7 @@ module.exports = function () {
     var accessToken;
     beforeEach(function (done) {
       var data = dataService.getData();
-      var user = data.companies[0].users[0];
+      var user = data[0].users[0];
       request.post('/users/login')
         .send({
           email: user.email,

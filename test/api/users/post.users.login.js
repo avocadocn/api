@@ -12,7 +12,7 @@ module.exports = function () {
 
     it('should login success if email and password are correct', function (done) {
       var data = dataService.getData();
-      var user = data.companies[0].users[0];
+      var user = data[0].users[0];
 
       request.post('/users/login')
         .send({
@@ -41,7 +41,7 @@ module.exports = function () {
 
     it('should login failed if password is incorrect', function (done) {
       var data = dataService.getData();
-      var user = data.companies[0].users[0];
+      var user = data[0].users[0];
 
       request.post('/users/login')
         .send({
