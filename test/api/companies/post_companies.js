@@ -54,7 +54,7 @@ module.exports = function () {
         var company = data[0].model;
         var duplicateCompany = {
           "name": data.name? data.name : chance.string({length:8,pool: '上海北京啊地方睡觉啊的法律玩儿哦温热我人是否和比赛公司'}),
-          "province": "安徽省",
+          "province": data.province ? data.province : "安徽省",
           "city": "安庆市",
           "district": "大观区",
           "address": data.addr ? data.addr: chance.string({pool: '阿飞离开爱诶哦入认为快乐1234567890'}),
@@ -78,12 +78,12 @@ module.exports = function () {
 
     errorCompanyTest('公司名',{name:''});//公司名不填
     errorCompanyTest('地址',{address: ''});//地址不填
+    errorCompanyTest('省市区',{province: '洛杉矶市'});//省乱填
     errorCompanyTest('联系人',{contacts:''});//联系人不填
     errorCompanyTest('区号',{areacode:'asdf'});//区号不是数字
     errorCompanyTest('电话',{areacode:'asdf'});//电话不是数字
     errorCompanyTest('邮箱后缀',{email:'asdf@asdf.com'});//邮箱后缀错误
     errorCompanyTest('邮箱格式',{email:'asldfjaf'});//邮件乱填
-
 
   });
 };
