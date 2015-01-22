@@ -12,14 +12,14 @@ before(function (done) {
     console.log('开始清空测试数据库:', config.db);
     connect.db.dropDatabase(function (err, res) {
       if (err) {
-        console.log(err.stack);
-        done('清空测试数据库失败');
+        done(err);
         return;
       }
       console.log('开始创建测试数据');
       createDataModule.createData(function (err) {
         if (err) {
-          console.log(err.stack);
+          done(err);
+          return;
         }
         done();
       });
