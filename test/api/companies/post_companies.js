@@ -10,12 +10,11 @@ var chance = require('chance').Chance();
 
 module.exports = function () {
   describe('post /companies', function () {
-    //暂时skip有待查错
-    it.skip('应该在数据正确时返回201,数据库中应有此数据', function (done) {
+    it('应该在数据正确时返回201,数据库中应有此数据', function (done) {
       var newCompany = {
         "name": chance.string({length:8,pool: '上海北京啊地方睡觉啊的法律玩儿哦温热我人是否和比赛公司'}),
         "province": "安徽省",
-        "city": "安庆区",
+        "city": "安庆市",
         "district": "大观区",
         "address": chance.string({pool: '阿飞离开爱诶哦入认为快乐1234567890'}),
         "contacts": chance.string({pool: '阿里斯顿父亲为哦如破去'}),
@@ -32,7 +31,7 @@ module.exports = function () {
         Company.findOne({'info.name':newCompany.name},function(err, company) {
           if(err) return done(err);
           else{
-            company.email.domain.should.equal(newCompany.email.split('@')[1]);
+            company.email.domain[0].should.equal(newCompany.email.split('@')[1]);
             company.login_email.should.equal(newCompany.email);
             company.info.name.should.equal(newCompany.name);
             company.info.city.province.should.equal(newCompany.province);
@@ -56,7 +55,7 @@ module.exports = function () {
         var duplicateCompany = {
           "name": data.name? data.name : chance.string({length:8,pool: '上海北京啊地方睡觉啊的法律玩儿哦温热我人是否和比赛公司'}),
           "province": "安徽省",
-          "city": "安庆区",
+          "city": "安庆市",
           "district": "大观区",
           "address": data.addr ? data.addr: chance.string({pool: '阿飞离开爱诶哦入认为快乐1234567890'}),
           "contacts": data.contacts ? data.contacts : chance.string({pool: '阿里斯顿父亲为哦如破去'}),
