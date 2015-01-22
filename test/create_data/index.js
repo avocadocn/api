@@ -11,6 +11,8 @@ var createUsers = require('./create_users.js');
 var addUsersToTeams = require('./add_users_to_teams.js');
 var createCampaigns = require('./create_campaigns.js');
 
+var createConfig = require('./create_config.js');
+
 /**
  * 公司数据列表，保存公司及其员工、小队、活动数据
  *  [{
@@ -29,6 +31,11 @@ var createCampaigns = require('./create_campaigns.js');
 var resCompanyDataList = [];
 
 /**
+ * 配置数据，mongoose.model('Config')的文档
+ */
+var resConfig;
+
+/**
  * 生成测试数据
  * @param {Function} callback 完成后的回调函数，形式为function(err){}
  */
@@ -42,7 +49,7 @@ exports.createData = function (callback) {
       return;
     }
     console.log('成功创建了', companies.length, '个公司');
-    console.log('开始为每个公司生成小队、用户、活动等数据')
+    console.log('开始为每个公司生成小队、用户、活动等数据');
     // 为每个公司生成小队、用户、活动等数据
     async.map(companies, function (company, mapCallback) {
       console.log('开始生成公司', company.info.name, '的数据');
@@ -136,3 +143,23 @@ exports.createData = function (callback) {
 exports.getData = function () {
   return resCompanyDataList;
 };
+
+/**
+ * 创建配置数据
+ * @param {Function} callback function(err){}
+ */
+exports.createConfig = function (callback) {
+  createConfig(function (err, config) {
+    if (err) {
+      callback(err);
+    } else {
+      resConfig = config;
+      callback();
+    }
+  });
+};
+
+exports.getConfig = function () {
+  return resConfig;
+};
+

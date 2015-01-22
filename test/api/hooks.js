@@ -5,9 +5,28 @@ var config = common.config;
 var mongoose = require('mongoose');
 var connect = mongoose.createConnection(config.db);
 
+var async = require('async');
 
 before(function (done) {
   this.timeout(30 * 1000);
+
+  var doTasksAfterDropDB = function () {
+
+    async.parallel({
+      createConfig: function (parallelCallback) {
+        console.log('开始生成config数据');
+        createDataModule.createConfig(parallelCallback);
+      },
+      createCompanyDataList: function (parallelCallback) {
+        console.log('开始创建公司及其小队、用户等数据');
+        createDataModule.createData(parallelCallback);
+      }
+    }, function (err, results) {
+      done(err);
+    });
+    
+  };
+
   connect.on('open', function () {
     console.log('开始清空测试数据库:', config.db);
     connect.db.dropDatabase(function (err, res) {
@@ -15,15 +34,7 @@ before(function (done) {
         done(err);
         return;
       }
-      console.log('开始创建测试数据');
-      createDataModule.createData(function (err) {
-        if (err) {
-          done(err);
-          return;
-        }
-        done();
-      });
-
+      doTasksAfterDropDB();
     });
   });
 
