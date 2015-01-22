@@ -10,7 +10,7 @@ module.exports = function () {
 
   describe('post /users/login', function () {
 
-    it('should login success if email and password are correct', function (done) {
+    it('邮箱和密码正确应该登录成功', function (done) {
       var data = dataService.getData();
       var user = data[0].users[0];
 
@@ -39,7 +39,7 @@ module.exports = function () {
         });
     });
 
-    it('should login failed if password is incorrect', function (done) {
+    it('密码错误应该登录失败', function (done) {
       var data = dataService.getData();
       var user = data[0].users[0];
 
@@ -56,7 +56,7 @@ module.exports = function () {
         });
     });
 
-    it('should login failed if email is not exists', function (done) {
+    it('邮箱不存在应该登录失败', function (done) {
       request.post('/users/login')
         .send({
           email: 'unexits',
