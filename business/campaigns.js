@@ -220,7 +220,6 @@ var formatTime = exports.formatTime = function (start_time, end_time) {
       var hours = Math.abs(during.hours());
       var minutes = Math.abs(during.minutes());
       var seconds = Math.abs(during.seconds());
-
       temp_end_time.setHours(hours);
       temp_end_time.setMinutes(minutes);
       temp_end_time.setSeconds(seconds);
@@ -228,6 +227,7 @@ var formatTime = exports.formatTime = function (start_time, end_time) {
         time_text = days + '天';
       }
       else if (hours >= 1) {
+
         time_text = hours + '时';
       }
       else if (minutes >= 1) {
@@ -304,3 +304,4 @@ var formatRestTime = exports.formatRestTime = function (start_time, end_time) {
   }
   return restTime;
 };
+
