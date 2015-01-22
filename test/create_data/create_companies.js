@@ -40,7 +40,9 @@ var createCompanies = function(callback) {
           },
           linkman: result.contacts,
           phone: result.phone,
-          email: result.email
+          email: result.email,
+          brief: result.brief,
+          official_name: result.official_name
         }
       });
 
@@ -57,5 +59,4 @@ var createCompanies = function(callback) {
   callback(null, companies);
 
 };
-
 module.exports = createCompanies;

@@ -85,7 +85,7 @@ exports.generateCompanyData = function(callback) {
   var districtLength = _region[provinceId].city[cityId].district.length;
   var districtId = chance.integer({
     min: 0,
-    max: _region[provinceId].city[cityId].district.length ? 0: _region[provinceId].city[cityId].district.length-1
+    max: _region[provinceId].city[cityId].district.length ? 0 : _region[provinceId].city[cityId].district.length - 1
   }); // a random district id
   var districtName = districtLength ? _region[provinceId].city[cityId].district[districtId].name : '';
 
@@ -107,6 +107,15 @@ exports.generateCompanyData = function(callback) {
     pool: '0123456789'
   });
 
+  // Generate a random brief
+  var brief = chance.sentence();
+
+  // Generate a random official_name
+  var official_name = chance.string({
+    length: 5,
+    pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  });
+
   var data = {};
 
   data.username = username;
@@ -122,6 +131,8 @@ exports.generateCompanyData = function(callback) {
   data.phone = phone;
   data.email = email;
   data.login_email = email;
+  data.brief = brief;
+  data.official_name = official_name;
 
   callback(null, data);
 }
