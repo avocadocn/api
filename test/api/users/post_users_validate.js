@@ -16,7 +16,10 @@ module.exports = function () {
         })
         .expect(200)
         .end(function (err, res) {
-          if (err) return done(err);
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
           res.body.active.should.equal(3);
           done();
         });
@@ -29,8 +32,98 @@ module.exports = function () {
         })
         .expect(200)
         .end(function (err, res) {
-          if (err) return done(err);
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
           res.body.active.should.equal(1);
+          done();
+        });
+    });
+
+    it('邀请码和公司匹配时应该返回{invitekeyCheck:1}', function (done) {
+      var data = dataService.getData();
+      var company = data[0].model;
+      request.post('/users/validate')
+        .send({
+          cid: company.id,
+          inviteKey: company.invite_key
+        })
+        .expect(200)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          res.body.invitekeyCheck.should.equal(1);
+          done();
+        });
+    });
+
+    it('邀请码和公司不匹配时应该返回{invitekeyCheck:2}', function (done) {
+      var data = dataService.getData();
+      var company = data[0].model;
+      request.post('/users/validate')
+        .send({
+          cid: company.id,
+          inviteKey: 'toolongerrorkey'
+        })
+        .expect(200)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          res.body.invitekeyCheck.should.equal(2);
+          done();
+        });
+    });
+
+    it('公司id不对且不是objectid时应该返回500', function (done) {
+      request.post('/users/validate')
+        .send({
+          cid: 'error id',
+          inviteKey: 'toolongerrorkey'
+        })
+        .expect(500)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          done();
+        });
+    });
+
+    it('公司id不对但是objectid时应该返回400', function (done) {
+      var data = dataService.getData();
+      var user = data[0].users[0];
+      request.post('/users/validate')
+        .send({
+          cid: user.id,
+          inviteKey: 'toolongerrorkey'
+        })
+        .expect(400)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          done();
+        });
+    });
+
+    it('数据不全时应该返回400', function (done) {
+      request.post('/users/validate')
+        .send({
+          inviteKey: 'toolongerrorkey'
+        })
+        .expect(400)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
           done();
         });
     });

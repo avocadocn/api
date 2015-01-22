@@ -4,6 +4,8 @@ var chance = require('./chance.js');
 var common = require('../support/common.js');
 var mongoose = common.mongoose;
 var Company = mongoose.model('Company');
+var tools = require('../../tools/tools.js');
+
 /**
  * 生成公司数据
  * @param {Function} callback 形式为function(err, companies){}
@@ -43,7 +45,8 @@ var createCompanies = function(callback) {
           email: result.email,
           brief: result.brief,
           official_name: result.official_name
-        }
+        },
+        invite_key: tools.randomAlphaNumeric(8)
       });
 
       // Insert the company data to MongoDB 
