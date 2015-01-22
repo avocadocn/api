@@ -1,5 +1,6 @@
 'use strict';
 var common = require('../support/common');
+var tools = require('../../tools/tools');
 var mongoose = common.mongoose;
 var Campaign = mongoose.model('Campaign'),
     PhotoAlbum = mongoose.model('PhotoAlbum'),
@@ -10,7 +11,93 @@ var async = require('async');
 var chance = require('chance').Chance();
 var moment = require('moment');
 
-
+var molds = [
+    {
+        'name':'其它',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'羽毛球',
+        'module':['RichComment','ScoreBoard'],
+        'enable':true
+    },
+    {
+        'name':'篮球',
+        'module':['RichComment','ScoreBoard'],
+        'enable':true
+    },
+    {
+        'name':'阅读',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'自行车',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'下午茶',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'棋牌',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'足球',
+        'module':['RichComment','ScoreBoard'],
+        'enable':true
+    },
+    {
+        'name':'k歌',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'健身',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'美食',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'跑步',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'亲子',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'影视',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'摄影',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'旅行',
+        'module':['RichComment'],
+        'enable':true
+    },
+    {
+        'name':'桌游',
+        'module':['RichComment'],
+        'enable':true
+    }
+];
 /**
  * 创建单个活动
  * @param  {[type]}   options       活动的参数 
@@ -27,16 +114,19 @@ var createCampaign = function (options, callback) {
   var _options = {
     campaign_mold : options.campaign_mold || '其他',
     confirm_status : options.confirm_status==undefined || options.confirm_status,
-    statusType : statusType || 1
+    statusType : options.statusType || 1,
+    campaign_type : options.campaign_type,
+    campaignUnits : options.campaignUnits,
+    poster : options.poster
   }
   
   var now = new Date();
   var nowYear = now.getFullYear();
   var nowMonth = now.getMonth();
   var campaign = new Campaign({
-    cid : campaignUnits.length==1?[campaignUnits[0].company._id]:[campaignUnits[0].company._id,campaignUnits[1].company._id],
-    tid : options.campaign_type==1?undefined:(campaignUnits.length==1? [campaignUnits[0].team._id]:[campaignUnits[0].team._id,campaignUnits[1].team._id]),
-    campaign_unit : options.campaignUnits,
+    cid : _options.campaignUnits.length==1?[_options.campaignUnits[0].company._id]:[_options.campaignUnits[0].company._id,_options.campaignUnits[1].company._id],
+    tid : _options.campaign_type==1?undefined:(_options.campaignUnits.length==1? [_options.campaignUnits[0].team._id]:[_options.campaignUnits[0].team._id,_options.campaignUnits[1].team._id]),
+    campaign_unit : _options.campaignUnits,
     active : _options.statusType!=4,
     confirm_status : _options.confirm_status,
     finish : _options.statusType==3,
@@ -56,9 +146,9 @@ var createCampaign = function (options, callback) {
     campaign_mold : _options.campaign_mold,
   });
   var _user = {
-    '_id': options.poster.uid || options.poster.cid,
-    'name': options.poster.nickname || options.poster.cname,
-    'type': options.poster.role =="HR" ? 'hr' :'user'
+    '_id': _options.poster.uid || _options.poster.cid,
+    'name': _options.poster.nickname || _options.poster.cname,
+    'type': _options.poster.role =="HR" ? 'hr' :'user'
   };
   var photoInfo = {
     owner: {
@@ -115,46 +205,40 @@ var createCampaign = function (options, callback) {
     campaign.components = [];
     campaign.modularization = true;
     var componentNames = [];
-    CampaignMold.findOne({'name': campaign.campaign_mold}, function (err, mold) {
+    var modlsIndex = tools.arrayObjectIndexOf(molds,campaign.campaign_mold,'name');
+    componentNames = molds[modlsIndex<0 ? 0:modlsIndex].module;
+    if (campaign.campaign_unit.length !== 2) {//单组去除比分板
+      var scoreIndex = componentNames.indexOf('ScoreBoard');
+      if (scoreIndex > -1)
+        componentNames.splice(scoreIndex, 1);
+    }
+    async.map(componentNames, function (componentName, asyncCallback) {
+      mongoose.model(componentName).establish(campaign, function (err, component) {
+        if (err) {
+          asyncCallback(err);
+        }
+        else {
+          campaign.components.push({
+            name: componentName,
+            _id: component._id
+          });
+          asyncCallback(null, component);
+        }
+      });
+    }, function (err, results) {
       if (err) {
-        callback('查找活动类型失败');
+        callback('创建活动组件失败');
         return;
       }
-
-      componentNames = mold.module;
-      if (campaign.campaign_unit.length !== 2) {//单组去除比分板
-        var scoreIndex = componentNames.indexOf('ScoreBoard');
-        if (scoreIndex > -1)
-          componentNames.splice(scoreIndex, 1);
-      }
-      async.map(componentNames, function (componentName, asyncCallback) {
-        mongoose.model(componentName).establish(campaign, function (err, component) {
-          if (err) {
-            asyncCallback(err);
-          }
-          else {
-            campaign.components.push({
-              name: componentName,
-              _id: component._id
-            });
-            asyncCallback(null, component);
-          }
-        });
-      }, function (err, results) {
+      campaign.save(function (err) {
         if (err) {
-          callback('创建活动组件失败');
+          callback('保存活动失败');
           return;
         }
-        campaign.save(function (err) {
-          if (err) {
-            callback('保存活动失败');
-            return;
-          }
-          callback(null, campaign);
-
-        });
+        callback(null, campaign);
 
       });
+
     });
 
 
@@ -256,8 +340,8 @@ var createCampaigns = function (companyDataList, callback) {
         var leaderPoster = {
           cid: companyDataList[0].model._id,                       //活动发起者所属的公司
           cname: companyDataList[0].model.info.official_name,
-          uid: companyDataList[0].teams[0].leader[0]._id,
-          nickname: companyDataList[0].teams[0].leader[0].nickname,
+          uid: companyDataList[0].teams[0].leaders[0]._id,
+          nickname: companyDataList[0].teams[0].leaders[0].nickname,
           role: 'LEADER'
         }
         var campaignUnits = [{
@@ -330,8 +414,8 @@ var createCampaigns = function (companyDataList, callback) {
         var poster = {
           cid: companyDataList[0].model._id,                       //活动发起者所属的公司
           cname: companyDataList[0].model.info.official_name,
-          uid: companyDataList[0].teams[1].leader[0]._id,
-          nickname: companyDataList[0].teams[1].leader[0].nickname,
+          uid: companyDataList[0].teams[1].leaders[0]._id,
+          nickname: companyDataList[0].teams[1].leaders[0].nickname,
           role: 'LEADER'
         }
         var teamOneUsers = [];
@@ -423,7 +507,7 @@ var createCampaigns = function (companyDataList, callback) {
               member:teamTwoUsers,
               start_confirm: false
             }]
-            createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, member: users, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, callback);
+            createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, callback);
           },
           //拒绝应战
           function(callback){
@@ -454,7 +538,7 @@ var createCampaigns = function (companyDataList, callback) {
               member:teamTwoUsers,
               start_confirm: false
             }]
-            createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, member: users, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, callback);
+            createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, callback);
           }
         ],
         // optional callback
@@ -469,13 +553,14 @@ var createCampaigns = function (companyDataList, callback) {
     });
   }
   //跨公司挑战
-  else if( companyDataList.length == 2) {
+  else {
+    console.log(companyDataList);
     var campaign_mold = companyDataList[0].teams[0].model.group_type;
     var poster = {
       cid: companyDataList[0].model._id,                       //活动发起者所属的公司
       cname: companyDataList[0].model.info.official_name,
-      uid: companyDataList[0].teams[1].leader[0]._id,
-      nickname: companyDataList[0].teams[1].leader[0].nickname,
+      uid: companyDataList[0].teams[1].leaders[0]._id,
+      nickname: companyDataList[0].teams[1].leaders[0].nickname,
       role: 'LEADER'
     }
     var teamOneUsers = [];
@@ -604,6 +689,7 @@ var createCampaigns = function (companyDataList, callback) {
     // optional callback
     function(err, results){
       companyDataList[0].teams[0].campaigns = results;
+      console.log(results)
       callback(err, companyDataList);
     });
   }
