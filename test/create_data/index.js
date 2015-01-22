@@ -12,7 +12,7 @@ var addUsersToTeams = require('./add_users_to_teams.js');
 var createCampaigns = require('./create_campaigns.js');
 
 var createConfig = require('./create_config.js');
-
+var createRegion = require('./create_region.js');
 /**
  * 公司数据列表，保存公司及其员工、小队、活动数据
  *  [{
@@ -34,7 +34,7 @@ var resCompanyDataList = [];
  * 配置数据，mongoose.model('Config')的文档
  */
 var resConfig;
-
+var resRegion;
 /**
  * 生成测试数据
  * @param {Function} callback 完成后的回调函数，形式为function(err){}
@@ -158,8 +158,25 @@ exports.createConfig = function (callback) {
     }
   });
 };
+/**
+ * Generate Region Data
+ * @param {Function} callback function(err){}
+ */
+exports.createRegion = function (callback) {
+  createRegion(function (err, region) {
+    if (err) {
+      callback(err);
+    } else {
+      resRegion = region;
+      callback();
+    }
+  });
+};
 
 exports.getConfig = function () {
   return resConfig;
 };
 
+exports.getRegion = function () {
+  return resRegion;
+};

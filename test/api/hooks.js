@@ -17,6 +17,10 @@ before(function (done) {
         console.log('开始生成config数据');
         createDataModule.createConfig(parallelCallback);
       },
+      createRegion: function (parallelCallback) {
+        console.log('开始生成region数据');
+        createDataModule.createRegion(parallelCallback);
+      },
       createCompanyDataList: function (parallelCallback) {
         console.log('开始创建公司及其小队、用户等数据');
         createDataModule.createData(parallelCallback);
