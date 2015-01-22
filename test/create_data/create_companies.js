@@ -20,6 +20,7 @@ var createCompanies = function(callback) {
       var company = new Company({
         username: result.username,
         login_email: result.email,
+        password:'55yali',
         email: {
           domain: [result.email.split('@')[1]]
         },

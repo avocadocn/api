@@ -10,7 +10,7 @@ module.exports = function (app, ctrl) {
   app.get('/campaigns', token.needToken, ctrl.getCampaignList);
   app.get('/campaigns/:campaignId',token.needToken, resources.getCampaignByParamId, auth.authMiddleware(['getCampaigns']), ctrl.getCampaign);
   app.put('/campaigns/:campaignId',token.needToken, ctrl.updateCampaign);
-  app.delete('/campaigns/:campaignId', token.needToken, ctrl.closeCampaign);
+  app.delete('/campaigns/:campaignId', token.needToken, resources.getCampaignByParamId, ctrl.closeCampaign);
   app.post('/campaigns/:campaignId/users/:userId', token.needToken, ctrl.joinCampaign);
   app.delete('/campaigns/:campaignId/users/:userId', token.needToken, ctrl.quitCampaign);
   app.put('/campaigns/:campaignId/dealProvoke',token.needToken, ctrl.dealProvoke);

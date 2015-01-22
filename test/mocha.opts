@@ -2,3 +2,4 @@
 --slow 200
 --growl
 --globals key
+--bail
