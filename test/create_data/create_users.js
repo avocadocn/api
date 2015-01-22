@@ -3,7 +3,7 @@ var common = require('../support/common');
 var mongoose = common.mongoose;
 var async = require('async');
 var User  = mongoose.model('User');
-var Chance = require('chance');
+var chance = require('chance').Chance();
 
 /**
  * 创建一个新成员
@@ -11,7 +11,7 @@ var Chance = require('chance');
  * @param {Function} callback 形式为funciton(err, user){}
  */
 var createNewUser = function(opts, callback) {
-  var chance = new Chance();
+  // var chance = new Chance();
   var email =chance.email({domain: opts.domain});
   var user = new User({
     username: email,
@@ -19,9 +19,9 @@ var createNewUser = function(opts, callback) {
     email: email,
     active: true,
     mail_active: true,
-    nickname: chance.string({length: 5}),
-    realname: chance.string({length: 10}),
-    introduce: chance.string({length: 30}),
+    nickname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
+    realname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
+    introduce: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     role: 'EMPLOYEE',
     cid: opts.cid,
     cname: opts.cname,
