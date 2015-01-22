@@ -6,7 +6,7 @@ var common = require('../../support/common');
 
 module.exports = function () {
 
-  describe('post /users/logou', function () {
+  describe('post /users/logout', function () {
 
     var accessToken;
     beforeEach(function (done) {
