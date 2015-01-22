@@ -67,7 +67,7 @@ module.exports = function() {
                   data: _city.value
                 });
                 // check whether the district exits
-                _district.value.should.be.type('string');
+                _district.value.should.be.type('object');
               }); //city-loop-end
             }); //province-loop-end
           }); //region-loop-end

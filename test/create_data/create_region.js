@@ -42,25 +42,25 @@ var _region = [{"name" : "安徽省", "id" : "C62A0E03-74B0-0001-3869-592A1EB023
  * @param {Function} callback function(err, region){}
  */
 var createRegion = function(callback) {
-  var region = [];
+  var region = [];// region array storage 
   _region.forEach(function(province) {
-    var cities = [];
+    var cities = [];// city array storage
     province.city.forEach(function(city) {
-      var districts = [];
+      var districts = [];//district array storage
       city.district.forEach(function(district) {
         var _district = {
           id: district.id,
           name: district.name
         };
         districts.push(_district);
-      });
+      });// end-loop-district
       var _city = {
         id: city.id,
         name: city.name,
         district: districts
       };
       cities.push(_city);
-    });
+    });// end-loop-city
     var _province = new Province({
       id: province.id,
       name: province.name,
@@ -69,7 +69,7 @@ var createRegion = function(callback) {
     _province.save(function(err) {});
     region.push(_province);
 
-  });
+  });// end-loop-province
   callback(null, region);
 };
 
