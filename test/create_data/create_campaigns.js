@@ -201,15 +201,15 @@ var createCampaigns = function (companyDataList, callback) {
           });
         });
         var poster = {
-          cid: companyDataList[0].company._id,                       //活动发起者所属的公司
-          cname: companyDataList[0].company.info.official_name,
+          cid: companyDataList[0].model._id,                       //活动发起者所属的公司
+          cname: companyDataList[0].model.info.official_name,
           role: 'HR'
         }
         var campaignUnits = [{
           company:{
-            _id:companyDataList[0].company._id,
-            name:companyDataList[0].company.info.official_name,
-            logo:companyDataList[0].company.info.logo
+            _id:companyDataList[0].model._id,
+            name:companyDataList[0].model.info.official_name,
+            logo:companyDataList[0].model.info.logo
           },
           member:users,
           start_confirm: true
@@ -249,32 +249,32 @@ var createCampaigns = function (companyDataList, callback) {
           });
         });
         var hrPoster = {
-          cid: companyDataList[0].company._id,                       //活动发起者所属的公司
-          cname: companyDataList[0].company.info.official_name,
+          cid: companyDataList[0].model._id,                       //活动发起者所属的公司
+          cname: companyDataList[0].model.info.official_name,
           role: 'HR'
         }
         var leaderPoster = {
-          cid: companyDataList[0].company._id,                       //活动发起者所属的公司
-          cname: companyDataList[0].company.info.official_name,
+          cid: companyDataList[0].model._id,                       //活动发起者所属的公司
+          cname: companyDataList[0].model.info.official_name,
           uid: companyDataList[0].teams[0].leader[0]._id,
           nickname: companyDataList[0].teams[0].leader[0].nickname,
           role: 'LEADER'
         }
         var campaignUnits = [{
           company:{
-            _id:companyDataList[0].company._id,
-            name:companyDataList[0].company.info.official_name,
-            logo:companyDataList[0].company.info.logo
+            _id:companyDataList[0].model._id,
+            name:companyDataList[0].model.info.official_name,
+            logo:companyDataList[0].model.info.logo
           },
           team:{
-            _id:companyDataList[0].teams[0]._id,
-            name:companyDataList[0].teams[0].name,
-            logo:companyDataList[0].teams[0].logo
+            _id:companyDataList[0].teams[0].model._id,
+            name:companyDataList[0].teams[0].model.name,
+            logo:companyDataList[0].teams[0].model.logo
           },
           member:users,
           start_confirm: true
         }];
-        var campaign_mold = companyDataList[0].teams[0].group_type;
+        var campaign_mold = companyDataList[0].teams[0].model.group_type;
         async.parallel([
           //hr发送
             //未开始
@@ -320,16 +320,16 @@ var createCampaigns = function (companyDataList, callback) {
         ],
         // optional callback
         function(err, results){
-          companyDataList[0].teams[0].campaign = results;
+          companyDataList[0].teams[0].campaigns = results;
           callback(err, 'teamCampaignCampaign');
         });
       },
       //创建小队间挑战
       teamProvoke: function(callback){
-        var campaign_mold = companyDataList[0].teams[0].group_type;
+        var campaign_mold = companyDataList[0].teams[0].model.group_type;
         var poster = {
-          cid: companyDataList[0].company._id,                       //活动发起者所属的公司
-          cname: companyDataList[0].company.info.official_name,
+          cid: companyDataList[0].model._id,                       //活动发起者所属的公司
+          cname: companyDataList[0].model.info.official_name,
           uid: companyDataList[0].teams[1].leader[0]._id,
           nickname: companyDataList[0].teams[1].leader[0].nickname,
           role: 'LEADER'
@@ -352,27 +352,27 @@ var createCampaigns = function (companyDataList, callback) {
         });
         var campaignUnits = [{
           company:{
-            _id:companyDataList[0].company._id,
-            name:companyDataList[0].company.info.official_name,
-            logo:companyDataList[0].company.info.logo
+            _id:companyDataList[0].model._id,
+            name:companyDataList[0].model.info.official_name,
+            logo:companyDataList[0].model.info.logo
           },
           team:{
-            _id:companyDataList[0].teams[1]._id,
-            name:companyDataList[0].teams[1].name,
-            logo:companyDataList[0].teams[1].logo
+            _id:companyDataList[0].teams[1].model._id,
+            name:companyDataList[0].teams[1].model.name,
+            logo:companyDataList[0].teams[1].model.logo
           },
           member:teamOneUsers,
           start_confirm: true
         },{
           company:{
-            _id:companyDataList[0].company._id,
-            name:companyDataList[0].company.info.official_name,
-            logo:companyDataList[0].company.info.logo
+            _id:companyDataList[0].model._id,
+            name:companyDataList[0].model.info.official_name,
+            logo:companyDataList[0].model.info.logo
           },
           team:{
-            _id:companyDataList[0].teams[2]._id,
-            name:companyDataList[0].teams[2].name,
-            logo:companyDataList[0].teams[2].logo
+            _id:companyDataList[0].teams[2].model._id,
+            name:companyDataList[0].teams[2].model.name,
+            logo:companyDataList[0].teams[2].model.logo
           },
           member:teamTwoUsers,
           start_confirm: true
@@ -398,27 +398,27 @@ var createCampaigns = function (companyDataList, callback) {
           function(callback){
             var _campaignUnits = [{
               company:{
-                _id:companyDataList[0].company._id,
-                name:companyDataList[0].company.info.official_name,
-                logo:companyDataList[0].company.info.logo
+                _id:companyDataList[0].model._id,
+                name:companyDataList[0].model.info.official_name,
+                logo:companyDataList[0].model.info.logo
               },
               team:{
-                _id:companyDataList[0].teams[1]._id,
-                name:companyDataList[0].teams[1].name,
-                logo:companyDataList[0].teams[1].logo
+                _id:companyDataList[0].teams[1].model._id,
+                name:companyDataList[0].teams[1].model.name,
+                logo:companyDataList[0].teams[1].model.logo
               },
               member:teamOneUsers,
               start_confirm: false
             },{
               company:{
-                _id:companyDataList[0].company._id,
-                name:companyDataList[0].company.info.official_name,
-                logo:companyDataList[0].company.info.logo
+                _id:companyDataList[0].model._id,
+                name:companyDataList[0].model.info.official_name,
+                logo:companyDataList[0].model.info.logo
               },
               team:{
-                _id:companyDataList[0].teams[2]._id,
-                name:companyDataList[0].teams[2].name,
-                logo:companyDataList[0].teams[2].logo
+                _id:companyDataList[0].teams[2].model._id,
+                name:companyDataList[0].teams[2].model.name,
+                logo:companyDataList[0].teams[2].model.logo
               },
               member:teamTwoUsers,
               start_confirm: false
@@ -429,27 +429,27 @@ var createCampaigns = function (companyDataList, callback) {
           function(callback){
             var _campaignUnits = [{
               company:{
-                _id:companyDataList[0].company._id,
-                name:companyDataList[0].company.info.official_name,
-                logo:companyDataList[0].company.info.logo
+                _id:companyDataList[0].model._id,
+                name:companyDataList[0].model.info.official_name,
+                logo:companyDataList[0].model.info.logo
               },
               team:{
-                _id:companyDataList[0].teams[1]._id,
-                name:companyDataList[0].teams[1].name,
-                logo:companyDataList[0].teams[1].logo
+                _id:companyDataList[0].teams[1].model._id,
+                name:companyDataList[0].teams[1].model.name,
+                logo:companyDataList[0].teams[1].model.logo
               },
               member:teamOneUsers,
               start_confirm: true
             },{
               company:{
-                _id:companyDataList[0].company._id,
-                name:companyDataList[0].company.info.official_name,
-                logo:companyDataList[0].company.info.logo
+                _id:companyDataList[0].model._id,
+                name:companyDataList[0].model.info.official_name,
+                logo:companyDataList[0].model.info.logo
               },
               team:{
-                _id:companyDataList[0].teams[2]._id,
-                name:companyDataList[0].teams[2].name,
-                logo:companyDataList[0].teams[2].logo
+                _id:companyDataList[0].teams[2].model._id,
+                name:companyDataList[0].teams[2].model.name,
+                logo:companyDataList[0].teams[2].model.logo
               },
               member:teamTwoUsers,
               start_confirm: false
@@ -459,7 +459,7 @@ var createCampaigns = function (companyDataList, callback) {
         ],
         // optional callback
         function(err, results){
-          companyDataList[0].teams[0].campaign = results;
+          companyDataList[0].teams[0].campaigns = results;
           callback(err, 'teamProvoke');
         });
       }
@@ -470,10 +470,10 @@ var createCampaigns = function (companyDataList, callback) {
   }
   //跨公司挑战
   else if( companyDataList.length == 2) {
-    var campaign_mold = companyDataList[0].teams[0].group_type;
+    var campaign_mold = companyDataList[0].teams[0].model.group_type;
     var poster = {
-      cid: companyDataList[0].company._id,                       //活动发起者所属的公司
-      cname: companyDataList[0].company.info.official_name,
+      cid: companyDataList[0].model._id,                       //活动发起者所属的公司
+      cname: companyDataList[0].model.info.official_name,
       uid: companyDataList[0].teams[1].leader[0]._id,
       nickname: companyDataList[0].teams[1].leader[0].nickname,
       role: 'LEADER'
@@ -496,27 +496,27 @@ var createCampaigns = function (companyDataList, callback) {
     });
     var campaignUnits = [{
       company:{
-        _id:companyDataList[0].company._id,
-        name:companyDataList[0].company.info.official_name,
-        logo:companyDataList[0].company.info.logo
+        _id:companyDataList[0].model._id,
+        name:companyDataList[0].model.info.official_name,
+        logo:companyDataList[0].model.info.logo
       },
       team:{
-        _id:companyDataList[0].teams[0]._id,
-        name:companyDataList[0].teams[0].name,
-        logo:companyDataList[0].teams[0].logo
+        _id:companyDataList[0].teams[0].model._id,
+        name:companyDataList[0].teams[0].model.name,
+        logo:companyDataList[0].teams[0].model.logo
       },
       member:teamOneUsers,
       start_confirm: true
     },{
       company:{
-        _id:companyDataList[1].company._id,
-        name:companyDataList[1].company.info.official_name,
-        logo:companyDataList[1].company.info.logo
+        _id:companyDataList[1].model._id,
+        name:companyDataList[1].model.info.official_name,
+        logo:companyDataList[1].model.info.logo
       },
       team:{
-        _id:companyDataList[1].teams[0]._id,
-        name:companyDataList[1].teams[0].name,
-        logo:companyDataList[1].teams[0].logo
+        _id:companyDataList[1].teams[0].model._id,
+        name:companyDataList[1].teams[0].model.name,
+        logo:companyDataList[1].teams[0].model.logo
       },
       member:teamTwoUsers,
       start_confirm: true
@@ -542,27 +542,27 @@ var createCampaigns = function (companyDataList, callback) {
       function(callback){
         var _campaignUnits = [{
           company:{
-            _id:companyDataList[0].company._id,
-            name:companyDataList[0].company.info.official_name,
-            logo:companyDataList[0].company.info.logo
+            _id:companyDataList[0].model._id,
+            name:companyDataList[0].model.info.official_name,
+            logo:companyDataList[0].model.info.logo
           },
           team:{
-            _id:companyDataList[0].teams[0]._id,
-            name:companyDataList[0].teams[0].name,
-            logo:companyDataList[0].teams[0].logo
+            _id:companyDataList[0].teams[0].model._id,
+            name:companyDataList[0].teams[0].model.name,
+            logo:companyDataList[0].teams[0].model.logo
           },
           member:teamOneUsers,
           start_confirm: false
         },{
           company:{
-            _id:companyDataList[1].company._id,
-            name:companyDataList[1].company.info.official_name,
-            logo:companyDataList[1].company.info.logo
+            _id:companyDataList[1].model._id,
+            name:companyDataList[1].model.info.official_name,
+            logo:companyDataList[1].model.info.logo
           },
           team:{
-            _id:companyDataList[1].teams[0]._id,
-            name:companyDataList[1].teams[0].name,
-            logo:companyDataList[1].teams[0].logo
+            _id:companyDataList[1].teams[0].model._id,
+            name:companyDataList[1].teams[0].model.name,
+            logo:companyDataList[1].teams[0].model.logo
           },
           member:teamTwoUsers,
           start_confirm: false
@@ -573,27 +573,27 @@ var createCampaigns = function (companyDataList, callback) {
       function(callback){
         var _campaignUnits = [{
           company:{
-            _id:companyDataList[0].company._id,
-            name:companyDataList[0].company.info.official_name,
-            logo:companyDataList[0].company.info.logo
+            _id:companyDataList[0].model._id,
+            name:companyDataList[0].model.info.official_name,
+            logo:companyDataList[0].model.info.logo
           },
           team:{
-            _id:companyDataList[0].teams[0]._id,
-            name:companyDataList[0].teams[0].name,
-            logo:companyDataList[0].teams[0].logo
+            _id:companyDataList[0].teams[0].model._id,
+            name:companyDataList[0].teams[0].model.name,
+            logo:companyDataList[0].teams[0].model.logo
           },
           member:teamOneUsers,
           start_confirm: true
         },{
           company:{
-            _id:companyDataList[1].company._id,
-            name:companyDataList[1].company.info.official_name,
-            logo:companyDataList[1].company.info.logo
+            _id:companyDataList[1].model._id,
+            name:companyDataList[1].model.info.official_name,
+            logo:companyDataList[1].model.info.logo
           },
           team:{
-            _id:companyDataList[1].teams[0]._id,
-            name:companyDataList[1].teams[0].name,
-            logo:companyDataList[1].teams[0].logo
+            _id:companyDataList[1].teams[0].model._id,
+            name:companyDataList[1].teams[0].model.name,
+            logo:companyDataList[1].teams[0].model.logo
           },
           member:teamTwoUsers,
           start_confirm: false
@@ -603,7 +603,7 @@ var createCampaigns = function (companyDataList, callback) {
     ],
     // optional callback
     function(err, results){
-      companyDataList[0].teams[0].campaign = results;
+      companyDataList[0].teams[0].campaigns = results;
       callback(err, companyDataList);
     });
   }
