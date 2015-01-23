@@ -15,7 +15,7 @@ module.exports = function () {
     company = data[0].model;
   })
 
-  describe('post /companies/forgetPassword',function() {
+  describe.skip('post /companies/forgetPassword',function() {
     it('填写正确邮箱返回201',function (done) {
       request.post('/companies/forgetPassword')
       .send({
