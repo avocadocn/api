@@ -443,11 +443,10 @@ var _postCampaign = function (param, callback) {
     campaign.modularization = true;
     var componentNames = [];
     CampaignMold.findOne({'name': campaign.campaign_mold}, function (err, mold) {
-      if (err) {
+      if (err ||!mold) {
         callback('查找活动类型失败');
         return;
       }
-
       componentNames = mold.module;
       if (campaign.campaign_unit.length !== 2) {//单组去除比分板
         var scoreIndex = componentNames.indexOf('ScoreBoard');
@@ -513,10 +512,7 @@ var _postCampaign = function (param, callback) {
           if (pushData) {
             pushService.push(pushData, function (err) {
               if (err) {
-                console.log(err);
-                if (err.stack) {
-                  console.log(err.stack);
-                }
+                log(err);
               }
             });
           }
@@ -540,7 +536,7 @@ module.exports = function (app) {
         cid: {
           name: '公司id',
           value: req.body.cid,
-          validators: ['required']
+          validators: ['required', donlerValidator.minLength(1)]
         },
         campaign_type: {
           name: '活动类型',
@@ -550,7 +546,7 @@ module.exports = function (app) {
         tid: {
           name: '小队tid',
           value: req.body.tid,
-          validators: req.body.campaign_type ==1 ? []:['required']
+          validators: req.body.campaign_type ==1 ? []:['required', donlerValidator.minLength(1)]
         },
         theme: {
           name: '主题',
@@ -565,7 +561,7 @@ module.exports = function (app) {
         campaign_mold: {
           name: '活动模型',
           value: req.body.campaign_mold,
-          validators: ['required']
+          validators: ['required', donlerValidator.minLength(1)]
         },
         start_time: {
           name: '开始时间',
@@ -652,14 +648,16 @@ module.exports = function (app) {
                   break;
                 }
               };
-              for (var j = values[1].length - 1; j >= 0; j--) {
-                if(values[1][j]._id.toString()===param.tid[index]){
-                  unit.team = {
-                    _id: values[1][j]._id,
-                    name: values[1][j].name,
-                    logo: values[1][j].logo
+              if(param.tid){
+                for (var j = values[1].length - 1; j >= 0; j--) {
+                  if(values[1][j]._id.toString()===param.tid[index]){
+                    unit.team = {
+                      _id: values[1][j]._id,
+                      name: values[1][j].name,
+                      logo: values[1][j].logo
+                    }
+                    break;
                   }
-                  break;
                 }
               }
               param.campaign_unit.push(unit);
