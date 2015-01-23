@@ -609,24 +609,20 @@ module.exports = function (app) {
     },
 
     getCompanyStatistics: function (req, res) {
-      var option = {
-        'cid':req.query.companyId || req.user.cid || req.user._id
-      };
-      if(req.user.provider=='user'){
-        option.active = true;
+      if(req.user._id.toString() !== req.params.companyId ) {
+        return res.status(403).send({msg:'权限错误'});
       }
-      if(req.query.target=='team') {
-        option.gid = {
-          '$ne': '0'
-        }
+      var option = {'cid':req.params.companyId};
+      if(req.query.target=='team') {//查小队
+        option.gid = {'$ne': '0'};
       }
-      else{
+      else{//查部门
         option.gid = '0';
       }
-      if(req.query.type === 'official' ) {
+      if(req.query.type === 'official' ) {//查看官方小队
         option.poster = {role : 'HR'};
-      }else if(req.query.type === 'unofficial') {
-        option.poster = {role:'Personal'};
+      }else if(req.query.type === 'unofficial') {//查看非官方小队
+        option.poster = {role : 'Personal'};
       }
       CompanyGroup
       .find(option)
@@ -639,6 +635,7 @@ module.exports = function (app) {
             _id: companyGroups[i]._id,
             name: companyGroups[i].name,
             cid: companyGroups[i].cid,
+            gid: companyGroups[i].gid,
             cname: companyGroups[i].cname,
             logo: companyGroups[i].logo,
             groupType: companyGroups[i].group_type,
