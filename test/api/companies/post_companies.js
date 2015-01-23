@@ -81,7 +81,6 @@ module.exports = function () {
     errorCompanyTest('联系人',{contacts:''});//联系人不填
     errorCompanyTest('区号',{areacode:'asdf'});//区号不是数字
     errorCompanyTest('电话',{areacode:'asdf'});//电话不是数字
-    errorCompanyTest('邮箱后缀',{email:'asdf@asdf.com'});//邮箱后缀错误
     errorCompanyTest('邮箱格式',{email:'asldfjaf'});//邮件乱填
 
   });
