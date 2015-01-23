@@ -3,18 +3,18 @@ var app = require('../../../config/express.js'),
 
 var util = require('util');
 var common = require('../../support/common');
-var mongoose = common.mongoose;
-var Company = mongoose.model('Company');
 var dataService = require('../../create_data');
-var chance = require('chance').Chance();
 
 module.exports = function () {
   before(function() {
-    //user登录
-    //company登录
+    //user1登录
+    //user2登录
+    //company1登录
+    //company2登录
   })
-  describe('post /companies', function () {
-    //hr或拿inviteKey
+  describe('get /companies', function () {
+    //需求不明，暂且放一下
+    //hr或member拿inviteKey
 
     //user拿company数据
     

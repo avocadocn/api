@@ -85,7 +85,7 @@ exports.generateCompanyData = function(callback) {
   var districtLength = _region[provinceId].city[cityId].district.length;
   var districtId = chance.integer({
     min: 0,
-    max: _region[provinceId].city[cityId].district.length ? 0 : _region[provinceId].city[cityId].district.length - 1
+    max: districtLength===0 ? 0 : districtLength - 1
   }); // a random district id
   var districtName = districtLength ? _region[provinceId].city[cityId].district[districtId].name : '';
 

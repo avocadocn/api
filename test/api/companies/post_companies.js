@@ -69,7 +69,6 @@ module.exports = function () {
         .expect(400)
         .end(function (err, res) {
           if (err) return done(err);
-          //xxx should xxx
           res.body.msg.should.be.type('string');
           done();
         })

@@ -47,7 +47,7 @@ var createNewUser = function(opts, callback) {
  * @param {Function} callback 形式为function(err, users){}
  */
 var createUsers = function (company, callback) {
-  if (company.mail_active === false) {
+  if (company.status.mail_active === false) {
     callback(null, []);
     return;
   }

@@ -48,12 +48,13 @@ module.exports = function (app) {
         });
     },
 
+    //验证用户正在注册时输入的信息
     companyInfoValidate: function (req, res) {
       var option;
       if ( req.body.email ) {
         option = {'login_email': req.body.email};
       }
-      else if ( req.query.username ) {
+      else if ( req.body.username ) {//此步骤在邮箱认证后，故暂时在app中未用到
         option = {'username': req.body.username};
       }
       else if ( req.body.name){
@@ -64,7 +65,11 @@ module.exports = function (app) {
       }
       Company.findOne(option, function(err, company) {
         if (err || company) {
-          if(!req.body.name)
+          if(err) {
+            log(err);
+            return res.status(500).send({msg:'数据库查找出错'});
+          }
+          if(!req.body.name)//验证email和username时只需返回是否存在
             res.send({ validate:0, msg:'已经存在' });
           else{//是验证的名字的话未验证邮箱提醒他去验证邮箱或给donler发送邮件
             if(company.status.mail_active && company.status.active) //没被屏蔽，邮箱也验证了
@@ -75,7 +80,7 @@ module.exports = function (app) {
               res.send({ validate:2, msg:'被屏蔽了，可使用'});
           }
         } else {
-          res.send({ validate:3, msg:'可以使用' });
+          res.status(200).send({ validate:3, msg:'可以使用' });
         }
       });
     },

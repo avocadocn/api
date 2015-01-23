@@ -14,7 +14,7 @@ var CompanyGroup = mongoose.model('CompanyGroup');
  */
 var createTeams = function(company, callback) {
   //未激活的公司不需要加小队，被关闭的仍然加。
-  if(company.mail_active===false)
+  if(!company.status.mail_active)
     callback(null,[]);
   else{
     var teams = [];
