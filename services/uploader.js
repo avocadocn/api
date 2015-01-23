@@ -64,6 +64,15 @@ exports.uploadImg = function (req, options) {
       options.error(err);
       return;
     }
+    if (!files[options.fieldName]) {
+      if (options.error) {
+        options.error({
+          type: 'notfound',
+          msg: '没有收到文件' + options.fieldName
+        });
+        return;
+      }
+    }
     var file = files[options.fieldName][0];
     if (!file) {
       if (options.error) {

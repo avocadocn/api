@@ -117,6 +117,58 @@ module.exports = function () {
         });
     });
 
+    it('修改头像', function (done) {
+      var data = dataService.getData();
+      var user = data[0].users[8];
+
+      request.put('/users/' + user.id)
+        .attach('photo', __dirname + '/test_photo.png')
+        .set('x-access-token', accessToken)
+        .expect(200)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          done();
+        });
+    });
+
+    it('修改头像时如果提供不正确的表单名应该被忽略，返回200', function (done) {
+      var data = dataService.getData();
+      var user = data[0].users[8];
+
+      request.put('/users/' + user.id)
+        .attach('errorPhoto', __dirname + '/test_photo.png')
+        .set('x-access-token', accessToken)
+        .expect(200)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          done();
+        });
+    });
+
+    it('修改头像时如果上传非图像文件应该提示错误信息，不引起服务器崩溃', function (done) {
+      var data = dataService.getData();
+      var user = data[0].users[8];
+
+      request.put('/users/' + user.id)
+        .attach('photo', __dirname + '/test_photo.txt')
+        .set('x-access-token', accessToken)
+        .expect(500)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          res.body.msg.should.equal('服务器错误');
+          done();
+        });
+    });
+
   });
 
 };

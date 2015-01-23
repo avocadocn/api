@@ -469,7 +469,7 @@ module.exports = function (app) {
             next();
           } else {
             log(err);
-            res.sendStatus(500);
+            res.status(500).send({ msg: '服务器错误' });
           }
         }
       });
