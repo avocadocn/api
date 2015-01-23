@@ -12,7 +12,6 @@ module.exports = function () {
         var itemMsg = util.format('from %s to %s should return "%s %s %s"', start, end, expect.start_flag,expect.remind_text,expect.time_text);
         it(itemMsg, function () {
           var text = campaignBusiness.formatTime(new Date(start), new Date(end));
-          console.log(text);
           text.should.eql(expect);
         });
       };

@@ -18,13 +18,15 @@ exports.getCampaignByParamId = function (req, res, next) {
   if (req.query.populate === 'no') {
     populate = '';
   }
-
+  if(!mongoose.Types.ObjectId.isValid(req.params.campaignId)){
+    return res.status(404).send({ msg: '找不到该活动' });
+  };
   Campaign.findById(req.params.campaignId)
     .populate(populate)
     .exec()
     .then(function (campaign) {
       if (!campaign) {
-        res.status(404).send({ msg: '找不到该活动' });
+        return res.status(404).send({ msg: '找不到该活动' });
       } else {
         req.campaign = campaign;
         req.srcOwner = {

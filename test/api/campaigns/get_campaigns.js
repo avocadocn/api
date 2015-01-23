@@ -4,7 +4,7 @@ var app = require('../../../config/express.js'),
 var dataService = require('../../create_data');
 
 module.exports = function () {
-  describe('get /campaigns/:campaignId', function () {
+  describe('get /campaigns/', function () {
 
     var accessToken;
 
@@ -26,7 +26,7 @@ module.exports = function () {
 
     });
 
-    it('should get campaign', function (done) {
+    it('should get campaigns', function (done) {
       var data = dataService.getData();
       var campaign = data[0].campaigns[0];
       request.get('/campaigns/' + campaign.id)
@@ -39,6 +39,30 @@ module.exports = function () {
         });
     });
 
+    // it('should get 404', function (done) {
+    //   request.get('/campaigns/111')
+    //     .set('x-access-token', accessToken)
+    //     .expect(404)
+    //     .end(function (err, res) {
+    //       if (err) return done(err);
+    //       res.body.msg.should.equal('找不到该活动');
+    //       done();
+    //     });
+    // });
+
+    // it('should get 403', function (done) {
+    //   var data = dataService.getData();
+    //   var campaign = data[1].campaigns[0];
+    //   request.get('/campaigns/' + campaign.id)
+    //     .set('x-access-token', accessToken)
+    //     .expect(403)
+    //     .end(function (err, res) {
+    //       if (err) return done(err);
+    //       console.log(res.body)
+    //       res.body.msg.should.equal('您没有权限');
+    //       done();
+    //     });
+    // });
   });
 };
 

@@ -178,7 +178,7 @@ module.exports = function (app) {
         phone: {
           name: '手机号码',
           value: req.body.phone,
-          validators: ['number', donlerValidator.isLength(11)]
+          validators: ['number']
         }
       }, 'complete', function (pass, msg) {
         if (pass) {

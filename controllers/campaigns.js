@@ -881,36 +881,29 @@ module.exports = function (app) {
       });
     },
     closeCampaign: function (req, res) {
-      Campaign
-      .findById(req.params.campaignId)
-      .exec()
-      .then(function (campaign) {
-        if (!campaign || !campaign.active) {
-          res.status(404).send('未找到可以关闭的活动')
+      var campaign = req.campaign;
+      if (!campaign.active) {
+        res.status(404).send({msg:'未找到可以关闭的活动'});
+      }
+      else{
+        var role = auth.getRole(req.user, {
+          companies: campaign.cid,
+          teams: campaign.tid
+        });
+        var taskName = campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
+        var allow = auth.auth(role, [taskName]);
+        if(!allow[taskName]){
+          return res.status(403).send({msg:'您没有权限获取该活动'});
         }
-        else{
-          var role = auth.getRole(req.user, {
-            companies: campaign.cid,
-            teams: campaign.tid
-          });
-          var taskName = campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
-          var allow = auth.auth(role, [taskName]);
-          if(!allow[taskName]){
-            return res.status(403).send('您没有权限获取该活动');
+        campaign.active = false;
+        campaign.save(function (err) {
+          if (err) {
+            return res.status(500).send({msg:'关闭活动失败'});
+          } else {
+            return res.send({ result: 1, msg: '关闭活动成功' });
           }
-          campaign.active = false;
-          campaign.save(function (err) {
-            if (err) {
-              return res.status(500).send('关闭活动失败');
-            } else {
-              return res.send({ result: 1, msg: '关闭活动成功' });
-            }
-          });
-        }
-      })
-      .then(null, function (err) {
-        res.status(500).send('服务器错误');
-      });
+        });
+      }
     },
     joinCampaign: function(req, res){
       Campaign

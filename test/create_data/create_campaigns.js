@@ -271,6 +271,12 @@ var createCampaign = function (options, _callback) {
  *    //  campaigns: [doc]
  *    //}]
  *  });
+ *  第一，二个队为小队活动，第三个队的为公司内挑战
+ *  公司活动四个，分别为未开始，正在进行，已经结束，关闭
+ *  小队活动
+ *    第一个小队8个，依次为hr发送的四个状态的活动，leader发送的四个状态的活动
+ *    第二个个小队为第二与第三个小队间的6个挑战，依次为未开始，正在进行，已经结束，关闭，取消应战，拒绝应战
+ *  第一个公司的第一个小队14个，依次为hr发送的四个状态的活动，leader发送的四个状态的活动，与第一个公司的第一个小队间的6个挑战
  * @param {Array} companyDataList长度为1时返回对象，否则返回数组
  * @param callback
  */
@@ -547,7 +553,7 @@ var createCampaigns = function (companyDataList, callback) {
         ],
         // optional callback
         function(err, results){
-          companyDataList[0].teams[0].campaigns = results;
+          companyDataList[0].teams[1].campaigns = results;
           parallelCallback(err, 'teamProvoke');
         });
       }
@@ -691,7 +697,7 @@ var createCampaigns = function (companyDataList, callback) {
     ],
     // optional callback
     function(err, results){
-      companyDataList[0].teams[0].campaigns = results;
+      companyDataList[0].teams[0].campaigns = companyDataList[0].teams[0].campaigns.concat(results);
       callback(err, companyDataList);
     });
   }

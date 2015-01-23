@@ -17,8 +17,9 @@ var createNewUser = function(opts, callback) {
     username: email,
     password: '55yali',
     email: email,
-    active: true,
-    mail_active: true,
+    active: opts.active,
+    mail_active: opts.mail_active,
+    disabled: opts.disabled,
     nickname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     realname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     introduce: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
@@ -34,25 +35,46 @@ var createNewUser = function(opts, callback) {
       callback(null, user);
     }
   });
-}
+};
 
 /**
  * 创建公司的成员
+ * 前5个为正常用户，第6个未激活，第7个被HR关闭，第8个被管理员关闭
  * @param {Object} company
  * @param {Function} callback 形式为function(err, users){}
  */
 var createUsers = function (company, callback) {
+  if (company.mail_active === false) {
+    callback(null, []);
+    return;
+  }
+
   var i = 0;
   var users = [];
-  var opts = {
-    domain: company.email.domain,
-    cid: company._id,
-    cname: company.info.name,
-    company_official_name: company.info.official_name
-  };
+
   async.whilst(
-    function() {return i<5},//生成5个人 需要时可调整
+    function() {return i<8},//生成7个人 需要时可调整
     function(cb) {
+
+      var opts = {
+        domain: company.email.domain,
+        cid: company._id,
+        cname: company.info.name,
+        company_official_name: company.info.official_name,
+        active: true,
+        mail_active: true,
+        disabled: false
+      };
+      if (i === 5) {
+        opts.mail_active = false;
+      }
+      if (i === 6) {
+        opts.active = false;
+      }
+      if (i === 7) {
+        opts.disabled = true;
+      }
+
       createNewUser(opts, function(err, user) {
         i++;
         if(err){
