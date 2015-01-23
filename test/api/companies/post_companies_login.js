@@ -8,11 +8,14 @@ var common = require('../../support/common');
 var util = require('util');
 
 module.exports = function () {
+  var data ;
+  before(function() {
+    data = dataService.getData();
+  })
 
   describe('post /companies/login', function () {
 
     it('公司用户名和密码正确应该登录成功', function (done) {
-      var data = dataService.getData();
       var company = data[0].model;
 
       request.post('/companies/login')
@@ -39,74 +42,32 @@ module.exports = function () {
       });
     });
 
-    var loginErrorTest = function(data,msg) {
-      // var 
-      it('密码错误应该登录失败', function (done) {
-        var data = dataService.getData();
-        var user = data[0].model;
+    var loginErrorTest = function(theme, testData, msg) {
+      var title = util.format('%s应该登录失败', theme)
+      it(title, function (done) {
+        var company = data[0].model;
+        if(testData.company) {
+          company = data[testData.company].model;
+        }
 
         request.post('/companies/login')
           .send({
-            email: data.email? data.email : company.username,
-            password: data.password ? data.password :'123456'
+            username: testData.username? testData.username : company.username,
+            password: testData.password ? testData.password :'55yali'
           })
           .expect(401)
           .end(function (err, res) {
             if (err) return done(err);
-            res.body.msg.should.equal('密码输入错误,请检查重试。');
+            res.body.msg.should.equal(msg);
             done();
           });
       });
     };
     //密码
-    //用户名
-    //未激活
-    //被关闭
-    // it('密码错误应该登录失败', function (done) {
-    //   var data = dataService.getData();
-    //   var user = data[0].users[0];
-
-    //   request.post('/users/login')
-    //     .send({
-    //       email: user.email,
-    //       password: '123456'
-    //     })
-    //     .expect(401)
-    //     .end(function (err, res) {
-    //       if (err) return done(err);
-    //       res.body.msg.should.equal('密码输入错误,请检查重试。');
-    //       done();
-    //     });
-    // });
-
-    // it('用户名不存在应该登录失败', function (done) {
-    //   request.post('/users/login')
-    //     .send({
-    //       email: 'unexits',
-    //       password: '123456'
-    //     })
-    //     .expect(401)
-    //     .end(function (err, res) {
-    //       if (err) return done(err);
-    //       res.body.msg.should.equal('邮箱地址不存在,请检查或注册。');
-    //       done();
-    //     });
-    // });
-
-    // it('用户名不存在应该登录失败', function (done) {
-    //   request.post('/users/login')
-    //     .send({
-    //       email: 'unexits',
-    //       password: '123456'
-    //     })
-    //     .expect(401)
-    //     .end(function (err, res) {
-    //       if (err) return done(err);
-    //       res.body.msg.should.equal('邮箱地址不存在,请检查或注册。');
-    //       done();
-    //     });
-    // });
-
+    loginErrorTest('密码错误', {password : '123456'}, '密码错误,请重新输入');
+    loginErrorTest('用户名错误', {username: '1'},'用户不存在，请检查您的用户名');
+    loginErrorTest('公司未激活', {company:3} , '您的公司账号尚未激活,请到邮箱内激活');
+    loginErrorTest('公司被关闭', {company:4} , '您的公司账号已被关闭');
   });
 
 };
