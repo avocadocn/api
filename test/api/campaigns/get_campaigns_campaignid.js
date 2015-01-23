@@ -74,6 +74,18 @@ module.exports = function () {
           done();
         });
     });
+    it('should get 401', function (done) {
+        var data = dataService.getData();
+        var campaign = data[0].campaigns[0];
+        request.get('/campaigns/' + campaign.id)
+          .set('x-access-token', '111')
+          .expect(401)
+          .end(function (err, res) {
+            if (err) return done(err);
+            res.body.msg.should.equal('您没有登录或者登录超时，请重新登录');
+            done();
+          });
+      });
   });
 };
 
