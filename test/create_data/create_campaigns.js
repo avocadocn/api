@@ -4,6 +4,7 @@ var tools = require('../../tools/tools');
 var mongoose = common.mongoose;
 var Campaign = mongoose.model('Campaign'),
     PhotoAlbum = mongoose.model('PhotoAlbum'),
+    Photo = mongoose.model('Photo'),
     CampaignMold = mongoose.model('CampaignMold'),
     CompanyGroup = mongoose.model('CompanyGroup');
 
@@ -98,6 +99,57 @@ var molds = [
         'enable':true
     }
 ];
+
+/**
+ * 为活动相册生成照片
+ * @param {Object} photoAlbum
+ * @param {Object} campaign
+ */
+var createPhotos = function (photoAlbum, campaign) {
+  var uploadUsers = [];
+  campaign.members.forEach(function (member) {
+    uploadUsers.push({
+      _id: member._id,
+      name: member.nickname,
+      type: 'user'
+    });
+  });
+  var randomPhotoCount = chance.integer({ min: 10, max: 30 });
+  var uploadUsersMaxIndex = uploadUsers.length - 1;
+  for (var i = 0; i < randomPhotoCount; i++) {
+    (function () {
+      var photo = new Photo({
+        photo_album: photoAlbum._id,
+        owner: {
+          companies: photoAlbum.owner.companies,
+          teams: photoAlbum.owner.teams
+        },
+        uri: 'testuri',
+        width: 200,
+        height: 200,
+        upload_date: chance.date(),
+        hidden: chance.bool({ likelihood: 90 }),
+        click: chance.integer({ min: 0, max: 500 }),
+        name: 'test photo name',
+        tags: ['tag1', 'tag2'],
+        upload_user: uploadUsers[chance.integer({ min: 0, max: uploadUsersMaxIndex})]
+      });
+      photo.save(function (err) {
+        if (err) {
+          console.error('保存照片失败');
+          console.error(err.stack);
+        }
+      });
+      i++
+    }())
+  }
+
+};
+
+
+
+
+
 /**
  * 创建单个活动
  * @param  {[type]}   options       活动的参数 
@@ -195,10 +247,13 @@ var createCampaign = function (options, _callback) {
   //---save
   photo_album.save(function (err) {
     if (err) {
-      console.log(err)
+      console.log(err);
       _callback('保存相册失败');
       return;
     }
+
+    // 创建照片
+    createPhotos(photo_album, campaign);
 
     campaign.photo_album = photo_album._id;
 

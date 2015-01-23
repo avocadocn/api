@@ -39,6 +39,41 @@ module.exports = function () {
         });
     });
 
+    it('附带设备信息后应该登录成功', function (done) {
+      var data = dataService.getData();
+      var user = data[0].users[0];
+
+      request.post('/users/login')
+        .set('x-app-id', "id1a2b3c4d5e6f")
+        .set('x-api-key', "key1a2b3c4d5e6f")
+        .set('x-device-id', "429F38FB-35FD-49ED-8E90-B5ACA9FC7468")
+        .set('x-device-type', "iPhone5,2")
+        .set('x-platform', "iOS")
+        .set('x-version', "8.1.2")
+        .send({
+          email: user.email,
+          password: '55yali'
+        })
+        .expect(200)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.cid.should.equal(user.cid.toString());
+          res.body.id.should.equal(user.id);
+
+          jwt.verify(res.body.token, common.config.token.secret, function (err, decoded) {
+            if (err) {
+              console.log(err);
+              err.should.not.be.ok;
+            } else {
+              decoded.id.should.equal(user.id);
+              decoded.type.should.equal('user')
+            }
+            done();
+          });
+
+        });
+    });
+
     it('密码错误应该登录失败', function (done) {
       var data = dataService.getData();
       var user = data[0].users[0];
