@@ -1,5 +1,7 @@
 'use strict';
 
+var util = require('util');
+
 var common = require('../support/common');
 var mongoose = common.mongoose;
 
@@ -81,7 +83,7 @@ exports.createData = function (callback) {
               callback(err);
               return;
             }
-            console.log('成功生成小队和用户的数据');
+            console.log(util.format('成功生成%d个小队和%d个用户', results.teams.length, results.users.length));
             results.teams.forEach(function (team) {
               resCompanyData.teams.push({
                 model: team,

@@ -8,6 +8,118 @@ module.exports = function () {
 
   describe('get /users/:userId', function () {
 
+    var accessToken;
+    before(function (done) {
+      var data = dataService.getData();
+      var user = data[0].users[0];
+
+      request.post('/users/login')
+        .send({
+          email: user.email,
+          password: '55yali'
+        })
+        .expect(200)
+        .end(function (err, res) {
+          if (err) return done(err);
+          accessToken = res.body.token;
+          done();
+        });
+    });
+
+    it('用户应该获取到自己的完整信息', function (done) {
+      var data = dataService.getData();
+      var user = data[0].users[0];
+      request.get('/users/' + user.id)
+        .set('x-access-token', accessToken)
+        .expect(200)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          var resUser = res.body;
+          resUser._id.should.equal(user.id);
+          resUser.nickname.should.equal(user.nickname);
+          resUser.photo.should.equal(user.photo);
+          resUser.realname.should.equal(user.realname);
+          resUser.sex.should.equal(user.sex);
+          (new Date(resUser.birthday).valueOf()).should.equal(user.birthday.valueOf());
+          (new Date(resUser.registerDate).valueOf()).should.equal(user.register_date.valueOf());
+          resUser.phone.should.equal(user.phone);
+          resUser.company._id.should.equal(user.cid.toString());
+          resUser.company.name.should.equal(user.company_official_name);
+          resUser.company.briefName.should.equal(user.cname);
+          resUser.tids.should.be.ok;
+          done();
+        });
+    });
+
+    it('用户可以只获取免打扰开关', function (done) {
+      var data = dataService.getData();
+      var user = data[0].users[0];
+      request.get('/users/' + user.id + '?responseKey=pushToggle')
+        .set('x-access-token', accessToken)
+        .expect(200)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          res.body.pushToggle.should.equal(user.push_toggle);
+          done();
+        });
+    });
+
+    it('应该正常获取到公司其它成员的信息', function (done) {
+      var data = dataService.getData();
+      var user = data[0].users[0];
+      var otherUser = data[0].users[1];
+      request.get('/users/' + otherUser.id)
+        .set('x-access-token', accessToken)
+        .expect(200)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          var resUser = res.body;
+          resUser._id.should.equal(otherUser.id);
+          resUser.nickname.should.equal(otherUser.nickname);
+          resUser.photo.should.equal(otherUser.photo);
+          resUser.realname.should.equal(otherUser.realname);
+          resUser.sex.should.equal(otherUser.sex);
+          (new Date(resUser.birthday).valueOf()).should.equal(otherUser.birthday.valueOf());
+          resUser.phone.should.equal(otherUser.phone);
+          resUser.company._id.should.equal(otherUser.cid.toString());
+          resUser.company.name.should.equal(otherUser.company_official_name);
+          resUser.company.briefName.should.equal(otherUser.cname);
+          resUser.tids.should.be.ok;
+          done();
+        });
+    });
+
+    it('获取其它公司的成员的信息应该只获取到简略信息', function (done) {
+      var data = dataService.getData();
+      var user = data[0].users[0];
+      var otherUser = data[1].users[0];
+      request.get('/users/' + otherUser.id)
+        .set('x-access-token', accessToken)
+        .expect(200)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          var resUser = res.body;
+          resUser._id.should.equal(otherUser.id);
+          resUser.nickname.should.equal(otherUser.nickname);
+          resUser.photo.should.equal(otherUser.photo);
+          for (var key in resUser) {
+            '_id nickname photo'.indexOf(key).should.not.equal(-1);
+          }
+          done();
+        });
+    });
 
   });
 

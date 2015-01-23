@@ -20,13 +20,16 @@ var createNewUser = function(opts, callback) {
     active: opts.active,
     mail_active: opts.mail_active,
     disabled: opts.disabled,
+    sex: chance.character({ pool: '男女' }),
     nickname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     realname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     introduce: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     role: 'EMPLOYEE',
     cid: opts.cid,
     cname: opts.cname,
-    company_official_name: opts.company_official_name
+    company_official_name: opts.company_official_name,
+    birthday: chance.birthday(),
+    phone: chance.string({ pool: '0123456789', length: 11 })
   });
   user.save(function(err) {
     if(err){
@@ -39,7 +42,7 @@ var createNewUser = function(opts, callback) {
 
 /**
  * 创建公司的成员
- * 前5个为正常用户，第6个未激活，第7个被HR关闭，第8个被管理员关闭
+ * 前5个为正常用户，第6个未激活，第7个被HR关闭，第8个被管理员关闭，第9个用户用于修改信息测试
  * @param {Object} company
  * @param {Function} callback 形式为function(err, users){}
  */
@@ -53,7 +56,7 @@ var createUsers = function (company, callback) {
   var users = [];
 
   async.whilst(
-    function() {return i<8},//生成7个人 需要时可调整
+    function() {return i<9},//生成7个人 需要时可调整
     function(cb) {
 
       var opts = {

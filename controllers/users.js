@@ -411,9 +411,9 @@ module.exports = function (app) {
           value: req.body.realname,
           validators: [donlerValidator.minLength(1), donlerValidator.maxLength(20)]
         },
-        intro: {
+        introduce: {
           name: '简介',
-          value: req.body.realname,
+          value: req.body.introduce,
           validators: [donlerValidator.maxLength(40)]
         },
         phone: {
@@ -487,9 +487,6 @@ module.exports = function (app) {
       }
       if (req.body.realname) {
         user.realname = req.body.realname;
-      }
-      if (req.body.intro) {
-        user.introduce = req.body.intro;
       }
       if (req.body.phone) {
         user.phone = req.body.phone;
