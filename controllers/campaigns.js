@@ -830,55 +830,51 @@ module.exports = function (app) {
       });
     },
     updateCampaign: function (req, res) {
-      Campaign
-      .findById(req.params.campaignId)
-      .exec()
-      .then(function (campaign) {
-        if (!campaign) {
-          res.status(404).send({msg:'未找到活动'})
+      var campaign = req.campaign;
+      if (!campaign) {
+        res.status(404).send({msg:'未找到活动'})
+      }
+      else{
+        var role = auth.getRole(req.user, {
+          companies: campaign.cid,
+          teams: campaign.tid
+        });
+        var taskName = campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
+        var allow = auth.auth(role, [taskName]);
+        if(!allow[taskName]){
+          return res.status(403).send({msg:'您没有权限获取该活动'});
         }
-        else{
-          var role = auth.getRole(req.user, {
-            companies: campaign.cid,
-            teams: campaign.tid
-          });
-          var taskName = campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
-          var allow = auth.auth(role, [taskName]);
-          if(!allow[taskName]){
-            return res.status(403).send({msg:'您没有权限获取该活动'});
-          }
-          if(campaign.start_time<new Date()){
-            return res.status(400).send({msg:'活动已经开始，无法进行编辑'});
-          }
-          if (req.body.content) {
-            campaign.content=xss(req.body.content);
-          }
-          var max = Number(req.body.member_max);
-          if (!isNaN(max)) {
-            campaign.member_max = max;
-          }
-          var min = Number(req.body.member_min);
-          if (!isNaN(min)) {
-            campaign.member_min = min;
-          }
-          if(req.body.tags) {
-            campaign.tags = req.body.tags;
-          }
-          if(req.body.deadline) {
-            campaign.deadline = req.body.deadline;
-          }
-          campaign.save(function (err) {
-            if (err) {
-              return res.status(500).send({msg:'数据保存错误'});
-            } else {
-              return res.status(200).send(campaign);
-            }
-          });
+        if(campaign.start_time<new Date()){
+          return res.status(400).send({msg:'活动已经开始，无法进行编辑'});
         }
-      })
-      .then(null, function (err) {
-        res.status(500).send({msg:'服务器错误'});
-      });
+        if (req.body.content) {
+          campaign.content=xss(req.body.content);
+        }
+        var max = Number(req.body.member_max);
+        if (!isNaN(max)) {
+          campaign.member_max = max;
+        }
+        var min = Number(req.body.member_min);
+        if (!isNaN(min)) {
+          campaign.member_min = min;
+        }
+        if(campaign.member_min>campaign.member_max) {
+          return res.status(400).send({msg:'人数上限不能小于下限'});
+        }
+        if(req.body.tags) {
+          campaign.tags = req.body.tags;
+        }
+        if(req.body.deadline) {
+          campaign.deadline = req.body.deadline;
+        }
+        campaign.save(function (err) {
+          if (err) {
+            return res.status(500).send({msg:'数据保存错误'});
+          } else {
+            return res.status(200).send(campaign);
+          }
+        });
+      }
     },
     closeCampaign: function (req, res) {
       var campaign = req.campaign;

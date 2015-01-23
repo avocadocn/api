@@ -26,7 +26,7 @@ module.exports = function () {
 
     });
 
-    it('should get company campaign', function (done) {
+    it('应该获取公司公司活动', function (done) {
       var data = dataService.getData();
       var campaign = data[0].campaigns[0];
       request.get('/campaigns/' + campaign.id)
@@ -39,7 +39,7 @@ module.exports = function () {
         });
     });
 
-    it('should get team campaign', function (done) {
+    it('应该获取小队活动', function (done) {
       var data = dataService.getData();
       var campaign = data[0].teams[0].campaigns[0];
       request.get('/campaigns/' + campaign.id)
@@ -51,7 +51,7 @@ module.exports = function () {
           done();
         });
     });
-    it('should get 404', function (done) {
+    it('应该在找不到活动时返回404', function (done) {
       request.get('/campaigns/111')
         .set('x-access-token', accessToken)
         .expect(404)
@@ -62,7 +62,7 @@ module.exports = function () {
         });
     });
 
-    it('should get 403', function (done) {
+    it('应该在没有权限获取时返回403', function (done) {
       var data = dataService.getData();
       var campaign = data[1].campaigns[0];
       request.get('/campaigns/' + campaign.id)
@@ -74,7 +74,7 @@ module.exports = function () {
           done();
         });
     });
-    it('should get 401', function (done) {
+    it('应该在没有登录时返回401', function (done) {
         var data = dataService.getData();
         var campaign = data[0].campaigns[0];
         request.get('/campaigns/' + campaign.id)

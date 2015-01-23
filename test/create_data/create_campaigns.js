@@ -133,8 +133,8 @@ var createCampaign = function (options, _callback) {
     poster : _options.poster,
     theme : chance.string({length: 10}),
     content : chance.sentence(),
-    memberMin : chance.integer({min: 0, max: 10}),
-    memberMax : chance.integer({min: 10, max: 100}),
+    member_min : chance.integer({min: 0, max: 10}),
+    member_max : chance.integer({min: 10, max: 100}),
     location : {
       name : chance.address(),
       coordinates : [chance.longitude(), chance.latitude()]
@@ -277,6 +277,7 @@ var createCampaign = function (options, _callback) {
  *    第一个小队8个，依次为hr发送的四个状态的活动，leader发送的四个状态的活动
  *    第二个个小队为第二与第三个小队间的6个挑战，依次为未开始，正在进行，已经结束，关闭，取消应战，拒绝应战
  *  第一个公司的第一个小队14个，依次为hr发送的四个状态的活动，leader发送的四个状态的活动，与第一个公司的第一个小队间的6个挑战
+ *  每个活动都只有第一个user参加(公司内挑战,第二个队无人参加）
  * @param {Array} companyDataList长度为1时返回对象，否则返回数组
  * @param callback
  */
@@ -287,13 +288,13 @@ var createCampaigns = function (companyDataList, callback) {
       //创建公司活动
       companyCampaign: function(parallelCallback){
         var users = [];
-        companyDataList[0].users.forEach(function(user){
+        // companyDataList[0].users.forEach(function(user){
           users.push({
-            _id: user._id,
-            nickname: user.nickname,
-            photo: user.photo
+            _id: companyDataList[0].users[0]._id,
+            nickname: companyDataList[0].users[0].nickname,
+            photo: companyDataList[0].users[0].photo
           });
-        });
+        // });
         var poster = {
           cid: companyDataList[0].model._id,                       //活动发起者所属的公司
           cname: companyDataList[0].model.info.official_name,
@@ -334,228 +335,239 @@ var createCampaigns = function (companyDataList, callback) {
       },
       //创建小队活动
       teamCampaign: function(parallelCallback){
-        var users = [];
-        companyDataList[0].teams[0].users.forEach(function(user){
-          users.push({
-            _id: user._id,
-            nickname: user.nickname,
-            photo: user.photo
+        if(!companyDataList[0].teams ||companyDataList[0].teams.length==0){
+          parallelCallback('noTeam', 'teamCampaignCampaign');
+        }
+        else {
+          var users = [];
+          // companyDataList[0].teams[0].users.forEach(function(user){
+            users.push({
+              _id: companyDataList[0].teams[0].users[0]._id,
+              nickname: companyDataList[0].teams[0].users[0].nickname,
+              photo: companyDataList[0].teams[0].users[0].photo
+            });
+          // });
+          var hrPoster = {
+            cid: companyDataList[0].model._id,                       //活动发起者所属的公司
+            cname: companyDataList[0].model.info.official_name,
+            role: 'HR'
+          }
+          var leaderPoster = {
+            cid: companyDataList[0].model._id,                       //活动发起者所属的公司
+            cname: companyDataList[0].model.info.official_name,
+            uid: companyDataList[0].teams[0].leaders[0]._id,
+            nickname: companyDataList[0].teams[0].leaders[0].nickname,
+            role: 'LEADER'
+          }
+          var campaignUnits = [{
+            company:{
+              _id:companyDataList[0].model._id,
+              name:companyDataList[0].model.info.official_name,
+              logo:companyDataList[0].model.info.logo
+            },
+            team:{
+              _id:companyDataList[0].teams[0].model._id,
+              name:companyDataList[0].teams[0].model.name,
+              logo:companyDataList[0].teams[0].model.logo
+            },
+            member:users,
+            start_confirm: true
+          }];
+          var campaign_mold = companyDataList[0].teams[0].model.group_type;
+          async.parallel([
+            //hr发送
+              //未开始
+              function(cb){
+                createCampaign({
+                  campaignUnits: campaignUnits,
+                  campaign_type: 2,
+                  start_confirm: true,
+                  poster: hrPoster,
+                  campaign_mold: campaign_mold,
+                  statusType: 1
+                }, cb);
+              },
+              //正在进行
+              function(cb){
+                createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 2}, cb);
+              },
+              //已经结束
+              function(cb){
+                createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 3}, cb);
+              },
+              //已经关闭
+              function(cb){
+                createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 4}, cb);
+              },
+            //队长发送
+              //未开始
+              function(cb){
+                createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 1}, cb);
+              },
+              //正在进行
+              function(cb){
+                createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 2}, cb);
+              },
+              //已经结束
+              function(cb){
+                createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 3}, cb);
+              },
+              //已经关闭
+              function(cb){
+                createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 4}, cb);
+              }
+          ],
+          // optional parallelCallback
+          function(err, results){
+            companyDataList[0].teams[0].campaigns = results;
+            parallelCallback(err, 'teamCampaignCampaign');
           });
-        });
-        var hrPoster = {
-          cid: companyDataList[0].model._id,                       //活动发起者所属的公司
-          cname: companyDataList[0].model.info.official_name,
-          role: 'HR'
         }
-        var leaderPoster = {
-          cid: companyDataList[0].model._id,                       //活动发起者所属的公司
-          cname: companyDataList[0].model.info.official_name,
-          uid: companyDataList[0].teams[0].leaders[0]._id,
-          nickname: companyDataList[0].teams[0].leaders[0].nickname,
-          role: 'LEADER'
-        }
-        var campaignUnits = [{
-          company:{
-            _id:companyDataList[0].model._id,
-            name:companyDataList[0].model.info.official_name,
-            logo:companyDataList[0].model.info.logo
-          },
-          team:{
-            _id:companyDataList[0].teams[0].model._id,
-            name:companyDataList[0].teams[0].model.name,
-            logo:companyDataList[0].teams[0].model.logo
-          },
-          member:users,
-          start_confirm: true
-        }];
-        var campaign_mold = companyDataList[0].teams[0].model.group_type;
-        async.parallel([
-          //hr发送
-            //未开始
-            function(cb){
-              createCampaign({
-                campaignUnits: campaignUnits,
-                campaign_type: 2,
-                start_confirm: true,
-                poster: hrPoster,
-                campaign_mold: campaign_mold,
-                statusType: 1
-              }, cb);
-            },
-            //正在进行
-            function(cb){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 2}, cb);
-            },
-            //已经结束
-            function(cb){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 3}, cb);
-            },
-            //已经关闭
-            function(cb){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: hrPoster, campaign_mold: campaign_mold, statusType: 4}, cb);
-            },
-          //队长发送
-            //未开始
-            function(cb){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 1}, cb);
-            },
-            //正在进行
-            function(cb){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 2}, cb);
-            },
-            //已经结束
-            function(cb){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 3}, cb);
-            },
-            //已经关闭
-            function(cb){
-              createCampaign({campaignUnits: campaignUnits, campaign_type: 2, start_confirm: true, poster: leaderPoster, campaign_mold: campaign_mold, statusType: 4}, cb);
-            }
-        ],
-        // optional parallelCallback
-        function(err, results){
-          companyDataList[0].teams[0].campaigns = results;
-          parallelCallback(err, 'teamCampaignCampaign');
-        });
+        
       },
       //创建小队间挑战
       teamProvoke: function(parallelCallback){
-        var campaign_mold = companyDataList[0].teams[0].model.group_type;
-        var poster = {
-          cid: companyDataList[0].model._id,                       //活动发起者所属的公司
-          cname: companyDataList[0].model.info.official_name,
-          uid: companyDataList[0].teams[1].leaders[0]._id,
-          nickname: companyDataList[0].teams[1].leaders[0].nickname,
-          role: 'LEADER'
+        if(!companyDataList[0].teams ||companyDataList[0].teams.length<2){
+          parallelCallback('noTeam', 'teamProvoke');
         }
-        var teamOneUsers = [];
-        companyDataList[0].teams[1].users.forEach(function(user){
-          teamOneUsers.push({
-            _id: user._id,
-            nickname: user.nickname,
-            photo: user.photo
-          });
-        });
-        var teamTwoUsers = [];
-        companyDataList[0].teams[2].users.forEach(function(user){
-          teamTwoUsers.push({
-            _id: user._id,
-            nickname: user.nickname,
-            photo: user.photo
-          });
-        });
-        var campaignUnits = [{
-          company:{
-            _id:companyDataList[0].model._id,
-            name:companyDataList[0].model.info.official_name,
-            logo:companyDataList[0].model.info.logo
-          },
-          team:{
-            _id:companyDataList[0].teams[1].model._id,
-            name:companyDataList[0].teams[1].model.name,
-            logo:companyDataList[0].teams[1].model.logo
-          },
-          member:teamOneUsers,
-          start_confirm: true
-        },{
-          company:{
-            _id:companyDataList[0].model._id,
-            name:companyDataList[0].model.info.official_name,
-            logo:companyDataList[0].model.info.logo
-          },
-          team:{
-            _id:companyDataList[0].teams[2].model._id,
-            name:companyDataList[0].teams[2].model.name,
-            logo:companyDataList[0].teams[2].model.logo
-          },
-          member:teamTwoUsers,
-          start_confirm: true
-        }];
-        async.parallel([
-          //未开始
-          function(cb){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 1}, cb);
-          },
-          //正在进行
-          function(cb){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 2}, cb);
-          },
-          //已经结束
-          function(cb){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 3}, cb);
-          },
-          //已经关闭
-          function(cb){
-            createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
-          },
-          //取消应战
-          function(cb){
-            var _campaignUnits = [{
-              company:{
-                _id:companyDataList[0].model._id,
-                name:companyDataList[0].model.info.official_name,
-                logo:companyDataList[0].model.info.logo
-              },
-              team:{
-                _id:companyDataList[0].teams[1].model._id,
-                name:companyDataList[0].teams[1].model.name,
-                logo:companyDataList[0].teams[1].model.logo
-              },
-              member:teamOneUsers,
-              start_confirm: false
-            },{
-              company:{
-                _id:companyDataList[0].model._id,
-                name:companyDataList[0].model.info.official_name,
-                logo:companyDataList[0].model.info.logo
-              },
-              team:{
-                _id:companyDataList[0].teams[2].model._id,
-                name:companyDataList[0].teams[2].model.name,
-                logo:companyDataList[0].teams[2].model.logo
-              },
-              member:teamTwoUsers,
-              start_confirm: false
-            }]
-            createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
-          },
-          //拒绝应战
-          function(cb){
-            var _campaignUnits = [{
-              company:{
-                _id:companyDataList[0].model._id,
-                name:companyDataList[0].model.info.official_name,
-                logo:companyDataList[0].model.info.logo
-              },
-              team:{
-                _id:companyDataList[0].teams[1].model._id,
-                name:companyDataList[0].teams[1].model.name,
-                logo:companyDataList[0].teams[1].model.logo
-              },
-              member:teamOneUsers,
-              start_confirm: true
-            },{
-              company:{
-                _id:companyDataList[0].model._id,
-                name:companyDataList[0].model.info.official_name,
-                logo:companyDataList[0].model.info.logo
-              },
-              team:{
-                _id:companyDataList[0].teams[2].model._id,
-                name:companyDataList[0].teams[2].model.name,
-                logo:companyDataList[0].teams[2].model.logo
-              },
-              member:teamTwoUsers,
-              start_confirm: false
-            }]
-            createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
+        else {
+          var campaign_mold = companyDataList[0].teams[0].model.group_type;
+          var poster = {
+            cid: companyDataList[0].model._id,                       //活动发起者所属的公司
+            cname: companyDataList[0].model.info.official_name,
+            uid: companyDataList[0].teams[1].leaders[0]._id,
+            nickname: companyDataList[0].teams[1].leaders[0].nickname,
+            role: 'LEADER'
           }
-        ],
-        // optional callback
-        function(err, results){
-          companyDataList[0].teams[1].campaigns = results;
-          parallelCallback(err, 'teamProvoke');
-        });
+          var teamOneUsers = [];
+          // companyDataList[0].teams[1].users.forEach(function(user){
+            teamOneUsers.push({
+              _id: companyDataList[0].teams[1].users[0]._id,
+              nickname: companyDataList[0].teams[1].users[0].nickname,
+              photo: companyDataList[0].teams[1].users[0].photo
+            });
+          // });
+          var teamTwoUsers = [];
+          // companyDataList[0].teams[2].users.forEach(function(user){
+            // teamTwoUsers.push({
+            //   _id: companyDataList[0].teams[2].users[0]._id,
+            //   nickname: companyDataList[0].teams[2].users[0].nickname,
+            //   photo: companyDataList[0].teams[2].users[0].photo
+            // });
+          // });
+          var campaignUnits = [{
+            company:{
+              _id:companyDataList[0].model._id,
+              name:companyDataList[0].model.info.official_name,
+              logo:companyDataList[0].model.info.logo
+            },
+            team:{
+              _id:companyDataList[0].teams[1].model._id,
+              name:companyDataList[0].teams[1].model.name,
+              logo:companyDataList[0].teams[1].model.logo
+            },
+            member:teamOneUsers,
+            start_confirm: true
+          },{
+            company:{
+              _id:companyDataList[0].model._id,
+              name:companyDataList[0].model.info.official_name,
+              logo:companyDataList[0].model.info.logo
+            },
+            team:{
+              _id:companyDataList[0].teams[2].model._id,
+              name:companyDataList[0].teams[2].model.name,
+              logo:companyDataList[0].teams[2].model.logo
+            },
+            member:teamTwoUsers,
+            start_confirm: true
+          }];
+          async.parallel([
+            //未开始
+            function(cb){
+              createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 1}, cb);
+            },
+            //正在进行
+            function(cb){
+              createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 2}, cb);
+            },
+            //已经结束
+            function(cb){
+              createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 3}, cb);
+            },
+            //已经关闭
+            function(cb){
+              createCampaign({campaignUnits: campaignUnits, campaign_type: 4, start_confirm: true, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
+            },
+            //取消应战
+            function(cb){
+              var _campaignUnits = [{
+                company:{
+                  _id:companyDataList[0].model._id,
+                  name:companyDataList[0].model.info.official_name,
+                  logo:companyDataList[0].model.info.logo
+                },
+                team:{
+                  _id:companyDataList[0].teams[1].model._id,
+                  name:companyDataList[0].teams[1].model.name,
+                  logo:companyDataList[0].teams[1].model.logo
+                },
+                member:teamOneUsers,
+                start_confirm: false
+              },{
+                company:{
+                  _id:companyDataList[0].model._id,
+                  name:companyDataList[0].model.info.official_name,
+                  logo:companyDataList[0].model.info.logo
+                },
+                team:{
+                  _id:companyDataList[0].teams[2].model._id,
+                  name:companyDataList[0].teams[2].model.name,
+                  logo:companyDataList[0].teams[2].model.logo
+                },
+                member:teamTwoUsers,
+                start_confirm: false
+              }]
+              createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
+            },
+            //拒绝应战
+            function(cb){
+              var _campaignUnits = [{
+                company:{
+                  _id:companyDataList[0].model._id,
+                  name:companyDataList[0].model.info.official_name,
+                  logo:companyDataList[0].model.info.logo
+                },
+                team:{
+                  _id:companyDataList[0].teams[1].model._id,
+                  name:companyDataList[0].teams[1].model.name,
+                  logo:companyDataList[0].teams[1].model.logo
+                },
+                member:teamOneUsers,
+                start_confirm: true
+              },{
+                company:{
+                  _id:companyDataList[0].model._id,
+                  name:companyDataList[0].model.info.official_name,
+                  logo:companyDataList[0].model.info.logo
+                },
+                team:{
+                  _id:companyDataList[0].teams[2].model._id,
+                  name:companyDataList[0].teams[2].model.name,
+                  logo:companyDataList[0].teams[2].model.logo
+                },
+                member:teamTwoUsers,
+                start_confirm: false
+              }]
+              createCampaign({campaignUnits: _campaignUnits, campaign_type: 2, start_confirm: false, poster: poster, campaign_mold: campaign_mold, statusType: 4}, cb);
+            }
+          ],
+          // optional callback
+          function(err, results){
+            companyDataList[0].teams[1].campaigns = results;
+            parallelCallback(err, 'teamProvoke');
+          });
+        }
       }
     },
     function(err, results) {
@@ -573,21 +585,21 @@ var createCampaigns = function (companyDataList, callback) {
       role: 'LEADER'
     }
     var teamOneUsers = [];
-    companyDataList[0].teams[0].users.forEach(function(user){
+    // companyDataList[0].teams[0].users.forEach(function(user){
       teamOneUsers.push({
-        _id: user._id,
-        nickname: user.nickname,
-        photo: user.photo
+        _id: companyDataList[0].teams[0].users[0]._id,
+        nickname: companyDataList[0].teams[0].users[0].nickname,
+        photo: companyDataList[0].teams[0].users[0].photo
       });
-    });
+    // });
     var teamTwoUsers = [];
-    companyDataList[1].teams[0].users.forEach(function(user){
+    // companyDataList[1].teams[0].users.forEach(function(user){
       teamTwoUsers.push({
-        _id: user._id,
-        nickname: user.nickname,
-        photo: user.photo
+        _id: companyDataList[1].teams[0].users[0]._id,
+        nickname: companyDataList[1].teams[0].users[0].nickname,
+        photo: companyDataList[1].teams[0].users[0].photo
       });
-    });
+    // });
     var campaignUnits = [{
       company:{
         _id:companyDataList[0].model._id,

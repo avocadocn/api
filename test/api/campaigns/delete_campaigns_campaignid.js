@@ -5,7 +5,7 @@ var dataService = require('../../create_data');
 
 module.exports = function () {
   describe('delete /campaigns/:campaignId', function () {
-    describe('user close campaigns', function () {
+    describe('用户关闭活动', function () {
       var accessToken;
 
       before(function (done) {
@@ -25,7 +25,7 @@ module.exports = function () {
           });
 
       });
-      it('should close campaign', function (done) {
+      it('应该成功关闭活动', function (done) {
         var data = dataService.getData();
         var campaign = data[2].teams[0].campaigns[0];
         request.delete('/campaigns/' + campaign.id)
@@ -37,7 +37,7 @@ module.exports = function () {
             done();
           });
       });
-      it('should get 404 because has colsed', function (done) {
+      it('应该在活动已经关闭时返回404', function (done) {
         var data = dataService.getData();
         var campaign = data[2].teams[0].campaigns[0];
         request.delete('/campaigns/'+ campaign.id)
@@ -49,7 +49,7 @@ module.exports = function () {
             done();
           });
       });
-      it('should get 404 because has not found', function (done) {
+      it('应该在找不到活动时返回404', function (done) {
         request.delete('/campaigns/111')
           .set('x-access-token', accessToken)
           .expect(404)
@@ -60,7 +60,7 @@ module.exports = function () {
           });
       });
 
-      it('should get 403', function (done) {
+      it('应该在没有权限时返回403', function (done) {
         var data = dataService.getData();
         var campaign = data[1].campaigns[0];
         request.delete('/campaigns/'+ campaign.id)
@@ -72,7 +72,7 @@ module.exports = function () {
             done();
           });
       });
-      it('should get 401', function (done) {
+      it('应该在没有登录时返回401', function (done) {
         var data = dataService.getData();
         var campaign = data[1].campaigns[0];
         request.delete('/campaigns/'+ campaign.id)
@@ -85,7 +85,7 @@ module.exports = function () {
           });
       });
     });
-    describe('hr close campaigns', function () {
+    describe('hr关闭活动', function () {
       var hrAccessToken;
 
       before(function (done) {
@@ -105,7 +105,7 @@ module.exports = function () {
           });
 
       });
-      it('should close company campaign', function (done) {
+      it('应该成功关闭公司活动', function (done) {
         var data = dataService.getData();
         var campaign = data[2].campaigns[0];
         request.delete('/campaigns/' + campaign.id)
@@ -117,19 +117,7 @@ module.exports = function () {
             done();
           });
       });
-      it('should get 403 because other company campaign', function (done) {
-        var data = dataService.getData();
-        var campaign = data[1].campaigns[0];
-        request.delete('/campaigns/'+ campaign.id)
-          .set('x-access-token', hrAccessToken)
-          .expect(403)
-          .end(function (err, res) {
-            if (err) return done(err);
-            res.body.msg.should.equal('您没有权限获取该活动');
-            done();
-          });
-      });
-      it('should close team campaign', function (done) {
+      it('应该成功关闭小队活动', function (done) {
         var data = dataService.getData();
         var campaign = data[2].teams[0].campaigns[1];
         request.delete('/campaigns/' + campaign.id)
@@ -141,6 +129,19 @@ module.exports = function () {
             done();
           });
       });
+      it('应该在关闭其他公司活动时返回403', function (done) {
+        var data = dataService.getData();
+        var campaign = data[1].campaigns[0];
+        request.delete('/campaigns/'+ campaign.id)
+          .set('x-access-token', hrAccessToken)
+          .expect(403)
+          .end(function (err, res) {
+            if (err) return done(err);
+            res.body.msg.should.equal('您没有权限获取该活动');
+            done();
+          });
+      });
+
     });
   });
 
