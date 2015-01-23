@@ -42,7 +42,7 @@ var createNewUser = function(opts, callback) {
 
 /**
  * 创建公司的成员
- * 前5个为正常用户，第6个未激活，第7个被HR关闭，第8个被管理员关闭，第9个用户用于修改信息测试
+ * 前5个为正常用户，第6个未激活，第7个被HR关闭，第8个被管理员关闭，第9个用户用于修改信息测试，第10个用于测试被hr关闭
  * @param {Object} company
  * @param {Function} callback 形式为function(err, users){}
  */
@@ -56,7 +56,7 @@ var createUsers = function (company, callback) {
   var users = [];
 
   async.whilst(
-    function() {return i<9},//生成7个人 需要时可调整
+    function() {return i<10},//生成10个人 需要时可调整
     function(cb) {
 
       var opts = {

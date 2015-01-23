@@ -20,7 +20,7 @@ exports.getCampaignByParamId = function (req, res, next) {
   }
   if(!mongoose.Types.ObjectId.isValid(req.params.campaignId)){
     return res.status(404).send({ msg: '找不到该活动' });
-  };
+  }
   Campaign.findById(req.params.campaignId)
     .populate(populate)
     .exec()
