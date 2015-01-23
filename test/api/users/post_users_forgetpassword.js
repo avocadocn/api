@@ -6,7 +6,7 @@ var common = require('../../support/common');
 
 module.exports = function () {
 
-  describe('post /users/forgetPassword', function () {
+  describe.skip('post /users/forgetPassword', function () {
 
     it('邮箱填写正确时应该发送激活邮件', function (done) {
       var data = dataService.getData();

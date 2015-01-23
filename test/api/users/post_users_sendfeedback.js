@@ -6,7 +6,7 @@ var common = require('../../support/common');
 
 module.exports = function () {
 
-  describe('post /users/sendFeedback', function () {
+  describe.skip('post /users/sendFeedback', function () {
 
     var accessToken;
     before(function (done) {

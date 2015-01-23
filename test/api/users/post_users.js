@@ -6,7 +6,7 @@ var common = require('../../support/common');
 
 module.exports = function () {
 
-  describe('post /users', function () {
+  describe.skip('post /users', function () {
 
     it('正常数据应该注册成功', function (done) {
       var data = dataService.getData();

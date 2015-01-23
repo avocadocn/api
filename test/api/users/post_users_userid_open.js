@@ -61,6 +61,43 @@ module.exports = function () {
         });
     });
 
+    describe('用户操作测试', function () {
+      var accessToken;
+      before(function (done) {
+        var data = dataService.getData();
+        var user = data[0].users[0];
+
+        request.post('/users/login')
+          .send({
+            email: user.email,
+            password: '55yali'
+          })
+          .expect(200)
+          .end(function (err, res) {
+            if (err) return done(err);
+            accessToken = res.body.token;
+            done();
+          });
+      });
+
+      it('用户不能对其它成员解除屏蔽', function (done) {
+        var data = dataService.getData();
+        var user = data[0].users[9];
+
+        request.post('/users/' + user.id + '/open')
+          .set('x-access-token', accessToken)
+          .expect(403)
+          .end(function (err, res) {
+            if (err) {
+              console.log(res.body);
+              return done(err);
+            }
+            done();
+          });
+      });
+
+    });
+
   });
 
 };
