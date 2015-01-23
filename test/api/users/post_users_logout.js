@@ -26,7 +26,7 @@ module.exports = function () {
         });
     });
 
-    it('should logout success if token is correct', function (done) {
+    it('已经登录的用户应该正常退出', function (done) {
       request.post('/users/logout')
         .set('x-access-token', accessToken)
         .expect(204)
@@ -36,7 +36,7 @@ module.exports = function () {
         });
     });
 
-    it('should receive 401 if token is incorrect', function (done) {
+    it('如果token不正确，则会返回401', function (done) {
       request.post('/users/logout')
         .set('x-access-token', 'random')
         .expect(401)
