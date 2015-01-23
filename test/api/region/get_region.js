@@ -40,7 +40,7 @@ var _region = [{"name" : "安徽省", "id" : "C62A0E03-74B0-0001-3869-592A1EB023
 // compare the regionData from api with the _regin json.
 module.exports = function() {
   describe('get /region', function() {
-    it('it should be region json data', function(done) {
+    it('省市县地区正确性验证', function(done) {
       request.get('/region')
         .expect(200)
         .end(function(err, res) {
