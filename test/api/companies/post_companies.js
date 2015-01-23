@@ -47,22 +47,22 @@ module.exports = function () {
       })
     });
 
-    var errorCompanyTest = function (theme, data) {
+    var errorCompanyTest = function (theme, testData) {
       var msg = util.format('应该在数据%s错误时返回400', theme)
       it(msg, function (done) {
         var data = dataService.getData();
         var company = data[0].model;
         var duplicateCompany = {
-          "name": data.name? data.name : chance.string({length:8,pool: '上海北京啊地方睡觉啊的法律玩儿哦温热我人是否和比赛公司'}),
-          "province": data.province ? data.province : "安徽省",
+          "name": testData.name? testData.name : chance.string({length:8,pool: '上海北京啊地方睡觉啊的法律玩儿哦温热我人是否和比赛公司'}),
+          "province": testData.province ? testData.province : "安徽省",
           "city": "安庆市",
           "district": "大观区",
-          "address": data.addr ? data.addr: chance.string({pool: '阿飞离开爱诶哦入认为快乐1234567890'}),
-          "contacts": data.contacts ? data.contacts : chance.string({pool: '阿里斯顿父亲为哦如破去'}),
-          "areacode": data.areacode ? data.areacode : "021",
-          "tel": data.tel ? data.tel : chance.string({length:8,pool:'0123456789'}),
-          "phone": data.phone ? data.phone : chance.string({length:11,pool:'0123456789'}),
-          "email": data.email ? data.email : company.login_email
+          "address": testData.addr ? testData.addr: chance.string({pool: '阿飞离开爱诶哦入认为快乐1234567890'}),
+          "contacts": testData.contacts ? testData.contacts : chance.string({pool: '阿里斯顿父亲为哦如破去'}),
+          "areacode": testData.areacode ? testData.areacode : "021",
+          "tel": testData.tel ? testData.tel : chance.string({length:8,pool:'0123456789'}),
+          "phone": testData.phone ? testData.phone : chance.string({length:11,pool:'0123456789'}),
+          "email": testData.email ? testData.email : chance.email()
         }
         request.post('/companies')
         .send(duplicateCompany)
