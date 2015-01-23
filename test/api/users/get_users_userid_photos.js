@@ -38,7 +38,30 @@ module.exports = function () {
             console.log(res.body);
             return done(err);
           }
-          console.log(res.body);
+          var photos = res.body.photos;
+          photos.forEach(function (photo) {
+            photo._id.should.be.a.String;
+            photo.name.should.be.a.String;
+            photo.uri.should.be.a.String;
+          });
+          res.body.hasNext.should.be.a.Boolean;
+          done();
+        });
+
+    });
+
+    it('不应该获取到其它公司的用户上传过的照片列表', function (done) {
+      var data = dataService.getData();
+      var user = data[1].users[0];
+
+      request.get('/users/' + user.id + '/photos')
+        .set('x-access-token', accessToken)
+        .expect(403)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
           done();
         });
 

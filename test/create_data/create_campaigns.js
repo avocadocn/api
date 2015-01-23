@@ -140,6 +140,9 @@ var createPhotos = function (photoAlbum, campaign) {
           console.error(err.stack);
         }
       });
+      photoAlbum.pushPhoto(photo);
+      photoAlbum.update_user = photo.upload_user;
+      photoAlbum.update_date = photo.update_date;
       i++
     }())
   }
@@ -244,6 +247,10 @@ var createCampaign = function (options, _callback) {
         conole.log(err);
       });
   }
+
+  // 创建照片
+  createPhotos(photo_album, campaign);
+
   //---save
   photo_album.save(function (err) {
     if (err) {
@@ -251,9 +258,6 @@ var createCampaign = function (options, _callback) {
       _callback('保存相册失败');
       return;
     }
-
-    // 创建照片
-    createPhotos(photo_album, campaign);
 
     campaign.photo_album = photo_album._id;
 
