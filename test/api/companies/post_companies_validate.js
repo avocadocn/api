@@ -32,7 +32,7 @@ module.exports = function () {
     validateSuccessTest('公司名', {name: chance.string()});
 
     var validateDuplicateTest = function(theme) {
-      var title= util.format('%s应该返回msg已经存在', theme);
+      var title= util.format('%s应该返回msg:已经存在', theme);
       it(title, function (done) {
         var testData;
         var dupCompany = data[0].model;
@@ -58,7 +58,7 @@ module.exports = function () {
     validateDuplicateTest('公司名');
 
     var validateNameTest = function(validate,theme,msg) {
-      var title= util.format('用户名查询后%s应该返回msg%s', theme, msg);
+      var title= util.format('用户名查询后%s应该返回msg:%s', theme, msg);
       it(title, function (done) {
         var testData = {name:''};
         if(validate===1) {

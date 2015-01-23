@@ -284,6 +284,9 @@ var createCampaign = function (options, _callback) {
 var createCampaigns = function (companyDataList, callback) {
   //公司内的活动
   if(companyDataList.length ==1 ) {
+    if(!companyDataList[0].model.status.mail_active) {
+      return callback(null,companyDataList[0]);
+    }
     async.parallel({
       //创建公司活动
       companyCampaign: function(parallelCallback){
