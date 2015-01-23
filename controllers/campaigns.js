@@ -592,7 +592,18 @@ module.exports = function (app) {
         if(!allow[taskName]){
           return res.status(403).send({msg:'您没有权限发布该活动'});
         }
-        var param = req.body;
+        var param = {
+          cid: req.body.cid,
+          campaign_type: req.body.campaign_type,
+          theme: req.body.theme,
+          location: req.body.location,
+          campaign_mold: req.body.campaign_mold,
+          start_time: req.body.start_time,
+          end_time: req.body.end_time
+        };
+        if(req.body.tid){
+          param.tid = req.body.tid;
+        }
         async.parallel([
           function(callback){
             Company

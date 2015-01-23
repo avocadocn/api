@@ -15,6 +15,7 @@ var createCampaigns = require('./create_campaigns.js');
 
 var createConfig = require('./create_config.js');
 var createRegion = require('./create_region.js');
+var createCampaignMold = require('./create_mold.js');
 /**
  * 公司数据列表，保存公司及其员工、小队、活动数据
  *  [{
@@ -174,7 +175,15 @@ exports.createRegion = function (callback) {
     }
   });
 };
-
+exports.createCampaignMold = function (callback) {
+  createCampaignMold(function (err) {
+    if (err) {
+      callback(err);
+    } else {
+      callback();
+    }
+  });
+};
 exports.getConfig = function () {
   return resConfig;
 };
