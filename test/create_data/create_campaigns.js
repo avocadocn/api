@@ -626,8 +626,6 @@ var createCampaigns = function (companyDataList, callback) {
   }
   //跨公司挑战
   else {
-<<<<<<< HEAD
-=======
     var campaign_mold = companyDataList[0].teams[0].model.group_type;
     var poster = {
       cid: companyDataList[0].model._id,                       //活动发起者所属的公司
@@ -636,7 +634,6 @@ var createCampaigns = function (companyDataList, callback) {
       nickname: companyDataList[0].teams[0].leaders[0].nickname,
       role: 'LEADER'
     }
->>>>>>> 公司注册修正
     var teamOneUsers = [];
     // companyDataList[0].teams[0].users.forEach(function(user){
       teamOneUsers.push({
