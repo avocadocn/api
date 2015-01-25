@@ -14,7 +14,7 @@ var tools = require('../../tools/tools.js');
 var createCompanies = function(callback) {
   var companies = [];
   // The number of companies that you want to create
-  var num = 5;
+  var num = 6;
   for (var i = 0; i < num; i++) {
     // 非异步方法
     chance.generateCompanyData(function(err, result) {
