@@ -1156,139 +1156,127 @@ module.exports = function (app) {
       });
     },
     dealProvoke: function(req, res){
-      var campaignId = req.params.campaignId;
-      Campaign
-      .findById(campaignId)
-      .populate('photo_album')
-      .exec()
-      .then(function (campaign) {
-        if (!campaign||!campaign.active) {
-          res.status(404).send({msg:'未找到该挑战或该挑战已经被关闭'})
+      var campaign = req.campaign;
+      if (!campaign.active) {
+        return res.status(400).send({msg:'该活动已经被关闭'})
+      }
+      else if (!campaign.isProvoke || campaign.campaign_unit.length<2) {
+        return res.status(400).send({msg:'该活动不是挑战'});
+      }
+      else if (campaign.confirm_status) {
+        return res.status(400).send({msg:'该挑战已经被应战'});
+      }
+      //确认状态变更
+      var status = req.body.dealType;
+      var dealUnitIndex;
+      switch(status){
+        case 1://接受
+          campaign.campaign_unit[1].start_confirm = true;
+          campaign.confirm_status = true;
+          dealUnitIndex = 1;
+          break;
+        case 2://拒绝
+          campaign.active = false;
+          dealUnitIndex = 1;
+          break;
+        case 3://取消
+          campaign.campaign_unit[0].start_confirm = false;
+          campaign.active = false;
+          dealUnitIndex = 0;
+          break;
+        default:
+          return res.status(400).send({msg:'处理类型错误'});
+          break;
+      }
+      var role = auth.getRole(req.user, {
+        companies: [campaign.cid[dealUnitIndex]],
+        teams: [campaign.tid[dealUnitIndex]]
+      });
+      var allow = auth.auth(role, ['sponsorProvoke']);
+      if(!allow.sponsorProvoke){
+        return res.status(403).send({msg:'您没有权限处理该挑战'});
+      }
+      campaign.save(function(err){
+        if(err){
+          res.status(500).send({msg:'保存错误'});
         }
         else{
-          if (!campaign.isProvoke || campaign.campaign_unit.length<2) {
-            return res.status(400).send({msg:'该活动不是挑战'});
-          }
-          if (campaign.confirm_status) {
-            return res.status(400).send({msg:'该挑战已经被应战'});
-          }
-          //确认状态变更
-          var status = req.body.dealType;
-          var dealUnitIndex;
-          switch(status){
-            case 1://接受
-              campaign.campaign_unit[1].start_confirm = true;
-              campaign.confirm_status = true;
-              dealUnitIndex = 1;
-              break;
-            case 2://拒绝
-              campaign.active = false;
-              dealUnitIndex = 1;
-              break;
-            case 3://取消
-              campaign.campaign_unit[0].start_confirm = false;
-              campaign.active = false;
-              dealUnitIndex = 0;
-              break;
-            default:
-              return res.status(400).send({msg:'处理类型错误'});
-              break;
-          }
-          var role = auth.getRole(req.user, {
-            companies: [campaign.cid[dealUnitIndex]],
-            teams: [campaign.tid[dealUnitIndex]]
-          });
-          var allow = auth.auth(role, ['sponsorProvoke']);
-          if(!allow.sponsorProvoke){
-            return res.status(403).send({msg:'您没有权限处理该挑战'});
-          }
-          campaign.save(function(err){
+          //发站内信
+          var own_team = status===3? campaign.campaign_unit[0].team:campaign.campaign_unit[1].team;
+          var receive_team = status ===3? campaign.campaign_unit[1].team:campaign.campaign_unit[0].team;
+          var param = {
+            'specific_type':{
+              'value':4,
+              'child_type':status
+            },
+            'type':'private',
+            'caption':campaign.theme,
+            // 'own':{
+            //   '_id':req.user._id,
+            //   'nickname':req.user.provider==='company'?req.user.info.official_name: req.user.nickname,
+            //   'photo':req.user.provider==='company'? req.user.info.logo: req.user.photo,
+            //   'role':req.user.provider==='company'? 'HR':'LEADER'
+            // },
+            // 'receiver':{
+            //   '_id':rst[0].leader[0]._id
+            // },
+            'own_team':{
+              '_id':own_team._id,
+              'name':own_team.name,
+              'logo':own_team.logo,
+              'status': status===1 ? 1 :(status===2? 4 :5)
+            },
+            'receive_team':{
+              '_id':receive_team._id,
+              'name':receive_team.name,
+              'logo':receive_team.logo,
+              'status': status===1 ? 1 :(status===2? 4 :5)
+            },
+            'campaign_id':campaign._id,
+            'auto':true
+          };
+          CompanyGroup.findOne({'_id':receive_team._id},{leader:1},function(err,opposite_team){
             if(err){
-              res.status(500).send({msg:'保存错误'});
+              log('查询对方小队错误');
             }
             else{
-              //发站内信
-              var own_team = status===3? campaign.campaign_unit[0].team:campaign.campaign_unit[1].team;
-              var receive_team = status ===3? campaign.campaign_unit[1].team:campaign.campaign_unit[0].team;
-              var param = {
-                'specific_type':{
-                  'value':4,
-                  'child_type':status
-                },
-                'type':'private',
-                'caption':campaign.theme,
-                // 'own':{
-                //   '_id':req.user._id,
-                //   'nickname':req.user.provider==='company'?req.user.info.official_name: req.user.nickname,
-                //   'photo':req.user.provider==='company'? req.user.info.logo: req.user.photo,
-                //   'role':req.user.provider==='company'? 'HR':'LEADER'
-                // },
-                // 'receiver':{
-                //   '_id':rst[0].leader[0]._id
-                // },
-                'own_team':{
-                  '_id':own_team._id,
-                  'name':own_team.name,
-                  'logo':own_team.logo,
-                  'status': status===1 ? 1 :(status===2? 4 :5)
-                },
-                'receive_team':{
-                  '_id':receive_team._id,
-                  'name':receive_team.name,
-                  'logo':receive_team.logo,
-                  'status': status===1 ? 1 :(status===2? 4 :5)
-                },
-                'campaign_id':campaign._id,
-                'auto':true
-              };
-              CompanyGroup.findOne({'_id':receive_team._id},{leader:1},function(err,opposite_team){
-                if(err){
-                  log('查询对方小队错误');
-                }
-                else{
-                  param.receiver = {
-                    '_id':opposite_team.leader.length? opposite_team.leader[0]._id:''
-                  }
-                  param.team = [param.own_team,param.receive_team];
-                  messageController(app)._sendMessage(param);
-                }
-              });
-              //若接受,则发动态、加积分
-              if(status ===1){
-                // todo test push
-                pushService.push({
-                  name: 'teamCampaign',
-                  target: {
-                    tid: campaign.tid
-                  },
-                  campaignId: campaign._id,
-                  msg: {
-                    title: '您的小队有新活动',
-                    body: '您有新活动: ' + campaign.theme,
-                    description: '您有新活动: ' + campaign.theme
-                  }
-                }, function (err) {
-                  if (err) {
-                    console.log(err);
-                    if (err.stack) {
-                      console.log(err.stack);
-                    }
-                  }
-                });
-                CompanyGroup.update({'_id':{'$in':campaign.tid}},{'$inc':{'score.provoke':15}},function (err,team){
-                  if(err){
-                    log('RESPONSE_PROVOKE_POINT_FAILED!',err);
-                  }
-                });
+              param.receiver = {
+                '_id':opposite_team.leader.length? opposite_team.leader[0]._id:''
               }
-              return res.status(200).send({'msg':'成功'});
+              param.team = [param.own_team,param.receive_team];
+              messageController(app)._sendMessage(param);
             }
           });
+          //若接受,则发动态、加积分
+          if(status ===1){
+            // todo test push
+            pushService.push({
+              name: 'teamCampaign',
+              target: {
+                tid: campaign.tid
+              },
+              campaignId: campaign._id,
+              msg: {
+                title: '您的小队有新活动',
+                body: '您有新活动: ' + campaign.theme,
+                description: '您有新活动: ' + campaign.theme
+              }
+            }, function (err) {
+              if (err) {
+                console.log(err);
+                if (err.stack) {
+                  console.log(err.stack);
+                }
+              }
+            });
+            CompanyGroup.update({'_id':{'$in':campaign.tid}},{'$inc':{'score.provoke':15}},function (err,team){
+              if(err){
+                log('RESPONSE_PROVOKE_POINT_FAILED!',err);
+              }
+            });
+          }
+          return res.status(200).send({'msg':'成功'});
         }
-      })
-      .then(null, function (err) {
-        log(err);
-        res.status(500).send({msg:'服务器错误'});
       });
     },
     getCampaignMolds: function(req, res) {

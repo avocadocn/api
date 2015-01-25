@@ -13,6 +13,6 @@ module.exports = function (app, ctrl) {
   app.delete('/campaigns/:campaignId', token.needToken, resources.getCampaignByParamId, ctrl.closeCampaign);
   app.post('/campaigns/:campaignId/users/:userId', token.needToken, resources.getCampaignByParamId, ctrl.joinCampaign);
   app.delete('/campaigns/:campaignId/users/:userId', token.needToken, resources.getCampaignByParamId, ctrl.quitCampaign);
-  app.put('/campaigns/:campaignId/dealProvoke',token.needToken, ctrl.dealProvoke);
+  app.put('/campaigns/:campaignId/dealProvoke',token.needToken, resources.getCampaignByParamId, ctrl.dealProvoke);
   app.get('/campaigns/mold/:requestType/:requestId',token.needToken, ctrl.getCampaignMolds);
 };

@@ -333,7 +333,7 @@ var createCampaign = function (options, _callback) {
  *  公司活动四个，分别为未开始，正在进行，已经结束，关闭
  *  小队活动
  *    第一个小队8个，依次为hr发送的四个状态的活动，leader发送的四个状态的活动
- *    第二个个小队为第二与第三个小队间的6个挑战，依次为未开始，正在进行，已经结束，关闭，取消应战，拒绝应战
+ *    第二个个小队为第一和第二个小队间的6个挑战，依次为未开始，正在进行，已经结束，关闭，取消应战，拒绝应战
  *  第一个公司的第一个小队14个，依次为hr发送的四个状态的活动，leader发送的四个状态的活动，与第一个公司的第一个小队间的6个挑战
  *  每个活动都只有第一个user参加(公司内挑战,第二个队无人参加）
  * @param {Array} companyDataList长度为1时返回对象，否则返回数组
@@ -516,19 +516,19 @@ var createCampaigns = function (companyDataList, callback) {
             nickname: companyDataList[0].teams[1].leaders[0].nickname,
             photo: companyDataList[0].teams[1].leaders[0].photo
           });
-          // companyDataList[0].teams[1].users.forEach(function(user){
+          // companyDataList[0].teams[0].users.forEach(function(user){
             // teamOneUsers.push({
-            //   _id: companyDataList[0].teams[1].users[0]._id,
-            //   nickname: companyDataList[0].teams[1].users[0].nickname,
-            //   photo: companyDataList[0].teams[1].users[0].photo
+            //   _id: companyDataList[0].teams[0].users[0]._id,
+            //   nickname: companyDataList[0].teams[0].users[0].nickname,
+            //   photo: companyDataList[0].teams[0].users[0].photo
             // });
           // });
           var teamTwoUsers = [];
-          // companyDataList[0].teams[2].users.forEach(function(user){
+          // companyDataList[0].teams[1].users.forEach(function(user){
             // teamTwoUsers.push({
-            //   _id: companyDataList[0].teams[2].users[0]._id,
-            //   nickname: companyDataList[0].teams[2].users[0].nickname,
-            //   photo: companyDataList[0].teams[2].users[0].photo
+            //   _id: companyDataList[0].teams[1].users[0]._id,
+            //   nickname: companyDataList[0].teams[1].users[0].nickname,
+            //   photo: companyDataList[0].teams[1].users[0].photo
             // });
           // });
           var getCampaignData = function (argument) {
@@ -540,9 +540,9 @@ var createCampaigns = function (companyDataList, callback) {
                   logo:companyDataList[0].model.info.logo
                 },
                 team:{
-                  _id:companyDataList[0].teams[1].model._id,
-                  name:companyDataList[0].teams[1].model.name,
-                  logo:companyDataList[0].teams[1].model.logo
+                  _id:companyDataList[0].teams[0].model._id,
+                  name:companyDataList[0].teams[0].model.name,
+                  logo:companyDataList[0].teams[0].model.logo
                 },
                 member:teamOneUsers,
                 start_confirm: argument.start_confirm ? argument.start_confirm[0] : true
@@ -553,9 +553,9 @@ var createCampaigns = function (companyDataList, callback) {
                   logo:companyDataList[0].model.info.logo
                 },
                 team:{
-                  _id:companyDataList[0].teams[2].model._id,
-                  name:companyDataList[0].teams[2].model.name,
-                  logo:companyDataList[0].teams[2].model.logo
+                  _id:companyDataList[0].teams[1].model._id,
+                  name:companyDataList[0].teams[1].model.name,
+                  logo:companyDataList[0].teams[1].model.logo
                 },
                 member:teamTwoUsers,
                 start_confirm:  argument.start_confirm ? argument.start_confirm[1] : true
