@@ -220,6 +220,11 @@ var registeredTasks = {
     team: ['leader']
   },
 
+  // 获取小队的相册列表
+  getTeamPhotoAlbums: {
+    company: ['member', 'hr']
+  },
+
   // 上传照片
   uploadPhoto: {
     company: ['hr'],

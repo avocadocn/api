@@ -82,6 +82,9 @@ module.exports = function (app) {
         companies: [req.body.cid],
         teams: [req.body.tid]
       }, req.user);
+
+
+
       photoAlbum.save(function (err) {
         if (err) {
           log(err);
@@ -133,6 +136,7 @@ module.exports = function (app) {
       PhotoAlbum.find(query, {
         _id: true,
         name: true,
+        owner: true,
         update_date: true,
         update_user: true,
         photo_count: true,
@@ -143,6 +147,28 @@ module.exports = function (app) {
         .limit(20)
         .exec()
         .then(function (photoAlbums) {
+
+          // 获取对应的公司id
+          var cid;
+          if (req.query.ownerType === 'team') {
+            for (var i = 0; i < photoAlbums[0].owner.teams.length; i++) {
+              var team = photoAlbums[0].owner.teams[i];
+              if (req.query.ownerId === team.toString()) {
+                cid = photoAlbums[0].owner.companies[i];
+                break;
+              }
+            }
+          }
+
+          var role = auth.getRole(req.user, {
+            companies: [cid]
+          });
+          var allow = auth.auth(role, ['getTeamPhotoAlbums']);
+          if (!allow.getTeamPhotoAlbums) {
+            res.status(403).send({ msg: '权限不足' });
+            return;
+          }
+
           var resPhotoAlbums = [];
           photoAlbums.forEach(function (photoAlbum) {
             var latestPhotos = tools.collect(photoAlbum.photos, '_id', 'uri');

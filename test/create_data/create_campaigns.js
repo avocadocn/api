@@ -143,6 +143,7 @@ var createPhotos = function (photoAlbum, campaign) {
       photoAlbum.pushPhoto(photo);
       photoAlbum.update_user = photo.upload_user;
       photoAlbum.update_date = photo.update_date;
+      photoAlbum.photo_count += 1;
       i++
     }())
   }
@@ -208,7 +209,7 @@ var createCampaign = function (options, _callback) {
   var photoInfo = {
     owner: {
       model: {
-        // _id: campaign._id,
+        _id: campaign._id,
         type: 'Campaign'
       },
       companies: campaign.cid,
@@ -219,11 +220,7 @@ var createCampaign = function (options, _callback) {
     create_user: _user
   };
   //---Photo
-  var photo_album = new PhotoAlbum();
-  for (var attr in photoInfo) {
-    photo_album[attr] = photoInfo[attr];
-  }
-  photo_album.owner.model._id = campaign._id;
+  var photo_album = new PhotoAlbum(photoInfo);
   if (campaign.campaign_type !== 1) {
     CompanyGroup.find({
       _id: campaign.tid
