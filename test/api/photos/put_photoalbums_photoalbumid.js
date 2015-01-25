@@ -55,7 +55,7 @@ module.exports = function () {
     });
 
     it('不是队长不能编辑小队相册', function (done) {
-      var campaign = data[0].teams[1].campaigns[0];
+      var campaign = data[1].teams[0].campaigns[0];
       request.put('/photo_albums/' + campaign.photo_album)
         .set('x-access-token', accessToken)
         .send({

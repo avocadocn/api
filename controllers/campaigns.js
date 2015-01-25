@@ -1289,9 +1289,8 @@ module.exports = function (app) {
             CompanyGroup.findOne({'_id':req.params.requestId},{'group_type':1},function(err,team){
               if(err){
                 log(err);
-                return res.status(500).send({'msg':'获取活动类型失败!'});
               }
-              else{
+              else if(team){
                 //把跟自己小组类型相同的mold换到第0个
                 for(var i=0;i<molds.length;i++){
                   if(molds[i].name===team.group_type){
@@ -1305,8 +1304,8 @@ module.exports = function (app) {
                     }
                   }
                 }
-                return res.send(molds);
               }
+              return res.send(molds);
             });
           }
           else{
@@ -1318,3 +1317,5 @@ module.exports = function (app) {
   };
 
 };
+
+
