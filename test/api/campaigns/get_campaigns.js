@@ -26,18 +26,18 @@ module.exports = function () {
 
     });
 
-    it('should get campaigns', function (done) {
-      var data = dataService.getData();
-      var campaign = data[0].campaigns[0];
-      request.get('/campaigns/' + campaign.id)
-        .set('x-access-token', accessToken)
-        .expect(200)
-        .end(function (err, res) {
-          if (err) return done(err);
-          res.body._id.should.equal(campaign.id);
-          done();
-        });
-    });
+    // it('should get campaigns', function (done) {
+    //   var data = dataService.getData();
+    //   var campaign = data[0].campaigns[0];
+    //   request.get('/campaigns/' + campaign.id)
+    //     .set('x-access-token', accessToken)
+    //     .expect(200)
+    //     .end(function (err, res) {
+    //       if (err) return done(err);
+    //       res.body._id.should.equal(campaign.id);
+    //       done();
+    //     });
+    // });
 
     // it('should get 404', function (done) {
     //   request.get('/campaigns/111')

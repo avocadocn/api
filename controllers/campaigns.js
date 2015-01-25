@@ -911,143 +911,141 @@ module.exports = function (app) {
       }
     },
     joinCampaign: function(req, res){
-      Campaign
-      .findById(req.params.campaignId)
-      .populate('photo_album')
-      .exec()
-      .then(function (campaign) {
-        if (!campaign) {
-          return res.status(404).send({msg:'未找到活动'});
-        }
-        else{
-          if (!campaign.confirm_status) {
-            return res.status(400).send({msg:'该活动还未应战，无法参加'});
-          }
-          var role = auth.getRole(req.user, {
-            companies: campaign.cid,
-            teams: campaign.tid,
-            users:campaign.member
+      
+      if(!mongoose.Types.ObjectId.isValid(req.params.userId)){
+        return res.status(400).send({ msg: '用户信息有误' });
+      }
+      var campaign = req.campaign;
+      if (!campaign.active) {
+        return res.status(400).send({msg:'该活动已经关闭'});
+      }
+      else if (!campaign.confirm_status) {
+        return res.status(400).send({msg:'该活动还未应战，无法参加'});
+      }
+      else if (campaign.deadline < Date.now()) {
+        return res.status(400).send({
+          msg: '活动报名已经截止'
+        });
+      }
+      else if (campaign.member_max > 0) {
+        if (campaign.members.length >= campaign.member_max) {
+          return res.status(400).send({
+            msg: '报名人数已达上限'
           });
-          var taskName = campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
-          var allow = auth.auth(role, [taskName]);
-          if(!allow[taskName]){
-            return res.status(403).send({msg:'您没有权限参加该活动'});
+        }
+      }
+      var role = auth.getRole(req.user, {
+        companies: campaign.cid,
+        teams: campaign.tid,
+        users:campaign.member
+      });
+      var taskName = campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
+      var allow = auth.auth(role, [taskName]);
+      if(!allow[taskName]){
+        return res.status(403).send({msg:'您没有权限参加该活动'});
+      }
+      User.findById(req.params.userId)
+      .exec()
+      .then(function(user){
+        var _join = function (unit) {
+          // 更新user的讨论列表
+          // var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns,campaign._id,'_id');
+          // if(campaignIndex>-1){
+          //   var campaignNeedUpdate = user.unjoinedCommentCampaigns.splice(campaignIndex,1);
+          //   user.commentCampaigns.push(campaignNeedUpdate[0]);
+          //   user.save(function (err) {
+          //     if (err)
+          //       console.log(err);
+          //   });
+          // }
+          for (var i = 0; i < unit.member.length; i++) {
+            if (user._id.toString() === unit.member[i]._id.toString()) {
+              // 用户已经参加该活动
+              return {
+                success: false,
+                msg: '您已经参加该活动'
+              };
+            }
           }
-          User.findById(req.params.userId)
-          .exec()
-          .then(function(user){
-
-            if (campaign.deadline < Date.now()) {
-              return req.status(400).send({
-                msg: '活动报名已经截止'
-              });
-            }
-
-            if (campaign.member_max > 0) {
-              if (campaign.members.length >= campaign.member_max) {
-                return req.status(400).send({
-                  msg: '报名人数已达上限'
-                });
-              }
-            }
-            var _join = function (unit) {
-              // 更新user的讨论列表
-              // var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns,campaign._id,'_id');
-              // if(campaignIndex>-1){
-              //   var campaignNeedUpdate = user.unjoinedCommentCampaigns.splice(campaignIndex,1);
-              //   user.commentCampaigns.push(campaignNeedUpdate[0]);
-              //   user.save(function (err) {
-              //     if (err)
-              //       console.log(err);
-              //   });
-              // }
-
-              for (var i = 0; i < unit.member_quit.length; i++) {
-                if (user._id.toString() === unit.member_quit[i]._id.toString()) {
-                  var member = (unit.member_quit.splice(i, 1))[0];
-                  unit.member.push(member);
-                  return {
-                    success: true
-                  };
-                }
-              }
-
-              // 用户没有参加
-              unit.member.push({
-                _id: user._id,
-                nickname: user.nickname,
-                photo: user.photo
-              });
+          for (var i = 0; i < unit.member_quit.length; i++) {
+            if (user._id.toString() === unit.member_quit[i]._id.toString()) {
+              var member = (unit.member_quit.splice(i, 1))[0];
+              unit.member.push(member);
               return {
                 success: true
               };
-            };
-            var joinResult = {
-              success: false,
-              msg: '没有找到目标阵营'
-            };
-            for (var i = 0; i < campaign.campaign_unit.length; i++) {
-              var unit = campaign.campaign_unit[i];
-              // 非公司活动
-              if (req.query.teamId) {
-                if(req.query.teamId.toString() === unit.team._id.toString()){
-                  joinResult = _join(unit);
-                  break;
-                }
-              }
-              // 公司活动
-              else if (user.cid.toString() === unit.company._id.toString()) {
-                joinResult = _join(unit);
-                break;
-              }
             }
+          }
 
-            if (!joinResult.success) {
-              return res.status(400).send({msg: joinResult.msg});
+          // 用户没有参加
+          unit.member.push({
+            _id: user._id,
+            nickname: user.nickname,
+            photo: user.photo
+          });
+          return {
+            success: true
+          };
+        };
+        var joinResult = {
+          success: false,
+          msg: '没有找到目标阵营'
+        };
+        for (var i = 0; i < campaign.campaign_unit.length; i++) {
+          var unit = campaign.campaign_unit[i];
+          // 非公司活动
+          if (req.query.teamId) {
+            if(req.query.teamId.toString() === unit.team._id.toString()){
+              joinResult = _join(unit);
+              break;
+            }
+          }
+          // 公司活动
+          else if (user.cid.toString() === unit.company._id.toString()) {
+            joinResult = _join(unit);
+            break;
+          }
+        }
+        if (!joinResult.success) {
+          return res.status(400).send({msg: joinResult.msg});
+        } else {
+          campaign.save(function (err) {
+            if (err) {
+              log(err);
+              return req.status(400).send({
+                msg: '参加失败，请重试'
+              });
             } else {
-              campaign.save(function (err) {
-                if (err) {
+              var logBody = {
+                'log_type':'joinCampaign',
+                'userid' : user._id,
+                'cid': user.cid,
+                'role' : 'user',
+                'campaignid' :campaign._id
+              }
+              logController.addLog(logBody);
+              async.series([
+                function(callback){
+                  var _formatCampaign = formatCampaign(campaign,req.user);
+                  callback(null,_formatCampaign);
+                },//格式化活动
+                function(callback){
+                  _formatCampaignUnit(campaign,callback);
+                }
+              ],function(err, values){
+                if(err){
                   log(err);
-                  return req.status(400).send({
-                    msg: '参加失败，请重试'
-                  });
-                } else {
-                  var logBody = {
-                    'log_type':'joinCampaign',
-                    'userid' : user._id,
-                    'cid': user.cid,
-                    'role' : 'user',
-                    'campaignid' :campaign._id
-                  }
-                  logController.addLog(logBody);
-                  async.series([
-                    function(callback){
-                      var _formatCampaign = formatCampaign(campaign,req.user);
-                      callback(null,_formatCampaign);
-                    },//格式化活动
-                    function(callback){
-                      _formatCampaignUnit(campaign,callback);
-                    }
-                  ],function(err, values){
-                    if(err){
-                      log(err);
-                      return res.status(500).send({ msg: '服务器错误'});
-                    }
-                    else{
-                      var formatCampaign = values[0];
-                      formatCampaign.campaign_unit = values[1];
-                      return res.status(200).send(formatCampaign);
-                    }
-                  });
+                  return res.status(500).send({ msg: '服务器错误'});
+                }
+                else{
+                  var formatCampaign = values[0];
+                  formatCampaign.campaign_unit = values[1];
+                  return res.status(200).send(formatCampaign);
                 }
               });
             }
-          })
-          .then(null, function (err) {
-            log(err)
-            res.status(500).send({msg:'服务器错误'});
           });
-        };
+        }
       })
       .then(null, function (err) {
         log(err)
@@ -1055,6 +1053,21 @@ module.exports = function (app) {
       });
     },
     quitCampaign: function(req,res){
+      if(!mongoose.Types.ObjectId.isValid(req.params.userId)){
+        return res.status(400).send({ msg: '用户信息有误' });
+      }
+      var campaign = req.campaign;
+      if (!campaign.active) {
+        return res.status(400).send({msg:'该活动已经关闭'});
+      }
+      else if (!campaign.confirm_status) {
+        return res.status(400).send({msg:'该活动还未应战，无法参加'});
+      }
+      else if (campaign.deadline < Date.now()) {
+        return res.status(400).send({
+          msg: '活动报名已经截止'
+        });
+      }
       var role = auth.getRole(req.user, {
         users: [req.params.userId]
       });
@@ -1062,100 +1075,81 @@ module.exports = function (app) {
       if(!allow.quitCampaign){
         return res.status(403).send({msg:'您没有权限退出该活动'});
       }
-      Campaign
-      .findById(req.params.campaignId)
-      .populate('photo_album')
+      User.findById(req.params.userId)
       .exec()
-      .then(function (campaign) {
-        if (!campaign) {
-          res.status(404).send({msg:'未找到活动'});
-        }
-        else{
-          User.findById(req.params.userId)
-          .exec()
-          .then(function(user){
-            if (campaign.end_time < Date.now()) {
-              return req.status(400).send({
-                msg: '活动已经结束'
-              });
-            }
-            var quitResult = false;
-            var _quit = function (unit) {
-              for (var i = 0; i < unit.member.length; i++) {
-                if (req.params.userId === unit.member[i]._id.toString()) {
-                  var member = (unit.member.splice(i, 1))[0];
-                  if (!unit.member_quit) {
-                    unit.member_quit = [];
-                  }
-                  unit.member_quit.push(member);
-
-                  //
-                  // var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns,campaign._id,'_id');
-                  // if(campaignIndex > -1){
-                  //   var campaignNeedUpdate = user.commentCampaigns.splice(campaignIndex,1);
-                  //   user.unjoinedCommentCampaigns.push(campaignNeedUpdate[0]);
-                  //   user.save(function (err) {
-                  //     if (err)
-                  //       console.log(err);
-                  //   });
-                  // }
-                  return true;
-                }
+      .then(function(user){
+        var quitResult = false;
+        var _quit = function (unit) {
+          for (var i = 0; i < unit.member.length; i++) {
+            if (req.params.userId === unit.member[i]._id.toString()) {
+              var member = (unit.member.splice(i, 1))[0];
+              if (!unit.member_quit) {
+                unit.member_quit = [];
               }
-              return false;
-            };
+              unit.member_quit.push(member);
 
-            for (var i = 0; i < campaign.campaign_unit.length; i++) {
-              var unit = campaign.campaign_unit[i];
-              if (_quit(unit)) {
-                quitResult = true;
-              }
+              //
+              // var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns,campaign._id,'_id');
+              // if(campaignIndex > -1){
+              //   var campaignNeedUpdate = user.commentCampaigns.splice(campaignIndex,1);
+              //   user.unjoinedCommentCampaigns.push(campaignNeedUpdate[0]);
+              //   user.save(function (err) {
+              //     if (err)
+              //       console.log(err);
+              //   });
+              // }
+              return true;
             }
-            if (!quitResult) {
-              return res.status(400).send({msg:'该成员未参加活动'});
-            } else {
-              campaign.save(function (err) {
-                if (err) {
-                  log(err);
-                  return req.status(400).send({
-                    msg: '退出失败，请重试'
-                  });
-                } else {
-                  var logBody = {
-                    'log_type':'quitCampaign',
-                    'userid' : user._id,
-                    'cid': user.cid,
-                    'role' : 'user',
-                    'campaignid' :campaign._id
-                  }
-                  logController.addLog(logBody);
-                  async.series([
-                    function(callback){
-                      var _formatCampaign = formatCampaign(campaign,req.user);
-                      callback(null,_formatCampaign);
-                    },//格式化活动
-                    function(callback){
-                      _formatCampaignUnit(campaign,callback);
-                    }
-                  ],function(err, values){
-                    if(err){
-                      log(err);
-                      return res.status(500).send({ msg: '服务器错误'});
-                    }
-                    else{
-                      var formatCampaign = values[0];
-                      formatCampaign.campaign_unit = values[1];
-                      return res.status(200).send(formatCampaign);
-                    }
-                  });
-                }
-              });
-            }
-          })
-          .then(null, function (err) {
-            res.status(500).send({msg:'服务器错误'});
-          });
+          }
+          return false;
         };
+
+        for (var i = 0; i < campaign.campaign_unit.length; i++) {
+          var unit = campaign.campaign_unit[i];
+          if (_quit(unit)) {
+            quitResult = true;
+          }
+        }
+        if (!quitResult) {
+          return res.status(400).send({msg:'该成员未参加活动'});
+        } else {
+          campaign.save(function (err) {
+            if (err) {
+              log(err);
+              return req.status(500).send({
+                msg: '退出失败，请重试'
+              });
+            } else {
+              var logBody = {
+                'log_type':'quitCampaign',
+                'userid' : user._id,
+                'cid': user.cid,
+                'role' : 'user',
+                'campaignid' :campaign._id
+              }
+              logController.addLog(logBody);
+              async.series([
+                function(callback){
+                  var _formatCampaign = formatCampaign(campaign,req.user);
+                  callback(null,_formatCampaign);
+                },//格式化活动
+                function(callback){
+                  _formatCampaignUnit(campaign,callback);
+                }
+              ],function(err, values){
+                if(err){
+                  log(err);
+                  return res.status(500).send({ msg: '服务器错误'});
+                }
+                else{
+                  var formatCampaign = values[0];
+                  formatCampaign.campaign_unit = values[1];
+                  return res.status(200).send(formatCampaign);
+                }
+              });
+            }
+          });
+        }
       })
       .then(null, function (err) {
         res.status(500).send({msg:'服务器错误'});
