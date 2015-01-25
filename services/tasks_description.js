@@ -230,10 +230,14 @@ var registeredTasks = {
     company: ['member', 'hr']
   },
 
+  // 获取相册的照片列表
+  getPhotos: {
+    company: ['member', 'hr']
+  },
+
   // 上传照片
   uploadPhoto: {
-    company: ['hr'],
-    team: ['leader', 'member']
+    company: ['hr', 'member']
   },
 
   // 修改照片

@@ -385,13 +385,22 @@ module.exports = function (app) {
         },
         error: function (err) {
           log(err);
-          res.sendStatus(500);
+          res.status(500).send({ msg: '服务器错误' });
         }
       });
 
     },
 
     getPhotos: function (req, res) {
+      var role = auth.getRole(req.user, {
+        companies: req.photoAlbum.owner.companies
+      });
+      var allow = auth.auth(role, ['getPhotos']);
+      if (!allow.getPhotos) {
+        res.status(403).send({ msg: '权限不足' });
+        return;
+      }
+
       Photo.find({
         'photo_album': req.params.photoAlbumId,
         'hidden': false
@@ -407,6 +416,7 @@ module.exports = function (app) {
         .sort('-upload_date')
         .exec()
         .then(function (photos) {
+
           var resPhotos = [];
           photos.forEach(function (photo) {
             resPhotos.push({

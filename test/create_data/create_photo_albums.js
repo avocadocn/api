@@ -21,7 +21,7 @@ var moment = require('moment');
  *    users: [doc],
  *    leaders: [doc],
  *    campaigns: [doc],
- *    photoAlbums: [doc] // 0和1用于删除测试
+ *    photoAlbums: [doc] // 0和1用于删除测试，2用于上传测试
  *  }
  *  该方法是异步的，但是并无必要提供全部成功后的回调，没有其它方法需要依赖于该方法
  * @param {Object} team
