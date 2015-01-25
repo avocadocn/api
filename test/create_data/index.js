@@ -16,6 +16,9 @@ var createCampaigns = require('./create_campaigns.js');
 var createConfig = require('./create_config.js');
 var createRegion = require('./create_region.js');
 var createCampaignMold = require('./create_mold.js');
+
+var createPhotoAlbums = require('./create_photo_albums.js');
+
 /**
  * 公司数据列表，保存公司及其员工、小队、活动数据
  *  [{
@@ -24,7 +27,8 @@ var createCampaignMold = require('./create_mold.js');
  *      model: doc, // mongoose.model('Team')
  *      campaigns: [doc], // mongoose.model('Campaign')
  *      users: [doc], // mongoose.model('User')
- *      leaders: [doc] // mongoose.model('User')
+ *      leaders: [doc], // mongoose.model('User')
+ *      photoAlbums: [doc] // mongoose.model('PhotoAlbum')
  *    }],
  *    users: [doc], // mongoose.model('User')
  *    campaigns: [doc] // mongoose.model('Campaign')
@@ -103,6 +107,11 @@ exports.createData = function (callback) {
           addUsersToTeams(resCompanyData, waterfallCallback);
         },
         function (waterfallCallback) {
+          // 创建小队相册, 这是个异步过程，但不影响后面创建和参加活动，所以使用回调获取结果，减少流程复杂度
+          resCompanyData.teams.forEach(function (team) {
+            createPhotoAlbums(team);
+          });
+
           // 生成除跨公司挑战外的活动并让部分成员加入
           console.log('加入小队成功，开始生成除跨公司挑战外的活动');
           createCampaigns([resCompanyData], function (err, companyData) {

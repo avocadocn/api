@@ -192,6 +192,16 @@ module.exports = function (app) {
 
     getPhotoAlbum: function (req, res) {
       var photoAlbum = req.photoAlbum;
+
+      var role = auth.getRole(req.user, {
+        companies: photoAlbum.owner.companies
+      });
+      var allow = auth.auth(role, ['getPhotoAlbum']);
+      if (!allow.getPhotoAlbum) {
+        res.status(403).send({ msg: '权限不足' });
+        return;
+      }
+
       var resPhotoAlbum = {
         _id: photoAlbum._id,
         owner: photoAlbum.owner,
@@ -253,7 +263,12 @@ module.exports = function (app) {
       });
       var allow = auth.auth(role, ['deletePhotoAlbum']);
       if (!allow.deletePhotoAlbum) {
-        res.sendStatus(403);
+        res.status(403).send({ msg: '权限不足' });
+        return;
+      }
+
+      if (photoAlbum.owner.model.type === 'Campaign') {
+        res.status(403).send({ msg: '活动相册不允许删除' });
         return;
       }
 

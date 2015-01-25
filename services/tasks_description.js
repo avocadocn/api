@@ -208,6 +208,11 @@ var registeredTasks = {
     team: ['leader']
   },
 
+  // 获取相册数据
+  getPhotoAlbum: {
+    company: ['member', 'hr']
+  },
+
   // 编辑相册
   editPhotoAlbum: {
     company: ['hr'],
