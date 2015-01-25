@@ -329,12 +329,12 @@ var createCampaign = function (options, _callback) {
  *    //  campaigns: [doc]
  *    //}]
  *  });
- *  第一，二个队为小队活动，第三个队的为公司内挑战
- *  公司活动四个，分别为未开始，正在进行，已经结束，关闭
+ *  第一各队为小队活动，第二个队的为公司内挑战
+ *  公司活动5个，分别为未开始，正在进行，已经结束，关闭,成员上限为1
  *  小队活动
  *    第一个小队8个，依次为hr发送的四个状态的活动，leader发送的四个状态的活动
- *    第二个个小队为第一和第二个小队间的6个挑战，依次为未开始，正在进行，已经结束，关闭，取消应战，拒绝应战
- *  第一个公司的第一个小队14个，依次为hr发送的四个状态的活动，leader发送的四个状态的活动，与第一个公司的第一个小队间的6个挑战
+ *    第二个个小队为第一和第二个小队间的9个挑战，依次为未开始，正在进行，已经结束，关闭，取消应战，拒绝应战，三个未应战的
+ *  第一个公司的第一个小队14个，依次为hr发送的四个状态的活动，leader发送的四个状态的活动，与第一个公司的第一个小队间的9个挑战
  *  每个活动都只有第一个user参加(公司内挑战,第二个队无人参加）
  * @param {Array} companyDataList长度为1时返回对象，否则返回数组
  * @param callback
@@ -675,8 +675,8 @@ var createCampaigns = function (companyDataList, callback) {
         poster: {
           cid: companyDataList[0].model._id,                       //活动发起者所属的公司
           cname: companyDataList[0].model.info.official_name,
-          uid: companyDataList[0].teams[1].leaders[0]._id,
-          nickname: companyDataList[0].teams[1].leaders[0].nickname,
+          uid: companyDataList[0].teams[0].leaders[0]._id,
+          nickname: companyDataList[0].teams[0].leaders[0].nickname,
           role: 'LEADER'
         },
         campaign_mold: companyDataList[0].teams[0].model.group_type,
