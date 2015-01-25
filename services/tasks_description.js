@@ -235,6 +235,11 @@ var registeredTasks = {
     company: ['member', 'hr']
   },
 
+  // 获取单张照片详细数据
+  getPhoto: {
+    company: ['member', 'hr']
+  },
+
   // 上传照片
   uploadPhoto: {
     company: ['hr', 'member']

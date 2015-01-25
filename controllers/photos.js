@@ -446,6 +446,7 @@ module.exports = function (app) {
           '_id': true,
           'uri': true,
           'name': true,
+          'owner': true,
           'upload_user': true,
           'upload_date': true
         })
@@ -453,6 +454,15 @@ module.exports = function (app) {
         .then(function (photo) {
           if (!photo) {
             res.sendStatus(404);
+            return;
+          }
+
+          var role = auth.getRole(req.user, {
+            companies: photo.owner.companies
+          });
+          var allow = auth.auth(role, ['getPhoto']);
+          if (!allow.getPhoto) {
+            res.status(403).send({ msg: '权限不足' });
             return;
           }
 

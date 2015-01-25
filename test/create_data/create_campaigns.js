@@ -104,8 +104,9 @@ var molds = [
  * 为活动相册生成照片
  * @param {Object} photoAlbum
  * @param {Object} campaign
+ * @param {Function} callback function(err){}
  */
-var createPhotos = function (photoAlbum, campaign) {
+var createPhotos = function (photoAlbum, campaign, callback) {
   var uploadUsers = [];
   campaign.members.forEach(function (member) {
     uploadUsers.push({
@@ -116,6 +117,7 @@ var createPhotos = function (photoAlbum, campaign) {
   });
   var randomPhotoCount = chance.integer({ min: 10, max: 30 });
   var uploadUsersMaxIndex = uploadUsers.length - 1;
+  var photoList = [];
   for (var i = 0; i < randomPhotoCount; i++) {
     (function () {
       var photo = new Photo({
@@ -128,25 +130,27 @@ var createPhotos = function (photoAlbum, campaign) {
         width: 200,
         height: 200,
         upload_date: chance.date(),
-        hidden: chance.bool({ likelihood: 90 }),
+        hidden: chance.bool({ likelihood: 10 }),
         click: chance.integer({ min: 0, max: 500 }),
         name: 'test photo name',
         tags: ['tag1', 'tag2'],
         upload_user: uploadUsers[chance.integer({ min: 0, max: uploadUsersMaxIndex})]
       });
-      photo.save(function (err) {
-        if (err) {
-          console.error('保存照片失败');
-          console.error(err.stack);
-        }
-      });
+      photoList.push(photo);
+
       photoAlbum.pushPhoto(photo);
       photoAlbum.update_user = photo.upload_user;
       photoAlbum.update_date = photo.update_date;
       photoAlbum.photo_count += 1;
       i++
-    }())
+    }());
   }
+
+  async.map(photoList, function (photo, mapCallback) {
+    photo.save(mapCallback);
+  }, function (err, results) {
+    callback(err);
+  });
 
 };
 
@@ -248,63 +252,71 @@ var createCampaign = function (options, _callback) {
   }
 
   // 创建照片
-  createPhotos(photo_album, campaign);
-
-  //---save
-  photo_album.save(function (err) {
+  createPhotos(photo_album, campaign, function (err) {
     if (err) {
-      console.log(err);
-      _callback('保存相册失败');
+      _callback(err);
       return;
     }
 
-    campaign.photo_album = photo_album._id;
-
-    campaign.components = [];
-    campaign.modularization = true;
-    var componentNames = [];
-    var modlsIndex = tools.arrayObjectIndexOf(molds,campaign.campaign_mold,'name');
-    componentNames = molds[modlsIndex<0 ? 0:modlsIndex].module;
-    if (campaign.campaign_unit.length !== 2) {//单组去除比分板
-      var scoreIndex = componentNames.indexOf('ScoreBoard');
-      if (scoreIndex > -1)
-        componentNames.splice(scoreIndex, 1);
-    }
-    async.map(componentNames, function (componentName, asyncCallback) {
-      mongoose.model(componentName).establish(campaign, function (err, component) {
-        if (err) {
-          asyncCallback(err);
-        }
-        else {
-          campaign.components.push({
-            name: componentName,
-            _id: component._id
-          });
-          asyncCallback(null, component);
-        }
-      });
-    }, function (err, results) {
+    //---save
+    photo_album.save(function (err) {
       if (err) {
-        console.log(err)
-        _callback('创建活动组件失败');
+        console.log(err);
+        _callback('保存相册失败');
         return;
       }
-      else{
-        campaign.save(function (err) {
+
+      campaign.photo_album = photo_album._id;
+
+      campaign.components = [];
+      campaign.modularization = true;
+      var componentNames = [];
+      var modlsIndex = tools.arrayObjectIndexOf(molds,campaign.campaign_mold,'name');
+      componentNames = molds[modlsIndex<0 ? 0:modlsIndex].module;
+      if (campaign.campaign_unit.length !== 2) {//单组去除比分板
+        var scoreIndex = componentNames.indexOf('ScoreBoard');
+        if (scoreIndex > -1)
+          componentNames.splice(scoreIndex, 1);
+      }
+      async.map(componentNames, function (componentName, asyncCallback) {
+        mongoose.model(componentName).establish(campaign, function (err, component) {
           if (err) {
-            console.log(err)
-            _callback('保存活动失败');
-            return;
+            asyncCallback(err);
           }
-          else{
-            _callback(null, campaign);
+          else {
+            campaign.components.push({
+              name: componentName,
+              _id: component._id
+            });
+            asyncCallback(null, component);
           }
         });
-      }
+      }, function (err, results) {
+        if (err) {
+          console.log(err)
+          _callback('创建活动组件失败');
+          return;
+        }
+        else{
+          campaign.save(function (err) {
+            if (err) {
+              console.log(err)
+              _callback('保存活动失败');
+              return;
+            }
+            else{
+              _callback(null, campaign);
+            }
+          });
+        }
+      });
+
+
     });
 
-
   });
+
+
 };
 /**
  * 新建活动，并让成员加入，新建活动后在companyDataList添加相应属性
