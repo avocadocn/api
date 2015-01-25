@@ -117,6 +117,9 @@ var createPhotos = function (photoAlbum, campaign, callback) {
   });
   var randomPhotoCount = chance.integer({ min: 10, max: 30 });
   var uploadUsersMaxIndex = uploadUsers.length - 1;
+  if(uploadUsersMaxIndex==-1){
+    return callback(null);
+  }
   var photoList = [];
   for (var i = 0; i < randomPhotoCount; i++) {
     (function () {
