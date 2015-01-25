@@ -318,8 +318,10 @@ module.exports = function (app) {
         subDir: req.user.getCid().toString(),
         saveOrigin: true,
         getFields: function (fields) {
-          randomId = fields.randomId[0];
-          req.randomId = randomId;
+          if(fields.randomId) {
+            randomId = fields.randomId[0];
+            req.randomId = randomId;
+          }
         },
         getSize: function (size) {
           imgSize = size;
