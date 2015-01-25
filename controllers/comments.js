@@ -251,7 +251,7 @@ module.exports = function (app) {
         Campaign.findById(hostId).exec()
           .then(function (campaign) {
             if (!campaign) {
-              return res.status(403).send({ msg: '权限错误' });
+              return res.status(400).send({ msg: '无此活动' });
             }
             var role = auth.getRole(req.user, {
               companies: campaign.cid,

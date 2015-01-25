@@ -9,8 +9,8 @@ var dataService = require('../../create_data');
 var chance = require('chance').Chance();
 
 module.exports = function () {
-  describe.skip('post /companies', function () {
-    it('应该在数据正确时返回201,数据库中应有此数据', function (done) {
+  describe('post /companies', function () {
+    it.skip('应该在数据正确时返回201,数据库中应有此数据', function (done) {
       var newCompany = {
         "name": chance.string({length:8,pool: '上海北京啊地方睡觉啊的法律玩儿哦温热我人是否和比赛公司'}),
         "province": "安徽省",
@@ -53,12 +53,12 @@ module.exports = function () {
         var data = dataService.getData();
         var company = data[0].model;
         var duplicateCompany = {
-          "name": testData.name? testData.name : chance.string({length:8,pool: '上海北京啊地方睡觉啊的法律玩儿哦温热我人是否和比赛公司'}),
+          "name": testData.name !== null ? testData.name : chance.string({length:8,pool: '上海北京啊地方睡觉啊的法律玩儿哦温热我人是否和比赛公司'}),
           "province": testData.province ? testData.province : "安徽省",
           "city": "安庆市",
           "district": "大观区",
-          "address": testData.addr ? testData.addr: chance.string({pool: '阿飞离开爱诶哦入认为快乐1234567890'}),
-          "contacts": testData.contacts ? testData.contacts : chance.string({pool: '阿里斯顿父亲为哦如破去'}),
+          "address": testData.addr !== null ? testData.addr: chance.string({pool: '阿飞离开爱诶哦入认为快乐1234567890'}),
+          "contacts": testData.contacts !== null ? testData.contacts : chance.string({pool: '阿里斯顿父亲为哦如破去'}),
           "areacode": testData.areacode ? testData.areacode : "021",
           "tel": testData.tel ? testData.tel : chance.string({length:8,pool:'0123456789'}),
           "phone": testData.phone ? testData.phone : chance.string({length:11,pool:'0123456789'}),
