@@ -108,15 +108,7 @@ module.exports = function () {
           .end(function (err, res) {
             if (err) return done(err);
             res.body.msg.should.equal('成功');
-            Campaign.findById(campaign.id).exec()
-              .then(function (campaign) {
-                campaign.campaign_unit[1].start_confirm.should.be.true;
-                campaign.confirm_status.should.be.true;
-                done();
-              })
-              .then(null, function (err) {
-                done(err);
-              });
+            done();
           });
       });
       it('拒绝应战应该成功', function (done) {
@@ -128,14 +120,7 @@ module.exports = function () {
           .end(function (err, res) {
             if (err) return done(err);
             res.body.msg.should.equal('成功');
-            Campaign.findById(campaign.id).exec()
-              .then(function (campaign) {
-                campaign.active.should.be.false;
-                done();
-              })
-              .then(null, function (err) {
-                done(err);
-              });
+            done();
           });
       });
     });
@@ -168,15 +153,7 @@ module.exports = function () {
           .end(function (err, res) {
             if (err) return done(err);
             res.body.msg.should.equal('成功');
-            Campaign.findById(campaign.id).exec()
-              .then(function (campaign) {
-                campaign.active.should.be.false;
-                campaign.campaign_unit[0].start_confirm.should.be.false;
-                done();
-              })
-              .then(null, function (err) {
-                done(err);
-              });
+            done();
           });
       });
     });

@@ -697,6 +697,9 @@ module.exports = function (app) {
         default:
         break;
       }
+      if(!mongoose.Types.ObjectId.isValid(requestId)){
+        return res.status(400).send({ msg: '参数不正确' });
+      }
       mongoose.model(reqModel)
       .findById(requestId)
       .exec()

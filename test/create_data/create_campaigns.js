@@ -335,12 +335,12 @@ var createCampaign = function (options, _callback) {
  *    //    model: doc,
  *    //    users: [doc],
  *    //    leaders: [doc],
- *    //    campaigns: [doc]  //正常8个活动：依次为hr发布的四个状态的活动，leader发布的四个状态的活动。第一个公司的第一个小队17个活动：再加上与第二个公司的第一个小队间的9个挑战(第一个队的队长参加活动，第二个队无人参加）
+ *    //    campaigns: [doc]  //正常8个活动：依次为hr发布的四个状态的活动，leader发布的四个状态的活动。第一个公司的第一个小队17个活动：再加上与第二个公司的第一个小队间的9个挑战(第一个队的队长参加活动，第二个队无人参加,未应战的无人参加）
  *    //  },{
  *    //    model: doc,
  *    //    users: [doc],
  *    //    leaders: [doc],
- *    //    campaigns: [doc] //第一和第二个小队间的9个挑战，依次为未开始，正在进行，已经结束，关闭，取消应战，拒绝应战，三个未应战的(第一个队的队长参加活动，第二个队无人参加）
+ *    //    campaigns: [doc] //第一和第二个小队间的9个挑战，依次为未开始，正在进行，已经结束，关闭，取消应战，拒绝应战，三个未应战的(第一个队的队长参加活动，第二个队无人参加,未应战的无人参加）
  *    //  },{
  *    //    model: doc,
  *    //    users: [doc],
@@ -678,7 +678,7 @@ var createCampaigns = function (companyDataList, callback) {
             name:companyDataList[0].teams[0].model.name,
             logo:companyDataList[0].teams[0].model.logo
           },
-          member:teamOneUsers,
+          member:argument.start_confirm ? [] : teamOneUsers,
           start_confirm: argument.start_confirm ? argument.start_confirm[0] : true
         },{
           company:{
