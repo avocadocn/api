@@ -6,7 +6,7 @@ var chance = require('chance').Chance();
 var dataService = require('../../create_data');
 
 module.exports = function() {
-  describe('get /teams/:teamId', function() {
+  describe('put /teams/:teamId', function() {
 
     describe('用户修改小队信息', function () {
       var accessToken;
