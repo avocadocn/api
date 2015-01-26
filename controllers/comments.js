@@ -528,23 +528,33 @@ module.exports = function (app) {
 
 
     getComments: function(req, res) {
-      //获取评论，只有comment 无reply
-      Comment.getComments({
-        hostType: req.query.requestType,
-        hostId: req.query.requestId
-      }, req.query.createDate, req.query.limit, function (err, comments, nextStartDate) {
-        setDeleteAuth({
-          host_type: req.query.requestType,
-          host_id: req.query.requestId,
-          user: req.user,
-          comments: comments
-        }, function (err) {
-          if (err) console.log(err);
-          // 即使错误依然会做基本的权限设置（公司可删自己员工的，自己可以删自己的），所以依旧返回数据
-          res.status(202).send({'comments': comments, nextStartDate: nextStartDate});
-          userReadComment(req.user, req.query.requestId, function(){});
-        });
-      });
+      //先判断权限
+      Campaign.findOne({_id: req.query.requestId}, function(err, campaign) {
+        if(err || !campaign) return res.status(500).send('无对应活动');
+        else {
+          if(req.user.provider === 'company' && campaign.cid.indexOf(req.user._id) === -1 || req.user.provider === 'user' && campaign.cid.indexOf(req.user.cid)) 
+            return res.status(403).send('权限错误');
+          else {
+            //获取评论，只有comment 无reply
+            Comment.getComments({
+              hostType: req.query.requestType,
+              hostId: req.query.requestId
+            }, req.query.createDate, req.query.limit, function (err, comments, nextStartDate) {
+              setDeleteAuth({
+                host_type: req.query.requestType,
+                host_id: req.query.requestId,
+                user: req.user,
+                comments: comments
+              }, function (err) {
+                if (err) console.log(err);
+                // 即使错误依然会做基本的权限设置（公司可删自己员工的，自己可以删自己的），所以依旧返回数据
+                res.status(202).send({'comments': comments, nextStartDate: nextStartDate});
+                userReadComment(req.user, req.query.requestId, function(){});
+              });
+            });
+          }
+        }
+      })
     },
     readComments: function(req, res) {
       var host_id = req.body.requestId;

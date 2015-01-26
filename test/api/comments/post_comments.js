@@ -3,7 +3,6 @@ var app = require('../../../config/express.js'),
 
 var util = require('util');
 var dataService = require('../../create_data');
-var tools = require('../../../tools/tools.js');
 var chance = require('chance').Chance();
 
 module.exports = function () {
