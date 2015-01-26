@@ -657,7 +657,8 @@ module.exports = function (app) {
         res.sendStatus(500);
       });
     },
-
+    //与users路由中中获取公司成员重复，此功能待需求及重写.
+    //app中暂时没有用到此路由、此功能.
     getCompanyMembers: function (req, res) {
       User.find({
         cid: req.params.companyId

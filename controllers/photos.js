@@ -82,6 +82,9 @@ module.exports = function (app) {
         companies: [req.body.cid],
         teams: [req.body.tid]
       }, req.user);
+
+
+
       photoAlbum.save(function (err) {
         if (err) {
           log(err);
@@ -133,6 +136,7 @@ module.exports = function (app) {
       PhotoAlbum.find(query, {
         _id: true,
         name: true,
+        owner: true,
         update_date: true,
         update_user: true,
         photo_count: true,
@@ -143,6 +147,28 @@ module.exports = function (app) {
         .limit(20)
         .exec()
         .then(function (photoAlbums) {
+
+          // 获取对应的公司id
+          var cid;
+          if (req.query.ownerType === 'team') {
+            for (var i = 0; i < photoAlbums[0].owner.teams.length; i++) {
+              var team = photoAlbums[0].owner.teams[i];
+              if (req.query.ownerId === team.toString()) {
+                cid = photoAlbums[0].owner.companies[i];
+                break;
+              }
+            }
+          }
+
+          var role = auth.getRole(req.user, {
+            companies: [cid]
+          });
+          var allow = auth.auth(role, ['getTeamPhotoAlbums']);
+          if (!allow.getTeamPhotoAlbums) {
+            res.status(403).send({ msg: '权限不足' });
+            return;
+          }
+
           var resPhotoAlbums = [];
           photoAlbums.forEach(function (photoAlbum) {
             var latestPhotos = tools.collect(photoAlbum.photos, '_id', 'uri');
@@ -166,6 +192,16 @@ module.exports = function (app) {
 
     getPhotoAlbum: function (req, res) {
       var photoAlbum = req.photoAlbum;
+
+      var role = auth.getRole(req.user, {
+        companies: photoAlbum.owner.companies
+      });
+      var allow = auth.auth(role, ['getPhotoAlbum']);
+      if (!allow.getPhotoAlbum) {
+        res.status(403).send({ msg: '权限不足' });
+        return;
+      }
+
       var resPhotoAlbum = {
         _id: photoAlbum._id,
         owner: photoAlbum.owner,
@@ -227,7 +263,12 @@ module.exports = function (app) {
       });
       var allow = auth.auth(role, ['deletePhotoAlbum']);
       if (!allow.deletePhotoAlbum) {
-        res.sendStatus(403);
+        res.status(403).send({ msg: '权限不足' });
+        return;
+      }
+
+      if (photoAlbum.owner.model.type === 'Campaign') {
+        res.status(403).send({ msg: '活动相册不允许删除' });
         return;
       }
 
@@ -344,13 +385,22 @@ module.exports = function (app) {
         },
         error: function (err) {
           log(err);
-          res.sendStatus(500);
+          res.status(500).send({ msg: '服务器错误' });
         }
       });
 
     },
 
     getPhotos: function (req, res) {
+      var role = auth.getRole(req.user, {
+        companies: req.photoAlbum.owner.companies
+      });
+      var allow = auth.auth(role, ['getPhotos']);
+      if (!allow.getPhotos) {
+        res.status(403).send({ msg: '权限不足' });
+        return;
+      }
+
       Photo.find({
         'photo_album': req.params.photoAlbumId,
         'hidden': false
@@ -366,6 +416,7 @@ module.exports = function (app) {
         .sort('-upload_date')
         .exec()
         .then(function (photos) {
+
           var resPhotos = [];
           photos.forEach(function (photo) {
             resPhotos.push({
@@ -395,6 +446,7 @@ module.exports = function (app) {
           '_id': true,
           'uri': true,
           'name': true,
+          'owner': true,
           'upload_user': true,
           'upload_date': true
         })
@@ -402,6 +454,15 @@ module.exports = function (app) {
         .then(function (photo) {
           if (!photo) {
             res.sendStatus(404);
+            return;
+          }
+
+          var role = auth.getRole(req.user, {
+            companies: photo.owner.companies
+          });
+          var allow = auth.auth(role, ['getPhoto']);
+          if (!allow.getPhoto) {
+            res.status(403).send({ msg: '权限不足' });
             return;
           }
 

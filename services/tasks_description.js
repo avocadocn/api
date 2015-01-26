@@ -208,6 +208,11 @@ var registeredTasks = {
     team: ['leader']
   },
 
+  // 获取相册数据
+  getPhotoAlbum: {
+    company: ['member', 'hr']
+  },
+
   // 编辑相册
   editPhotoAlbum: {
     company: ['hr'],
@@ -220,10 +225,24 @@ var registeredTasks = {
     team: ['leader']
   },
 
+  // 获取小队的相册列表
+  getTeamPhotoAlbums: {
+    company: ['member', 'hr']
+  },
+
+  // 获取相册的照片列表
+  getPhotos: {
+    company: ['member', 'hr']
+  },
+
+  // 获取单张照片详细数据
+  getPhoto: {
+    company: ['member', 'hr']
+  },
+
   // 上传照片
   uploadPhoto: {
-    company: ['hr'],
-    team: ['leader', 'member']
+    company: ['hr', 'member']
   },
 
   // 修改照片

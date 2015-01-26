@@ -251,7 +251,7 @@ module.exports = function (app) {
         Campaign.findById(hostId).exec()
           .then(function (campaign) {
             if (!campaign) {
-              return res.status(403).send({ msg: '权限错误' });
+              return res.status(400).send({ msg: '无此活动' });
             }
             var role = auth.getRole(req.user, {
               companies: campaign.cid,
@@ -318,8 +318,10 @@ module.exports = function (app) {
         subDir: req.user.getCid().toString(),
         saveOrigin: true,
         getFields: function (fields) {
-          randomId = fields.randomId[0];
-          req.randomId = randomId;
+          if(fields.randomId) {
+            randomId = fields.randomId[0];
+            req.randomId = randomId;
+          }
         },
         getSize: function (size) {
           imgSize = size;
