@@ -154,7 +154,7 @@ module.exports = function (app) {
           }
         },
         function(callback){
-          if(req.body.campaignId || param.type =='private'){
+          if(req.body.campaignId && param.type =='private'){
             Campaign
               .findOne({_id:req.body.campaignId})
               .exec()
@@ -187,7 +187,6 @@ module.exports = function (app) {
           if(!allow.publishTeamMessage &&campaignAllow &&!campaignAllow.publishTeamMessage){
             return res.status(403).send('您没有权限发此站内信');
           }else{
-            console.log(param)
             __sendMessage(param,function(err){
               if(err){
                 return res.status(500).send({ msg: '服务器错误'});
