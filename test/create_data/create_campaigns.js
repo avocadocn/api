@@ -108,7 +108,7 @@ var molds = [
  */
 var createPhotos = function (photoAlbum, campaign, callback) {
   var uploadUsers = [];
-  campaign.members.forEach(function (member) {
+  campaign.campaign_unit[0].member.forEach(function (member) {
     uploadUsers.push({
       _id: member._id,
       name: member.nickname,
@@ -123,12 +123,15 @@ var createPhotos = function (photoAlbum, campaign, callback) {
   var photoList = [];
   for (var i = 0; i < randomPhotoCount; i++) {
     (function () {
+      var owner = {
+        companies: [campaign.campaign_unit[0].company._id]
+      };
+      if (campaign.campaign_unit[0].team && campaign.campaign_unit[0].team._id) {
+        owner.teams = [campaign.campaign_unit[0].team._id];
+      }
       var photo = new Photo({
         photo_album: photoAlbum._id,
-        owner: {
-          companies: photoAlbum.owner.companies,
-          teams: photoAlbum.owner.teams
-        },
+        owner: owner,
         uri: 'testuri',
         width: 200,
         height: 200,

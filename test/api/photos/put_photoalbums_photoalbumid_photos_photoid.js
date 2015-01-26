@@ -127,7 +127,7 @@ module.exports = function () {
           });
       });
 
-      describe('hr获取相册照片', function () {
+      describe('hr修改相册照片', function () {
         var accessToken;
         before(function (done) {
           var company = data[0].model;

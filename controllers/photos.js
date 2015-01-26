@@ -331,12 +331,39 @@ module.exports = function (app) {
               type: 'hr'
             }
           }
+
+          // 设置准确的owner，相册可以属于多个公司多个小队，但照片只能属于一个公司一个小队
+          // 以前owner中companies和teams都是数组，为了不破坏其它功能，不改动数据结构
+          var owner = {};
+          if (req.user.provider === 'user') {
+            for (var i = 0; i < photoAlbum.owner.companies.length; i++) {
+              if (req.user.cid.toString() === photoAlbum.owner.companies[i].toString()) {
+                owner.companies = [photoAlbum.owner.companies[i]];
+                break;
+              }
+            }
+
+            if (photoAlbum.owner.teams) {
+              for (var i = 0; i < photoAlbum.owner.teams.length; i++) {
+                if (req.user.isTeamMember(photoAlbum.owner.teams[i])) {
+                  owner.teams = [photoAlbum.owner.teams[i]];
+                  break;
+                }
+              }
+            }
+
+          } else {
+            for (var i = 0; i < photoAlbum.owner.companies.length; i++) {
+              if (req.user.id === photoAlbum.owner.companies[i].toString()) {
+                owner.companies = [photoAlbum.owner.companies[i]];
+                break;
+              }
+            }
+          }
+
           var photo = new Photo({
             photo_album: photoAlbum._id,
-            owner: {
-              companies: photoAlbum.owner.companies,
-              teams: photoAlbum.owner.teams
-            },
+            owner: owner,
             uri: path.join('/img/photo_album', url),
             width: imgSize.width,
             height: imgSize.height,
@@ -573,45 +600,48 @@ module.exports = function (app) {
             }
           });
 
-          // 后续的照片文件相关操作及更新相册照片计数
-          var yaliDir = uploader.yaliDir;
+          try {
+            // 后续的照片文件相关操作及更新相册照片计数
+            var yaliDir = uploader.yaliDir;
 
-          var result = photo.uri.match(/^([\s\S]+)\/(([-\w]+)\.[\w]+)$/);
-          var imgPath = result[1], imgFilename = result[2], imgName = result[3];
+            var result = photo.uri.match(/^([\s\S]+)\/(([-\w]+)\.[\w]+)$/);
+            var imgPath = result[1], imgFilename = result[2], imgName = result[3];
 
-          var oriPath = path.join(yaliDir, 'public', imgPath);
-          var sizePath = path.join(oriPath, 'size');
+            var oriPath = path.join(yaliDir, 'public', imgPath);
+            var sizePath = path.join(oriPath, 'size');
 
-          var removeSizeFiles = fs.readdirSync(sizePath).filter(function (item) {
-            if (item.indexOf(imgName) === -1) {
-              return false;
-            } else {
-              return true;
+            var removeSizeFiles = fs.readdirSync(sizePath).filter(function (item) {
+              if (item.indexOf(imgName) === -1) {
+                return false;
+              } else {
+                return true;
+              }
+            });
+
+            removeSizeFiles.forEach(function (filename) {
+              fs.unlinkSync(path.join(sizePath, filename));
+            });
+
+            var now = new Date();
+            var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
+            var moveTargetDir = path.join(yaliDir, 'img_trash', dateDirName);
+            if (!fs.existsSync(moveTargetDir)) {
+              mkdirp.sync(moveTargetDir);
             }
-          });
+            // 将上传的图片移至备份目录
+            fs.renameSync(path.join(yaliDir, 'public', photo.uri), path.join(moveTargetDir, imgFilename));
 
-          removeSizeFiles.forEach(function (filename) {
-            fs.unlinkSync(path.join(sizePath, filename));
-          });
-
-          var now = new Date();
-          var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
-          var moveTargetDir = path.join(yaliDir, 'img_trash', dateDirName);
-          if (!fs.existsSync(moveTargetDir)) {
-            mkdirp.sync(moveTargetDir);
+            if (tools.arrayObjectIndexOf(photoAlbum.photos, photo._id, '_id') !== -1) {
+              photoAlbum.reliable = false;
+            }
+            photoAlbum.photo_count--;
+            photoAlbum.save(function(err) {
+              // 即使更新相册照片数量失败了，依然算作是删除成功。
+              console.log(err);
+            });
+          } catch (e) {
+            log(e);
           }
-          // 将上传的图片移至备份目录
-          fs.renameSync(path.join(yaliDir, 'public', photo.uri), path.join(moveTargetDir, imgFilename));
-
-          if (tools.arrayObjectIndexOf(photoAlbum.photos, photo._id, '_id') !== -1) {
-            photoAlbum.reliable = false;
-          }
-          photoAlbum.photo_count--;
-          photoAlbum.save(function(err) {
-            // 即使更新相册照片数量失败了，依然算作是删除成功。
-            console.log(err);
-          });
-
 
         })
         .then(null, function (err) {
