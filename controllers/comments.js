@@ -557,6 +557,9 @@ module.exports = function (app) {
       })
     },
     readComments: function(req, res) {
+      if(req.user.provider==='company') {
+        return res.status(403).send({msg:'无此功能'});
+      }
       var host_id = req.body.requestId;
       userReadComment(req.user, host_id, function() {
         return res.status(200).send();
@@ -704,6 +707,9 @@ module.exports = function (app) {
       });
     },
     getCommentList: function(req, res) {
+      if(req.user.provider==='company') {
+        return res.status(403).send({msg: '无此功能'});
+      }
       var campaigns= [];
       if(req.query.type==='joined')
         campaigns = req.user.commentCampaigns;
