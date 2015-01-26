@@ -21,6 +21,10 @@ before(function (done) {
         console.log('开始生成region数据');
         createDataModule.createRegion(parallelCallback);
       },
+      createGroups: function (parallelCallback) {
+        console.log('开始生成groups数据');
+        createDataModule.createGroups(parallelCallback);
+      },
       createCampaignMold: function (parallelCallback) {
         console.log('开始生成campaignMold数据');
         createDataModule.createCampaignMold(parallelCallback);

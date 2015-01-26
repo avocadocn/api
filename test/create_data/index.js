@@ -15,6 +15,7 @@ var createCampaigns = require('./create_campaigns.js');
 
 var createConfig = require('./create_config.js');
 var createRegion = require('./create_region.js');
+var createGroups = require('./create_groups.js');
 var createCampaignMold = require('./create_mold.js');
 
 var createPhotoAlbums = require('./create_photo_albums.js');
@@ -42,6 +43,7 @@ var resCompanyDataList = [];
  */
 var resConfig;
 var resRegion;
+var resGroups;
 /**
  * 生成测试数据
  * @param {Function} callback 完成后的回调函数，形式为function(err){}
@@ -184,6 +186,22 @@ exports.createRegion = function (callback) {
     }
   });
 };
+
+/**
+ * Generate Groups Data
+ * @param {Function} callback function(err){}
+ */
+exports.createGroups = function (callback) {
+  createGroups(function (err, groups) {
+    if (err) {
+      callback(err);
+    } else {
+      resGroups = groups;
+      callback();
+    }
+  });
+};
+
 exports.createCampaignMold = function (callback) {
   createCampaignMold(function (err) {
     if (err) {
@@ -199,4 +217,8 @@ exports.getConfig = function () {
 
 exports.getRegion = function () {
   return resRegion;
+};
+
+exports.getGroups = function () {
+  return resGroups;
 };
