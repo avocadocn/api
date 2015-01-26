@@ -4,9 +4,6 @@ var app = require('../../../config/express.js'),
 var dataService = require('../../create_data');
 var chance = require('chance').Chance();
 var util = require('util');
-var common = require('../../support/common');
-var mongoose = common.mongoose;
-var Campaign = mongoose.model('Campaign');
 module.exports = function () {
   describe('post /campaigns', function () {
 
