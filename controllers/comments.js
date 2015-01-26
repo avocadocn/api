@@ -64,9 +64,9 @@ var setDeleteAuth = function setDeleteAuth(data, callback) {
       Campaign.findById(data.host_id).exec()
         .then(function (campaign) {
           var is_leader = false;
-          if (campaign.team && user.provider === 'user') {
-            for (var i = 0; i < campaign.team.length; i++) {
-              if (user.isTeamLeader(campaign.team[i].toString())) {
+          if (campaign.tid && user.provider === 'user') {
+            for (var i = 0; i < campaign.tid.length; i++) {
+              if (user.isTeamLeader(campaign.tid[i].toString())) {
                 is_leader = true;
                 break;
               }
@@ -625,10 +625,7 @@ module.exports = function (app) {
           .then(null, function (err) {
             callback(err);
           });
-
       };
-
-
 
       var comment = req.comment;
       setDeleteAuth({
@@ -648,7 +645,7 @@ module.exports = function (app) {
               return res.status(500).send({msg: 'comment save error'});
             }
             // save成功就意味着已经改为delete状态，后续操作不影响已经成功这个事实，故直接返回成功状态
-            res.status(200).send('success');
+            res.status(200).send({ msg: 'success' });
 
             // 计数-1
             if (comment.host_type === "campaign" || comment.host_type === "campaign_detail") {
