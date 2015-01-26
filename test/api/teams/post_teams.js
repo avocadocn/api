@@ -47,7 +47,6 @@ module.exports = function() {
           .end(function (err, res) {
             if (err) return done(err);
             res.body.should.have.property('teamId');
-            console.log(res.body.teamId);
             res.body.msg.should.have.equal("保存成功");
             done();
           });
@@ -125,7 +124,7 @@ module.exports = function() {
           .expect(200)
           .end(function (err, res) {
             if (err) return done(err);
-                        res.body.should.have.property('teamId');
+            res.body.should.have.property('teamId');
             res.body.msg.should.have.equal("保存成功");
             done();
           });
@@ -151,7 +150,7 @@ module.exports = function() {
             done();
           });
       });
-      it('创建不正确id的公司的小队时应该返回400', function (done) {
+      it('创建不正确id的公司的小队时应该返回403', function (done) {
         var teamData = {
           companyId: 'sss',
           selectedGroups: [
@@ -165,10 +164,10 @@ module.exports = function() {
         request.post('/teams')
           .send(teamData)
           .set('x-access-token', hrAccessToken)
-          .expect(400)
+          .expect(403)
           .end(function (err, res) {
             if (err) return done(err);
-            res.body.msg.should.have.equal("参数不正确");
+            res.body.msg.should.have.equal("权限错误");
             done();
           });
       });

@@ -26,9 +26,6 @@ module.exports = function (app) {
     createTeams : function(req, res) {
       //权限判断
       var companyId = req.body.companyId || req.user.cid || req.user._id;
-      if(!mongoose.Types.ObjectId.isValid(req.body.companyId)){
-        return res.status(400).send({ msg: '参数不正确' });
-      }
       var role = auth.getRole(req.user, {
         companies:[companyId]
       });
