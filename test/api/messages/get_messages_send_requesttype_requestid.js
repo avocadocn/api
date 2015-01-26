@@ -6,7 +6,7 @@ var common = require('../../support/common');
 
 module.exports = function () {
 
-  describe('get /messages/:requestType/:requestId', function () {
+  describe('get /messages/send/:requestType/:requestId', function () {
     var accessToken;
     var data;
     before(function (done) {
@@ -25,23 +25,26 @@ module.exports = function () {
         });
     });
 
-    it('user应该成功收取自己的站内信', function (done) {
-      request.get('/messages/user/' + data[0].teams[0].users[1].id)
+    it('应该成功获取private类型的站内信', function (done) {
+      request.get('/messages/send/private/' + data[0].teams[0].users[1].id)
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
           if (err) return done(err);
           res.body.count.should.be.a.Number;
+          res.body.data.should.be.an.Array;
           done();
         });
     });
 
-    it('user不可以接收其他人的站内信', function (done) {
-      request.get('/messages/user/' + data[0].teams[0].users[0].id)
+    it('应该成功获取team类型的站内信', function (done) {
+      request.get('/messages/send/private/' + data[0].teams[0].users[1].id)
         .set('x-access-token', accessToken)
-        .expect(403)
+        .expect(200)
         .end(function (err, res) {
           if (err) return done(err);
+          res.body.count.should.be.a.Number;
+          res.body.data.should.be.an.Array;
           done();
         });
     });
