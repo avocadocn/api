@@ -34,7 +34,7 @@ before(function (done) {
         createDataModule.createData(parallelCallback);
       }
     }, function (err, results) {
-      done(err);
+      createDataModule.createMessages(createDataModule.getData()[0], done);
     });
     
   };

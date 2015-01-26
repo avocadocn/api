@@ -65,7 +65,7 @@ module.exports = function () {
           type:'private',
           caption: 'testCampaignTheme',
           content: 'testContent',
-          specific_type:{
+          specific_type: {
             value: 3,
             child_type: 0
           },
