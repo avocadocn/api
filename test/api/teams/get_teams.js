@@ -6,7 +6,7 @@ var app = require('../../../config/express.js'),
 var dataService = require('../../create_data');
 
 module.exports = function() {
-  describe.skip('get /teams', function() {
+  describe('get /teams', function() {
 
     describe('用户获取小队', function () {
       var accessToken;

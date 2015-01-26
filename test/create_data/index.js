@@ -19,6 +19,7 @@ var createGroups = require('./create_groups.js');
 var createCampaignMold = require('./create_mold.js');
 
 var createPhotoAlbums = require('./create_photo_albums.js');
+var createMessages = require('./create_messages.js');
 
 /**
  * 公司数据列表，保存公司及其员工、小队、活动数据
@@ -222,3 +223,6 @@ exports.getRegion = function () {
 exports.getGroups = function () {
   return resGroups;
 };
+
+exports.createMessages = createMessages;
+

@@ -78,9 +78,10 @@ module.exports = function () {
               hostId = data[0].teams[0].campaigns[8]._id;
               break;
           }
+          var content = chance.string();
           request.post('/comments/host_type/campaign/host_id/' + hostId)
             .set('x-access-token', userToken)
-            .send({content:chance.string()})
+            .send({content: content})
             .expect(200)
             .end(function (err,res) {
               if(err) return done(err);
@@ -89,6 +90,7 @@ module.exports = function () {
               //数据库中应有此comment,其host_id为hostId,发布者为此user
               //公司里参加此小队的人commentCampaigns列表里应有此活动
               //公司里未参加此小队的人unjoinedCommentCampaigns列表里应有此活动
+              res.body.comment.content.should.equal(content);
               done();
             })
 

@@ -115,7 +115,8 @@ var registeredTasks = {
     company: ['hr']
   },
   createTeams:{
-    company: ['hr', 'member']
+    company: ['hr']
+    // company: ['hr', 'member'] 个人小队功能开放
   },
   editTeam: {
     company: ['hr'],
