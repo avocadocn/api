@@ -151,6 +151,13 @@ module.exports = function (app) {
     },
     getTeam : function(req, res) {
       var team = req.companyGroup;
+      var role = auth.getRole(req.user, {
+        companies:[team.cid]
+      });
+      var allow = auth.auth(role,['getTeams']);
+      if(!allow.getTeams) {
+        return res.status(403).send({msg: '权限错误'});
+      }
       var membersWithoutLeader = [];
       team.member.forEach(function (member) {
         var isLeader = false;
@@ -250,7 +257,7 @@ module.exports = function (app) {
 
         var addIdsToOptions = function (userTeams) {
           var teams = userTeams.filter(function (team) {
-            if (team.group_type === 'virtual' || req.body.gid && req.body.gid!=team.gid ||req.body.leadFlag &&!team.leader) {
+            if (team.group_type === 'virtual' || req.query.gid && req.query.gid!=team.gid ||req.query.leadFlag &&!team.leader) {
               return false;
             } else {
               return true;
@@ -263,21 +270,23 @@ module.exports = function (app) {
         };
 
         if (!req.query.hostId || req.query.hostId === req.user._id.toString()) {
+          options.cid = req.user.cid || req.user._id;
           addIdsToOptions(req.user.team);
           next();
         } else {
           User.findById(req.query.hostId).exec()
             .then(function (user) {
               if (!user) {
-                res.sendStatus(404);
+                res.status(404).send({msg: '用户查找失败'});
                 return;
               }
+              options.cid = user.cid;
               addIdsToOptions(user.team);
               next();
             })
             .then(null, function (err) {
               log(err);
-              res.sendStatus(500);
+              res.status(500).send({msg: '用户查找错误'});
             });
         }
         break;
@@ -285,6 +294,13 @@ module.exports = function (app) {
     },
 
     getTeams: function(req, res) {
+      var role = auth.getRole(req.user, {
+        companies:[req.options.cid]
+      });
+      var allow = auth.auth(role,['getTeams']);
+      if(!allow.getTeams) {
+        return res.status(403).send({msg: '权限错误'});
+      }
       CompanyGroup
         .find(req.options)
         .populate('poster._id')
@@ -296,8 +312,8 @@ module.exports = function (app) {
             var membersWithoutLeader = [];
             companyGroups[i].member.forEach(function (member) {
               var isLeader = false;
-              for (var j = 0; j < companyGroups[j].leader.length; j++) {
-                var leader = companyGroups[j].leader[j];
+              for (var j = 0; j < companyGroups[i].leader.length; j++) {
+                var leader = companyGroups[i].leader[j];
                 if (leader._id.toString() === member._id.toString()) {
                   isLeader = true;
                   break;
@@ -356,7 +372,8 @@ module.exports = function (app) {
         })
         .then(null, function (err) {
           log(err);
-          res.sendStatus(500);
+          console.log(err);
+          res.status(500).send({msg: '小队信息获取错误'});
         });
     },
     updateTeamLogo: function (req, res, next) {
@@ -376,7 +393,7 @@ module.exports = function (app) {
           if (err.type === 'notfound') {
             next();
           } else {
-            res.sendStatus(500);
+            res.status(500).send({msg: '服务器错误'});
           }
         }
       });
@@ -387,8 +404,8 @@ module.exports = function (app) {
         companies:[team.cid],
         teams:[req.params.teamId]
       });
-      var allow = auth.auth(role,['editTeamCampaign','appointLeader']);
-      if(!allow.editTeamCampaign){
+      var allow = auth.auth(role,['editTeam','appointLeader']);
+      if(!allow.editTeam){
         return res.status(403).send({msg: '权限错误'});
       }
       var teamNameChanged = false;
@@ -457,7 +474,10 @@ module.exports = function (app) {
         });
       };
       var leader = req.body.leader;
-      if(allow.appointLeader && leader){
+      if(leader){
+        if(!allow.appointLeader) {
+          return res.status(403).send({msg: '权限错误'});
+        }
         //如果有原来的人把原来的那个人的资料改了
         if(team.leader&&team.leader.length>0) {
           for(var i=0; i<team.leader.length; i++) {

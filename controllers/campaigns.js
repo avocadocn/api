@@ -1267,10 +1267,7 @@ module.exports = function (app) {
               }
             }, function (err) {
               if (err) {
-                console.log(err);
-                if (err.stack) {
-                  console.log(err.stack);
-                }
+                log(err);
               }
             });
             CompanyGroup.update({'_id':{'$in':campaign.tid}},{'$inc':{'score.provoke':15}},function (err,team){

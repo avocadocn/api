@@ -101,6 +101,9 @@ var registeredTasks = {
     company: ['hr'],
     team: ['leader']
   },
+  getTeams:{
+    company: ['hr', 'member']
+  },
   joinTeam: function (role) {
     if (role.company === 'member' && !role.team) {
       return true;

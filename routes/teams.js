@@ -8,7 +8,7 @@ module.exports = function (app, ctrl) {
   app.get('/teams', token.needToken, ctrl.getTeamsValidate, ctrl.getTeamsSetQueryOptions, ctrl.getTeams);
   app.get('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.getTeam);
   app.put('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.updateTeamLogo, ctrl.editTeamData);
-  app.put('/teams/:teamId/update', token.needToken, getById.getTeamById, ctrl.updatePersonalTeam);
+  // app.put('/teams/:teamId/update', token.needToken, getById.getTeamById, ctrl.updatePersonalTeam);
   app.delete('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.deleteTeam);
   app.post('/teams/:teamId/actions/open', token.needToken, getById.getTeamById, ctrl.openTeam);
   app.post('/teams/:teamId/family_photos', token.needToken, getById.getTeamById, ctrl.uploadFamilyPhotos);

@@ -175,9 +175,9 @@ module.exports = function() {
     });
     describe('用户创建小队', function () {
       var accessToken;
-
+      var data;
       before(function (done) {
-        var data = dataService.getData();
+        data = dataService.getData();
         var user = data[2].teams[0].leaders[0];
         request.post('/users/login')
           .send({
@@ -193,7 +193,27 @@ module.exports = function() {
           });
 
       });
-
+      it('个人创建公司的小队时应该返回403', function (done) {
+        var teamData = {
+          companyId: data[2].model.id,
+          selectedGroups: [
+            {
+              "groupType": "阅读",
+              "entityType": "Reading",
+              "_id": "3"
+            }
+          ]
+        }
+        request.post('/teams')
+          .send(teamData)
+          .set('x-access-token', accessToken)
+          .expect(403)
+          .end(function (err, res) {
+            if (err) return done(err);
+            res.body.msg.should.have.equal("权限错误");
+            done();
+          });
+      });
     });
     
   });
