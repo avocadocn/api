@@ -737,13 +737,14 @@ module.exports = function (app) {
             }
             option={
               'active':true,
-              'cid': requestModal.cid
+              'cid': requestModal.cid,
+              '$or': [{'tid':{'$in':team_ids}},{'tid':{'$size':0}}]
             };
             if(req.query.join_flag=='1'){
               option['campaign_unit.member._id'] = requestId;
             }
             else if (req.query.join_flag=='0') {
-              option['$or'] = [{'tid':{'$in':team_ids}},{'tid':{'$size':0}}];
+              option['$nor'] = [{'campaign_unit.member._id':requestId}];
             }
           break;
           default:
@@ -793,7 +794,7 @@ module.exports = function (app) {
           });
         }
         else {
-          searchCampaign(req.query.select_type, option, sort, limit, null, null, populate, function (err, campaigns) {
+          searchCampaign(req.query.select_type, option, sort, limit, requestId, team_ids, populate, function (err, campaigns) {
             if (err) {
               log(err);
               res.status(500).send('服务器错误');

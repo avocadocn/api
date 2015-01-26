@@ -162,8 +162,6 @@ var createPhotos = function (photoAlbum, campaign, callback) {
 
 
 
-
-
 /**
  * 创建单个活动
  * @param  {[type]}   options       活动的参数 
@@ -193,7 +191,7 @@ var createCampaign = function (options, _callback) {
   var nowMonth = now.getMonth();
   var campaign = new Campaign({
     cid : _options.campaignUnits.length==1?[_options.campaignUnits[0].company._id]:[_options.campaignUnits[0].company._id,_options.campaignUnits[1].company._id],
-    tid : _options.campaign_type==1?undefined:(_options.campaignUnits.length==1? [_options.campaignUnits[0].team._id]:[_options.campaignUnits[0].team._id,_options.campaignUnits[1].team._id]),
+    tid : _options.campaign_type==1?[]:(_options.campaignUnits.length==1? [_options.campaignUnits[0].team._id]:[_options.campaignUnits[0].team._id,_options.campaignUnits[1].team._id]),
     campaign_unit : _options.campaignUnits,
     active : _options.statusType!=4,
     confirm_status : _options.confirm_status,
