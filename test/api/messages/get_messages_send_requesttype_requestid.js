@@ -38,7 +38,7 @@ module.exports = function () {
     });
 
     it('应该成功获取team类型的站内信', function (done) {
-      request.get('/messages/send/private/' + data[0].teams[0].users[1].id)
+      request.get('/messages/send/team/' + data[0].teams[0].users[1].id)
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {

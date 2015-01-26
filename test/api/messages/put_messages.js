@@ -82,7 +82,8 @@ module.exports = function () {
             requestId: data[0].users[0].id
           })
           .send({
-            status: 'read'
+            status: 'read',
+            multi: true
           })
           .expect(200)
           .end(function (err, res) {

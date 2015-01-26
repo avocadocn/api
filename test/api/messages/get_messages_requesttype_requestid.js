@@ -36,6 +36,17 @@ module.exports = function () {
         });
     });
 
+    it('user应该成功收取自己公司的站内信', function (done) {
+      request.get('/messages/company/' + data[0].teams[0].users[1].id)
+        .set('x-access-token', accessToken)
+        .expect(200)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.count.should.be.a.Number;
+          done();
+        });
+    });
+
     it('user不可以接收其他人的站内信', function (done) {
       request.get('/messages/user/' + data[0].teams[0].users[0].id)
         .set('x-access-token', accessToken)
