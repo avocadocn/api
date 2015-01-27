@@ -5,6 +5,7 @@ var common = require('../support/common.js');
 var mongoose = common.mongoose;
 var Company = mongoose.model('Company');
 var tools = require('../../tools/tools.js');
+var async = require('async');
 
 /**
  * 生成公司数据
@@ -50,18 +51,15 @@ var createCompanies = function(callback) {
         },
         invite_key: tools.randomAlphaNumeric(8)
       });
-
-      // Insert the company data to MongoDB 
-      company.save(function(err) {
-        if (err) {
-          console.log(err.stack);
-        }
-      });
-
       companies.push(company);
     });
   }
-  callback(null, companies);
+
+  async.map(companies, function (company, mapCallback) {
+    company.save(mapCallback);
+  }, function (err, results) {
+    callback(err, companies);
+  });
 
 };
 module.exports = createCompanies;

@@ -19,9 +19,14 @@ var CompanyGroup = mongoose.model('CompanyGroup');
  *    campaigns: [doc]
  *  }, function (err) {})
  * @param {Object} companyData
- * @param {Function} callback
+ * @param {Function} callback function(err) {}
  */
 var createFamilyPhotos = function (companyData, callback) {
+
+  if (companyData.teams.length === 0) {
+    callback();
+    return;
+  }
 
   async.map(companyData.teams, function (teamData, mapCallback) {
 

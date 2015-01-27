@@ -5,6 +5,7 @@ var PhotoAlbum = mongoose.model('PhotoAlbum');
 
 var chance = require('chance').Chance();
 var moment = require('moment');
+var async = require('async');
 
 /**
  * 创建小队相册
@@ -14,7 +15,7 @@ var moment = require('moment');
  *    users: [doc],
  *    leaders: [doc],
  *    campaigns: [doc]
- *  });
+ *  }, function (err) {});
  *  调用完该方法后会添加photoAlbums属性，使参数team变为:
  *  {
  *    model: doc,
@@ -23,14 +24,15 @@ var moment = require('moment');
  *    campaigns: [doc],
  *    photoAlbums: [doc] // 0和1用于删除测试，2用于上传测试
  *  }
- *  该方法是异步的，但是并无必要提供全部成功后的回调，没有其它方法需要依赖于该方法
  * @param {Object} team
+ * @param {Function} callback function(err) {}
  */
-var createPhotoAlbums = function (team) {
+var createPhotoAlbums = function (team, callback) {
   // 随机创建相册数
   team.photoAlbums = [];
   var randomAlbumCount = chance.integer({ min: 10, max: 20 });
   if (team.leaders.length < 1) {
+    callback();
     return;
   }
   var leader = team.leaders[0];
@@ -39,6 +41,7 @@ var createPhotoAlbums = function (team) {
     name: leader.nickname,
     type: 'user'
   };
+  var photoAlbums = [];
   for (var i = 0; i < randomAlbumCount; i++) {
     (function () {
       var photoAlbum = new PhotoAlbum({
@@ -54,17 +57,23 @@ var createPhotoAlbums = function (team) {
         update_user: createUser,
         create_user: createUser
       });
-      photoAlbum.save(function (err) {
-        if (err) {
-          console.log('创建小队相册失败');
-          console.log(err);
-        } else {
-          team.photoAlbums.push(photoAlbum);
-        }
-      });
+      photoAlbums.push(photoAlbum);
     }());
   }
 
+  async.map(photoAlbums, function (photoAlbum, mapCallback) {
+    photoAlbum.save(function (err) {
+      if (err) {
+        console.log('创建小队相册失败');
+        mapCallback(err);
+      } else {
+        team.photoAlbums.push(photoAlbum);
+        mapCallback();
+      }
+    });
+  }, function (err, results) {
+    callback(err);
+  });
 
 };
 
