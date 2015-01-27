@@ -8,6 +8,7 @@ var auth = require('../services/auth.js');
 
 module.exports = function (app) {
   return {
+    //这里未用到，与users重复
     getPushStatus: function(req, res){
       User.findById(req.params.userId).exec()
         .then(function (user) {

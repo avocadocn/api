@@ -604,6 +604,7 @@ module.exports = function (app) {
       });
 
     },
+    //进相册看相册数据，并非在首页取全家福
     getFamilyPhotos : function(req, res) {
       var team = req.companyGroup;
       var role = auth.getRole(req.user, {

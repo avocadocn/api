@@ -4,58 +4,75 @@ var app = require('../../../config/express.js'),
 var util = require('util');
 var dataService = require('../../create_data');
 var chance = require('chance').Chance();
+var async = require('async');
 
 module.exports = function () {
   var data, userToken, userToken2, hrToken;
 
   before(function (done) {
     data = dataService.getData();
-    var user = data[0].users[0];
-    var user2 = data[2].users[0];
-    var company = data[0].model;
-    //第一个公司的第一个人
-    request.post('/users/login')
-      .send({
-        email: user.email,
-        password: '55yali'
-      })
-      .expect(200)
-      .end(function (err, res) {
-        if (err) {
-          console.log(res.body);
-          return done(err);
-        }
-        userToken = res.body.token;
-      });
-    //第三个公司的第一个人
-    request.post('/users/login')
-      .send({
-        email: user2.email,
-        password: '55yali'
-      })
-      .expect(200)
-      .end(function (err, res) {
-        if (err) {
-          console.log(res.body);
-          return done(err);
-        }
-        userToken2 = res.body.token;
-      });
-    //第一个公司的hr
-    request.post('/companies/login')
-      .send({
-        username: company.username,
-        password: '55yali'
-      })
-      .expect(200)
-      .end(function (err, res) {
-        if(err) {
-          console.log(res.body);
-          return done(err);
-        }
-        hrToken = res.body.token;
-        done();
-      })
+    
+    
+    
+    async.parallel([
+      function(callback) {
+        //第一个公司的第一个人
+        var user = data[0].users[0];
+        request.post('/users/login')
+          .send({
+            email: user.email,
+            password: '55yali'
+          })
+          .expect(200)
+          .end(function (err, res) {
+            if (err) {
+              console.log(res.body);
+              return done(err);
+            }
+            userToken = res.body.token;
+            callback();
+          });
+      },
+      function(callback) {
+        //第三个公司的第一个人
+        var user2 = data[2].users[0];
+        request.post('/users/login')
+          .send({
+            email: user2.email,
+            password: '55yali'
+          })
+          .expect(200)
+          .end(function (err, res) {
+            if (err) {
+              console.log(res.body);
+              return done(err);
+            }
+            userToken2 = res.body.token;
+            callback();
+          });
+      },
+      function(callback) {
+        //第一个公司的hr
+        var company = data[0].model;
+        request.post('/companies/login')
+          .send({
+            username: company.username,
+            password: '55yali'
+          })
+          .expect(200)
+          .end(function (err, res) {
+            if(err) {
+              console.log(res.body);
+              return done(err);
+            }
+            hrToken = res.body.token;
+            callback();
+          })
+      }
+    ],function(err, results) {
+      if(err) return done(err);
+      else done();
+    })
   })
 
   describe('post /comments/host_type/:hostType/host_id/:hostId', function() {
