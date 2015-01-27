@@ -690,7 +690,7 @@ module.exports = function (app) {
       var user = req.resourceUser;
       var team = req.companyGroup;
       var requestRole = auth.getRole(req.user, {
-        companies:[user.getCid()],
+        companies:[team.cid],
         users:[req.params.userId]
       });
       var requestAllow = auth.auth(requestRole,['joinTeamOperation']);
@@ -706,7 +706,7 @@ module.exports = function (app) {
       });
       var resourceAllow = auth.auth(resourceRole, ['joinTeam'])
       if(!resourceAllow.joinTeam){
-        return res.status(403).send({msg: '参加出错'});
+        return res.status(400).send({msg: '已参加'});
       }else{
         team.member.push({
           '_id':user._id,
