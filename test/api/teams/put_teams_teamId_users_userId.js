@@ -83,7 +83,6 @@ module.exports = function() {
         .set('x-access-token', userAccessToken)
         .expect(403)
         .end(function(err, res) {
-          console.log(res.body);
           if (err) return done(err);
           res.body.msg.should.be.equal('权限错误');
           done();
