@@ -891,6 +891,9 @@ module.exports = function (app) {
             res.sendStatus(404);
             return;
           }
+          if(req.user.getCid().toString() !== team.cid.toString()) {
+            return res.status(403).send({msg:'权限错误'});
+          }
           res.status(200).send({'members':team.member,'leaders':team.leader});
         })
         .then(null, function (err) {
