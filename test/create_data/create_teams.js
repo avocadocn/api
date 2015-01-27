@@ -4,7 +4,7 @@ var chance = require('./chance.js');
 var common = require('../support/common');
 var mongoose = common.mongoose;
 var CompanyGroup = mongoose.model('CompanyGroup');
-
+var async = require('async');
 
 /**
  * 为公司生成小队
@@ -52,10 +52,6 @@ var createTeams = function(company, callback) {
           }
         });
         
-        // Insert the company data to MongoDB
-        team.save(function(err) {
-        });
-        
         var _team = {
           gid : team.gid,
           group_type: team.group_type,
@@ -68,12 +64,23 @@ var createTeams = function(company, callback) {
 
       });
     }
+
     company.team = _teams;
-    company.save(function(err){
 
+    async.parallel({
+      saveTeams: function (parallelCallback) {
+        async.map(teams, function (team, mapCallback) {
+          team.save(mapCallback);
+        }, function (err, results) {
+          parallelCallback(err);
+        });
+      },
+      saveCompany: function (parallelCallback) {
+        company.save(parallelCallback);
+      }
+    }, function (err, results) {
+      callback(err, teams);
     });
-
-    callback(null, teams);
   }
 };
 
