@@ -77,7 +77,7 @@ module.exports = function() {
         .set('x-access-token', userAccessToken[0])
         .expect(200)
         .end(function(err, res) {
-          if (err) console.log(err);
+          if (err) return done(err);
           res.body.should.be.type('object');
           done();
         });
@@ -90,7 +90,7 @@ module.exports = function() {
         .set('x-access-token', userAccessToken[1])
         .expect(200)
         .end(function(err, res) {
-          if (err) console.log(err);
+          if (err) return done(err);
           
           done();
         });
@@ -104,7 +104,7 @@ module.exports = function() {
         .set('x-access-token', userAccessToken[0])
         .expect(403)
         .end(function(err, res) {
-          if (err) console.log(err);
+          if (err) return done(err);
           
           done();
         });
@@ -118,7 +118,7 @@ module.exports = function() {
         .set('x-access-token', companyAccessToken)
         .expect(200)
         .end(function(err, res) {
-          if (err) console.log(err);
+          if (err) return done(err);
           
           res.body.should.be.type('object');
           done();
@@ -133,7 +133,7 @@ module.exports = function() {
         .set('x-access-token', companyAccessToken)
         .expect(403)
         .end(function(err, res) {
-          if (err) console.log(err);
+          if (err) return done(err);
           
           done();
         });
