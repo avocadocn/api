@@ -96,4 +96,5 @@ module.exports = function() {
     getFamilyPhotosTest('本公司HR', 1);
     getFamilyPhotosTest('本小队队员不', 2);
     getFamilyPhotosTest('非本公司HR不', 3);
+  });
 };
