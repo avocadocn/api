@@ -156,6 +156,18 @@ module.exports = function() {
             done();
           });
       });
+      it('重复确认比分应该返回400', function(done) {
+        var campaign = data[0].teams[1].campaigns[1];
+        var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
+        request.put('/components/ScoreBoard/' + scoreBoardId)
+          .set('x-access-token', accessToken[1])
+          .expect(400)
+          .end(function(err, res) {
+            if (err) return done(err);
+            res.body.msg.should.equal('比分已确认。');
+            done();
+          });
+      });
       
     });
 
