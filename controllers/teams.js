@@ -706,7 +706,7 @@ module.exports = function (app) {
       });
       var resourceAllow = auth.auth(resourceRole, ['joinTeam'])
       if(!resourceAllow.joinTeam){
-        return res.status(400).send({msg: '已加入'});
+        return res.status(403).send({msg: '参加出错'});
       }else{
         team.member.push({
           '_id':user._id,
