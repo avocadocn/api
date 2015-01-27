@@ -40,7 +40,7 @@ module.exports = function() {
           });
       });
     });
-    describe('hr修改小队信息', function () {
+    describe('hr关闭小队', function () {
       var hrAccessToken;
       var data;
       before(function (done) {
@@ -70,7 +70,18 @@ module.exports = function() {
             done();
           });
       });
-      it('hr修改其他公司小队名应该返回403', function (done) {
+      it('hr重复关闭公司小队', function (done) {
+        var team = data[2].teams[0].model;
+        request.delete('/teams/'+team.id)
+          .set('x-access-token', hrAccessToken)
+          .expect(400)
+          .end(function (err, res) {
+            if (err) return done(err);
+            res.body.msg.should.equal('该小队已经被关闭');
+            done();
+          });
+      });
+      it('hr关闭其他公司小队名应该返回403', function (done) {
         var team = data[1].teams[0].model;
         request.delete('/teams/'+team.id)
           .set('x-access-token', hrAccessToken)
@@ -78,6 +89,17 @@ module.exports = function() {
           .end(function (err, res) {
             if (err) return done(err);
             res.body.msg.should.equal('权限错误');
+            done();
+          });
+      });
+      it('hr关闭不存在的id的小队名应该返回404', function (done) {
+        var team = data[1].teams[0].model;
+        request.delete('/teams/111')
+          .set('x-access-token', hrAccessToken)
+          .expect(404)
+          .end(function (err, res) {
+            if (err) return done(err);
+            res.body.msg.should.equal('没有找到对应的小队');
             done();
           });
       });

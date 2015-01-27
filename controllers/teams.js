@@ -523,6 +523,9 @@ module.exports = function (app) {
       if(!allow.closeTeam){
         return res.status(403).send({msg: '权限错误'});
       }else{
+        if(!team.active){
+          return res.status(400).send({msg: '该小队已经被关闭'});
+        }
         team.active = false;
         team.save(function(err){
           if(err){
@@ -545,6 +548,9 @@ module.exports = function (app) {
       if(!allow.closeTeam){
         return res.status(403).send({msg: '权限错误'});
       }else{
+        if(team.active){
+          return res.status(400).send({msg: '该小队处于已处于打开状态'});
+        }
         team.active = true;
         team.save(function(err){
           if(err){

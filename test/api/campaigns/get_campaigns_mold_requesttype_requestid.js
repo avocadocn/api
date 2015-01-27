@@ -26,7 +26,6 @@ module.exports = function () {
 
       });
       it('应该成功获取列表-公司', function (done) {
-        var campaign = data[0].campaigns[0];
         request.get('/campaigns/mold/company/' + data[0].model.id)
           .set('x-access-token', accessToken)
           .expect(200)
@@ -37,14 +36,26 @@ module.exports = function () {
           });
       });
       it('应该成功获取列表-小队', function (done) {
-        var campaign = data[0].campaigns[0];
-        request.get('/campaigns/mold/team/' + data[0].teams[0].model.id)
+        var team = data[0].teams[0].model;
+        request.get('/campaigns/mold/team/' + team.id)
           .set('x-access-token', accessToken)
           .expect(200)
           .end(function (err, res) {
             if (err) return done(err);
             res.body.should.be.an.Array.and.an.Object;
-            res.body[0].name.should.equal(data[0].teams[0].model.group_type)
+            res.body[0].name.should.equal(team.group_type)
+            done();
+          });
+      });
+      it('应该成功获取列表-小队', function (done) {
+        var team = data[0].teams[1].model;
+        request.get('/campaigns/mold/team/' + team.id)
+          .set('x-access-token', accessToken)
+          .expect(200)
+          .end(function (err, res) {
+            if (err) return done(err);
+            res.body.should.be.an.Array.and.an.Object;
+            res.body[0].name.should.equal(team.group_type)
             done();
           });
       });
