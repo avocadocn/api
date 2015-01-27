@@ -258,17 +258,13 @@ ScoreBoard.methods = {
       results: [],
       confirm: true
     };
-    var confirmFlag=false;
     for (var i = 0; i < confirmIndex.length; i++) {
       var playing_team = this.playing_teams[confirmIndex[i]];
-      if (!playing_team.confirm) {
-        log.playing_team = {
-          cid: playing_team.cid,
-          tid: playing_team.tid
-        };
-        playing_team.confirm = true;
-        confirmFlag =true;
-      }
+      log.playing_team = {
+        cid: playing_team.cid,
+        tid: playing_team.tid
+      };
+      playing_team.confirm = true;
     }
 
     for (var i = 0; i < this.playing_teams.length; i++) {

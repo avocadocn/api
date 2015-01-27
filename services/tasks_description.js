@@ -31,6 +31,9 @@ var registeredTasks = {
   publishComment: {
     company: ['member']
   },
+  getScoreBoardScore: {
+    company: ['hr','member']
+  },
   setScoreBoardScore: {
     company: ['hr'],
     team: ['leader']

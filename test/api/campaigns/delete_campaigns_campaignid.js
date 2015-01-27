@@ -7,9 +7,9 @@ module.exports = function () {
   describe('delete /campaigns/:campaignId', function () {
     describe('用户关闭活动', function () {
       var accessToken;
-
+      var data;
       before(function (done) {
-        var data = dataService.getData();
+        data = dataService.getData();
         var user = data[2].teams[0].leaders[0];
         request.post('/users/login')
           .send({
@@ -26,7 +26,6 @@ module.exports = function () {
 
       });
       it('应该成功关闭活动', function (done) {
-        var data = dataService.getData();
         var campaign = data[2].teams[0].campaigns[0];
         request.delete('/campaigns/' + campaign.id)
           .set('x-access-token', accessToken)
@@ -38,7 +37,6 @@ module.exports = function () {
           });
       });
       it('应该在活动已经关闭时返回404', function (done) {
-        var data = dataService.getData();
         var campaign = data[2].teams[0].campaigns[0];
         request.delete('/campaigns/'+ campaign.id)
           .set('x-access-token', accessToken)
@@ -61,7 +59,6 @@ module.exports = function () {
       });
 
       it('应该在没有权限时返回403', function (done) {
-        var data = dataService.getData();
         var campaign = data[1].campaigns[0];
         request.delete('/campaigns/'+ campaign.id)
           .set('x-access-token', accessToken)
@@ -73,7 +70,6 @@ module.exports = function () {
           });
       });
       it('应该在没有登录时返回401', function (done) {
-        var data = dataService.getData();
         var campaign = data[1].campaigns[0];
         request.delete('/campaigns/'+ campaign.id)
           .set('x-access-token', '111')
@@ -87,9 +83,9 @@ module.exports = function () {
     });
     describe('hr关闭活动', function () {
       var hrAccessToken;
-
+      var data;
       before(function (done) {
-        var data = dataService.getData();
+        data = dataService.getData();
         var hr = data[2].model;
         request.post('/companies/login')
           .send({
@@ -106,7 +102,6 @@ module.exports = function () {
 
       });
       it('应该成功关闭公司活动', function (done) {
-        var data = dataService.getData();
         var campaign = data[2].campaigns[0];
         request.delete('/campaigns/' + campaign.id)
           .set('x-access-token', hrAccessToken)
@@ -118,7 +113,6 @@ module.exports = function () {
           });
       });
       it('应该成功关闭小队活动', function (done) {
-        var data = dataService.getData();
         var campaign = data[2].teams[0].campaigns[1];
         request.delete('/campaigns/' + campaign.id)
           .set('x-access-token', hrAccessToken)
@@ -130,7 +124,6 @@ module.exports = function () {
           });
       });
       it('应该在关闭其他公司活动时返回403', function (done) {
-        var data = dataService.getData();
         var campaign = data[1].campaigns[0];
         request.delete('/campaigns/'+ campaign.id)
           .set('x-access-token', hrAccessToken)

@@ -589,7 +589,7 @@ var createCampaigns = function (companyDataList, callback) {
                 nickname: companyDataList[0].teams[1].leaders[0].nickname,
                 role: 'LEADER'
               },
-              campaign_mold: companyDataList[0].teams[0].model.group_type,
+              campaign_mold: companyDataList[0].teams[1].model.group_type,
               statusType:argument.statusType
             }
           }
@@ -707,7 +707,8 @@ var createCampaigns = function (companyDataList, callback) {
           nickname: companyDataList[0].teams[0].leaders[0].nickname,
           role: 'LEADER'
         },
-        campaign_mold: companyDataList[0].teams[0].model.group_type,
+        //足球类型
+        campaign_mold: companyDataList[0].teams[1].model.group_type,
         statusType:argument.statusType
       }
     }

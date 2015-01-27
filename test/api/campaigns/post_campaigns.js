@@ -12,8 +12,9 @@ module.exports = function () {
       var now = new Date();
       var nowYear = now.getFullYear();
       var nowMonth = now.getMonth();
+      var data;
       before(function (done) {
-        var data = dataService.getData();
+        data = dataService.getData();
         var user = data[0].teams[0].leaders[0];
         request.post('/users/login')
           .send({
@@ -30,7 +31,6 @@ module.exports = function () {
 
       });
       it('应该成功发活动', function (done) {
-        var data = dataService.getData();
         var campaignData = {
           cid: [data[0].model.id],
           tid: [data[0].teams[0].model.id],
@@ -55,7 +55,6 @@ module.exports = function () {
           });
       });
       it('个人发公司活动时活动应该返回403', function (done) {
-        var data = dataService.getData();
         var campaignData = {
           cid: [data[0].model.id],
           campaign_type: 1,
@@ -82,7 +81,6 @@ module.exports = function () {
         var _expectStatus = expectStatus !=undefined ? expectStatus : 400;
         var msg = util.format('应该在数据%s错误时返回%s', theme, _expectStatus);
         it(msg, function (done) {
-          var data = dataService.getData();
           var _campaignData = {
             cid: campaignData.cid!=undefined ? campaignData.cid : [data[0].model.id],
             tid: campaignData.tid!=undefined ? campaignData.tid : [data[0].teams[0].model.id],
@@ -122,9 +120,9 @@ module.exports = function () {
       var nowYear = now.getFullYear();
       var nowMonth = now.getMonth();
       var hrAccessToken;
-
+      var data;
       before(function (done) {
-        var data = dataService.getData();
+        data = dataService.getData();
         var hr = data[0].model;
         request.post('/companies/login')
           .send({
@@ -141,7 +139,6 @@ module.exports = function () {
 
       });
       it('应该成功发公司活动', function (done) {
-        var data = dataService.getData();
         var campaignData = {
           cid: [data[0].model.id],
           campaign_type: 1,
@@ -165,7 +162,6 @@ module.exports = function () {
           });
       });
       it('应该成功发小队活动', function (done) {
-        var data = dataService.getData();
         var campaignData = {
           cid: [data[0].model.id],
           tid: [data[0].teams[0].model.id],
@@ -190,7 +186,6 @@ module.exports = function () {
           });
       });
       it('hr发其他公司活动时活动应该返回403', function (done) {
-        var data = dataService.getData();
         var campaignData = {
           cid: [data[1].model.id],
           campaign_type: 1,
@@ -217,7 +212,6 @@ module.exports = function () {
         var _expectStatus = expectStatus !=undefined ? expectStatus : 400;
         var msg = util.format('应该在数据%s错误时返回%s', theme, _expectStatus);
         it(msg, function (done) {
-          var data = dataService.getData();
           var _campaignData = {
             cid: campaignData.cid!=undefined ? campaignData.cid : [data[0].model.id],
             tid: campaignData.tid!=undefined ? campaignData.tid : [data[0].teams[0].model.id],
