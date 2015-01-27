@@ -67,7 +67,6 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
       _option.tid = {'$in':teamIds}
     break;
     default:
-      return callback('err',[]);
     break;
   }
   Campaign

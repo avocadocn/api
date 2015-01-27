@@ -45,7 +45,9 @@ module.exports = function () {
             .query(queryData)
             .expect(200)
             .end(function (err, res) {
-              if (err) return done(err);
+              if (err){
+                return done(err);
+              }
               res.body.should.be.instanceof(Array).and.have.lengthOf(expectLength);
               if(queryData=='0'){
                 res.body[0].should.be.instanceof(Array).and.have.lengthOf(expectLength);
