@@ -17,7 +17,7 @@ var createConfig = require('./create_config.js');
 var createRegion = require('./create_region.js');
 var createGroups = require('./create_groups.js');
 var createCampaignMold = require('./create_mold.js');
-
+var createFamilyPhotos = require('./create_family_photos.js');
 var createPhotoAlbums = require('./create_photo_albums.js');
 var createMessages = require('./create_messages.js');
 
@@ -108,6 +108,10 @@ exports.createData = function (callback) {
           // 用户加入小队
           console.log('让公司的用户加入小队');
           addUsersToTeams(resCompanyData, waterfallCallback);
+        },
+        function (waterfallCallback) {
+          console.log('创建小队全家福照片');
+          createFamilyPhotos(resCompanyData, waterfallCallback);
         },
         function (waterfallCallback) {
           // 创建小队相册, 这是个异步过程，但不影响后面创建和参加活动，所以使用回调获取结果，减少流程复杂度
@@ -225,4 +229,3 @@ exports.getGroups = function () {
 };
 
 exports.createMessages = createMessages;
-

@@ -86,11 +86,6 @@ var addUsersToTeams = function (companyData, callback) {
         }
       }
     }
-    companyData.users[i].save(function(err) {
-      if(err) {
-        console.log(err);
-      }
-    });
   }
   for(var i=0; i<userLength; i++) {
     for(var j=0; j<teamLength; j++) {
@@ -103,14 +98,28 @@ var addUsersToTeams = function (companyData, callback) {
     }
   }
 
-  for(var k =0; k<teamLength; k++) {
-    companyData.teams[k].model.save(function(err) {
-      if(err) {
-        console.log(err);
-      }
-    });
-  }
-  callback();
+  async.parallel({
+    saveUsers: function (parallelCallback) {
+      async.map(companyData.users, function (user, mapCallback) {
+        user.save(mapCallback);
+      }, function (err, results) {
+        parallelCallback(err);
+      });
+    },
+    saveTeams: function (parallelCallback) {
+      var teams = [];
+      companyData.teams.forEach(function (team) {
+        teams.push(team.model);
+      });
+      async.map(teams, function (team, mapCallback) {
+        team.save(mapCallback);
+      }, function (err, results) {
+        parallelCallback(err);
+      });
+    }
+  }, function (err, results) {
+    callback(err);
+  });
 };
 
 module.exports = addUsersToTeams;
