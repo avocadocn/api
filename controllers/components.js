@@ -6,7 +6,7 @@ var message = require('../controllers/message.js');
 var log = require('../services/error_log.js');
 var Campaign = mongoose.model('Campaign');
 var CompanyGroup = mongoose.model('CompanyGroup');
-
+var donlerValidator = require('../services/donler_validator.js');
 /**
  * 发送比分请求、接受比分的站内信
  * @param  {Object} req        request
@@ -64,10 +64,26 @@ module.exports = function (app) {
 
   return {
     ScoreBoard : {
-
+      setScoreValidate: function (req, res, next) {
+        donlerValidator({
+          data: {
+            name: 'data',
+            value: req.body.data,
+            validators: ['required']
+          }
+        }, 'fast', function (pass, msg) {
+          if (pass) {
+            next();
+          } else {
+            var resMsg = donlerValidator.combineMsg(msg);
+            return res.status(400).send({ msg: resMsg });
+          }
+        });
+      },
       setScore: function (req, res) {
-        // todo 过滤请求参数
-
+        if(!mongoose.Types.ObjectId.isValid(req.params.componentId)){
+          return res.status(400).send({ msg: '参数错误' });
+        }
         mongoose.model('ScoreBoard').findById(req.params.componentId).exec()
           .then(function (scoreBoard) {
             if (!scoreBoard) {
@@ -78,12 +94,16 @@ module.exports = function (app) {
               .exec()
               .then(function (campaign) {
                 if (!campaign) {
-                  res.status(404).send('未找到活动')
+                  return res.status(404).send({ msg: '未找到活动'})
+                }
+                else if (!campaign.active) {
+                  return res.status(400).send({ msg: '活动已经关闭'})
+                }
+                else if(campaign.start_time> Date.now()){
+                  return res.status(400).send({msg:'活动还未开始，无法设置比分'})
                 }
                 else{
-                  if(campaign.start_time> Date.now()){
-                    return res.status(400).send({msg:'活动还未开始，无法设置比分'})
-                  }
+
                   var leaderTeam;
                   var opponentTid;
                   var allows = [];
@@ -139,7 +159,8 @@ module.exports = function (app) {
                 }
               })
               .then(null, function (err) {
-                res.status(500).send('服务器错误');
+                console.log(err);
+                return res.status(500).send({ msg: '服务器错误'});
               });
             }
           })
@@ -150,53 +171,77 @@ module.exports = function (app) {
       },
 
       confirmScore: function (req, res) {
-
+        if(!mongoose.Types.ObjectId.isValid(req.params.componentId)){
+          return res.status(400).send({ msg: '参数错误' });
+        }
         mongoose.model('ScoreBoard').findById(req.params.componentId).exec()
           .then(function (scoreBoard) {
             if (!scoreBoard) {
-              res.status(404).send({msg: '找不到该组件' });
-            } else {
-              if (scoreBoard.status === 2) {
-                return res.status(400).send({msg: '比分已确认。' });
-              }
-              var leaderTeam;
-              var opponentTid;
-
-              var confirmIndex = [];
-              for (var i = 0; i < scoreBoard.playing_teams.length; i++) {
-                var playing_team = scoreBoard.playing_teams[i];
-                var role = auth.getRole(req.user, {
-                  companies: [playing_team.cid],
-                  teams: [playing_team.tid]
-                });
-                var allow = auth.auth(role, ['confirmScoreBoardScore']);
-                if (allow.confirmScoreBoardScore) {
-                  confirmIndex.push(i);
+              return res.status(404).send({msg: '找不到该组件' });
+            }
+            else if (scoreBoard.status === 0) {
+              return res.status(400).send({msg: '比分没有设置。' });
+            }
+            else if (scoreBoard.status === 2) {
+              return res.status(400).send({msg: '比分已确认。' });
+            }
+            else {
+              Campaign
+              .findById(scoreBoard.host_id)
+              .exec()
+              .then(function (campaign) {
+                if (!campaign) {
+                  return  res.status(404).send({ msg: '未找到活动'})
                 }
-                if (req.user.provider === 'user') {
-                  var isLeader = req.user.isTeamLeader(playing_team.tid);
-                  if (isLeader) {
-                    leaderTeam = playing_team;
-                  } else {
-                    opponentTid = playing_team.tid;
+                else if (!campaign.active) {
+                  return res.status(400).send({ msg: '活动已经关闭'})
+                }
+                else if(campaign.start_time> Date.now()){
+                  return res.status(400).send({msg:'活动还未开始，无法设置比分'})
+                }
+                else{
+                  var leaderTeam;
+                  var opponentTid;
+
+                  var confirmIndex = [];
+                  for (var i = 0; i < scoreBoard.playing_teams.length; i++) {
+                    var playing_team = scoreBoard.playing_teams[i];
+                    var role = auth.getRole(req.user, {
+                      companies: [playing_team.cid],
+                      teams: [playing_team.tid]
+                    });
+                    var allow = auth.auth(role, ['confirmScoreBoardScore']);
+                    //当有未确认比分的队伍时加入到数值中去操作
+                    if (allow.confirmScoreBoardScore&&!playing_team.confirm) {
+                      confirmIndex.push(i);
+                    }
+                    if (req.user.provider === 'user') {
+                      var isLeader = req.user.isTeamLeader(playing_team.tid);
+                      if (isLeader) {
+                        leaderTeam = playing_team;
+                      } else {
+                        opponentTid = playing_team.tid;
+                      }
+                    }
+                  }
+                  //如果一个都没有说明没有权限，目前只有两个队，所以如果有权限则数组中有一个
+                  if(confirmIndex.length==0){
+                    return res.status(403).send({msg: '没有确认该比分的权限' });
+                  }
+                  scoreBoard.confirm(confirmIndex);
+                  scoreBoard.save(function (err) {
+                    if (err) {
+                      return res.status(500).send({msg: err });
+                    } else {
+                      res.sendStatus(200);
+                    }
+                  });
+                  // 发站内信
+                  if (opponentTid) {
+                    sendScoreBoardMessage(req, scoreBoard, leaderTeam, 3, opponentTid);
                   }
                 }
-              }
-              if(confirmIndex.length==0){
-                return res.status(400).send({msg: '没有确认该比分的权限' });
-              }
-              scoreBoard.confirm(confirmIndex);
-              scoreBoard.save(function (err) {
-                if (err) {
-                  return res.status(500).send({msg: err });
-                } else {
-                  res.sendStatus(200);
-                }
               });
-              // 发站内信
-              if (opponentTid) {
-                sendScoreBoardMessage(req, scoreBoard, leaderTeam, 3, opponentTid);
-              }
             }
           })
           .then(null, function (err) {
@@ -205,13 +250,27 @@ module.exports = function (app) {
       },
 
       getLogs: function (req, res) {
+        if(!mongoose.Types.ObjectId.isValid(req.params.componentId)){
+          return res.status(400).send({ msg: '参数错误' });
+        }
         mongoose.model('ScoreBoard')
         .findById(req.params.componentId)
         .exec()
         .then(function (scoreBoard) {
           if (!scoreBoard) {
-            res.status(404).send({msg: '找不到该组件' });
+            return res.status(404).send({msg: '找不到该组件' });
           } else {
+            var cids =[];
+            scoreBoard.playing_teams.forEach(function(playing_team, index){
+              cids.push(playing_team.cid);
+            });
+            var role = auth.getRole(req.user, {
+              companies: cids
+            });
+            var allow = auth.auth(role, ['getScoreBoardScore']);
+            if(!allow.getScoreBoardScore) {
+              return res.status(403).send({msg: '没有此权限' });
+            }
             var logs = scoreBoard.getLogs();
             return res.status(200).send(logs);
           }

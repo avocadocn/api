@@ -9,7 +9,6 @@ module.exports = function () {
     var data;
     describe('用户退出活动', function () {
         var accessToken;
-        
         before(function (done) {
           data = dataService.getData();
           var user = data[1].teams[0].users[0];

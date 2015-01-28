@@ -34,6 +34,10 @@ before(function (done) {
         createDataModule.createData(parallelCallback);
       }
     }, function (err, results) {
+      if (err) {
+        done(err);
+        return;
+      }
       createDataModule.createMessages(createDataModule.getData()[0], done);
     });
     

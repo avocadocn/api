@@ -110,17 +110,23 @@ exports.createData = function (callback) {
           addUsersToTeams(resCompanyData, waterfallCallback);
         },
         function (waterfallCallback) {
-          console.log('创建小队全家福照片');
+          console.log('加入小队成功');
+          console.log('开始创建小队全家福照片');
           createFamilyPhotos(resCompanyData, waterfallCallback);
         },
         function (waterfallCallback) {
-          // 创建小队相册, 这是个异步过程，但不影响后面创建和参加活动，所以使用回调获取结果，减少流程复杂度
-          resCompanyData.teams.forEach(function (team) {
-            createPhotoAlbums(team);
+          console.log('创建小队全家福相册成功');
+          console.log('开始创建小队相册');
+          async.map(resCompanyData.teams, function (team, mapCallback) {
+            createPhotoAlbums(team, mapCallback);
+          }, function (err, results) {
+            console.log(typeof waterfallCallback);
+            waterfallCallback(err);
           });
-
+        },
+        function (waterfallCallback) {
           // 生成除跨公司挑战外的活动并让部分成员加入
-          console.log('加入小队成功，开始生成除跨公司挑战外的活动');
+          console.log('创建小队相册成功，开始生成除跨公司挑战外的活动');
           createCampaigns([resCompanyData], function (err, companyData) {
             waterfallCallback(err, companyData);
           });
@@ -128,7 +134,7 @@ exports.createData = function (callback) {
       ], function (err, result) {
         if (err) {
           console.error('生成公司', company.info.name, '的活动失败');
-          callback(err);
+          mapCallback(err);
           return;
         }
         // mapCallback 公司及小队数据，以便生成跨公司挑战

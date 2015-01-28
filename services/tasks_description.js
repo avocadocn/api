@@ -31,6 +31,9 @@ var registeredTasks = {
   publishComment: {
     company: ['member']
   },
+  getScoreBoardScore: {
+    company: ['hr','member']
+  },
   setScoreBoardScore: {
     company: ['hr'],
     team: ['leader']
@@ -194,9 +197,11 @@ var registeredTasks = {
     company: ['hr']
   },
   // 能操作某user加入小队
-  joinTeamOperation: {
-    company: ['hr'],
-    user: ['self']
+  joinTeamOperation: function(role) {
+    if (role.company === 'member' && role.user ==='self' || role.company === 'hr')
+      return true;
+    else
+      return false;
   },
   // 能操作某user退出小队
   quitTeamOperation: {

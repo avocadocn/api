@@ -7,9 +7,9 @@ module.exports = function () {
   describe('get /campaigns/:campaignId', function () {
 
     var accessToken;
-
+    var data;
     before(function (done) {
-      var data = dataService.getData();
+      data = dataService.getData();
       var user = data[0].users[0];
       request.post('/users/login')
         .send({
@@ -27,7 +27,6 @@ module.exports = function () {
     });
 
     it('应该获取公司公司活动', function (done) {
-      var data = dataService.getData();
       var campaign = data[0].campaigns[0];
       request.get('/campaigns/' + campaign.id)
         .set('x-access-token', accessToken)
@@ -40,7 +39,6 @@ module.exports = function () {
     });
 
     it('应该获取小队活动', function (done) {
-      var data = dataService.getData();
       var campaign = data[0].teams[0].campaigns[0];
       request.get('/campaigns/' + campaign.id)
         .set('x-access-token', accessToken)
@@ -63,7 +61,6 @@ module.exports = function () {
     });
 
     it('应该在没有权限获取时返回403', function (done) {
-      var data = dataService.getData();
       var campaign = data[1].campaigns[0];
       request.get('/campaigns/' + campaign.id)
         .set('x-access-token', accessToken)
@@ -75,17 +72,16 @@ module.exports = function () {
         });
     });
     it('应该在没有登录时返回401', function (done) {
-        var data = dataService.getData();
-        var campaign = data[0].campaigns[0];
-        request.get('/campaigns/' + campaign.id)
-          .set('x-access-token', '111')
-          .expect(401)
-          .end(function (err, res) {
-            if (err) return done(err);
-            res.body.msg.should.equal('您没有登录或者登录超时，请重新登录');
-            done();
-          });
-      });
+      var campaign = data[0].campaigns[0];
+      request.get('/campaigns/' + campaign.id)
+        .set('x-access-token', '111')
+        .expect(401)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.msg.should.equal('您没有登录或者登录超时，请重新登录');
+          done();
+        });
+    });
   });
 };
 

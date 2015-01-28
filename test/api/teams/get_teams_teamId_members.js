@@ -65,11 +65,9 @@ module.exports = function() {
           companyAccessToken = res.body.token;
           done();
         });
-
-
     });
 
-    it('用户获取所在小队队员信息', function(done) {
+    it('用户获取所在小队队员信息应返回200', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
 
@@ -83,7 +81,7 @@ module.exports = function() {
         });
     });
 
-    it('用户获取所在公司其他小队队员信息', function(done) {
+    it('用户获取所在公司其他小队队员信息应返回200', function(done) {
       var data = dataService.getData();
       var user = data[0].users[2];
       request.get('/teams/'+ user.team[0]._id + '/members')
@@ -97,7 +95,7 @@ module.exports = function() {
     });
 
     // Produre Error: a user can't get members of teams of other company.
-    it('用户获取其他公司小队队员信息，权限不够', function(done) {
+    it('用户获取其他公司小队队员信息应返回403', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
       request.get('/teams/'+ data[1].users[0].team[0]._id + '/members')
@@ -110,7 +108,7 @@ module.exports = function() {
         });
     });
 
-    it('HR获取其公司小队队员信息', function(done) {
+    it('公司HR获取其公司小队队员信息应返回200', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
 
@@ -119,13 +117,12 @@ module.exports = function() {
         .expect(200)
         .end(function(err, res) {
           if (err) return done(err);
-          
           res.body.should.be.type('object');
           done();
         });
     });
     // Produre Error: a company can't get members of teams of other company.
-    it('HR获取其他公司小队队员信息，权限不够', function(done) {
+    it('公司HR获取其他公司小队队员信息应返回403', function(done) {
       var data = dataService.getData();
       var user = data[1].users[0];
 
@@ -134,7 +131,6 @@ module.exports = function() {
         .expect(403)
         .end(function(err, res) {
           if (err) return done(err);
-          
           done();
         });
     });
