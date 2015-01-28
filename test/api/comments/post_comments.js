@@ -11,9 +11,7 @@ module.exports = function () {
 
   before(function (done) {
     data = dataService.getData();
-    
-    
-    
+
     async.parallel([
       function(callback) {
         //第一个公司的第一个人
@@ -110,7 +108,6 @@ module.exports = function () {
               res.body.comment.content.should.equal(content);
               done();
             })
-
         });
       }
       publishCommentSuccessTest('单队活动',1);

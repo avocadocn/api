@@ -94,18 +94,35 @@ module.exports = function () {
         async.whilst(
           function () {return j<5;},
           function (cb) {
-            request.post('/comments/host_type/campaign/host_id/' + hostId)
-              .set('x-access-token', userToken[1])
-              .send({content:chance.string()})
-              .expect(200)
-              .end(function (r_err,res) {
-                if(r_err) return cb(r_err);
-                else {
-                  comments[j] = res.body.comment;
-                  j++;
-                  cb();
-                }
-              })
+            if(j===0){
+              request.post('/comments/host_type/campaign/host_id/' + hostId)
+                .set('x-access-token', userToken[1])
+                .send({content:chance.string()})
+                .attach('photo', __dirname + '/test_photo.png')
+                .expect(200)
+                .end(function (r_err,res) {
+                  if(r_err) return cb(r_err);
+                  else {
+                    comments[j] = res.body.comment;
+                    j++;
+                    cb();
+                  }
+                })
+            }
+            else {
+              request.post('/comments/host_type/campaign/host_id/' + hostId)
+                .set('x-access-token', userToken[1])
+                .send({content:chance.string()})
+                .expect(200)
+                .end(function (r_err,res) {
+                  if(r_err) return cb(r_err);
+                  else {
+                    comments[j] = res.body.comment;
+                    j++;
+                    cb();
+                  }
+                })
+            }
           },
           //whilst error
           function(w_err) {
