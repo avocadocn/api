@@ -69,7 +69,7 @@ module.exports = function() {
 
     });
 
-    it('有效用户获取所在小队标签信息', function(done) {
+    it('用户获取所在小队标签信息', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
 
@@ -83,7 +83,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取所在公司其他小队标签信息', function(done) {
+    it('用户获取所在公司其他小队标签信息', function(done) {
       var data = dataService.getData();
       var user = data[0].users[2];
       request.get('/teams/'+ user.team[0]._id + '/tags')
@@ -97,7 +97,7 @@ module.exports = function() {
     });
 
     // Produre Error: a user can't get tags of teams of other company.
-    it('有效用户获取其他公司小队标签信息，权限不够', function(done) {
+    it('用户获取其他公司小队标签信息，权限不够', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
       request.get('/teams/'+ data[1].users[0].team[0]._id + '/tags')
@@ -110,7 +110,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其公司小队标签信息', function(done) {
+    it('HR获取其公司小队标签信息', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
 
@@ -125,7 +125,7 @@ module.exports = function() {
         });
     });
     // Produre Error: a company can't get tags of teams of other company.
-    it('有效公司获取其他公司小队标签信息，权限不够', function(done) {
+    it('HR获取其他公司小队标签信息，权限不够', function(done) {
       var data = dataService.getData();
       var user = data[1].users[0];
 

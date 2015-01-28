@@ -267,7 +267,70 @@ module.exports = function () {
       });
     });
 
+    describe('date', function () {
+      it('"2011-08-04"或"08/04/2011"应该是有效的日期', function () {
+        donlerValidator({
+          date1: {
+            name: 'date1',
+            value: '2011-08-04',
+            validators: ['date']
+          },
+          date2: {
+            name: 'date2',
+            value: '08/04/2011',
+            validators: ['date']
+          }
+        }, 'complete', function (pass, msg) {
+          pass.should.be.true;
+        });
+      });
 
+      it('"foo"和"2011-Jan-04"不是有效的日期', function () {
+        donlerValidator({
+          date1: {
+            name: 'date1',
+            value: 'foo',
+            validators: ['date']
+          },
+          date2: {
+            name: 'date2',
+            value: '2011-foos-04',
+            validators: ['date']
+          }
+        }, 'complete', function (pass, msg) {   
+          pass.should.be.false;
+          msg.date1.should.equal('date1不是有效的日期格式');
+          msg.date2.should.equal('date2不是有效的日期格式');
+        });
+      });
+    });
+
+    describe('region', function() {
+      it('"广西,梧州市,长洲区"应该是有效的省市区', function() {
+        donlerValidator({
+          region: {
+            name: 'region',
+            value: '广西,梧州市,长洲区',
+            validators: ['region']
+          }
+        }, 'complete', function(pass, msg) {
+          pass.should.be.true;
+        });
+      });
+
+      it('"广西,福州市,长洲区"不是有效的省市区', function() {
+        donlerValidator({
+          region: {
+            name: 'region',
+            value: 'foo',
+            validators: ['region']
+          }
+        }, 'complete', function(pass, msg) {
+          pass.should.be.false;
+          msg.region.should.equal('region不是有效的日期格式');
+        });
+      });
+    });
   });
 };
 

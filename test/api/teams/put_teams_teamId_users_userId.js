@@ -75,6 +75,7 @@ module.exports = function() {
         .set('x-access-token', userAccessToken)
         .expect(400)
         .end(function(err, res) {
+          console.log(res.body);
           if (err) return done(err);
           res.body.msg.should.be.equal('已加入');
           done();

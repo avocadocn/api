@@ -74,7 +74,7 @@ module.exports = function() {
     });
     // Routes: get /timeline/record/{requestType}/{requestId} 
     //  and get /timeline/data/{requestType}/{requestId} 
-    it('有效用户获取活动时间', function(done) {
+    it('用户获取活动时间', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
       
@@ -91,7 +91,7 @@ module.exports = function() {
       
     });
 
-    it('有效用户获取活动内容', function(done) {
+    it('用户根据活动时间获取活动内容', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
       request.get('/timeline/data/user/' + user._id.toString() + '?year=' + year + '&month=' + month)
@@ -103,7 +103,7 @@ module.exports = function() {
         });
     });
     
-    it('有效用户获取所在公司活动时间', function(done) {
+    it('用户获取所在公司活动时间', function(done) {
       var data = dataService.getData();
       var company = data[0].model;
       request.get('/timeline/record/company/' + company._id.toString())
@@ -117,7 +117,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取所在公司活动内容', function(done) {
+    it('用户根据活动时间获取所在公司活动内容', function(done) {
       var data = dataService.getData();
       var company = data[0].model;
       request.get('/timeline/data/company/' + company._id.toString() + '?year=' + year + '&month=' + month)
@@ -129,7 +129,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取所在小队活动时间', function(done) {
+    it('用户获取所在小队活动时间', function(done) {
       var data = dataService.getData();
       var team = data[0].users[0].team[0];
       request.get('/timeline/record/team/' + team._id.toString())
@@ -143,7 +143,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取所在小队活动内容', function(done) {
+    it('用户根据活动时间获取所在小队活动内容', function(done) {
       var data = dataService.getData();
       var team = data[0].users[0].team[0];
       request.get('/timeline/data/team/' + team._id.toString() + '?year=' + year + '&month=' + month)
@@ -155,7 +155,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取所在公司其它小队活动时间', function(done) {
+    it('用户获取所在公司其他小队活动时间', function(done) {
       var data = dataService.getData();
       var team = data[0].users[2].team[0];
       request.get('/timeline/record/team/' + team._id.toString())
@@ -169,7 +169,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取所在公司其它小队活动内容', function(done) {
+    it('用户根据活动时间获取所在公司其他小队活动内容', function(done) {
       var data = dataService.getData();
       var team = data[0].users[2].team[0];
       request.get('/timeline/data/team/' + team._id.toString() + '?year=' + year + '&month=' + month)
@@ -181,7 +181,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取其它公司用户活动时间，权限不够', function(done) {
+    it('用户无法获取其他公司用户活动时间，权限不够', function(done) {
       var data = dataService.getData();
       var user = data[1].users[0];
       request.get('/timeline/record/user/' + user._id.toString())
@@ -194,7 +194,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取其它公司活动时间，权限不够', function(done) {
+    it('用户无法获取其他公司活动时间，权限不够', function(done) {
       var data = dataService.getData();
       var company = data[1].model;
       request.get('/timeline/record/company/' + company._id.toString())
@@ -207,7 +207,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取其它公司小队活动时间，权限不够', function(done) {
+    it('用户无法获取其他公司小队活动时间，权限不够', function(done) {
       var data = dataService.getData();
       var team = data[1].users[0].team[0];
       request.get('/timeline/record/team/' + team._id.toString())
@@ -220,7 +220,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其员工活动时间', function(done) {
+    it('HR获取其员工活动时间', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
       request.get('/timeline/record/user/' + user._id.toString())
@@ -234,7 +234,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其员工活动内容', function(done) {
+    it('HR根据活动时间获取其员工活动内容', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
       request.get('/timeline/data/user/' + user._id.toString() + '?year=' + year + '&month=' + month)
@@ -246,7 +246,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其小队活动时间', function(done) {
+    it('HR获取其小队活动时间', function(done) {
       var data = dataService.getData();
       var team = data[0].teams[0].model;
       request.get('/timeline/record/team/' + team._id.toString())
@@ -260,7 +260,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其小队活动内容', function(done) {
+    it('HR根据活动时间获取其小队活动内容', function(done) {
       var data = dataService.getData();
       var team = data[0].teams[0].model;
       request.get('/timeline/data/team/' + team._id.toString() + '?year=' + year + '&month=' + month)
@@ -272,7 +272,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其公司活动时间', function(done) {
+    it('HR获取其公司活动时间', function(done) {
       var data = dataService.getData();
       var company = data[0].model;
       request.get('/timeline/record/company/' + company._id.toString())
@@ -286,7 +286,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其公司活动内容', function(done) {
+    it('HR根据活动时间获取其公司活动内容', function(done) {
       var data = dataService.getData();
       var company = data[0].model;
       request.get('/timeline/data/company/' + company._id.toString() + '?year=' + year + '&month=' + month)
@@ -298,7 +298,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其它公司员工活动时间，权限不够', function(done) {
+    it('HR无法获取其他公司员工活动时间，权限不够', function(done) {
       var data = dataService.getData();
       var user = data[1].users[1];
       request.get('/timeline/record/user/' + user._id.toString())
@@ -311,7 +311,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其小队活动时间，权限不够', function(done) {
+    it('HR无法获取其小队活动时间，权限不够', function(done) {
       var data = dataService.getData();
       var team = data[1].teams[0].model;
       request.get('/timeline/record/team/' + team._id.toString())
@@ -324,7 +324,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其它公司活动时间，权限不够', function(done) {
+    it('HR无法获取其他公司活动时间，权限不够', function(done) {
       var data = dataService.getData();
       var company = data[1].model;
       request.get('/timeline/record/company/' + company._id.toString())
@@ -338,7 +338,7 @@ module.exports = function() {
     });
     // Route: get /timeline/{requestType}/{requestId} 
     // 
-    it('有效用户获取2页活动', function(done) {
+    it('用户获取2页活动', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
       
@@ -352,7 +352,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取所在公司2页活动', function(done) {
+    it('用户获取所在公司2页活动', function(done) {
       var data = dataService.getData();
       var company = data[0].model;
       request.get('/timeline/company/' + company._id.toString() + '?page=2')
@@ -364,7 +364,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取所在小队2页活动', function(done) {
+    it('用户获取所在小队2页活动', function(done) {
       var data = dataService.getData();
       var team = data[0].users[0].team[0];
       request.get('/timeline/team/' + team._id.toString() + '?page=2')
@@ -377,7 +377,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取所在公司其它小队2页活动', function(done) {
+    it('用户获取所在公司其他小队2页活动', function(done) {
       var data = dataService.getData();
       var team = data[0].users[2].team[0];
       request.get('/timeline/team/' + team._id.toString() + '?page=2')
@@ -389,7 +389,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取其它公司用户2页活动，权限不够', function(done) {
+    it('用户无法获取其他公司用户2页活动，权限不够', function(done) {
       var data = dataService.getData();
       var user = data[1].users[0];
       request.get('/timeline/user/' + user._id.toString() + '?page=2')
@@ -402,7 +402,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取其它公司2页活动，权限不够', function(done) {
+    it('用户无法获取其他公司2页活动，权限不够', function(done) {
       var data = dataService.getData();
       var company = data[1].model;
       request.get('/timeline/company/' + company._id.toString() + '?page=2')
@@ -415,7 +415,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取其它公司小队2页活动，权限不够', function(done) {
+    it('用户无法获取其他公司小队2页活动，权限不够', function(done) {
       var data = dataService.getData();
       var team = data[1].users[0].team[0];
       request.get('/timeline/team/' + team._id.toString() + '?page=2')
@@ -428,7 +428,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其员工2页活动', function(done) {
+    it('HR获取其员工2页活动', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
       request.get('/timeline/user/' + user._id.toString() + '?page=2')
@@ -440,7 +440,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其小队2页活动', function(done) {
+    it('HR获取其小队2页活动', function(done) {
       var data = dataService.getData();
       var team = data[0].teams[0].model;
       request.get('/timeline/team/' + team._id.toString() + '?page=2')
@@ -452,7 +452,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其公司2页活动', function(done) {
+    it('HR获取其公司2页活动', function(done) {
       var data = dataService.getData();
       var company = data[0].model;
       request.get('/timeline/company/' + company._id.toString() + '?page=2')
@@ -464,7 +464,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其它公司员工2页活动，权限不够', function(done) {
+    it('HR无法获取其他公司员工2页活动，权限不够', function(done) {
       var data = dataService.getData();
       var user = data[1].users[1];
       request.get('/timeline/user/' + user._id.toString() + '?page=2')
@@ -477,7 +477,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其小队活动，权限不够', function(done) {
+    it('HR无法获取其他公司小队活动，权限不够', function(done) {
       var data = dataService.getData();
       var team = data[1].teams[0].model;
       request.get('/timeline/team/' + team._id.toString() + '?page=2')
@@ -490,7 +490,7 @@ module.exports = function() {
         });
     });
 
-    it('有效公司获取其它公司2页活动，权限不够', function(done) {
+    it('HR无法获取其他公司2页活动，权限不够', function(done) {
       var data = dataService.getData();
       var company = data[1].model;
       request.get('/timeline/company/' + company._id.toString())

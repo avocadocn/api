@@ -35,7 +35,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取作为队长身份的小队', function(done) {
+    it('用户获取作为队长身份的小队', function(done) {
       request.get('/teams/lead/list')
         .set('x-access-token', userAccessToken)
         .expect(200)
@@ -46,7 +46,7 @@ module.exports = function() {
         });
     });
 
-    it('有效用户获取指定类型的小队', function(done) {
+    it('用户获取指定类型的小队', function(done) {
       var data = dataService.getData();
       var user = data[0].users[0];
       // 此类型：用户为队长
