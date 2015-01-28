@@ -574,7 +574,8 @@ module.exports = function (app) {
               res.status(200).send({
                 token: token,
                 id:user._id,
-                cid:user.cid
+                cid:user.cid,
+                role:user.role
               });
             }
           });

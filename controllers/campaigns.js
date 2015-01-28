@@ -228,6 +228,7 @@ var formatCampaign = function(_campaign,user){
   var temp = {
     '_id':_campaign._id,
     'active':_campaign.active,
+    'create_time':_campaign.create_time,
     'confirm_status':_campaign.confirm_status,
     'theme':_campaign.theme,
     'content':_campaign.content ? _campaign.content.replace(/<\/?[^>]*>/g, ''):'',
@@ -631,6 +632,18 @@ module.exports = function (app) {
             return res.status(500).send({ msg: '服务器错误'});
           }
           else{
+            //活动的发起者
+            param.poster = {
+              cid: req.user.cid || req.user._id,                       //活动发起者所属的公司
+              cname: req.user.cname || req.user.info.official_name,
+              role: req.user.provider=="user" ?'LEADER' : 'HR'
+            }
+            if(req.user.provider=="user"){
+              param.poster.uid = req.user._id;
+              param.poster.nickname = req.user.nickname;
+            }
+
+
             param.campaign_unit = [];
             param.cid.forEach(function(cid,index){
               var unit ={};
