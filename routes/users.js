@@ -14,6 +14,7 @@ module.exports = function (app, ctrl) {
   app.post('/users/sendFeedback', token.needToken, ctrl.sendFeedback);
   app.post('/users/:userId/close', token.needToken, getById.getUserById, ctrl.close);
   app.post('/users/:userId/open', token.needToken, getById.getUserById, ctrl.open);
+  app.post('/users/:userId/active', token.needToken, getById.getUserById, ctrl.activeUser);
 
   app.post('/users/login', ctrl.login);
   app.post('/users/logout', token.needToken, ctrl.logout);

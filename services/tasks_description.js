@@ -193,6 +193,11 @@ var registeredTasks = {
     company: ['hr'],
     user: ['self']
   },
+  // 激活用户(当发邮件失败时hr可直接激活)
+  activeUser: {
+    company: ['hr']
+  },
+
   editCompany: {
     company: ['hr']
   },

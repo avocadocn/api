@@ -461,6 +461,36 @@
         }
       }
     },
+    "/users/{userId}/active": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "激活成员",
+        "operationId": "activeUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "用户id",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "default": "53aa707a11fd597b3e1be260"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "激活成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/users/{userId}/photos": {
       "get": {
         "tags": [

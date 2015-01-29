@@ -120,7 +120,6 @@ exports.createData = function (callback) {
           async.map(resCompanyData.teams, function (team, mapCallback) {
             createPhotoAlbums(team, mapCallback);
           }, function (err, results) {
-            console.log(typeof waterfallCallback);
             waterfallCallback(err);
           });
         },

@@ -648,6 +648,27 @@ module.exports = function (app) {
       });
     },
 
+    activeUser: function (req, res, next) {
+      var srcUser = req.resourceUser;
+      var role = auth.getRole(req.user, {
+        companies: [srcUser.cid]
+      });
+      var allow = auth.auth(role, ['activeUser']);
+      if (!allow.activeUser) {
+        res.status(403).send({ msg: '您没有权限' });
+        return;
+      }
+
+      srcUser.mail_active = true;
+      srcUser.save(function (err) {
+        if (err) {
+          next(err);
+          return;
+        }
+        res.send({ msg: '激活成功' });
+      });
+    },
+
     getUserPhotosValidate: function (req, res, next) {
       donlerValidator({
         start: {
