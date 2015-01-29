@@ -30,13 +30,18 @@ var CircleComment = new Schema({
     type: Schema.Types.ObjectId,
     required: true
   },
+  post_user_cid: {
+    type: Schema.Types.ObjectId, // 发评论或赞的用户的公司id
+    required: true
+  },
   post_user_id: {
     type: Schema.Types.ObjectId, // 发评论或赞的用户的id（头像和昵称再次查询）
     required: true
   },
   post_date: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    required: true
   },
   status: {
     type: String,

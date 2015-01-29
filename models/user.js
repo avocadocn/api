@@ -187,7 +187,39 @@ var UserSchema = new Schema({
     //自己写的标签
     tags: [String],
     //参加过多少campaign
-    campaignCount:Number
+    campaignCount:Number,
+
+    // 有没有同事发新消息, 如果已经为true了再有新消息，则不要再写入更新，在查询时设置条件过滤
+    has_new_content: {
+        type: Boolean,
+        default: false
+    },
+    msg_list: [{
+        // 类型：新的评论或赞
+        kind: {
+            type: String,
+            enum: ['newComment', 'newAppreciate'],
+            required: true
+        },
+
+        // 发赞或评论的用户
+        post_user: {
+            _id: {
+                type: Schema.Types.ObjectId,
+                required: true
+            },
+            photo: {
+                type: String,
+                required: true
+            },
+            nickname: {
+                type: String,
+                required: true
+            }
+        },
+        content: String // 评论内容
+    }],
+    clear_date: Date // 上次清空提醒列表的时间
 });
 
 /**
