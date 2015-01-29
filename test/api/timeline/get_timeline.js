@@ -155,6 +155,7 @@ module.exports = function() {
         });
     });
 
+
     it('用户获取所在公司其他小队活动时间', function(done) {
       var data = dataService.getData();
       var team = data[0].users[2].team[0];

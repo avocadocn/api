@@ -1,3 +1,6 @@
+// Copyright by ytoon, 2015/01/23
+// Compare the regionData from api with the _regin json.
+// 
 var app = require('../../../config/express.js'),
   request = require('supertest')(app);
 
