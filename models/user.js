@@ -194,6 +194,9 @@ var UserSchema = new Schema({
         type: Boolean,
         default: false
     },
+
+    new_content_date: Date, //所有未读新消息中最早的时间
+
     msg_list: [{
         // 类型：新的评论或赞
         kind: {

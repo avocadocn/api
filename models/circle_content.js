@@ -26,6 +26,7 @@ var CircleContent = new Schema({
     type: Schema.Types.ObjectId,
     required: true
   },
+  
   post_date: {
     type: Date,
     default: Date.now,

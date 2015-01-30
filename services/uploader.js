@@ -14,7 +14,7 @@ var yaliDir = path.join(__dirname, '../../yali/');
 var tempDir = path.join(yaliDir, 'temp_uploads');
 exports.yaliDir = yaliDir;
 exports.tempDir = tempDir;
-
+  
 /**
  * 上传照片到某个目录
  * 示例:
@@ -162,5 +162,106 @@ exports.uploadImg = function (req, options) {
     }
 
   });
+
+};
+
+/**
+ * 上传照片到某个目录
+ * @param  {[type]} file    [description]
+ * @param  {[type]} options [description]
+ * @return {[type]}         [description]
+ */
+exports.uploadImage = function(file, options) {
+  if (!file) {
+    if (options.error) {
+      options.error({
+        type: 'notfound',
+        msg: '没有收到文件' + options.fieldName
+      });
+      return;
+    }
+  }
+  try {
+    var now = new Date();
+    var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
+    if (options.subDir) {
+      dateDirName = path.join(dateDirName, options.subDir);
+    }
+    var ext = mime.extension(file.headers['content-type']);
+    var dateImgName = Date.now().toString() + '.' + ext;
+    var imgDir = path.join(yaliDir, options.targetDir, dateDirName);
+    if (!fs.existsSync(imgDir)) {
+      mkdirp.sync(imgDir);
+    }
+    gm(file.path).write(path.join(imgDir, dateImgName), function(err) {
+      if (err) {
+        if (options.error) {
+          options.error(err);
+        }
+        return;
+      }
+
+      var doSuccess = function(size) {
+        var imgInfo = {};
+        imgInfo.url = path.join(dateDirName, dateImgName);
+        imgInfo.originName = file.originalFilename;
+        imgInfo.size = size;
+
+        if (options.saveOrigin) {
+          var saveOrigin = function(oriPath, oriName, oriCallback) {
+            var oriDir = path.join(yaliDir, oriPath);
+            if (!fs.existsSync(oriDir)) {
+              mkdirp.sync(oriDir);
+            }
+            fs.rename(file.path, path.join(yaliDir, oriPath, oriName + '.' + ext), function(err) {
+              oriCallback(err);
+            });
+          };
+
+          options.success(imgInfo, saveOrigin);
+        } else {
+          options.success(imgInfo);
+          fs.unlink(file.path, function(err) {
+            console.log(err);
+          });
+        }
+      };
+
+      if (options.getSize) {
+        async.waterfall([
+          function(callback) {
+            try {
+              gm(file.path).size(function(err, size) {
+                if (err) {
+                  if (options.error) {
+                    options.error(err);
+                  }
+                  callback(err);
+                } else {
+                  callback(null, size);
+                }
+              });
+            } catch (e) {
+              if (options.error) {
+                options.error(e);
+              }
+              callback(e);
+            }
+          },
+          function(size, callback) {
+            doSuccess(size);
+            callback();
+          }
+        ]);
+      } else {
+        doSuccess(-1);
+      }
+
+    });
+  } catch (e) {
+    if (options.error) {
+      options.error(e);
+    }
+  }
 
 };
