@@ -524,6 +524,148 @@ var _postCampaign = function (param, callback) {
 
   });
 };
+
+var getCampaignListHandle = function (req, res) {
+  var option,
+    requestType = req.query.requestType,
+    requestId = req.query.requestId,
+    sort = req.query.sortBy || 'start_time',
+    limit = parseInt(req.query.limit) || 0,
+    populate =req.query.populate || '',
+    reqModel,team_ids;
+  switch(requestType){
+  case 'company':
+    reqModel = 'Company';
+    break;
+  case 'team':
+    reqModel = 'CompanyGroup';
+    break;
+  case 'user':
+    reqModel = 'User';
+    break;
+  default:
+    break;
+  }
+  if(!mongoose.Types.ObjectId.isValid(requestId)){
+    return res.status(400).send({ msg: '参数不正确' });
+  }
+  mongoose.model(reqModel)
+    .findById(requestId)
+    .exec()
+    .then(function(requestModal){
+      if(!requestModal){
+        return res.status(404).send({msg:'未找到该活动'});
+      }
+      var role = auth.getRole(req.user, {
+        companies: [requestType=='company' ? requestId : requestModal.cid],
+        teams:[requestType=='team' ? requestId : ''],
+        users:[requestType=='user' ? requestId : '']
+      });
+      var allow = auth.auth(role, ['getCampaigns']);
+      if(!allow.getCampaigns){
+        return res.status(403).send({msg:'您没有权限获取该活动'});
+      }
+      switch(requestType){
+      case 'company':
+        option = {
+          'active':true,
+          'cid' : requestId
+        };
+        break;
+      case 'team':
+        option = {
+          'active':true,
+          'cid':requestModal.cid,
+          'tid':requestId
+        };
+        break;
+      case 'user':
+        team_ids = [];
+        for( var i = requestModal.team.length-1; i >=0 ; i--) {
+          team_ids.push(requestModal.team[i]._id.toString());
+        }
+        option={
+          'active':true,
+          'cid': requestModal.cid,
+          '$or': [{'tid':{'$in':team_ids}},{'tid':{'$size':0}}]
+        };
+        if(req.query.join_flag=='1'){
+          option['campaign_unit.member._id'] = requestId;
+        }
+        else if (req.query.join_flag=='0') {
+          option['$nor'] = [{'campaign_unit.member._id':requestId}];
+        }
+        break;
+      default:
+        break;
+      }
+      if(req.query.to){
+        option.start_time = { '$lte':new Date(parseInt(req.query.to)) };
+      }
+      if(req.query.from){
+        option.end_time = { '$gte':new Date(parseInt(req.query.from)) };
+      }
+      if (req.query.nextPageStartId) {
+        option._id = { '$lte': req.query.nextPageStartId };
+      }
+      if(req.query.select_type =='0'){
+        async.series([
+          function(callback){
+            searchCampaign('1', option, sort, limit, requestId, team_ids, populate, callback);
+          },//即将开始的活动
+          function(callback){
+            searchCampaign('2', option, sort, limit, requestId, team_ids, populate, callback);
+          },//正在进行的活动
+          function(callback){
+            searchCampaign('4', option, sort, limit, requestId, team_ids, populate, callback);
+          },//新活动（未参加）
+          function(callback){
+            searchCampaign('5', option, sort, limit, requestId, team_ids, populate, callback);
+          }//未确认的挑战
+        ],function(err, values){
+          if(err){
+            log(err);
+            return res.status(500).send({ msg: '服务器错误'});
+          }
+          else{
+            var formatCampaigns = [];
+            values.forEach(function(value){
+              formatCampaigns.push([]);
+              var index = formatCampaigns.length-1;
+              value.forEach(function(campaign){
+                formatCampaigns[index].push(formatCampaign(campaign,req.user));
+              })
+
+            })
+            return res.status(200).send(formatCampaigns);
+          }
+        });
+      }
+      else {
+        searchCampaign(req.query.select_type, option, sort, limit, requestId, team_ids, populate, function (err, campaigns) {
+          if (err) {
+            log(err);
+            res.status(500).send('服务器错误');
+          }
+          else if (campaigns.length === 0) {
+            res.status(200).send([]);
+          }
+          else {
+            var formatCampaigns = [];
+            campaigns.forEach(function (campaign) {
+              formatCampaigns.push(formatCampaign(campaign, req.user));
+            });
+            res.status(200).send(formatCampaigns);
+          }
+        });
+      }
+    })
+    .then(null, function (err) {
+      log(err);
+      return res.status(500).send({msg: err });
+    });
+};
+
 module.exports = function (app) {
 
   return {
@@ -685,147 +827,7 @@ module.exports = function (app) {
       });
       
     },
-    getCampaignList: function (req, res) {
-      var option,
-          requestType = req.query.requestType,
-          requestId = req.query.requestId,
-          sort = req.query.sortBy || 'start_time',
-          limit = parseInt(req.query.limit) || 0,
-          populate =req.query.populate || '',
-          reqModel,team_ids;
-      switch(requestType){
-        case 'company':
-          reqModel = 'Company';
-        break;
-        case 'team':
-          reqModel = 'CompanyGroup';
-        break;
-        case 'user':
-          reqModel = 'User';
-        break;
-        default:
-        break;
-      }
-      if(!mongoose.Types.ObjectId.isValid(requestId)){
-        return res.status(400).send({ msg: '参数不正确' });
-      }
-      mongoose.model(reqModel)
-      .findById(requestId)
-      .exec()
-      .then(function(requestModal){
-        if(!requestModal){
-          return res.status(404).send({msg:'未找到该活动'});
-        }
-        var role = auth.getRole(req.user, {
-          companies: [requestType=='company' ? requestId : requestModal.cid],
-          teams:[requestType=='team' ? requestId : ''],
-          users:[requestType=='user' ? requestId : '']
-        });
-        var allow = auth.auth(role, ['getCampaigns']);
-        if(!allow.getCampaigns){
-          return res.status(403).send({msg:'您没有权限获取该活动'});
-        }
-        switch(requestType){
-          case 'company':
-            option = {
-              'active':true,
-              'cid' : requestId
-            };
-          break;
-          case 'team':
-            option = {
-              'active':true,
-              'cid':requestModal.cid,
-              'tid':requestId
-            };
-          break;
-          case 'user':
-            team_ids = [];
-            for( var i = requestModal.team.length-1; i >=0 ; i--) {
-              team_ids.push(requestModal.team[i]._id.toString());
-            }
-            option={
-              'active':true,
-              'cid': requestModal.cid,
-              '$or': [{'tid':{'$in':team_ids}},{'tid':{'$size':0}}]
-            };
-            if(req.query.join_flag=='1'){
-              option['campaign_unit.member._id'] = requestId;
-            }
-            else if (req.query.join_flag=='0') {
-              option['$nor'] = [{'campaign_unit.member._id':requestId}];
-            }
-          break;
-          default:
-          break;
-        }
-        if(req.query.to){
-          option.start_time = { '$lte':new Date(parseInt(req.query.to)) };
-        }
-        if(req.query.from){
-          option.end_time = { '$gte':new Date(parseInt(req.query.from)) };
-        }
-        if (req.query.nextPageStartId) {
-          option._id = { '$lte': req.query.nextPageStartId };
-        }
-
-        if(req.query.select_type =='0'){
-          async.series([
-            function(callback){
-              searchCampaign('1', option, sort, limit, requestId, team_ids, populate, callback);
-            },//即将开始的活动
-            function(callback){
-              searchCampaign('2', option, sort, limit, requestId, team_ids, populate, callback);
-            },//正在进行的活动
-            function(callback){
-              searchCampaign('4', option, sort, limit, requestId, team_ids, populate, callback);
-            },//新活动（未参加）
-            function(callback){
-              searchCampaign('5', option, sort, limit, requestId, team_ids, populate, callback);
-            }//未确认的挑战
-          ],function(err, values){
-            if(err){
-              log(err);
-              return res.status(500).send({ msg: '服务器错误'});
-            }
-            else{
-              var formatCampaigns = [];
-              values.forEach(function(value){
-                formatCampaigns.push([]);
-                var index = formatCampaigns.length-1;
-                value.forEach(function(campaign){
-                  formatCampaigns[index].push(formatCampaign(campaign,req.user));
-                })
-        
-              })
-              return res.status(200).send(formatCampaigns);
-            }
-          });
-        }
-        else {
-          searchCampaign(req.query.select_type, option, sort, limit, requestId, team_ids, populate, function (err, campaigns) {
-            if (err) {
-              log(err);
-              res.status(500).send('服务器错误');
-            }
-            else if (campaigns.length === 0) {
-              res.status(200).send([]);
-            }
-            else {
-              var formatCampaigns = [];
-              campaigns.forEach(function (campaign) {
-                formatCampaigns.push(formatCampaign(campaign, req.user));
-              });
-              res.status(200).send(formatCampaigns);
-            }
-          });
-        }
-      })
-      .then(null, function (err) {
-        log(err);
-        return res.status(500).send({msg: err });
-      });
-    },
+    getCampaignList: getCampaignListHandle,
     getCampaign: function (req, res) {
       var campaign = req.campaign;
       async.series([
@@ -1323,7 +1325,90 @@ module.exports = function (app) {
           }
         }
       });
+    },
+
+    // todo
+    getCampaigns: {
+      // 兼容旧版本api，如果请求的url query中没有cp_type，则按1.0的api处理，否则使用1.2的api
+      switcher: function (req, res, next) {
+        if (!req.query.cp_type) {
+          donlerValidator({
+            requestType: {
+              name: 'requestType',
+              value: req.query.requestType,
+              validators: [donlerValidator.enum(['user', 'team', 'company']), 'required']
+            },
+            requestId: {
+              name: 'requestId',
+              value: req.query.requestId,
+              validators: ['required', 'objectId']
+            },
+            select_type: {
+              name: 'select_type',
+              value: req.query.select_type,
+              validators: [donlerValidator.enum(['0', '1', '2', '3', '4', '5'])]
+            },
+            join_flag: {
+              name: 'join_flag',
+              value: req.query.join_flag,
+              validators: [donlerValidator.enum(['0', '1'])]
+            },
+            limit: {
+              name: 'limit',
+              value: req.query.limit,
+              validators: ['number']
+            },
+            populate: {
+              name: 'populate',
+              value: req.query.populate,
+              validators: [donlerValidator.enum(['photo_album'])]
+            },
+            // 分页时下一页开始的活动id
+            nextPageStartId: {
+              name: 'nextPageStartId',
+              value: req.query.nextPageStartId,
+              validators: ['objectId']
+            }
+          }, 'fast', function (pass, msg) {
+            if (pass) {
+              // 使用1.0 api的处理逻辑
+              getCampaignListHandle(req, res);
+            } else {
+              return res.status(400).send({ msg: donlerValidator.combineMsg(msg) });
+            }
+          });
+        } else {
+          return next();
+        }
+      },
+
+      // 过滤请求数据
+      filter: function (req, res, next) {
+
+      },
+
+      // 获取活动所有者的数据，例如获取公司活动，则获取公司数据；如果获取小队活动，则获取小队数据
+      getHolder: function (req, res, next) {
+        // todo
+      },
+      // 设置查询条件和任务、需要返回的数据结构
+      setOptions: function (req, res, next) {
+        // todo
+        next();
+      },
+      // 权限判断
+      auth: function (req, res, next) {
+        // todo
+        next();
+      },
+
+      // 查询数据，使用相应的formator去转换成合适的数据结构，并写入响应
+      queryAndFormat: function (req, res, next) {
+        // todo
+        res.sendStatus(200);
+      }
     }
+
   };
 
 };

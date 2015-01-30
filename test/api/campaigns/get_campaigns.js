@@ -60,11 +60,9 @@ module.exports = function () {
         });
       };
       var now = new Date();
-      var start = new Date();
-      start.setDate(1);
-      var end = new Date();
-      end.setMonth(now.getMonth()+1);
-      end.setDate(1);
+      var start = new Date(now.getFullYear(), now.getMonth());
+      var end = new Date(now.getFullYear(), now.getMonth() + 1);
+
       //仅包含active的活动
       getCampaignTest('应该成功获取公司所有活动',{requestType:'company'},13);
       getCampaignTest('应该成功获取小队所有活动',{requestType:'team'},9);
@@ -86,7 +84,7 @@ module.exports = function () {
           .expect(400)
           .end(function (err, res) {
             if (err) return done(err);
-            res.body.msg.should.equal('参数不正确');
+            res.body.msg.should.equal('requestId不是一个有效的ObjectId');
             done();
           });
       });
@@ -188,11 +186,9 @@ module.exports = function () {
         });
       };
       var now = new Date();
-      var start = new Date();
-      start.setDate(1);
-      var end = new Date();
-      end.setMonth(now.getMonth()+1);
-      end.setDate(1);
+      var start = new Date(now.getFullYear(), now.getMonth());
+      var end = new Date(now.getFullYear(), now.getMonth() + 1);
+
       //仅包含active的活动
       getCampaignTest('应该成功获取公司所有活动',{requestType:'company'},13);
       getCampaignTest('应该成功获取小队所有活动',{requestType:'team'},9);

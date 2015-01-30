@@ -1,11 +1,16 @@
 var path = require('path');
 
 var common = require('../../support/common.js');
-
+var dataService = require('../../create_data');
 var donlerValidator = require(path.join(common.config.rootPath, 'services/donler_validator.js'));
 
 module.exports = function () {
   describe('donlerValidator', function () {
+
+    var data;
+    before(function () {
+      data = dataService.getData();
+    });
 
     describe('async validate task', function () {
 
@@ -331,6 +336,36 @@ module.exports = function () {
         });
       });
     });
+
+    describe('objectId', function () {
+      it('user.id应该通过验证', function () {
+        donlerValidator({
+          uid: {
+            name: 'uid',
+            value: data[0].users[0].id,
+            validators: ['objectId']
+          }
+        }, 'pass', function(pass, msg) {
+          pass.should.be.true;
+        });
+      });
+
+      it('普通字符串不应该通过验证', function () {
+        donlerValidator({
+          uid: {
+            name: 'uid',
+            value: 'abc2213',
+            validators: ['objectId']
+          }
+        }, 'pass', function(pass, msg) {
+          pass.should.be.false;
+        });
+      });
+
+    });
+
+
+
   });
 };
 

@@ -328,5 +328,23 @@ validators.region = function (name, value, callback) {
     });
 };
 
+/**
+ * 验证是否是一个有效的ObjectId
+ * @param {String} name
+ * @param {String} value
+ * @param {Function} callback
+ */
+validators.objectId = function (name, value, callback) {
+  if (!value) {
+    callback(true);
+    return;
+  }
+  if (!mongoose.Types.ObjectId.isValid(value)) {
+    var msg = util.format('%s不是一个有效的ObjectId', name);
+    callback(false, msg);
+  } else {
+    callback(true);
+  }
+};
 
 module.exports = donlerValidator;

@@ -209,7 +209,7 @@ var createCampaign = function (options, _callback) {
     end_time : chance.date({year: nowYear, month: _options.statusType ==3 ? nowMonth-1:nowMonth +3}),
     deadline : chance.date({year: nowYear, month: _options.statusType ==3 ? nowMonth-2:nowMonth +2}),
     campaign_type : _options.campaign_type,
-    campaign_mold : _options.campaign_mold,
+    campaign_mold : _options.campaign_mold
   });
   var _user = {
     '_id': _options.poster.uid || _options.poster.cid,
