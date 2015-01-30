@@ -641,7 +641,8 @@ module.exports = function (app) {
             brief: companyGroups[i].brief,
             score: companyGroups[i].score,
             count: companyGroups[i].count,
-            memberCount: companyGroups[i].member.length
+            memberCount: companyGroups[i].member.length,
+            leader: companyGroups[i].leader
           };
           if(req.query.target=='department'){
             briefTeam.did = companyGroups[i].department;
