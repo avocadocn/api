@@ -41,7 +41,6 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
     case '1':
       _option.start_time = { '$gte':now };
       _option['campaign_unit.member._id'] = requestId;
-      
     break;
     //正在进行的活动
     case '2':
@@ -82,237 +81,7 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
     callback(err,[]);
   });
 }
-/**
- * 格式化距离开始时间还有多久
- * @param  {Date} start_time 活动开始时间
- * @param  {Date} end_time   活动结束时间
- * @return {Object}          start_flag:活动是否已经开始,
-                              remind_text:提示文字,
-                              time_text: 距离开始（结束）的时间
- */
-var formatTime = function(start_time,end_time){
-  var remind_text, time_text,start_flag;
-  var now = new Date();
-  var diff_end = now - end_time;
-  if (diff_end >= 0) {
-    // 活动已结束
-    remind_text = '活动已结束';
-    time_text = '';
-    start_flag = -1;
-  } else {
-    // 活动未结束
-    var temp_start_time = new Date(start_time);
-    var during = moment.duration(moment(now).diff(temp_start_time));
-    // 活动已开始
-    if (during >= 0) {
-      start_flag = 1;
-      remind_text = '距离活动结束还有';
-      var temp_end_time = new Date(end_time);
-      var during = moment.duration(moment(now).diff(temp_end_time));
-      var years = Math.abs(during.years());
-      var months = Math.abs(during.months());
-      var days = Math.floor(Math.abs(during.asDays()));
-      var hours = Math.abs(during.hours());
-      var minutes = Math.abs(during.minutes());
-      var seconds = Math.abs(during.seconds());
 
-      temp_end_time.setHours(hours);
-      temp_end_time.setMinutes(minutes);
-      temp_end_time.setSeconds(seconds);
-      if(days>=1){
-        time_text =  days + '天';
-      }
-      else if(hours>=1){
-        time_text = hours + '时';
-      }
-      else if(minutes>=1){
-        time_text =  minutes + '分'  ;
-      }
-      else{
-        time_text = seconds + '秒';
-      }
-    } else {
-      // 活动未开始
-      var years = Math.abs(during.years());
-      var months = Math.abs(during.months());
-      var days = Math.floor(Math.abs(during.asDays()));
-      var hours = Math.abs(during.hours());
-      var minutes = Math.abs(during.minutes());
-      var seconds = Math.abs(during.seconds());
-
-      temp_start_time.setHours(hours);
-      temp_start_time.setMinutes(minutes);
-      temp_start_time.setSeconds(seconds);
-      start_flag = 0;
-      remind_text = '距离活动开始还有';
-      if(days>=1){
-        time_text =  days + '天';
-      }
-      else if(hours>=1){
-        time_text = hours + '时';
-      }
-      else if(minutes>=1){
-        time_text =  minutes + '分'  ;
-      }
-      else{
-        time_text = seconds + '秒';
-      }
-
-    }
-  }
-  return { start_flag:start_flag,
-            remind_text:remind_text,
-            time_text: time_text
-          }
-}
-/**
- * 格式化两个时间距离还有多久
- * @param  {Date} start_time 开始时间
- * @param  {Date} end_time   结束时间
- * @return {String}          相差时间的中文格式化
- */
-var formatrestTime = function(start_time,end_time){
-  var restTime;
-  var temp_start_time = new Date(start_time);
-  var temp_end_time = new Date(end_time);
-  var during = moment.duration(moment(temp_end_time).diff(temp_start_time));
-  var years = Math.abs(during.years());
-  var months = Math.abs(during.months());
-  var days = Math.floor(Math.abs(during.asDays()));
-  var hours = Math.abs(during.hours());
-  var minutes = Math.abs(during.minutes());
-  var seconds = Math.abs(during.seconds());
-
-  if(days>=3){
-    restTime =  days + '天';
-  }
-  else if(days>=1){
-    restTime = days + '天' + (hours ? hours + '小时' : '') ;
-  }
-  else if(hours>=1){
-    restTime = hours + '小时'  + minutes + '分';
-  }
-  else{
-    restTime = (minutes ?  minutes + '分' : '' ) + seconds + '秒';
-  }
-  return restTime;
-}
-// var sortByUploadDate = function(a, b) {
-//   return  b.upload_date - a.upload_date;
-// };
-/**
- * 按照点击数由大到小排序照片
- * @param  {Object} a Photo model
- * @param  {Object} b
- * @return {Boolean}
- */
-// var sortByClick = function(a, b) {
-//   // 兼容旧数据，旧的数据没有click属性
-//   if (!a.click) {
-//     a.click = 0;
-//   }
-//   if (!b.click) {
-//     b.click = 0;
-//   }
-//   return b.click - a.click;
-// };
-/**
- * [formatCampaign description]
- * @param  {[type]} campaign 需要格式化的活动
- * @param  {[type]} user     所比较的用户
- * @return {[type]}          [description]
- */
-var formatCampaign = function(_campaign,user){
-  var now = new Date();
-  var photos = updateLatestPhotoService.getLatestPhotos(_campaign.photo_album, 10)
-  var temp = {
-    '_id':_campaign._id,
-    'active':_campaign.active,
-    'create_time':_campaign.create_time,
-    'confirm_status':_campaign.confirm_status,
-    'theme':_campaign.theme,
-    'content':_campaign.content ? _campaign.content.replace(/<\/?[^>]*>/g, ''):'',
-    'member_max':_campaign.member_max,
-    'member_min':_campaign.member_min,
-    'members_count':_campaign.members.length,
-    'location':_campaign.location,
-    'start_time':_campaign.start_time,
-    'finish':_campaign.finish,
-    'end_time':_campaign.end_time,
-    'deadline':_campaign.deadline,
-    'comment_sum':_campaign.comment_sum,
-    'join_flag':tools.arrayObjectIndexOf(_campaign.members,user._id,'_id')>-1?1:-1,
-    'due_flag':now>_campaign.deadline ? 1 : 0,
-    'tags':_campaign.tags,
-    'campaign_mold':_campaign.campaign_mold,
-    'campaign_unit':_campaign.campaign_unit,
-    'photo_album': {
-      '_id': _campaign.photo_album._id,
-      'photos': photos,
-      'name': _campaign.photo_album.name,
-      'moreFlag':photos.length>10
-    },
-    'campaign_type':_campaign.campaign_type,
-    'is_start': _campaign.start_time <= Date.now(),
-    'is_end': _campaign.end_time <= Date.now()
-  };
-  var _formatTime = formatTime(_campaign.start_time,_campaign.end_time);
-  temp.start_flag = _formatTime.start_flag;
-  temp.remind_text =_formatTime.remind_text;
-  temp.time_text = _formatTime.time_text;
-  temp.deadline_rest = formatrestTime(now,_campaign.deadline);
-  var memberIds = [];
-  _campaign.members.forEach(function (member) {
-    memberIds.push(member._id);
-  });
-  var role = auth.getRole(user, {
-    companies: _campaign.cid,
-    teams: _campaign.tid,
-    users: memberIds
-  });
-  if(_campaign.confirm_status) {
-    var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
-    var editTaskName = _campaign.campaign_type==1?'editCompanyCampaign':'editTeamCampaign';
-    var allow = auth.auth(role, [
-      'quitCampaign','publishCampaignMessage',joinTaskName,editTaskName
-    ]);
-    if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
-      allow[joinTaskName]=false;
-    }
-    if(_campaign.deadline < now) {
-       allow.quitCampaign=false;
-    }
-    if(_campaign.start_time<now ) {
-      allow[editTaskName]=false;
-    }
-  }
-  else {
-    var allow = {};
-    if(role.team=='leader' && [4,5,7,9].indexOf(_campaign.campaign_type)>-1){
-
-      var provokeRole = auth.getRole(user, {
-        companies: _campaign.cid,
-        teams: [_campaign.tid[0]]
-      });
-      var provokeAllow = auth.auth(provokeRole, [
-        'sponsorProvoke'
-      ]);
-      allow.quitProvoke = provokeAllow.sponsorProvoke;
-      provokeRole = auth.getRole(user, {
-        companies: _campaign.cid,
-        teams: [_campaign.tid[1]]
-      });
-      provokeAllow = auth.auth(provokeRole, [
-        'sponsorProvoke'
-      ]);
-      allow.dealProvoke = provokeAllow.sponsorProvoke;
-    }
-  }
-
-  temp.allow = allow;
-
-  return temp;
-};
 /**
  * 格式化活动的小队信息，增加是否为队长属性
  * @param  {[type]} campaign    [description]
@@ -525,6 +294,7 @@ var _postCampaign = function (param, callback) {
   });
 };
 
+// 1.0 api 获取活动处理
 var getCampaignListHandle = function (req, res) {
   var option,
     requestType = req.query.requestType,
@@ -633,7 +403,7 @@ var getCampaignListHandle = function (req, res) {
               formatCampaigns.push([]);
               var index = formatCampaigns.length-1;
               value.forEach(function(campaign){
-                formatCampaigns[index].push(formatCampaign(campaign,req.user));
+                formatCampaigns[index].push(campaignBusiness.formatCampaign(campaign,req.user));
               })
 
             })
@@ -653,7 +423,7 @@ var getCampaignListHandle = function (req, res) {
           else {
             var formatCampaigns = [];
             campaigns.forEach(function (campaign) {
-              formatCampaigns.push(formatCampaign(campaign, req.user));
+              formatCampaigns.push(campaignBusiness.formatCampaign(campaign, req.user));
             });
             res.status(200).send(formatCampaigns);
           }
@@ -827,7 +597,6 @@ module.exports = function (app) {
       });
       
     },
-    getCampaignList: getCampaignListHandle,
     getCampaign: function (req, res) {
       var campaign = req.campaign;
       async.series([
@@ -1041,7 +810,7 @@ module.exports = function (app) {
               logController.addLog(logBody);
               async.series([
                 function(callback){
-                  var _formatCampaign = formatCampaign(campaign,req.user);
+                  var _formatCampaign = campaignBusiness.formatCampaign(campaign,req.user);
                   callback(null,_formatCampaign);
                 },//格式化活动
                 function(callback){
@@ -1145,7 +914,7 @@ module.exports = function (app) {
               logController.addLog(logBody);
               async.series([
                 function(callback){
-                  var _formatCampaign = formatCampaign(campaign,req.user);
+                  var _formatCampaign = campaignBusiness.formatCampaign(campaign,req.user);
                   callback(null,_formatCampaign);
                 },//格式化活动
                 function(callback){
@@ -1384,28 +1153,124 @@ module.exports = function (app) {
 
       // 过滤请求数据
       filter: function (req, res, next) {
-
+        donlerValidator({
+          cp_type: {
+            name: 'cp_type',
+            value: req.query.cp_type,
+            validators: ['required', donlerValidator.enum(['com_all', 'team_all'])] // todo
+          },
+          target_id: {
+            name: 'target_id',
+            value: req.query.target_id,
+            validators: ['required', 'objectId']
+          },
+          result: {
+            name: 'result',
+            value: req.query.result,
+            validators: [donlerValidator.enum(['hr_manager_list'])] // todo
+          },
+          limit: {
+            name: 'limit',
+            value: req.query.limit,
+            validators: ['number']
+          },
+          //sort: {
+          //  name: 'sort',
+          //  value: req.query.sort,
+          //  validators: [] // todo
+          //},
+          // 分页用的id
+          page_id: {
+            name: 'page_id',
+            value: req.query.page_id,
+            validators: ['objectId']
+          }
+        }, 'fast', function (pass, msg) {
+          if (pass) {
+            return next();
+          } else {
+            return res.status(400).send(donlerValidator.combineMsg(msg));
+          }
+        });
       },
 
       // 获取活动所有者的数据，例如获取公司活动，则获取公司数据；如果获取小队活动，则获取小队数据
       getHolder: function (req, res, next) {
-        // todo
-      },
-      // 设置查询条件和任务、需要返回的数据结构
-      setOptions: function (req, res, next) {
-        // todo
-        next();
-      },
-      // 权限判断
-      auth: function (req, res, next) {
-        // todo
-        next();
+        req.campaignTypes = req.query.cp_type.split('_');
+        var targetModelName;
+        switch (req.campaignTypes[0]) {
+        case 'com':
+          targetModelName = 'Company';
+          break;
+        case 'team':
+          targetModelName = 'CompanyGroup';
+          break;
+        case 'user':
+          targetModelName = 'User';
+          break;
+        }
+        mongoose.model(targetModelName).findById(req.query.target_id).exec()
+          .then(function (targetModel) {
+            if (!targetModel) {
+              return res.status(404).send({ msg: '找不到活动' });
+            } else {
+              req.targetModel = targetModel;
+              return next();
+            }
+          })
+          .then(null, function (err) {
+            return next(err);
+          });
       },
 
-      // 查询数据，使用相应的formator去转换成合适的数据结构，并写入响应
+      // 权限判断
+      auth: function (req, res, next) {
+        var tasks = campaignBusiness.getAuthTasks(req.campaignTypes, req.query.result);
+        var owner;
+        switch (req.campaignTypes[0]) {
+        case 'com':
+          owner = {
+            companies: [req.targetModel._id]
+          };
+          break;
+        case 'team':
+          owner = {
+            companies: [req.targetModel.cid],
+            teams: [req.targetModel._id]
+          };
+          break;
+        case 'user':
+          owner = {
+            companies: [req.targetModel.cid],
+            users: [req.targetModel._id]
+          };
+          break;
+        }
+        var role = auth.getRole(req.user, owner);
+        var allow = auth.auth(role, tasks);
+        for (var task in allow) {
+          if (!allow[task]) {
+            return res.status(403).send({ msg: '权限不足' });
+          }
+        }
+        return next();
+      },
+
+      // 查询数据，使用相应的formatter去转换成合适的数据结构，并写入响应
       queryAndFormat: function (req, res, next) {
-        // todo
-        res.sendStatus(200);
+
+        campaignBusiness.queryAndFormat({
+          campaignTypes: req.campaignTypes,
+          reqQuery: req.query,
+          targetModel: req.targetModel,
+          user: req.user
+        }, function (err, campaigns) {
+          if (err) {
+            return next(err);
+          } else {
+            return res.send(campaigns);
+          }
+        });
       }
     }
 

@@ -215,6 +215,52 @@ module.exports = function () {
           });
       });
     });
+
+    describe('1.2', function () {
+
+      describe('hr', function () {
+        var hrAccessToken;
+        var data;
+        before(function (done) {
+          data = dataService.getData();
+          var hr = data[5].model;
+          request.post('/companies/login')
+            .send({
+              username: hr.username,
+              password: '55yali'
+            })
+            .end(function (err, res) {
+              if (err) return done(err);
+              if (res.statusCode === 200) {
+                hrAccessToken = res.body.token;
+              }
+              done();
+            });
+
+        });
+        it('应该正常获取公司活动', function (done) {
+          request.get('/campaigns')
+            .set('x-access-token', hrAccessToken)
+            .query({
+              cp_type: 'com_all',
+              target_id: data[5].model.id,
+              result: 'hr_manager_list'
+            })
+            .expect(200)
+            .end(function (err, res) {
+              if (err) return done(err);
+              console.log(res.body);
+              done();
+            });
+        });
+      });
+
+      describe('user', function () {
+
+      });
+
+    });
+
   });
 };
 

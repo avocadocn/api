@@ -5,6 +5,8 @@ var moment = require('moment');
 var tools = require('../tools/tools.js');
 var updateLatestPhotoService = require('../services/update_latestphotos');
 var auth = require('../services/auth.js');
+var mongoose = require('mongoose');
+var Campaign = mongoose.model('Campaign');
 
 /**
  * 将活动数据结构转换为前端需要的形式，主要是添加开始结束及权限等标记
@@ -303,5 +305,162 @@ var formatRestTime = exports.formatRestTime = function (start_time, end_time) {
     restTime = (minutes ? minutes + '分' : '' ) + seconds + '秒';
   }
   return restTime;
+};
+
+/**
+ * 将活动数据转换为前端需要的格式的方法集合
+ * @type {{}}
+ */
+var formatterList = {
+  hrManageList: function (campaigns, options, callback) {
+    // todo hr活动管理中的活动列表信息
+    callback(null, campaigns);
+  },
+  appCampaignCard: function (campaigns, options, callback) {
+    // todo app 活动卡片
+  },
+  appTimelineCard: function (campaigns, options, callback) {
+    // todo app 足迹卡片
+  }
+};
+
+/**
+ * 根据需要获取的活动类型和结果类型返回权限判断任务列表
+ * @param {Array} cpTypes
+ * @param {String} resultType
+ * @return {Array}
+ */
+exports.getAuthTasks = function (cpTypes, resultType) {
+  var tasks = ['getCampaigns'];
+  switch (cpTypes[0]) {
+  case 'user':
+    if (resultType === 'app_calendar') {
+      tasks = ['getUserAllCampaignsForCalendar'];
+    }
+    break;
+  }
+  return tasks;
+};
+
+/**
+ * 查询并将活动转换为需要的格式
+ *  queryAndFormat({
+ *    campaignTypes: ['com', 'all'],
+ *    reqQuery: req.query,
+ *    targetModel: req.targetModel,
+ *    user: req.user
+ *  }, function (err, campaigns) {})
+ * @param opts
+ * @param callback
+ */
+exports.queryAndFormat = function (opts, callback) {
+  var dbQueryOptions = {};
+  var formatter = 'default';
+  var formatterOptions;
+  var dbQuery;
+
+  var pageSize = 20;
+  if (opts.reqQuery.limit) {
+    pageSize = opts.reqQuery.limit;
+  }
+
+  var sortOptions = '-start_time -_id';
+  // todo set custom sort
+
+  var setPagerOptions = function () {
+    if(opts.reqQuery.to){
+      dbQueryOptions.start_time = { '$lte':new Date(parseInt(opts.reqQuery.to)) };
+    }
+    if(opts.reqQuery.from){
+      dbQueryOptions.end_time = { '$gte':new Date(parseInt(opts.reqQuery.from)) };
+    }
+    if (opts.reqQuery.page_id) {
+      dbQueryOptions._id = { '$le': opts.reqQuery.page_id };
+    }
+  };
+
+  switch (opts.campaignTypes[0]) {
+  case 'com':
+    dbQueryOptions = {
+      cid: opts.targetModel._id,
+      active: true
+    };
+    if (opts.reqQuery.result === 'hr_manager_list') {
+      formatter = formatterList.hrManagerList;
+    }
+    setPagerOptions();
+    dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize);
+    break;
+  case 'team':
+    dbQueryOptions = {
+      tid: opts.targetModel._id,
+      active: true
+    };
+    if (opts.reqQuery.result === 'hr_manager_list') {
+      formatter = formatterList.hrManagerList;
+    }
+    setPagerOptions();
+    dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize);
+    break;
+  case 'user':
+    // todo 获取用户活动只是做好结构，还没有具体实现
+    dbQueryOptions = {
+      cid: opts.targetModel.cid,
+      active: true
+    };
+    switch (opts.campaignTypes[1]) {
+    case 'all':
+
+      break;
+    case 'tostart':
+
+      break;
+    case 'playing':
+      break;
+    case 'end':
+      break;
+    case 'provoke':
+      break;
+    case 'join':
+      break;
+    case 'unjoin':
+      break;
+    default:
+      // todo
+    }
+
+    setPagerOptions();
+    dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize);
+
+    switch (opts.reqQuery.result) {
+    case 'app_cp_card':
+      formatter = formatterList.appCampaignCard;
+      dbQuery = dbQuery.populate('photo_album');
+      break;
+    case 'app_tl_card':
+      formatter = formatterList.appTimelineCard;
+      dbQuery = dbQuery.populate('photo_album');
+      break;
+    }
+
+    break;
+  default:
+    // todo
+  }
+
+  dbQuery.exec()
+    .then(function (campaigns) {
+      formatter(campaigns.toObject(), formatterOptions, function (err, resCampaigns) {
+        if (err) {
+          callback(err);
+        } else {
+          callback(null, resCampaigns);
+        }
+      });
+    })
+    .then(null, function (err) {
+      callback(err);
+    });
+
 };
 
