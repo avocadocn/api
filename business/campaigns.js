@@ -386,7 +386,7 @@ exports.queryAndFormat = function (opts, callback) {
       active: true
     };
     if (opts.reqQuery.result === 'hr_manager_list') {
-      formatter = formatterList.hrManagerList;
+      formatter = formatterList.hrManageList;
     }
     setPagerOptions();
     dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize);
@@ -450,7 +450,10 @@ exports.queryAndFormat = function (opts, callback) {
 
   dbQuery.exec()
     .then(function (campaigns) {
-      formatter(campaigns.toObject(), formatterOptions, function (err, resCampaigns) {
+      var plainCampaigns = campaigns.map(function (campaign) {
+        return campaign.toObject({ virtuals: true });
+      });
+      formatter(plainCampaigns, formatterOptions, function (err, resCampaigns) {
         if (err) {
           callback(err);
         } else {

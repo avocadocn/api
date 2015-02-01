@@ -255,10 +255,6 @@ module.exports = function () {
         });
       });
 
-      describe('user', function () {
-
-      });
-
     });
 
   });
