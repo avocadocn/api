@@ -8,10 +8,10 @@ module.exports = function () {
 
   describe('get /users/:userId', function () {
 
-    var accessToken;
+    var accessToken, data, user;
     before(function (done) {
-      var data = dataService.getData();
-      var user = data[0].users[0];
+      data = dataService.getData();
+      user = data[0].users[0];
 
       request.post('/users/login')
         .send({
@@ -27,8 +27,6 @@ module.exports = function () {
     });
 
     it('用户应该获取到自己的完整信息', function (done) {
-      var data = dataService.getData();
-      var user = data[0].users[0];
       request.get('/users/' + user.id)
         .set('x-access-token', accessToken)
         .expect(200)
@@ -55,8 +53,6 @@ module.exports = function () {
     });
 
     it('用户可以只获取免打扰开关', function (done) {
-      var data = dataService.getData();
-      var user = data[0].users[0];
       request.get('/users/' + user.id + '?responseKey=pushToggle')
         .set('x-access-token', accessToken)
         .expect(200)
@@ -71,8 +67,6 @@ module.exports = function () {
     });
 
     it('应该正常获取到公司其它成员的信息', function (done) {
-      var data = dataService.getData();
-      var user = data[0].users[0];
       var otherUser = data[0].users[1];
       request.get('/users/' + otherUser.id)
         .set('x-access-token', accessToken)
@@ -99,8 +93,6 @@ module.exports = function () {
     });
 
     it('获取其它公司的成员的信息应该只获取到简略信息', function (done) {
-      var data = dataService.getData();
-      var user = data[0].users[0];
       var otherUser = data[1].users[0];
       request.get('/users/' + otherUser.id)
         .set('x-access-token', accessToken)
@@ -117,6 +109,21 @@ module.exports = function () {
           for (var key in resUser) {
             '_id nickname photo'.indexOf(key).should.not.equal(-1);
           }
+          done();
+        });
+    });
+
+    it('获取某活动的未读评论数应获取到此活动的数目', function (done) {
+      request.get('/users/' + user.id )
+        .query({commentCampaignId : data[0].campaigns[0]._id})
+        .set('x-access-token', accessToken)
+        .expect(200)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          res.body.unreadNumbers.should.be.a.Number;
           done();
         });
     });
