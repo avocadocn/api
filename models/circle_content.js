@@ -39,6 +39,7 @@ var CircleContent = new Schema({
     default: 'show'
   },
   comment_user_ids: [Schema.Types.ObjectId] // 参与过评论的用户id
+  
 });
 
 CircleContent.pre('save', function (next) {
