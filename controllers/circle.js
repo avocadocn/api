@@ -32,33 +32,35 @@ module.exports = function(app) {
       });
 
       form.parse(req, function(err, fields, files) {
-        // if (options.getFields) {
-        //   options.getFields(fields);
-        // }
-        // console.log(fields['tid'][0]);
-        // console.log(fields['campaign_id']);
         if (err) {
           log(err);
-          return;
+          return res.sendStatus(500);
         }
+        // Send error when don't have content and images
+        if(!fields['content'] && !files[fieldName]) {
+          return res.sendStatus(500);
+        }
+
+        req.tid = fields['tid'] ? fields['tid'] : null;
+        req.campaign_id = fields['campaign_id'] ? fields['campaign_id'] : null;
+        req.content = fields['content'] ? fields['content'] : null;      
 
         if (!files[fieldName]) {
           log(err);
-
-          // if (options.error) {
-          //   options.error({
-          //     type: 'notfound',
-          //     msg: '没有收到文件' + options.fieldName
-          //   });
-          //   return;
-          // }
         } else {
           req.imgFiles = files[fieldName];
           next();
         }
       });
     },
-
+    /**
+     * Upload images for the circle content
+     * Images upload path: /public/img/circle/{YYYY-MM}/{cid}/{DateTime.jpg}
+     * @param  {[type]}   req  [description]
+     * @param  {[type]}   res  [description]
+     * @param  {Function} next [description]
+     * @return {[type]}        [description]
+     */
     uploadPhotoForContent: function(req, res, next) {
       if (!req.imgFiles) {
         // 不传照片的话直接到下一步
@@ -92,14 +94,21 @@ module.exports = function(app) {
 
     },
     /**
-     * [createCircleContent description]
+     * Create circle content
      * @param  {[type]} req [description]
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
     createCircleContent: function(req, res) {
-      var tid = req.body.tid ? req.body.tid : [];
-      var campaign_id = req.body.campaign_id ? req.body.campaign_id : null;
+      // Send error when don't have content and images
+      if(!req.body.content && !req.content && !req.imgInfos) {
+        return res.sendStatus(500);
+      }
+
+      var tid = req.tid ? req.tid : (req.body.tid ? req.body.tid : null);
+      var campaign_id = req.campaign_id ? req.campaign_id : (req.body.campaign_id ? req.body.campaign_id : null);
+      var content = req.content ? req.content : (req.body.content ? req.body.content : null);
+
       var comment_users = [];
       comment_users.push(req.user._id);
 
@@ -126,7 +135,7 @@ module.exports = function(app) {
 
         campaign_id: campaign_id, // 关联的活动id(可选，不是必要的)
 
-        content: req.content, // 文本内容(content和photos至少要有一个)
+        content: content, // 文本内容(content和photos至少要有一个)
 
         // 照片列表
         photos: photos,
@@ -481,7 +490,7 @@ module.exports = function(app) {
 
                         }
                       });
-                    }).then(function(null, err) {
+                    }).then(null, function(err) {
                       log(err);
                     });
                   }
