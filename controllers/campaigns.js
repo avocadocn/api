@@ -36,6 +36,7 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
     };
   }
   var populate = populate ? populate.split(',').join(' ') :'';
+  var outputOption ;
   switch(select_type){
     //即将开始的活动
     case '1':
@@ -63,13 +64,19 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
     case '5':
       _option.start_time = { '$gte': now};
       _option.campaign_type = {'$in':[4,5,7,9]};
-      _option.tid = {'$in':teamIds}
+      _option.tid = {'$in':teamIds};
     break;
+    //发同事圈需要的活动
+    //暂时定为已参加的所有活动高，按照-start_time排序
+    case '6':
+      _option['campaign_unit.member._id'] = requestId;
+      outputOption = {'theme':1};
+      break;
     default:
     break;
   }
   Campaign
-  .find(_option)
+  .find(_option,outputOption)
   .sort(sort)
   .limit(limit)
   .populate(populate)
@@ -421,6 +428,9 @@ var getCampaignListHandle = function (req, res) {
             res.status(200).send([]);
           }
           else {
+            if(req.query.select_type === '6') {
+              return res.status(200).send(campaigns);
+            }
             var formatCampaigns = [];
             campaigns.forEach(function (campaign) {
               formatCampaigns.push(campaignBusiness.formatCampaign(campaign, req.user));
@@ -1115,7 +1125,7 @@ module.exports = function (app) {
             select_type: {
               name: 'select_type',
               value: req.query.select_type,
-              validators: [donlerValidator.enum(['0', '1', '2', '3', '4', '5'])]
+              validators: [donlerValidator.enum(['0', '1', '2', '3', '4', '5', '6'])]
             },
             join_flag: {
               name: 'join_flag',
