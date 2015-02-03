@@ -14,7 +14,7 @@ module.exports = function(app, ctrl) {
   // delete /circle_contents/:contentId/comments/:commentId 撤消评论或取消赞  
   app.delete('/circle_contents/:contentId/comments/:commentId', token.needToken, ctrl.deleteCircleComment);
   // get /circle_reminds?has_new=true 获取是否有最新消息  (红点)(TODO)
-  // app.get('/circle_reminds?has_new=true', token.needToken, ctrl.);
+  app.get('/circle_reminds', token.needToken, ctrl.getReminds);
   // get /circle_reminds/comments 获取同事圈提醒(被赞、被评论、赞过或评论过的消息有更新)  
   app.get('/circle_reminds/comments', token.needToken, ctrl.getCircleComments);
   // get /circle_messages 获取个人消息列表  (TODO)

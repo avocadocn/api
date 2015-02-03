@@ -465,8 +465,40 @@ module.exports = function(app) {
 
     getCircleMessages: function(req, res) {
 
+    },
+
+    /**
+     * 员工用户获取是否有新评论、新朋友圈内容&消息
+     * @param  {Object} req:{query:{has_new:string}}
+     * @return {comments:boolean, reminds:number, new_content:boolean}
+     */
+    getReminds: function (req, res) {
+      if(req.query.has_new !== 'true') {
+        return res.status(422);
+      }
+      if(req.user.provider==='company') {
+        return res.status(403).send({msg:'公司账号暂无提醒功能'});
+      }
+      var new_content = req.user.has_new_content;//是否有新的同事圈内容
+      var reminds = req.user.new_comment_num;
+      var comments = false;
+      var length = req.user.commentCampaigns.length;
+      for(var i=0; i<length; i++) {
+        if(req.user.commentCampaigns[i].unread > 0) {
+          comments = true;
+          break;
+        }
+      }
+      if(!comments) {
+        var length = req.user.unjoinedCommentCampaigns.length;
+        for(var i=0; i<length; i++) {
+          if(req.user.unjoinedCommentCampaigns[i].unread > 0) {
+            comments = true;
+            break;
+          }
+        }
+      }
+      return res.status(200).send({comments:comments, reminds:reminds, new_content:new_content});
     }
-
-
   };
 };
