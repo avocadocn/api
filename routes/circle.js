@@ -13,15 +13,13 @@ module.exports = function(app, ctrl) {
   app.post('/circle_contents/:contentId/comments', token.needToken, ctrl.getCircleContentById, ctrl.createCircleComment);
   // delete /circle_contents/:contentId/comments/:commentId 撤消评论或取消赞  
   app.delete('/circle_contents/:contentId/comments/:commentId', token.needToken, ctrl.deleteCircleComment);
-  // get /circle_reminds?has_new=true 获取是否有最新消息  (红点)(TODO)
+  // get /circle_reminds?has_new=true 获取是否有最新消息  (红点)
   app.get('/circle_reminds', token.needToken, ctrl.getReminds);
   // get /circle_reminds/comments 获取同事圈提醒(被赞、被评论、赞过或评论过的消息有更新)  
   app.get('/circle_reminds/comments', token.needToken, ctrl.getCircleComments);
-  // get /circle_messages 获取个人消息列表  (TODO)
-  app.get('/circle_messages', token.needToken, ctrl.getCircleMessages);
+  // get /circle_messages 获取个人提醒列表 同提醒
+  // app.get('/circle_messages', token.needToken, ctrl.getCircleMessages);
   // ## 辅助api
   // get /teams?query 获取小队列表(在现在基础上添加功能)  
   // get /campaigns?query 获取活动列表(在现在基础上添加功能)  
-  // 
-  // 
 };

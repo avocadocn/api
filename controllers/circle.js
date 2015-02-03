@@ -520,9 +520,98 @@ module.exports = function(app) {
     },
 
     /**
-     * 员工用户获取是否有新评论、新朋友圈内容&消息
+     * 获取同事圈提醒 
+     * @param  {Object} req:{ query:{last_comment_date(optional):date ,limit:int} } 
+     * @return [comment]
+     */
+    getCircleComments: function(req, res) {
+      if(req.user.provider==='company') {
+        return res.status(403).send({msg:'公司账号暂无提醒功能'});
+      }
+      var options = { 'post_user_cid': req.user.cid, 'relative_user_ids' : req.user._id };
+      if(req.query.last_comment_date) {//如果带此属性来，则查找比它更早的limit条
+        options.post_date = {'$lt': req.query.last_comment_date};
+      }
+      var limit = req.query.limit || 20;
+      //先查出所有的评论
+      CircleComment.find(options,{})
+      .sort('-post_date')
+      .limit(req.query.limit)
+      .exec(limit)
+      .then(function(comments) {
+        //再聚合所有的post_user、target_content_id
+        var uids = [];
+        var targetIds = [];
+        var comments_length = comments.length;
+        for(var i=0; i<comments_length; i++) {
+          uids.push(comments[i].pster_user_id);
+          targetIds.push(comments[i].target_content_id);
+        };
+        //获取所有的circlecontent
+        async.parallel({
+          users: function (callback) {//获取所有人的昵称和头像
+            User.find({ 'cid':req.user.cid, '_id':{'$in':uids}}, {'nickname':1, 'photo':1}, function (err, users) {
+              if(err) callback(err);
+              else callback(null, users);
+            })
+          },
+          contents: function (callback) {
+            CircleContent.find({ 'cid':req.user.cid, '_id':{'$in':targetIds}, 'status':'show' }, {'content':1, 'photos':1}, function (err, contents) {
+              if(err) callback(err);
+              else callback(null, contents);
+            })
+          }
+        },function(err, results) {
+          if(err) {
+            log(err);
+            return res.status(500).send({msg: 'database err'});
+          }else {
+            //一个个赋值回去
+            async.map(comments, function(comment, callback) {
+              var posterIndex = tools.arrayObjectIndexOf(results.users, comment.post_user_id, '_id');
+              var circleContentIndex = tools.arrayObjectIndexOf(results.contents, comment.target_content_id, '_id');
+              var circle_comment = {
+                '_id': comment._id,
+                'kind': comment.kind,
+                'content': comment.content,
+                'isOnlyToContent': comment.is_only_to_content,
+                'targetContent': results.contents[circleContentIndex],//{_id,conent,photos}
+                'targetUserId': comment.target_user_id,
+                'poster': results.users[posterIndex],//{_id, nickname,photo}
+                'postDate': comment.post_date
+              }
+              callback(circle_comment);
+            },function(err, circleComments) {
+              if(err) {
+                log(err);
+                return res.status(500).send({msg: 'output err'});
+              }else {
+                return res.status(200).send(circleComments);
+              }
+            });
+          }
+        });
+      })
+      .then(null, function (err) {
+        log(err);
+        return res.status(500).send({msg: 'circleComments not found.'})
+      });
+    },
+
+    /**
+     * 获取同事圈消息列表
+     * @param  {Object} req [description]
+     * @return {}     [description]
+     */
+    //功能同getCircleComments
+    // getCircleMessages: function(req, res) {
+
+    // },
+
+    /**
+     * 员工用户获取是否有新评论、新朋友圈内容&消息(包括最新消息人的头像)
      * @param  {Object} req:{query:{has_new:string}}
-     * @return {comments:boolean, reminds:number, new_content:boolean}
+     * @return {comments:boolean, reminds:{number:int, user:{photo:uri}}, new_content:boolean}
      */
     getReminds: function(req, res) {
       if (req.query.has_new !== 'true') {
@@ -533,8 +622,11 @@ module.exports = function(app) {
           msg: '公司账号暂无提醒功能'
         });
       }
-      var new_content = req.user.has_new_content; //是否有新的同事圈内容
-      var reminds = req.user.new_comment_num;
+      var new_content = req.user.has_new_content;//是否有新的同事圈内容
+      var reminds = {
+        number: req.user.new_comment_num,
+        user: { photo: req.user.new_comment_user.photo }
+      };
       var comments = false;
       var length = req.user.commentCampaigns.length;
       for (var i = 0; i < length; i++) {
