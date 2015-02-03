@@ -308,6 +308,8 @@ module.exports = function (app) {
         .exec()
         .then(function (companyGroups) {
           var formatCompanyGroups = [];
+          //若是在发评论时取小队,只取部分数据 todo
+
           for (var i = 0; i < companyGroups.length; i++) {
             var membersWithoutLeader = [];
             companyGroups[i].member.forEach(function (member) {

@@ -204,18 +204,9 @@ var UserSchema = new Schema({
 
   // 发赞或评论的用户
   new_comment_user: {
-    _id: {
-      type: Schema.Types.ObjectId,
-      required: true
-    },
-    photo: {
-      type: String,
-      required: true
-    },
-    nickname: {
-      type: String,
-      required: true
-    }
+    _id: Schema.Types.ObjectId,
+    photo: String,
+    nickname: String
   },
   // reminds_clear_date: Date,
   list_clear_date: Date // 上次清空提醒列表的时间
