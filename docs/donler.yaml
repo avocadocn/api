@@ -2727,6 +2727,15 @@ definitions:
       contacts:
         description: 联系人
         type: string
+      areacode:
+        description: 联系电话区号
+        type: string
+      number:
+        description: 联系电话
+        type: string
+      extension:
+        description: 分机号
+        type: string
       email:
         description: 公司邮箱
         type: string

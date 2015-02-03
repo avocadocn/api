@@ -395,8 +395,11 @@ module.exports = function (app) {
                 city: company.info.city.city,
                 district: company.info.city.district,
                 address: company.info.address,
-                contacts: company.info.contact,
+                contacts: company.info.linkman,
                 email: company.info.email,
+                areacode: company.info.lindline.areacode,
+                number: company.info.lindline.number,
+                extension: company.info.lindline.extension,
                 memberNumber: company.info.membernumber,
                 companyInviteCodes: company.register_invite_code,
                 staffInviteCode: company.invite_key
@@ -574,7 +577,7 @@ module.exports = function (app) {
         company.info.address = req.body.address;
       }
       if (req.body.contacts) {
-        company.info.city.linkman = req.body.contacts;
+        company.info.linkman = req.body.contacts;
       }
       if (req.body.areacode) {
         company.info.lindline.areacode = req.body.areacode;
