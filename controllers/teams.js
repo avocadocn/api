@@ -269,6 +269,11 @@ module.exports = function (app) {
           };
         };
 
+        //如果只要取用户的小队简单信息
+        if (req.query.brief==='true') {
+          req.outputOptions = {'name':1, 'logo':1}
+        }
+
         if (!req.query.hostId || req.query.hostId === req.user._id.toString()) {
           options.cid = req.user.cid || req.user._id;
           addIdsToOptions(req.user.team);
@@ -302,14 +307,16 @@ module.exports = function (app) {
         return res.status(403).send({msg: '权限错误'});
       }
       CompanyGroup
-        .find(req.options)
+        .find(req.options, req.outputOptions)
         .populate('poster._id')
         .sort('-score.total')
         .exec()
         .then(function (companyGroups) {
           var formatCompanyGroups = [];
           //若是在发评论时取小队,只取部分数据 todo
-
+          if(req.query.brief==='true') {
+            return res.status(200).send(companyGroups);
+          }
           for (var i = 0; i < companyGroups.length; i++) {
             var membersWithoutLeader = [];
             companyGroups[i].member.forEach(function (member) {

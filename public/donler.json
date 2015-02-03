@@ -1105,6 +1105,13 @@
             "required": false,
             "type": "boolean",
             "in": "query"
+          },
+          {
+            "name": "brief",
+            "description": "是否取简要数据（id、name、photo）",
+            "required": false,
+            "type": "boolean",
+            "in": "query"
           }
         ],
         "responses": {
