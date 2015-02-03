@@ -35,6 +35,7 @@ var CircleComment = new Schema({
     type: Schema.Types.ObjectId, // 发评论或赞的用户的公司id
     required: true
   },
+
   post_user_id: {
     type: Schema.Types.ObjectId, // 发评论或赞的用户的id（头像和昵称再次查询）
     required: true
@@ -49,7 +50,7 @@ var CircleComment = new Schema({
     enum: ['show', 'delete'],
     default: 'show'
   },
-  // 与该评论相关的用户id集合(circle-content.comment_user_ids的子集)
+  // 与该评论相关的用户id集合
   relative_user_ids: [Schema.Types.ObjectId]
 });
 

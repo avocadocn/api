@@ -197,25 +197,26 @@ var UserSchema = new Schema({
 
   new_content_date: Date, //所有未读新消息中最早的时间
 
-  new_comment_num: Number,
+  new_comment_num: {
+    type: Number,
+    default: 0
+  },
 
   // 发赞或评论的用户
-  // new_comment_user: {
-
-  //   _id: {
-  //     type: Schema.Types.ObjectId,
-  //     required: true
-  //   },
-  //   photo: {
-  //     type: String,
-  //     required: true
-  //   },
-  //   nickname: {
-  //     type: String,
-  //     required: true
-  //   }
-
-  // },
+  new_comment_user: {
+    _id: {
+      type: Schema.Types.ObjectId,
+      required: true
+    },
+    photo: {
+      type: String,
+      required: true
+    },
+    nickname: {
+      type: String,
+      required: true
+    }
+  },
   // reminds_clear_date: Date,
   list_clear_date: Date // 上次清空提醒列表的时间
 });

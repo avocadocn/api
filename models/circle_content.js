@@ -2,6 +2,17 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+var user = {
+  _id: {
+    type: Schema.Types.ObjectId,
+    required: true
+  },
+  comment_num: {
+    type: Number,
+    required: true
+  }
+};
+
 var CircleContent = new Schema({
 
   // 所属公司id
@@ -38,7 +49,7 @@ var CircleContent = new Schema({
     required: true,
     default: 'show'
   },
-  comment_user_ids: [Schema.Types.ObjectId] // 参与过评论的用户id
+  comment_users: [user] // 参与过评论的用户id
   
 });
 
