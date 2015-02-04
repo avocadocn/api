@@ -513,10 +513,10 @@ module.exports = function(app) {
       }
       var limit = req.query.limit || 20;
       //先查出所有的评论
-      CircleComment.find(options, {})
+      CircleComment.find(options)
         .sort('-post_date')
-        .limit(req.query.limit)
-        .exec(limit)
+        .limit(limit)
+        .exec()
         .then(function(comments) {
           //再聚合所有的post_user、target_content_id
           var uids = [];
@@ -571,7 +571,6 @@ module.exports = function(app) {
                   '_id': comment._id,
                   'kind': comment.kind,
                   'content': comment.content,
-                  'isOnlyToContent': comment.is_only_to_content,
                   'targetContent': results.contents[circleContentIndex], //{_id,conent,photos}
                   'targetUserId': comment.target_user_id,
                   'poster': results.users[posterIndex], //{_id, nickname,photo}
@@ -627,12 +626,10 @@ module.exports = function(app) {
           msg: '公司账号暂无提醒功能'
         });
       }
-      var reminds = {
-        number: req.user.new_comment_num,
-        user: {
-          photo: req.user.new_comment_user.photo
-        }
-      };
+      var reminds = {number: req.user.new_comment_num};
+      if(reminds.number) {
+        reminds.user = { photo: req.user.new_comment_user.photo };
+      }
       var comments = false;
       var length = req.user.commentCampaigns.length;
       for (var i = 0; i < length; i++) {
@@ -677,6 +674,12 @@ module.exports = function(app) {
             reminds: reminds,
             new_content: new_content
           });
+        });
+      }else {
+        return res.status(200).send({
+          comments: comments,
+          reminds: reminds,
+          new_content: new_content
         });
       }
     }
