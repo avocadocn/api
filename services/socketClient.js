@@ -27,10 +27,20 @@ exports.pushComment = function (joinedUids, unjoinedUids, campaign, comment) {
   socket.emit('commentFromServer', joinedUids, unjoinedUids, campaign, comment);
 };
 
-//发新朋友圈的push 应该push给公司所有人
-exports.pushCircleContent = function (cid, photo) {
-  var users = [];//todo
-  socket.emit('circleContent', users, photo);
+//发新朋友圈的push 应该push给公司除了自己所有人
+exports.pushCircleContent = function (cid, poster) {
+  User.find({'cid':cid, 'active':true, 'mail_active':true , 'disabled':false, '_id':{'$ne':poster._id}},null, function(err, users) {
+    if(err) {
+      console.log(err.stack);
+    }else {
+      var userIds = [];
+      var length = users.length;
+      for(var i=0; i<length; i++) {
+        userIds.push(users[i]._id);
+      }
+      socket.emit('circleContent', userIds, poster.photo);
+    }
+  });
 };
 
 //发新朋友圈评论的push 应push给相关用户

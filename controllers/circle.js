@@ -156,7 +156,8 @@ module.exports = function(app) {
             msg: '同事圈消息发送成功'
           });
 
-          //socket todo
+          //发新朋友圈的push 应该push给公司所有人
+          socketClient.pushCircleContent(req.user.getCid(), req.user);
 
           User.update({
             'cid': req.user.getCid(),
@@ -405,14 +406,13 @@ module.exports = function(app) {
                 msg: '评论或点赞成功'
               });
 
-              //socket todo
+              socketClient.pushCircleComment(relative_user_ids, req.user.photo);
 
               var new_comment_user = {
                 _id: req.user._id,
                 photo: req.user.photo,
                 nickname: req.user.nickname
               };
-
               relative_user_ids.forEach(function(user_id) {
                 User.findByIdAndUpdate(
                   user_id, {
