@@ -2123,7 +2123,6 @@ paths:
           schema:
             type: object
             $ref: CommentsList
-            
   /circle_contents:
     post:
       tags:
@@ -3441,7 +3440,6 @@ definitions:
         items:
           type: object
           $ref: SimplePhoto
-         
   CommentsResponse:
     title: CommentsResponse
     type: object
@@ -4245,3 +4243,95 @@ definitions:
           - 6
       content:
         type: string
+  CircleContent:
+    title: Content
+    required:
+      - _id
+      - cid
+      - post_user_id
+      - post_date
+      - status
+    properties:
+      _id:
+        type: string
+        description: 消息id
+      cid:
+        type: string
+        description: 公司名称
+      tid:
+        type: array
+        description: 小队id数组
+        items:
+          type: string
+      campaign_id:
+        type: array
+        description: 活动id数组
+        items:
+          type: string
+      content:
+        type: string
+        description: 消息内容
+      photos:
+        type: array
+        description: 消息图片
+        items:
+          $ref: ContentPhoto
+      post_user_id:
+        type: string
+        description: 消息发布者id
+      post_date:
+        type: string
+        description: 消息时间
+        format: date-time
+      status:
+        type: string
+        description: 消息状态
+      comment_users:
+        type: array
+        description: 参与过评论的用户id数组
+        items:
+          type: string
+  CircleComment:
+    title: CircleComment
+    required:
+      - _id
+      - kind
+      - is_only_to_content
+      - target_content_id
+      - target_user_id
+      - post_user_cid
+      - post_user_id
+      - post_date
+      - status
+    properties:
+      _id:
+        type: string
+        description: 评论id
+      kind:
+        type: string
+        description: 类型
+      content:
+        type: string
+        description: 评论内容
+      is_only_to_content:
+        type: boolean
+        description: 回复对象
+      target_content_id:
+        type: string
+        description: 评论目标消息的id
+      target_user_id:
+        type: string
+        description: 评论目标用户的id
+      post_user_cid:
+        type: string
+        description: 发评论或赞的用户的公司id
+      post_user_id:
+        type: string
+        description: 发评论或赞的用户的id
+      post_date:
+        type: string
+        description: 发评论时间
+        format: date-time
+      status:
+        type: string
+        description: 消息状态
