@@ -156,6 +156,8 @@ module.exports = function(app) {
             msg: '同事圈消息发送成功'
           });
 
+          //socket todo
+
           User.update({
             'cid': req.user.getCid(),
             'has_new_content': false
@@ -403,6 +405,8 @@ module.exports = function(app) {
                 msg: '评论或点赞成功'
               });
 
+              //socket todo
+
               var new_comment_user = {
                 _id: req.user._id,
                 photo: req.user.photo,
@@ -556,7 +560,6 @@ module.exports = function(app) {
           uids.push(comments[i].pster_user_id);
           targetIds.push(comments[i].target_content_id);
         };
-        //获取所有的circlecontent
         async.parallel({
           users: function (callback) {//获取所有人的昵称和头像
             User.find({ 'cid':req.user.cid, '_id':{'$in':uids}}, {'nickname':1, 'photo':1}, function (err, users) {
@@ -564,7 +567,7 @@ module.exports = function(app) {
               else callback(null, users);
             })
           },
-          contents: function (callback) {
+          contents: function (callback) {//获取所有的circlecontent
             CircleContent.find({ 'cid':req.user.cid, '_id':{'$in':targetIds}, 'status':'show' }, {'content':1, 'photos':1}, function (err, contents) {
               if(err) callback(err);
               else callback(null, contents);
@@ -620,7 +623,11 @@ module.exports = function(app) {
     /**
      * 员工用户获取是否有新评论、新朋友圈内容&消息(包括最新消息人的头像)
      * @param  {Object} req:{query:{has_new:string}}
-     * @return {comments:boolean, reminds:{number:int, user:{photo:uri}}, new_content:boolean}
+     * @return {
+     *           comments:boolean, 
+     *           reminds:{number:int, user:{photo:uri}},
+     *           new_content:{has_new:boolean, user:{photo:uri}}
+     *         }
      */
     getReminds: function(req, res) {
       if (req.query.has_new !== 'true') {
@@ -631,7 +638,6 @@ module.exports = function(app) {
           msg: '公司账号暂无提醒功能'
         });
       }
-      var new_content = req.user.has_new_content;//是否有新的同事圈内容
       var reminds = {
         number: req.user.new_comment_num,
         user: { photo: req.user.new_comment_user.photo }
@@ -653,11 +659,35 @@ module.exports = function(app) {
           }
         }
       }
-      return res.status(200).send({
-        comments: comments,
-        reminds: reminds,
-        new_content: new_content
-      });
+      var new_content = {has_new:req.user.has_new_content};//是否有新的同事圈内容
+      if(new_content.has_new) {
+        CircleContent.find({'cid':req.user.cid, 'status':'show'},{'post_user_id':1})
+        .sort('-post_date')
+        .limit(1)
+        .exec()
+        .then(function(contents){
+          User.findOne({'_id':contents[0].post_user_id}, {'photo':1}, function (err, user) {
+            if(err) {
+              log(err);
+            }else{
+              new_content.user = {photo: user.photo};
+            }
+            return res.status(200).send({
+              comments: comments,
+              reminds: reminds,
+              new_content: new_content
+            });
+          });
+        })
+        .then(null, function (err) {
+          log(err);
+          return res.status(500).send({
+            comments: comments,
+            reminds: reminds,
+            new_content: new_content
+          });
+        });
+      }
     }
   };
 };
