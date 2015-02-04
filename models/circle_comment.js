@@ -47,7 +47,7 @@ var CircleComment = new Schema({
   },
   status: {
     type: String,
-    enum: ['show', 'delete'],
+    enum: ['show', 'delete', 'content_delete'],
     default: 'show'
   },
   // 与该评论相关的用户id集合

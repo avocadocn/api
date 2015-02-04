@@ -195,7 +195,7 @@ var UserSchema = new Schema({
     default: false
   },
 
-  new_content_date: Date, //所有未读新消息中最早的时间
+  // new_content_date: Date, //所有未读新消息中最早的时间
 
   new_comment_num: {
     type: Number,
