@@ -387,6 +387,7 @@ module.exports = function (app) {
               res.status(200).send({
                 _id: company._id,
                 username: company.username,
+                login_email: company.login_email,
                 domains: company.email.domain,
                 name: company.info.name,
                 shortName: company.info.official_name,
@@ -455,6 +456,11 @@ module.exports = function (app) {
           value: req.body.password,
           validators: [donlerValidator.minLength(6), donlerValidator.maxLength(30)]
         },
+        oldPassword: {
+          name: '密码',
+          value: req.body.oldPassword,
+          validators: [donlerValidator.minLength(6), donlerValidator.maxLength(30)]
+        },
         domain: {
           name: '邮箱后缀',
           value: req.body.domain,
@@ -516,6 +522,13 @@ module.exports = function (app) {
           validators: ['email']
         }
       }, 'complete', function (pass, msg) {
+        if(req.body.password) {
+          if(!req.body.oldPassword || !req.company.authenticate(req.body.oldPassword)) {
+            return res.status(400).send({ msg: '您输入的旧密码错误' });
+          }
+        }
+
+
         if (pass) {
           next();
         } else {
