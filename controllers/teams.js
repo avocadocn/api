@@ -362,6 +362,9 @@ module.exports = function (app) {
               score: companyGroups[i].score,
               officialTeam: companyGroups[i].poster.role=='Personal' ? false : true
             };
+            if(role.company=='hr'){
+              briefTeam.count = companyGroups[i].count;
+            }
             if(companyGroups[i].poster.role=='Personal') {
               briefTeam.poster = {
                 _id:companyGroups[i].poster._id._id,
