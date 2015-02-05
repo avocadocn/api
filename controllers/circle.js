@@ -619,7 +619,7 @@ module.exports = function(app) {
      */
     getReminds: function(req, res) {
       if (req.query.has_new !== 'true') {
-        return res.status(422);
+        return res.status(422).send({msg:'参数错误'});
       }
       if (req.user.provider === 'company') {
         return res.status(403).send({
