@@ -31,7 +31,7 @@ module.exports = function(app) {
       var form = new multiparty.Form({
         uploadDir: uploader.tempDir
       });
-
+      
       form.parse(req, function(err, fields, files) {
         if (err) {
           log(err);
@@ -153,19 +153,14 @@ module.exports = function(app) {
             }
           }, {
             $set: {
-              'has_new_content': true,
-              'new_content_date': circleContent.post_date
+              'has_new_content': true
             }
 
           }, {
             multi: true
-          }, function(err, user) {
-            if (!user) {
-              console.log('no user');
-            }
+          }, function(err) {
             if (err) {
               log(err);
-
             }
           });
 
@@ -179,6 +174,7 @@ module.exports = function(app) {
      * @param  {[type]} res [description]
      * @return [
      *           {
+     *             content: {
      *               cid // 所属公司id
      *               tid: [Schema.Types.ObjectId], // 关联的小队id(可选，不是必要的)
      *               campaign_id: Schema.Types.ObjectId, // 关联的活动id(可选，不是必要的)
@@ -188,78 +184,80 @@ module.exports = function(app) {
      *               post_date: type: Date,
      *               status: type: String,
      *               comment_users: [Schema.Types.ObjectId] // 参与过评论的用户id
-     *               comments: [
-     *                          ...Reference: Schema CircleComment
-     *                         ]
+     *             }
+     *             comments: [
+     *               ...Reference: Schema CircleComment
+     *             ]
      *           }
      *           ....
      *         ]
      */
     getCircleContents: function(req, res) {
+      var options = {
+        'cid': req.user.cid,
+        'status': 'show'
+      };
+
+      if (req.query.last_comment_date) { //如果带此属性来，则查找比它更早的limit条
+        options.post_date = {
+          '$lt': req.query.last_comment_date
+        };
+      }
+
+      var limit = req.query.limit || 20;
+
+      CircleContent.find(options)
+        .sort('-post_date')
+        .limit(limit)
+        .exec()
+        .then(function(contents) {
+          if (!contents) {
+            return res.status(404).send({
+              msg: '未找到同事圈消息'
+            }); // 
+          } else {
+            async.map(contents, function(content, callback) {
+                var result = {};
+                CircleComment.find({
+                  target_content_id: content._id,
+                  status: 'show'
+                }).sort('-post_date').exec().then(function(comments) {
+                  result.content = content;
+                  result.comments = comments;
+                  callback(null, result);
+                }).then(null, function(err) {
+                  log(err);
+                  callback(err);
+                });
+              },
+              function(err, results) {
+                console.log(results);
+                return res.status(200).send(results);
+              });
+          }
+        })
+        .then(null, function(err) {
+          log(err);
+          return res.sendStatus(500);
+        });
+
       /**
        * Query the user who fits our conditions and
        * update the user's has_new_content(true->false)
        */
-      User.findOneAndUpdate({
-        has_new_content: true, // the field to show whether has new circle-contents
-        _id: req.user._id
-      }, {
-        has_new_content: false
-      }).exec().then(function(user) {
-        if (!user) {
-          return res.status(404).send({
-            msg: '无新的同事圈消息'
-          });
-        }
-
-        var options = {
-          'cid': user.cid,
-          'status': 'show'
-        };
-
-        if (req.query.last_comment_date) { //如果带此属性来，则查找比它更早的limit条
-          options.post_date = {
-            '$lt': req.query.last_comment_date
-          };
-        }
-
-        var limit = req.query.limit || 20;
-
-        circleContent.find(options)
-          .sort('-post_date')
-          .limit(limit)
-          .exec()
-          .then(function(contents) {
-            if (!contents) {
-              return res.status(404).send({
-                msg: '未找到同事圈消息'
-              }); // 
-            } else {
-              async.map(contents, function(content, callback) {
-                  CircleComment.find({
-                    target_content_id: content._id
-                  }).sort('-post_date').exec().then(function(comments) {
-                    content.comments = comments;
-                    callback(content);
-                  }).then(null, function(err) {
-                    log(err);
-                    callback(err);
-                  });
-                },
-                function(err, results) {
-                  return res.status(200).send(resContent);
-                });
-            }
-          })
-          .then(null, function(err) {
+      if (req.user.has_new_content) {
+        User.findOneAndUpdate({
+          has_new_content: true, // the field to show whether has new circle-contents
+          _id: req.user._id
+        }, {
+          has_new_content: false
+        }, function(err) {
+          if (err) {
             log(err);
-            return res.sendStatus(500);
-          });
+          }
+        });
+      }
 
-      }).then(null, function(err) {
-        log(err);
-        return res.sendStatus(500);
-      });
     },
     /**
      * Get the circle-contents by id for further use.
@@ -269,17 +267,17 @@ module.exports = function(app) {
      * @return {[type]}        [description]
      */
     getCircleContentById: function(req, res, next) {
-      CircleContent.find({
+      CircleContent.findOne({
           _id: req.params.contentId,
           status: 'show'
         }).exec()
-        .then(function(circlecontent) {
-          if (!circlecontent) {
+        .then(function(circleContent) {
+          if (!circleContent) {
             return res.status(404).send({
               msg: '未找到同事圈消息'
             });
           } else {
-            req.circlecontent = circlecontent;
+            req.circleContent = circleContent;
             next();
           }
         })
@@ -341,29 +339,35 @@ module.exports = function(app) {
 
       var relative_user_ids = []; // the other commenters (exclude the current commenter) 
       var comment_users = []; // the commenter (exclude the owner of content)
-
-      var user = {
-        _id: req.user._id,
-        comment_num: 1
-      };
-
-      if (req.user._id != circleContent.post_user_id) {
+      // Generate relative_user_ids
+      if (req.user._id.toString() != circleContent.post_user_id.toString()) {
         relative_user_ids.push(circleContent.post_user_id);
       }
 
-      circleContent.comment_users.forEach(function(_user) {
-        if (_user._id == req.user._id) {
-          user.comment_num = _user.comment_num + 1;
-        } else {
-          comment_users.push(_user);
-          if (_user.comment_num > 0) {
-            relative_user_ids.push(_user._id);
-          }
+      circleContent.comment_users.forEach(function(user) {
+        if(user._id.toString() != req.user._id.toString() && user.comment_num > 0){
+          relative_user_ids.push(user._id);
         }
       });
 
-      comment_users.push(user);
-
+      // Generate comment_users
+      if (req.user._id.toString() == circleContent.post_user_id.toString()) {
+        comment_users = circleContent.comment_users;
+      } else {
+        var new_comment_user = {
+          _id: req.user._id,
+          comment_num: 1
+        };
+        circleContent.comment_users.forEach(function(user) {
+          if (user._id.toString() == req.user._id.toString()) {
+            new_comment_user.comment_num = user.comment_num + 1;
+          } else {
+            comment_users.push(user);
+          }
+        });
+        comment_users.push(new_comment_user);
+      }
+      
       var circleComment = new CircleComment({
         // 类型，评论或赞
         kind: req.body.kind,
@@ -374,10 +378,10 @@ module.exports = function(app) {
         is_only_to_content: req.body.is_only_to_content,
 
         // # 评论目标消息的id
-        target_content_id: req.body.target_content_id,
+        target_content_id: req.params.contentId,
 
         // 评论目标用户的id(直接回复消息则保存消息发布者的id)
-        target_user_id: req.body.target_user_id,
+        target_user_id: !req.body.target_user_id ? circleContent.post_user_id : req.body.target_user_id,
 
         post_user_cid: req.user.cid, // 发评论或赞的用户的公司id
 
@@ -385,7 +389,7 @@ module.exports = function(app) {
 
         relative_user_ids: relative_user_ids
       });
-
+      
       circleComment.save(function(err) {
         if (err) {
           log(err);
@@ -404,7 +408,9 @@ module.exports = function(app) {
           };
 
           User.update({
-            $in: relative_user_ids
+            _id: {
+              $in: relative_user_ids
+            }
           }, {
             $set: {
               new_comment_user: new_comment_user
@@ -415,6 +421,7 @@ module.exports = function(app) {
 
           }, function(err) {
             if (err) {
+              console.log(err);
               log(err);
             }
           });
@@ -425,7 +432,9 @@ module.exports = function(app) {
           }, {
             comment_users: comment_users
           }, function(err) {
-            log(err);
+            if(err) {
+              log(err);
+            }
           });
         }
 
@@ -466,26 +475,28 @@ module.exports = function(app) {
                 new_comment_num: -1
               }
             }, function(err) {
-              log(err);
+              if(err) {
+                log(err);
+              }
             });
 
             // Update comment_users of circle content
             // Reference: http://stackoverflow.com/questions/11184079/how-to-increment-mongodb-document-object-fields-inside-an-array
-            CircleContent.update({
+          CircleContent.update({
               _id: comment.target_content_id,
-              status: 'show',
-              comment_users: {
-                _id: req.user._id,
-                comment_num: {
-                  $gte: 1
-                }
+              'comment_users._id': req.user._id,
+              'comment_users.comment_num': {
+                $gte: 1
               }
             }, {
               $inc: {
                 'comment_users.$.comment_num': -1
               }
-            }, function(err) {
-              log(err);
+            },
+            function(err) {
+              if (err) {
+                log(err);
+              }
             });
           }
         });

@@ -2129,7 +2129,15 @@ paths:
         - circles
       summary: 创建新同事圈内容
       operationId: createCircleContent
+      consumes:
+        - multipart/form-data
+      description: 此功能测试移动到upload_test
+      parameters:
       responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
         "200":
           description: 成功
     get:
@@ -2137,16 +2145,46 @@ paths:
         - circles
       summary: 获取同事圈内容
       operationId: getCircleContents
+      parameters:
+        - name: last_comment_date
+          description: 上一条评论的评论时间
+          required: false
+          type: string
+          format: date-time
+          in: query
+        - name: limit
+          description: 数量限制
+          required: false
+          type: number
+          in: query
       responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
         "200":
           description: 成功
+          schema:
+            type: array
+            items:
+              $ref: ResCircle
   /circle_contents/{contentId}:
     delete:
       tags:
         - circles
       summary: 删除已发同事圈
       operationId: deleteCircleContent
+      parameters:
+        - name: contentId
+          description: 消息id
+          required: true
+          type: string
+          in: path
       responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
         "200":
           description: 成功
   /circle_contents/{contentId}/comments:
@@ -2155,7 +2193,23 @@ paths:
         - circles
       summary: 发表同事圈评论或赞
       operationId: createCircleComment
+      parameters:
+        - name: contentId
+          description: 消息id
+          required: true
+          type: string
+          in: path
+        - name: body
+          schema:
+            $ref: CommentForm
+          in: body
+          required: true
+          description: 评论
       responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
         "200":
           description: 成功
   /circle_contents/{contentId}/comments/{commentId}:
@@ -2164,7 +2218,22 @@ paths:
         - circles
       summary: 删除同事圈评论或取消赞
       operationId: deleteCircleComment
+      parameters:
+        - name: contentId
+          description: 消息id
+          required: false
+          type: string
+          in: path
+        - name: commentId
+          description: 评论id
+          required: true
+          type: string
+          in: path
       responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
         "200":
           description: 成功
   /circle_reminds:
@@ -2173,8 +2242,6 @@ paths:
         - circles
       summary: 获取是否有新评论、新朋友圈内容、消息(包括最新消息人的头像)
       operationId: getReminds
-      consumes:
-        - application/json
       parameters:
         - name: has_new
           description: 标明是否获取是否有新消息
@@ -4243,6 +4310,20 @@ definitions:
           - 6
       content:
         type: string
+  ResCircle:
+    title: ResCircle
+    required:
+      - CircleContent
+      - comments
+    properties:
+      CircleContent:
+        type: CircleContent
+        description: 消息相关信息
+      comments:
+        type: array
+        description: 消息相关评论数组
+        items:
+          type: CircleComment
   CircleContent:
     title: Content
     required:
@@ -4291,6 +4372,11 @@ definitions:
         description: 参与过评论的用户id数组
         items:
           type: string
+      comments:
+        type: array
+        description: 消息相关评论数组
+        items:
+          type: CircleComment
   CircleComment:
     title: CircleComment
     required:
@@ -4335,3 +4421,25 @@ definitions:
       status:
         type: string
         description: 消息状态
+  CommentForm:
+    title: CommentForm
+    type: object
+    required:
+      - kind
+      - is_only_to_content
+    properties:
+      kind:
+        description: 类型，评论或赞
+        type: string
+      content:
+        description: 评论内容
+        type: string
+      is_only_to_content:
+        description: 回复对象
+        type: boolean
+      target_user_id:
+        description: 评论用户的id
+        type: string
+      is_only_to_content:
+        description: 回复对象
+        type: boolean

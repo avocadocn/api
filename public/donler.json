@@ -3125,9 +3125,20 @@
         ],
         "summary": "创建新同事圈内容",
         "operationId": "createCircleContent",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "description": "此功能测试移动到upload_test",
+        "parameters": null,
         "responses": {
           "200": {
             "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       },
@@ -3137,9 +3148,38 @@
         ],
         "summary": "获取同事圈内容",
         "operationId": "getCircleContents",
+        "parameters": [
+          {
+            "name": "last_comment_date",
+            "description": "上一条评论的评论时间",
+            "required": false,
+            "type": "string",
+            "format": "date-time",
+            "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "数量限制",
+            "required": false,
+            "type": "number",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "ResCircle"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -3151,9 +3191,24 @@
         ],
         "summary": "删除已发同事圈",
         "operationId": "deleteCircleContent",
+        "parameters": [
+          {
+            "name": "contentId",
+            "description": "消息id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
             "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -3165,9 +3220,33 @@
         ],
         "summary": "发表同事圈评论或赞",
         "operationId": "createCircleComment",
+        "parameters": [
+          {
+            "name": "contentId",
+            "description": "消息id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "CommentForm"
+            },
+            "in": "body",
+            "required": true,
+            "description": "评论"
+          }
+        ],
         "responses": {
           "200": {
             "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -3179,9 +3258,31 @@
         ],
         "summary": "删除同事圈评论或取消赞",
         "operationId": "deleteCircleComment",
+        "parameters": [
+          {
+            "name": "contentId",
+            "description": "消息id",
+            "required": false,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "commentId",
+            "description": "评论id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
             "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
           }
         }
       }
@@ -3193,9 +3294,6 @@
         ],
         "summary": "获取是否有新评论、新朋友圈内容、消息(包括最新消息人的头像)",
         "operationId": "getReminds",
-        "consumes": [
-          "application/json"
-        ],
         "parameters": [
           {
             "name": "has_new",
@@ -6059,6 +6157,181 @@
           ]
         },
         "content": {
+          "type": "string"
+        }
+      }
+    },
+    "ResCircle": {
+      "title": "ResCircle",
+      "required": [
+        "CircleContent",
+        "comments"
+      ],
+      "properties": {
+        "CircleContent": {
+          "type": "CircleContent",
+          "description": "消息相关信息"
+        },
+        "comments": {
+          "type": "array",
+          "description": "消息相关评论数组",
+          "items": {
+            "type": "CircleComment"
+          }
+        }
+      }
+    },
+    "CircleContent": {
+      "title": "Content",
+      "required": [
+        "_id",
+        "cid",
+        "post_user_id",
+        "post_date",
+        "status"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "消息id"
+        },
+        "cid": {
+          "type": "string",
+          "description": "公司名称"
+        },
+        "tid": {
+          "type": "array",
+          "description": "小队id数组",
+          "items": {
+            "type": "string"
+          }
+        },
+        "campaign_id": {
+          "type": "array",
+          "description": "活动id数组",
+          "items": {
+            "type": "string"
+          }
+        },
+        "content": {
+          "type": "string",
+          "description": "消息内容"
+        },
+        "photos": {
+          "type": "array",
+          "description": "消息图片",
+          "items": {
+            "$ref": "ContentPhoto"
+          }
+        },
+        "post_user_id": {
+          "type": "string",
+          "description": "消息发布者id"
+        },
+        "post_date": {
+          "type": "string",
+          "description": "消息时间",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "消息状态"
+        },
+        "comment_users": {
+          "type": "array",
+          "description": "参与过评论的用户id数组",
+          "items": {
+            "type": "string"
+          }
+        },
+        "comments": {
+          "type": "array",
+          "description": "消息相关评论数组",
+          "items": {
+            "type": "CircleComment"
+          }
+        }
+      }
+    },
+    "CircleComment": {
+      "title": "CircleComment",
+      "required": [
+        "_id",
+        "kind",
+        "is_only_to_content",
+        "target_content_id",
+        "target_user_id",
+        "post_user_cid",
+        "post_user_id",
+        "post_date",
+        "status"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "评论id"
+        },
+        "kind": {
+          "type": "string",
+          "description": "类型"
+        },
+        "content": {
+          "type": "string",
+          "description": "评论内容"
+        },
+        "is_only_to_content": {
+          "type": "boolean",
+          "description": "回复对象"
+        },
+        "target_content_id": {
+          "type": "string",
+          "description": "评论目标消息的id"
+        },
+        "target_user_id": {
+          "type": "string",
+          "description": "评论目标用户的id"
+        },
+        "post_user_cid": {
+          "type": "string",
+          "description": "发评论或赞的用户的公司id"
+        },
+        "post_user_id": {
+          "type": "string",
+          "description": "发评论或赞的用户的id"
+        },
+        "post_date": {
+          "type": "string",
+          "description": "发评论时间",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "消息状态"
+        }
+      }
+    },
+    "CommentForm": {
+      "title": "CommentForm",
+      "type": "object",
+      "required": [
+        "kind",
+        "is_only_to_content"
+      ],
+      "properties": {
+        "kind": {
+          "description": "类型，评论或赞",
+          "type": "string"
+        },
+        "content": {
+          "description": "评论内容",
+          "type": "string"
+        },
+        "is_only_to_content": {
+          "description": "回复对象",
+          "type": "boolean"
+        },
+        "target_user_id": {
+          "description": "评论用户的id",
           "type": "string"
         }
       }
