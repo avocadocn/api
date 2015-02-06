@@ -286,8 +286,19 @@ var registeredTasks = {
   // 任命队长
   appointLeader: {
     company: ['hr']
-  }
+  },
 
+  deleteCircleContent: {
+    user: ['self']
+  },
+
+  createCircleComment: {
+    company: ['member']
+  },
+
+  deleteCircleComment: {
+    user: ['self']
+  }
 };
 
 module.exports = registeredTasks;

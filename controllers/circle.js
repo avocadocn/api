@@ -298,6 +298,19 @@ module.exports = function(app) {
      * @return {[type]}     [description]
      */
     deleteCircleContent: function(req, res) {
+      // Judge authority
+      var users = [];
+      users.push(req.circleContent.post_user_id);
+      var role = auth.getRole(req.user, {
+        users: users
+      });
+      var allow = auth.auth(role, ['deleteCircleContent']);
+      if (!allow.deleteCircleContent) {
+        return res.status(403).send({
+          msg: '权限错误'
+        });
+      }
+
       CircleContent.findByIdAndUpdate(req.params.contentId, {
         status: 'delete'
       }, function(err, contents) {
@@ -330,12 +343,30 @@ module.exports = function(app) {
     /**
      * Create circle comment
      * TODO: check the body validate(kind, is_only_to_content, etc.)
-     * @param  {[type]} req [description]
+     * @param req {
+     *          "kind": "string", (required)
+     *          "content": "string",
+     *          "is_only_to_content": true, (required)
+     *          "target_user_id": "string"
+     * }
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
     createCircleComment: function(req, res) {
       var circleContent = req.circleContent;
+
+      // Judge authority
+      var companies = [];
+      companies.push(circleContent.cid);
+      var role = auth.getRole(req.user, {
+        companies: companies
+      });
+      var allow = auth.auth(role, ['createCircleComment']);
+      if (!allow.createCircleComment) {
+        return res.status(403).send({
+          msg: '权限错误'
+        });
+      }
 
       var relative_user_ids = []; // the other commenters (exclude the current commenter) 
       var comment_users = []; // the commenter (exclude the owner of content)
@@ -406,7 +437,7 @@ module.exports = function(app) {
             photo: req.user.photo,
             nickname: req.user.nickname
           };
-
+          // Update the feilds new_comment_user and new_comment_num of User Schema
           User.update({
             _id: {
               $in: relative_user_ids
@@ -425,7 +456,7 @@ module.exports = function(app) {
               log(err);
             }
           });
-
+          // Update the feild comment_users of CircleContent Schema
           CircleContent.findOneAndUpdate({
             _id: req.params.contentId,
             status: 'show'
@@ -449,57 +480,80 @@ module.exports = function(app) {
      * @return {[type]}     [description]
      */
     deleteCircleComment: function(req, res) {
-      CircleComment.findByIdAndUpdate(
-        req.params.commentId, {
-          status: 'delete'
-        },
-        function(err, comment) {
-          if (err) {
-            log(err);
-             return res.sendStatus(500);
-          } else {
-            res.status(200).send({
-              msg: '评论删除成功'
-            });
-
-            // Upadate new_comment_num
-            User.update({
-              _id: {
-                $in: comment.relative_user_ids
-              },
-              new_comment_num: {
-                $gte: 1
-              }
-            }, {
-              $inc: {
-                new_comment_num: -1
-              }
-            }, function(err) {
-              if(err) {
-                log(err);
-              }
-            });
-
-            // Update comment_users of circle content
-            // Reference: http://stackoverflow.com/questions/11184079/how-to-increment-mongodb-document-object-fields-inside-an-array
-          CircleContent.update({
-              _id: comment.target_content_id,
-              'comment_users._id': req.user._id,
-              'comment_users.comment_num': {
-                $gte: 1
-              }
-            }, {
-              $inc: {
-                'comment_users.$.comment_num': -1
-              }
-            },
-            function(err) {
-              if (err) {
-                log(err);
-              }
-            });
-          }
+      CircleComment.findById(req.params.commentId, function(err, comment) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        }
+        if (!comment) {
+          return res.status(200).send({
+            msg: '无法找到评论'
+          });
+        }
+        // Judge authority
+        var users = [];
+        users.push(comment.post_user_id);
+        var role = auth.getRole(req.user, {
+          users: users
         });
+        var allow = auth.auth(role, ['deleteCircleComment']);
+        if (!allow.deleteCircleComment) {
+          return res.status(403).send({
+            msg: '权限错误'
+          });
+        }
+        CircleComment.findByIdAndUpdate(
+          req.params.commentId, {
+            status: 'delete'
+          },
+          function(err, comment) {
+            if (err) {
+              log(err);
+              return res.sendStatus(500);
+            } else {
+              res.status(200).send({
+                msg: '评论删除成功'
+              });
+
+              // Upadate new_comment_num
+              User.update({
+                _id: {
+                  $in: comment.relative_user_ids
+                },
+                new_comment_num: {
+                  $gte: 1
+                }
+              }, {
+                $inc: {
+                  new_comment_num: -1
+                }
+              }, function(err) {
+                if (err) {
+                  log(err);
+                }
+              });
+
+              // Update comment_users of circle content
+              // Reference: http://stackoverflow.com/questions/11184079/how-to-increment-mongodb-document-object-fields-inside-an-array
+              CircleContent.update({
+                  _id: comment.target_content_id,
+                  'comment_users._id': req.user._id,
+                  'comment_users.comment_num': {
+                    $gte: 1
+                  }
+                }, {
+                  $inc: {
+                    'comment_users.$.comment_num': -1
+                  }
+                },
+                function(err) {
+                  if (err) {
+                    log(err);
+                  }
+                });
+            }
+          });
+      });
     },
 
     /**
