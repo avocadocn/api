@@ -79,7 +79,7 @@ html
           td.col.text_center(width="320" style="padding: 10px 0;")
             img(src='http://donlercom.qiniudn.com/img/dl_logol_blue.png' alt="动梨" style="background-size: contain; height: 30px;")
           td.col.text_center.xs_hidden(width="320" style="padding: 10px 0; text-align: right;")
-            span(style="color: #DCDCDC; font-size: 24px;") 动梨员工账号激活
+            span(style="color: #DCDCDC; font-size: 24px;")= title
       .mobile_wrap_top_border
       .mobile_wrap
         p(style="color: #008000;")
@@ -87,9 +87,9 @@ html
           span= who
         .solid.xs_hidden(style="border-top: 2px solid #DCDCDC;")
         div(style="font-size: 14px; line-height: 20px;")
-          p 我们收到您在动梨的申请信息，请点击下面的链接来激活帐户：
+          p= description
           p: a(style="text-decoration: none; word-break: break-all;" href="#{link}") #{link}
-        .dashed.sm_hidden
+        .dashed.sm_hidden(style="display: none;")
         div(style="margin-top: 40px;")
           p(style="color: #3bbee8;height:40px; line-height:40px; padding-left:40px; background:url(http://donlercom.qiniudn.com/img/icons/1_03.png) no-repeat left center; background-size: 40px;")
             span(style="font-size:24px; padding-left:10px;") 动梨 “活动助理”
@@ -122,7 +122,7 @@ html
                 td.col.text_left(style="text-align: left; line-height: 20px;")
                   span 日程、提醒、双重辅助，员工公司活动事务井井有条
         .solid.xs_hidden(style="border-top: 2px solid #DCDCDC;")
-        .dashed.sm_hidden
+        .dashed.sm_hidden(style="display: none;")
         .footer
           p.text_center.foot_text_line_1(style="color: #989898; margin: 20px 0 10px; font-size: 14px; line-height: 20px;") 本邮件由系统自动发出，请勿回复
           div.foot_text_line_2(style="width: 100%; margin: 10px 0 20px; color: #989898; font-size: 14px;")
