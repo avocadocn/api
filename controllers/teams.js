@@ -53,9 +53,8 @@ module.exports = function (app) {
             function (callback) {
               i--;
               Group.findOne({_id:selectedGroups[i]._id}).exec().then(function(group){
-                var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : company.info.official_name + '-' + selectedGroups[i].groupType + '队';
+                var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : company.info.official_name + '-' + group.groupType + '队';
                 var companyGroup = new CompanyGroup();
-
                 companyGroup.cid = company._id;
                 companyGroup.cname = company.info.name;
                 companyGroup.gid = selectedGroups[i]._id;
@@ -146,7 +145,7 @@ module.exports = function (app) {
       })
       .then(null, function (err) {
         log(err);
-        return res.status(500).send({msg: '查找公司错误'});
+        return res.status(500).send({msg: '新建小队失败'});
       });
     },
     getTeam : function(req, res) {
@@ -440,17 +439,22 @@ module.exports = function (app) {
         }
         team.home_court = homecourts;
       }
+
+
       //更新个人资料接口
       /**
        * [updateLeader description]
        * @param  {string}  uid            用户Id
        * @param  {Boolean} isOriginLeader 是否是原来的队长
        * @param  {Object}  team           小队
+       * @return {Function}callback            
        */
-      var updateLeader = function (uid, isOriginLeader, team) {
+      var updateLeader = function (uid, isOriginLeader, team,callback) {
+        callback = callback || function () {};
         User.findOne({_id:uid},function(err, user){
           if(err){
             log(err);
+            callback(err);
           }else{
             if(isOriginLeader){//如果被撤销了队长，把那个队的leader设为false
               var index = tools.arrayObjectIndexOf(user.team, team._id, '_id');
@@ -478,7 +482,22 @@ module.exports = function (app) {
                   logo: team.logo
                 });
               }
+              //把小队资料改了
+              var index = tools.arrayObjectIndexOf(team.member ,uid ,'_id');
+              var memberFormat = {
+                _id: uid,
+                nickname: user.nickname,
+                photo: user.photo
+              }
+              if(index === -1){
+                team.member.push(memberFormat);
+                team.leader =[memberFormat]; //目前仅为一个队长
+              }
+              else{
+                team.leader = [team.member[index]];//为了保证join_time属性正确.目前仅为一个队长
+              }
             }
+            callback();
             user.save(function(err){
               if(err) log(err);
             });
@@ -486,6 +505,28 @@ module.exports = function (app) {
         });
       };
       var leader = req.body.leader;
+      var saveTeam = function (error) {
+        if(error) {
+          log(err);
+          return res.status(500).send({msg:'保存错误'});
+        }
+        team.save(function(err){
+          if(err){
+            log(err);
+            return res.status(500).send({msg:'保存错误'});
+          }
+          else{
+            res.status(200).send({msg:'成功'});
+
+            if (req.isUpdateLogo) {
+              syncData.updateTlogo(team._id);
+            }
+            if (teamNameChanged) {
+              syncData.updateTname(team._id);
+            }
+          }
+        });
+      }
       if(leader){
         if(!allow.appointLeader) {
           return res.status(403).send({msg: '权限错误'});
@@ -497,33 +538,12 @@ module.exports = function (app) {
           }
         }
         //把新队长资料改了
-        updateLeader(req.body.leader._id, false, team);
-
-        //把小队资料改了
-        var index = tools.arrayObjectIndexOf(team.member ,leader._id ,'_id')
-        if(index === -1){
-          team.member.push(leader);
-          team.leader.push(leader);
-        }else{
-          team.leader = [team.member[index]];//为了保证join_time属性正确.
-        }
+        updateLeader(req.body.leader._id, false, team,saveTeam);
       }
-      team.save(function(err){
-        if(err){
-          log(err);
-          return res.status(500).send({msg:'保存错误'});
-        }
-        else{
-          res.status(200).send({msg:'成功'});
-
-          if (req.isUpdateLogo) {
-            syncData.updateTlogo(team._id);
-          }
-          if (teamNameChanged) {
-            syncData.updateTname(team._id);
-          }
-        }
-      });
+      else {
+        saveTeam();
+      }
+      
     },
     deleteTeam : function(req, res) {
       var team = req.companyGroup;
