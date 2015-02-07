@@ -377,12 +377,28 @@ module.exports = function (app) {
     },
 
     getCompanyUsers: function (req, res) {
+      //resultType :1仅nickname，photo
+      //2: username,photo,realname,department,team,campaignCount,score
+      //3:待激活用户
       var findOptions = {'cid':req.params.companyId, 'active':true, 'mail_active':true};
       var outputOptions = {};
-      if(req.user.provider==='company') { //hr取来任命队长用
+      if(req.user.provider==='company') { 
         if(req.user._id.toString() !== req.params.companyId) return res.sendStatus(403);
         else {
-          outputOptions = {'nickname':1,'photo':1};
+          //hr取来任命队长用
+          if(!req.query.resultType || req.query.resultType=='1'){
+            outputOptions = {'nickname':1,'photo':1};
+            
+          }
+          //hr统计用户
+          else if (req.query.resultType=='2'){
+            outputOptions = {'nickname':1,'photo':1,'username':1,'realname':1,'department':1,'team':1,'campaignCount':1,'score':1};
+          }
+          //待激活用户
+          else if (req.query.resultType=='3') {
+            findOptions = {'cid':req.params.companyId, 'active':false, 'mail_active':false};
+            outputOptions = {'username':1,'register_date':1};
+          }
         }
       }
       else if(req.user.cid.toString() !== req.params.companyId){

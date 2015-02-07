@@ -385,6 +385,8 @@ module.exports = function (app) {
 
           switch (role.company) {
             case 'hr':
+              var invite_key = encodeURIComponent(company.invite_key).replace(/'/g,"%27").replace(/"/g,"%22");
+              var inviteUrl = req.headers.origin+'/users/invite?key='+invite_key+'&cid=' + company._id;
               res.status(200).send({
                 _id: company._id,
                 username: company.username,
@@ -404,7 +406,8 @@ module.exports = function (app) {
                 extension: company.info.lindline.extension,
                 memberNumber: company.info.membernumber,
                 companyInviteCodes: company.register_invite_code,
-                staffInviteCode: company.invite_key
+                staffInviteCode: company.invite_key,
+                inviteUrl: inviteUrl
               });
               break;
             case 'member':

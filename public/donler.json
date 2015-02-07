@@ -272,6 +272,13 @@
             "type": "string",
             "in": "path",
             "default": "53aa6fc011fd597b3e1be250"
+          },
+          {
+            "name": "reslutType",
+            "description": "结果类型",
+            "required": false,
+            "type": "integer",
+            "in": "path"
           }
         ],
         "responses": {
