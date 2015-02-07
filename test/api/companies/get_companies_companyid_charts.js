@@ -29,8 +29,9 @@ module.exports = function () {
         });
     });
 
-    it('hr可以获取公司图表相关统计信息', function (done) {
+    it('hr可以获取公司图表每周活动数统计信息', function (done) {
       request.get('/companies/' + company.id + '/charts')
+        .query({ 'chart': 'bar' })
         .set('x-access-token', hrAccessToken)
         .expect(200)
         .end(function (err, res) {
@@ -40,6 +41,27 @@ module.exports = function () {
           }
           res.body.chartsData.campaignCounts.length.should.equal(5);
           res.body.chartsData.memberCounts.length.should.equal(5);
+          done();
+        });
+    });
+
+    it('hr可以获取公司图表每周活跃度统计信息', function (done) {
+      request.get('/companies/' + company.id + '/charts')
+        .query({ 'chart': 'pie' })
+        .set('x-access-token', hrAccessToken)
+        .expect(200)
+        .end(function (err, res) {
+          if (err) {
+            console.log(res.body);
+            return done(err);
+          }
+          res.body.chartsData.length.should.equal(5);
+          res.body.chartsData.forEach(function (data) {
+            data.zero.should.be.a.Number;
+            data.once.should.be.a.Number;
+            data.twice.should.be.a.Number;
+            data.moreThanThreeTimes.should.be.a.Number;
+          });
           done();
         });
     });

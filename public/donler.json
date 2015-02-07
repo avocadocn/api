@@ -891,6 +891,18 @@
             "type": "string",
             "in": "path",
             "default": "53aa6fc011fd597b3e1be250"
+          },
+          {
+            "name": "chart",
+            "description": "图表类型",
+            "required": true,
+            "type": "string",
+            "in": "query",
+            "enum": [
+              "bar",
+              "pie"
+            ],
+            "default": "bar"
           }
         ],
         "responses": {

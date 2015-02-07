@@ -703,81 +703,177 @@ module.exports = function (app) {
         });
       }
 
-      // todo 这里需要查询10次数据库！需要改进
-      // 查询total * 2次数据库，获取统计数据
-      async.map(queryList, function (query, mapCallback) {
+      var queryForBar = function () {
+        // todo 这里需要查询10次数据库！需要改进
+        // 查询total * 2次数据库，获取统计数据
+        async.map(queryList, function (query, mapCallback) {
 
-        async.parallel({
-          members: function (parallelCallback) {
-            Campaign.aggregate()
-              .match({
-                active: true,
-                cid: req.user.getCid(),
-                start_time: query.start_time
-              })
-              .unwind('campaign_unit')
-              .unwind('campaign_unit.member')
-              .group({
-                _id: null,
-                count: { $sum: 1 }
-              })
-              .project({
-                _id: 0,
-                count: 1
-              })
-              .exec()
-              .then(function (result) {
-                parallelCallback(null, result);
-              })
-              .then(null, function (err) {
-                parallelCallback(err);
-              });
-          },
-          campaigns: function (parallelCallback) {
-            Campaign.aggregate()
-              .match({
-                active: true,
-                cid: req.user.getCid(),
-                start_time: query.start_time
-              })
-              .group({
-                _id: null,
-                count: { $sum: 1 }
-              })
-              .project({
-                _id: 0,
-                count: 1
-              })
-              .exec()
-              .then(function (result) {
-                parallelCallback(null, result);
-              })
-              .then(null, function (err) {
-                parallelCallback(err);
-              });
-          }
-        }, function (err, results) {
-          mapCallback(err, results);
-        });
-
-      }, function (err, results) {
-        if (err) {
-          next(err);
-        } else {
-          // 将结果转换为两个数组
-          var campaignCounts = [], memberCounts = [];
-          results.forEach(function (result) {
-            campaignCounts.push(result.campaigns[0] ? result.campaigns[0].count : 0);
-            memberCounts.push(result.members[0] ? result.members[0].count : 0);
-          });
-          res.send({
-            chartsData: {
-              campaignCounts: campaignCounts,
-              memberCounts: memberCounts
+          async.parallel({
+            members: function (parallelCallback) {
+              Campaign.aggregate()
+                .match({
+                  active: true,
+                  cid: req.user.getCid(),
+                  start_time: query.start_time
+                })
+                .unwind('campaign_unit')
+                .unwind('campaign_unit.member')
+                .group({
+                  _id: null,
+                  count: { $sum: 1 }
+                })
+                .project({
+                  _id: 0,
+                  count: 1
+                })
+                .exec()
+                .then(function (result) {
+                  parallelCallback(null, result);
+                })
+                .then(null, function (err) {
+                  parallelCallback(err);
+                });
+            },
+            campaigns: function (parallelCallback) {
+              Campaign.aggregate()
+                .match({
+                  active: true,
+                  cid: req.user.getCid(),
+                  start_time: query.start_time
+                })
+                .group({
+                  _id: null,
+                  count: { $sum: 1 }
+                })
+                .project({
+                  _id: 0,
+                  count: 1
+                })
+                .exec()
+                .then(function (result) {
+                  parallelCallback(null, result);
+                })
+                .then(null, function (err) {
+                  parallelCallback(err);
+                });
             }
+          }, function (err, results) {
+            mapCallback(err, results);
           });
-        }
-      });
+
+        }, function (err, results) {
+          if (err) {
+            next(err);
+          } else {
+            // 将结果转换为两个数组
+            var campaignCounts = [], memberCounts = [];
+            results.forEach(function (result) {
+              campaignCounts.push(result.campaigns[0] ? result.campaigns[0].count : 0);
+              memberCounts.push(result.members[0] ? result.members[0].count : 0);
+            });
+            res.send({
+              chartsData: {
+                campaignCounts: campaignCounts,
+                memberCounts: memberCounts
+              }
+            });
+          }
+        });
+      }
+
+      var queryForPie = function () {
+        async.map(queryList, function (query, mapCallback) {
+
+          var calRes = {
+            once: 0,
+            twice: 0,
+            moreThanThreeTimes: 0
+          };
+
+          async.waterfall([
+            function (waterfallCallback) {
+              // 获取参加了一次活动及以上的人数
+              Campaign.aggregate()
+                .match({
+                  active: true,
+                  cid: req.user.getCid(),
+                  start_time: query.start_time
+                })
+                .unwind('campaign_unit')
+                .unwind('campaign_unit.member')
+                .group({
+                  _id: '$campaign_unit.member._id',
+                  count: { $sum: 1 }
+                })
+                .project({
+                  _id: 1,
+                  count: 1
+                })
+                .exec()
+                .then(function (result) {
+
+                  result.forEach(function (item) {
+                    if (item.count === 1) {
+                      calRes.once++;
+                    } else if (item.count === 2) {
+                      calRes.twice++;
+                    } else if (item.count >= 3) {
+                      calRes.moreThanThreeTimes++;
+                    }
+                  });
+
+                  var ids = result.map(function (item) {
+                    return item._id;
+                  });
+                  waterfallCallback(null, ids);
+                })
+                .then(null, function (err) {
+                  waterfallCallback(err);
+                });
+            },
+            function (ids, waterfallCallback) {
+              // 统计一次都没有参加的
+              User.find({
+                cid: req.user.getCid(),
+                _id: {
+                  $not: {
+                    $in: ids
+                  }
+                }
+              })
+                .count()
+                .exec()
+                .then(function (count) {
+                  calRes.zero = count;
+                  waterfallCallback();
+                })
+                .then(null, function (err) {
+                  waterfallCallback(err);
+                });
+            }
+          ], function (err, results) {
+            mapCallback(err, calRes);
+          });
+
+        }, function (err, results) {
+          if (err) {
+            next(err);
+          } else {
+            res.send({ chartsData: results });
+          }
+        });
+      };
+
+      switch (req.query.chart) {
+      case 'bar':
+        queryForBar();
+        break;
+      case 'pie':
+        queryForPie();
+        break;
+      default:
+        res.status(400).send({ msg: '请求的图表类型有误' });
+      }
 
     },
 
