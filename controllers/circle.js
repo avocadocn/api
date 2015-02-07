@@ -27,6 +27,12 @@ module.exports = function(app) {
      * @return {[type]}        [description]
      */
     getFormData: function(req, res, next) {
+      if (req.user.provider === 'company') {
+        return res.status(403).send({
+          msg: '公司账号暂无朋友圈功能'
+        });
+      }
+
       var fieldName = 'photo';
       var form = new multiparty.Form({
         uploadDir: uploader.tempDir
@@ -37,16 +43,16 @@ module.exports = function(app) {
           log(err);
           return res.sendStatus(500);
         }
-
+        
         // Send error when don't have content and images
-        if (!fields['content'][0] && !files[fieldName]) {
+        if ((fields['content'] == undefined || !fields['content'][0]) && !files[fieldName]) {
           return res.sendStatus(500);
         }
-
-        req.tid = fields['tid'][0] ? fields['tid'][0] : [];
-        req.campaign_id = fields['campaign_id'][0] ? fields['campaign_id'][0] : null;
-        req.content = fields['content'][0] ? fields['content'][0] : null;
-
+        
+        req.tid = (fields['tid'] && fields['tid'][0]) ? fields['tid'][0] : [];
+        req.campaign_id = (fields['campaign_id'] && fields['campaign_id'][0]) ? fields['campaign_id'][0] : null;
+        req.content = (fields['content'] && fields['content'][0]) ? fields['content'][0] : null;
+        
         if (files[fieldName]) {
           req.imgFiles = files[fieldName];
         }
@@ -65,7 +71,7 @@ module.exports = function(app) {
       if (!req.imgFiles) {
         // 不传照片的话直接到下一步
         next();
-        return;
+        return ;
       }
 
       var files = req.imgFiles;
@@ -80,7 +86,7 @@ module.exports = function(app) {
           },
           error: function(err) {
             log(err);
-            callback(err);
+            return res.status(500).send({ msg: '服务器错误' });
           }
         });
 
@@ -103,7 +109,6 @@ module.exports = function(app) {
       var photos = [];
       if (req.imgInfos) {
         req.imgInfos.forEach(function(imgInfo) {
-          console.log(imgInfo);
           var photo = {
             uri: imgInfo.url,
             width: imgInfo.size.width,
@@ -133,7 +138,7 @@ module.exports = function(app) {
         // // 参与过评论的用户id(包括发消息用户id)
         // comment_users: comment_users
       });
-
+      
       circleContent.save(function(err) {
         if (err) {
           log(err);
@@ -146,6 +151,7 @@ module.exports = function(app) {
           socketClient.pushCircleContent(req.user.getCid(), req.user);
           // Update the relative user's have_new_content status(if true, not update
           // ; if false, update has_new_content and new_content_date)
+          // TODO: update user(add conditions: active, provider)
           User.update({
             'cid': req.user.getCid(),
             'has_new_content': {
@@ -193,19 +199,24 @@ module.exports = function(app) {
      *         ]
      */
     getCircleContents: function(req, res) {
+      if (req.user.provider === 'company') {
+        return res.status(403).send({
+          msg: '公司账号暂无朋友圈功能'
+        });
+      }
       var options = {
         'cid': req.user.cid,
         'status': 'show'
       };
 
-      if (req.query.last_comment_date) { //如果带此属性来，则查找比它更早的limit条
+      if (req.query.last_content_date) { //如果带此属性来，则查找比它更早的limit条
         options.post_date = {
-          '$lt': req.query.last_comment_date
+          '$lt': req.query.last_content_date
         };
       }
 
       var limit = req.query.limit || 20;
-
+      
       CircleContent.find(options)
         .sort('-post_date')
         .limit(limit)
@@ -231,7 +242,6 @@ module.exports = function(app) {
                 });
               },
               function(err, results) {
-                console.log(results);
                 return res.status(200).send(results);
               });
           }
@@ -267,6 +277,12 @@ module.exports = function(app) {
      * @return {[type]}        [description]
      */
     getCircleContentById: function(req, res, next) {
+      if (req.user.provider === 'company') {
+        return res.status(403).send({
+          msg: '公司账号暂无朋友圈功能'
+        });
+      }
+
       CircleContent.findOne({
           _id: req.params.contentId,
           status: 'show'
@@ -353,6 +369,7 @@ module.exports = function(app) {
      * @return {[type]}     [description]
      */
     createCircleComment: function(req, res) {
+
       var circleContent = req.circleContent;
 
       // Judge authority
@@ -480,6 +497,12 @@ module.exports = function(app) {
      * @return {[type]}     [description]
      */
     deleteCircleComment: function(req, res) {
+      if (req.user.provider === 'company') {
+        return res.status(403).send({
+          msg: '公司账号暂无朋友圈功能'
+        });
+      }
+
       CircleComment.findById(req.params.commentId, function(err, comment) {
         if (err) {
           log(err);

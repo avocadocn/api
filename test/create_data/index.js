@@ -20,6 +20,7 @@ var createCampaignMold = require('./create_mold.js');
 var createFamilyPhotos = require('./create_family_photos.js');
 var createPhotoAlbums = require('./create_photo_albums.js');
 var createMessages = require('./create_messages.js');
+var createCircle = require('./create_circle.js');
 
 /**
  * 公司数据列表，保存公司及其员工、小队、活动数据
@@ -34,6 +35,12 @@ var createMessages = require('./create_messages.js');
  *    }],
  *    users: [doc], // mongoose.model('User')
  *    campaigns: [doc] // mongoose.model('Campaign')
+ *    circles: [
+ *                {
+ *                  content: //mongoose.model('CircleContent')
+ *                  comments: [doc] // mongoose.model('CircleComment')
+ *                }
+ *              ]
  *  }]
  * @type {Array}
  */
@@ -67,7 +74,8 @@ exports.createData = function (callback) {
         model: company,
         teams: [],
         users: [],
-        campaigns: []
+        campaigns: [],
+        circles: []
       };
       resCompanyDataList.push(resCompanyData);
 
@@ -102,6 +110,14 @@ exports.createData = function (callback) {
             });
             resCompanyData.users = results.users;
             waterfallCallback();
+          });
+        },
+        function (waterfallCallback) {
+          // 用户发朋友圈
+          console.log('用户发朋友圈');
+          createCircle(resCompanyData.users, function(err, circles){
+            resCompanyData.circles = circles;
+            waterfallCallback(err);
           });
         },
         function (waterfallCallback) {

@@ -217,7 +217,6 @@ exports.uploadImage = function(file, options) {
               oriCallback(err);
             });
           };
-
           options.success(imgInfo, saveOrigin);
         } else {
           options.success(imgInfo);
