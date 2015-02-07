@@ -291,6 +291,10 @@ var registeredTasks = {
   deleteCircleContent: {
     user: ['self']
   },
+  // 获取公司统计信息
+  getCompanyStatistics: {
+    company: ['hr']
+  },
 
   createCircleComment: {
     company: ['member']

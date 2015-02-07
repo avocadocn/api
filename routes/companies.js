@@ -13,6 +13,7 @@ module.exports = function (app, ctrl) {
   app.post('/companies/validate', ctrl.companyInfoValidate);
   app.post('/companies/forgetPassword', ctrl.forgetPassword);
   app.get('/companies/:companyId/statistics', token.needToken, ctrl.getCompanyStatistics);
+  app.get('/companies/:companyId/charts', token.needToken, ctrl.getCompanyCharts);
   app.get('/companies/:companyId/members', token.needToken, ctrl.getCompanyMembers);
   app.get('/companies/:companyId/departments', token.needToken, ctrl.getCompanyDepartments);
   app.get('/companies/:companyId/tags', token.needToken, ctrl.getCompanyTags);

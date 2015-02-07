@@ -14,6 +14,7 @@ var Campaign = mongoose.model('Campaign');
 
 var jwt = require('jsonwebtoken');
 var async = require('async');
+var moment = require('moment');
 
 var log = require('../services/error_log.js');
 var emailService = require('../services/email.js');
@@ -673,6 +674,113 @@ module.exports = function (app) {
         res.sendStatus(500);
       });
     },
+
+    // 获取图表相关统计信息
+    getCompanyCharts: function (req, res, next) {
+
+      var role = auth.getRole(req.user, {
+        companies: [req.params.companyId]
+      });
+      var allow = auth.auth(role, ['getCompanyStatistics']);
+      if (!allow.getCompanyStatistics) {
+        return res.status(403).send({ msg: '权限不足' });
+      }
+
+      var total = 5; // 统计5周数据
+      var queryDateList = [];
+      // 最近5周时间的查询分界点
+      for (var i = total - 1; i >= -1; i--) {
+        queryDateList.push(moment().isoWeek(0 - i).valueOf());
+      }
+      // 生成查询条件
+      var queryList = [];
+      for (var i = 0; i < total; i++) {
+        queryList.push({
+          start_time: {
+            $gte: new Date(queryDateList[i]),
+            $lt: new Date(queryDateList[i + 1])
+          }
+        });
+      }
+
+      // todo 这里需要查询10次数据库！需要改进
+      // 查询total * 2次数据库，获取统计数据
+      async.map(queryList, function (query, mapCallback) {
+
+        async.parallel({
+          members: function (parallelCallback) {
+            Campaign.aggregate()
+              .match({
+                active: true,
+                cid: req.user.getCid(),
+                start_time: query.start_time
+              })
+              .unwind('campaign_unit')
+              .unwind('campaign_unit.member')
+              .group({
+                _id: null,
+                count: { $sum: 1 }
+              })
+              .project({
+                _id: 0,
+                count: 1
+              })
+              .exec()
+              .then(function (result) {
+                parallelCallback(null, result);
+              })
+              .then(null, function (err) {
+                parallelCallback(err);
+              });
+          },
+          campaigns: function (parallelCallback) {
+            Campaign.aggregate()
+              .match({
+                active: true,
+                cid: req.user.getCid(),
+                start_time: query.start_time
+              })
+              .group({
+                _id: null,
+                count: { $sum: 1 }
+              })
+              .project({
+                _id: 0,
+                count: 1
+              })
+              .exec()
+              .then(function (result) {
+                parallelCallback(null, result);
+              })
+              .then(null, function (err) {
+                parallelCallback(err);
+              });
+          }
+        }, function (err, results) {
+          mapCallback(err, results);
+        });
+
+      }, function (err, results) {
+        if (err) {
+          next(err);
+        } else {
+          // 将结果转换为两个数组
+          var campaignCounts = [], memberCounts = [];
+          results.forEach(function (result) {
+            campaignCounts.push(result.campaigns[0] ? result.campaigns[0].count : 0);
+            memberCounts.push(result.members[0] ? result.members[0].count : 0);
+          });
+          res.send({
+            chartsData: {
+              campaignCounts: campaignCounts,
+              memberCounts: memberCounts
+            }
+          });
+        }
+      });
+
+    },
+
     //与users路由中中获取公司成员重复，此功能待需求及重写.
     //app中暂时没有用到此路由、此功能.
     getCompanyMembers: function (req, res) {
