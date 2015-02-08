@@ -605,7 +605,7 @@ module.exports = function(app) {
       }
       var options = {
         'post_user_cid': req.user.cid,
-        'relative_user_ids': req.user._id
+        'relative_user': {'_id':req.user._id,'list_status':'show'}
       };
       if (req.query.last_comment_date) { //如果带此属性来，则查找比它更早的limit条
         options.post_date = {

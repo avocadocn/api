@@ -35,7 +35,7 @@ module.exports = function () {
                   .expect(200)
                   .end(function (r_err, res) {
                     if (r_err) {
-                      console.log(res.body);
+                      console.log(r_err.stack);
                       cbc(r_err);
                     }else{
                       userToken[i] = res.body.token;
@@ -64,7 +64,7 @@ module.exports = function () {
                   .expect(200)
                   .end(function (r_err, res) {
                     if (r_err) {
-                      console.log(res.body);
+                      console.log(r_err.stack);
                       cbc(r_err);
                     }else{
                       hrToken[j] = res.body.token;
