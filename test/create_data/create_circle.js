@@ -46,7 +46,7 @@ var createCircle = function(users, callback) {
         post_user_cid: options.user.cid,
         post_user_id: options.user._id,
         status: options.status,
-        relative_user_ids: options.relative_user_ids
+        relative_user: options.relative_user
       });
 
       callback(null, circleComment);
@@ -63,7 +63,7 @@ var createCircle = function(users, callback) {
     circleContent: circleContents[0],
     user: users[0],
     status: 'show',
-    relative_user_ids: []
+    relative_user: []
   }, function(err, comment) {
     circle_1.comments.push(comment);
   });
@@ -74,35 +74,41 @@ var createCircle = function(users, callback) {
     content: null,
     comments: []
   };
-  var first_user_ids = [];
-  first_user_ids.push(users[0]._id);
+  var users1 = [];
+  users1.push({
+    _id: users[0]._id,
+    list_status: 'show'
+  });
   createCircleComment({
     kind: 'appreciate',
     circleContent: circleContents[1],
     user: users[1],
     status: 'show',
-    relative_user_ids: first_user_ids
+    relative_user: users1
   }, function(err, comment) {
     circle_2.comments.push(comment);
   });
-  first_user_ids.push(users[1]._id);
+  users1.push({
+    _id: users[1]._id,
+    list_status: 'show'
+  });
   createCircleComment({
     kind: 'appreciate',
     circleContent: circleContents[1],
     user: users[2],
     status: 'show',
-    relative_user_ids: first_user_ids
+    relative_user: users1
   }, function(err, comment) {
     circle_2.comments.push(comment);
   });
-  var first_comment_users = [];
+  var comment_users1 = [];
   for (var i = 1; i < 3; i++) {
-    first_comment_users.push({
+    comment_users1.push({
       _id: users[i]._id,
       comment_num: 1
     });
   }
-  circleContents[1].comment_users = first_comment_users;
+  circleContents[1].comment_users = comment_users1;
   circle_2.content = circleContents[1];
 
   // 第三个消息(删除)： 公司第2，3个用户依次发表评论， 但第2个用户评论删除，最后删除消息
@@ -111,35 +117,41 @@ var createCircle = function(users, callback) {
     comments: []
   };
 
-  var user_ids = [];
-  user_ids.push(users[0]._id);
+  var users2 = [];
+  users2.push({
+    _id: users[0]._id,
+    list_status: 'show'
+  });
   createCircleComment({
     kind: 'appreciate',
     circleContent: circleContents[2],
     user: users[1],
     status: 'delete',
-    relative_user_ids: user_ids
+    relative_user: users2
   }, function(err, comment) {
     circle_3.comments.push(comment);
   });
-  user_ids.push(users[1]._id);
+  users2.push({
+    _id: users[1]._id,
+    list_status: 'show'
+  });
   createCircleComment({
     kind: 'appreciate',
     circleContent: circleContents[2],
     user: users[2],
     status: 'content_delete',
-    relative_user_ids: user_ids
+    relative_user: users2
   }, function(err, comment) {
     circle_3.comments.push(comment);
   });
-  var comment_users = [];
+  var comment_users2 = [];
   for (var j = 1; j < 3; j++) {
-    comment_users.push({
+    comment_users2.push({
       _id: users[j]._id,
       comment_num: (j - 1)
     });
   }
-  circleContents[2].comment_users = comment_users;
+  circleContents[2].comment_users = comment_users2;
   circle_3.content = circleContents[2];
 
   circles.push(circle_1);
@@ -149,13 +161,13 @@ var createCircle = function(users, callback) {
   async.map(circles, function(circle, callback) {
       async.parallel([
           function(callback) {
-            circle.content.save(function(err){
+            circle.content.save(function(err) {
               callback(err);
             });
           },
           function(callback) {
             async.map(circle.comments, function(comment, callback) {
-              comment.save(function(err){
+              comment.save(function(err) {
                 callback(err);
               });
             }, function(err, results) {

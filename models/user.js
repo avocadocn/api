@@ -209,7 +209,7 @@ var UserSchema = new Schema({
     nickname: String
   },
   // reminds_clear_date: Date,
-  list_clear_date: Date // 上次清空提醒列表的时间
+  // list_clear_date: Date // 上次清空提醒列表的时间
 });
 
 /**

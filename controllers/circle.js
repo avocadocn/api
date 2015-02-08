@@ -385,16 +385,25 @@ module.exports = function(app) {
         });
       }
 
-      var relative_user_ids = []; // the other commenters (exclude the current commenter) 
+      var relative_user = []; // the other commenters (exclude the current commenter) 
+      var relative_user_ids = [];
       var comment_users = []; // the commenter (exclude the owner of content)
-      // Generate relative_user_ids
+      // Generate relative_user
       if (req.user._id.toString() != circleContent.post_user_id.toString()) {
         relative_user_ids.push(circleContent.post_user_id);
+        relative_user.push({
+          _id: circleContent.post_user_id,
+          list_status: 'show'
+        });
       }
 
       circleContent.comment_users.forEach(function(user) {
-        if(user._id.toString() != req.user._id.toString() && user.comment_num > 0){
+        if (user._id.toString() != req.user._id.toString() && user.comment_num > 0) {
           relative_user_ids.push(user._id);
+          relative_user.push({
+            _id: user._id,
+            list_status: 'show'
+          });
         }
       });
 
@@ -435,7 +444,7 @@ module.exports = function(app) {
 
         post_user_id: req.user._id, // 发评论或赞的用户的id（头像和昵称再次查询)
 
-        relative_user_ids: relative_user_ids
+        relative_user: relative_user
       });
       
       circleComment.save(function(err) {
@@ -539,9 +548,13 @@ module.exports = function(app) {
               });
 
               // Upadate new_comment_num
+              var relative_user_ids = [];
+              comment.relative_user.forEach(function(user) {
+                relative_user_ids.push(user._id);
+              });
               User.update({
                 _id: {
-                  $in: comment.relative_user_ids
+                  $in: relative_user_ids
                 },
                 new_comment_num: {
                   $gte: 1
@@ -770,6 +783,48 @@ module.exports = function(app) {
           new_content: new_content
         });
       }
+    },
+    /**
+     * 删除消息列表
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    deleteRemindComment: function(req, res) {
+      if (req.user.provider === 'company') {
+        return res.status(403).send({
+          msg: '公司账号暂无提醒功能'
+        });
+      }
+
+      var options = {
+        'relative_user._id': req.user._id,
+        'relative_user.list_status': 'show'
+      };
+
+      if (req.query.commentId) {
+        options._id = req.query.commentId;
+      }
+      
+      CircleComment.update(options, {
+        $set: {
+          'relative_user.$.list_status': 'delete'
+        }
+      }, function(err, num) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        }
+        if (num) {
+          return res.status(200).send({
+            msg: '消息列表删除成功'
+          });
+
+        }
+        return res.status(404).send({
+          msg: '未找到该消息'
+        });
+      });
     }
   };
 };

@@ -3408,6 +3408,33 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "circles"
+        ],
+        "summary": "删除消息列表",
+        "operationId": "deleteCircleComment",
+        "parameters": [
+          {
+            "name": "commentId",
+            "description": "评论id(若无，则删除列表所有消息)",
+            "required": false,
+            "type": "string",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
       }
     },
     "/messages": {

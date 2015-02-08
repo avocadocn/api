@@ -17,7 +17,8 @@ module.exports = function(app, ctrl) {
   app.get('/circle_reminds', token.needToken, ctrl.getReminds);
   // get /circle_reminds/comments 获取同事圈提醒(被赞、被评论、赞过或评论过的消息有更新)  
   app.get('/circle_reminds/comments', token.needToken, ctrl.getCircleComments);
-
+  // delete //circle_reminds/comments' 删除消息（评论）
+  app.delete('/circle_reminds/comments', token.needToken, ctrl.deleteRemindComment);
   // get /circle_messages 获取个人提醒列表 同提醒
   // app.get('/circle_reminds/comments', token.needToken, ctrl.getCircleComments);
   // ## 辅助api

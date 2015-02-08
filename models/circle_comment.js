@@ -2,6 +2,19 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+var user = {
+  _id: {
+    type: Schema.Types.ObjectId,
+    required: true
+  },
+  // 评论消息列表显示状态
+  list_status: {
+    type: String,
+    enum: ['show', 'delete'],
+    default: 'show'
+  }
+};
+
 var CircleComment = new Schema({
 
   // 类型，评论或赞
@@ -50,8 +63,8 @@ var CircleComment = new Schema({
     enum: ['show', 'delete', 'content_delete'],
     default: 'show'
   },
-  // 与该评论相关的用户id集合
-  relative_user_ids: [Schema.Types.ObjectId]
+  // 与该评论相关的用户集合
+  relative_user: [user]
 });
 
 mongoose.model('CircleComment', CircleComment);
