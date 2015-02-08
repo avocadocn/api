@@ -624,7 +624,7 @@ module.exports = function(app) {
           var targetIds = [];
           var comments_length = comments.length;
           for (var i = 0; i < comments_length; i++) {
-            uids.push(comments[i].pster_user_id);
+            uids.push(comments[i].post_user_id);
             targetIds.push(comments[i].target_content_id);
           };
           async.parallel({
@@ -677,7 +677,7 @@ module.exports = function(app) {
                   'poster': results.users[posterIndex], //{_id, nickname,photo}
                   'postDate': comment.post_date
                 }
-                callback(circle_comment);
+                callback(null,circle_comment);
               }, function(err, circleComments) {
                 if (err) {
                   log(err);
