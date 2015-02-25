@@ -14,6 +14,10 @@ var Report = new Schema({
   host_id: Schema.Types.ObjectId,  //留言主体的id,这个主体可以是 一条活动、一条评论、一张照片、一场比赛等等
   //举报的补充
   content: String,
+  content_poster:{
+    uid:Schema.Types.ObjectId,
+    cid:Schema.Types.ObjectId
+  },
   report_type:Number,
   //0:淫秽色情
   //1:敏感信息

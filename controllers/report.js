@@ -64,14 +64,53 @@ module.exports = function (app) {
             report.report_type = req.body.reportType;
             report.content = req.body.content;
             report.poster = _poster;
-            report.save(function(err){
-              if(!err){
-                return res.sendStatus(200);
+            var reportModel;
+            switch(req.body.hostType) {
+              case 'user':
+                reportModel = 'User';
+                break;
+              case 'comment':
+                reportModel = 'Comment';
+                break;
+              case 'photo':
+                reportModel = 'Photo';
+                break;
+            }
+            mongoose.model(reportModel)
+            .findById(req.body.hostId)
+            .exec()
+            .then(function(_reportModel){
+              var content_poster = {};
+              switch(req.body.hostType) {
+                case 'user':
+                  content_poster.uid = _reportModel._id;
+                  content_poster.cid = _reportModel.cid;
+                  break;
+                case 'comment':
+                  content_poster.uid = _reportModel.poster._id;
+                  content_poster.cid = _reportModel.poster.cid;
+                  break;
+                case 'photo':
+                  content_poster.cid = _reportModel.owner.companies[0];
+                  if(_reportModel.upload_user=='user') {
+                    content_poster.uid = _reportModel.upload_user._id;
+                  }
+                  break;
               }
-              else{
-                log(err);
-                return res.status(500).send({msg:'举报数据不正确，请重新尝试！'});
-              }
+              report.content_poster =content_poster;
+              report.save(function(err){
+                if(!err){
+                  return res.sendStatus(200);
+                }
+                else{
+                  log(err);
+                  return res.status(500).send({msg:'举报数据不正确，请重新尝试！'});
+                }
+              });
+            })
+            .then(null, function (err) {
+              log(err);
+              return res.status(500).send({msg: err });
             });
           }
         });
