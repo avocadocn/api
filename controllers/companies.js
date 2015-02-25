@@ -692,9 +692,11 @@ module.exports = function (app) {
       var total = 5; // 统计5周数据
       var queryDateList = [];
       // 最近5周时间的查询分界点
-      for (var i = total - 1; i >= -1; i--) {
-        queryDateList.push(moment().isoWeek(0 - i).valueOf());
+      var nowWeek = moment().isoWeek();
+      for (var i = total - 1; i >= 0; i--) {
+        queryDateList.push(moment().isoWeek(nowWeek - i).day(0).valueOf());
       }
+      queryDateList.push(Date.now());
       // 生成查询条件
       var queryList = [];
       for (var i = 0; i < total; i++) {
@@ -708,6 +710,9 @@ module.exports = function (app) {
 
       var queryForBar = function () {
         // todo 这里需要查询10次数据库！需要改进
+        // 如果精通mongodb的管道操作，或许可以将查询次数变为一次，至少可以变为5次
+        // 统计数据绝对不适宜将数据全取出，即使是取文档的一小部分，然后通过js去计算，这样虽然只查询一次，但效率不高且不安全，尽管实际的公司活动和人次不会很多
+        // 查询只要没有上限，就是不安全的，故先采取查询10次的方法，这是安全的，尽管会增加数据库压力
         // 查询total * 2次数据库，获取统计数据
         async.map(queryList, function (query, mapCallback) {
 
@@ -778,7 +783,8 @@ module.exports = function (app) {
               chartsData: {
                 campaignCounts: campaignCounts,
                 memberCounts: memberCounts
-              }
+              },
+              splitDate: queryDateList
             });
           }
         });
@@ -862,7 +868,7 @@ module.exports = function (app) {
           if (err) {
             next(err);
           } else {
-            res.send({ chartsData: results });
+            res.send({ chartsData: results, splitDate: queryDateList });
           }
         });
       };
