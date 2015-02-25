@@ -12,7 +12,7 @@ var getToken = function(){
   var token = jwt.sign({
     type: "server",
     id: 'APIServer',
-    exp: moment().add('days', 365).valueOf()
+    exp: moment().add(365, 'days').valueOf()
   }, tokenSecret);
   return token;
 }

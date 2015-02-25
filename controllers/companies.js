@@ -987,7 +987,7 @@ module.exports = function (app) {
           var token = jwt.sign({
             type: "company",
             id: company._id.toString(),
-            exp: app.get('tokenExpires')
+            exp: app.get('tokenExpires') + Date.now()
           }, app.get('tokenSecret'));
           company.addDevice(req.headers, token);
           company.save(function (err) {
