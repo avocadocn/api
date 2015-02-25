@@ -514,9 +514,10 @@ module.exports = function (app) {
           location: req.body.location,
           campaign_mold: req.body.campaign_mold,
           start_time: req.body.start_time,
-          end_time: req.body.end_time
+          end_time: req.body.end_time,
+          content: req.body.content
         };
-        if(req.body.tid){
+        if(req.body.tid){ 
           param.tid = req.body.tid;
         }
         async.parallel([
@@ -564,48 +565,95 @@ module.exports = function (app) {
               param.poster.uid = req.user._id;
               param.poster.nickname = req.user.nickname;
             }
-
-
+            //unit
             param.campaign_unit = [];
-            param.cid.forEach(function(cid,index){
-              var unit ={};
-              for (var i = values[0].length - 1; i >= 0; i--) {
-                if(values[0][i]._id.toString()===cid){
+
+            //如果是递归活动
+            if(param.campaign_type === 2 && param.tid.length>1) {
+              var length = req.body.tid.length;
+              var i = 0;
+              var results = [];
+              async.whilst(
+                function() {return i< length},
+                function(cb) {
+                  var newParam = param;
+                  newParam.tid = [req.body.tid[i]];
+                  var unit = {};
                   unit.company = {
-                    _id: cid,
-                    name: values[0][i].info.official_name,
-                    logo: values[0][i].info.logo
+                    _id: param.cid[0],
+                    name: values[0][0].info.official_name,
+                    logo: values[0][0].info.logo
+                  };
+                  for(var j = 0; j<values[1].length; j++) {
+                    if(newParam.tid.toString() === values[1][j]._id.toString()) {
+                      unit.team = {
+                        _id: values[1][j]._id,
+                        name: values[1][j].name,
+                        logo: values[1][j].logo
+                      };
+                    }
                   }
-                  break;
+                  newParam.campaign_unit=[unit];
+                  i++;
+                  _postCampaign(newParam, function(err, result){
+                    if(err){
+                      cb(err);
+                    }
+                    else{
+                      results.push(result);
+                      cb(null);
+                    }
+                  });
+                },
+                function(err) {
+                  if(err) {
+                    cosole.log(err);
+                    res.status(500).send({msg:err});
+                  }else {
+                    res.send(results);
+                  }
                 }
-              };
-              if(param.tid){
-                for (var j = values[1].length - 1; j >= 0; j--) {
-                  if(values[1][j]._id.toString()===param.tid[index]){
-                    unit.team = {
-                      _id: values[1][j]._id,
-                      name: values[1][j].name,
-                      logo: values[1][j].logo
+              );
+            }
+            else {//非递归活动
+              param.cid.forEach(function(cid,index){
+                var unit ={};
+                for (var i = values[0].length - 1; i >= 0; i--) {
+                  if(values[0][i]._id.toString()===cid){
+                    unit.company = {
+                      _id: cid,
+                      name: values[0][i].info.official_name,
+                      logo: values[0][i].info.logo
                     }
                     break;
                   }
+                };
+                if(param.tid){
+                  for (var j = values[1].length - 1; j >= 0; j--) {
+                    if(values[1][j]._id.toString()===param.tid[index]){
+                      unit.team = {
+                        _id: values[1][j]._id,
+                        name: values[1][j].name,
+                        logo: values[1][j].logo
+                      }
+                      break;
+                    }
+                  }
                 }
-              }
-              param.campaign_unit.push(unit);
-            })
-            _postCampaign(param, function(err,result){
-              if(err){
-                res.status(500).send({msg:err});
-              }
-              else{
-                res.send(result)
-              }
-            })
+                param.campaign_unit.push(unit);
+              })
+              _postCampaign(param, function(err,result){
+                if(err){
+                  res.status(500).send({msg:err});
+                }
+                else{
+                  res.send(result)
+                }
+              })
+            }
           }
         });
-        
       });
-      
     },
     getCampaign: function (req, res) {
       var campaign = req.campaign;
