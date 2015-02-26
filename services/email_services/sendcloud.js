@@ -157,6 +157,32 @@ exports.sendNewStaffActiveMail = function (email, uid, cid, host, callback) {
   });
 };
 
+exports.sendInvitedStaffActiveMail = function (email, uid, cid, cname, host, callback) {
+  var from = '动梨<service@donler.com>';
+  var to = email;
+  var subject = '动梨账号激活';
+  var description = cname + '邀请您注册动梨，请点击下面的链接来激活帐户：';
+  var link = 'http://' + host + '/users/inviteActive?key=' + encrypt.encrypt(uid, secret) + '&uid=' + uid + '&cid=' + cid;
+
+  fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
+    if (err) throw err;
+    var fn = jade.compile(data);
+    var html = fn({
+      'title': '注册激活',
+      'host': siteProtocol + host,
+      'who': email,
+      'description': description,
+      'link': link
+    });
+    transport.sendMail({
+      from: from,
+      to: to,
+      subject: subject,
+      html: html
+    }, callback);
+  });
+};
+
 exports.sendFeedBackMail = function (email, content, callback) {
   var from = '动梨<service@donler.com>';
   var to = 'service@donler.com';

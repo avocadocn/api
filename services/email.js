@@ -112,6 +112,23 @@ emailService.sendNewStaffActiveMail = function (email, uid, cid, callback) {
 };
 
 /**
+ * 发送员工激活邮件（被邀请时）
+ * @param {String} email 用户邮箱
+ * @param {String} uid 用户id
+ * @param {String} cid 公司id
+ * @param {String} cname 公司全称
+ * @param {Function} callback 形式为function(err)
+ */
+emailService.sendInvitedStaffActiveMail = function (email, uid, cid, cname, callback) {
+  getConfig(function (err, config) {
+    if (err) {
+      return callback(err);
+    }
+    getService(config).sendInvitedStaffActiveMail(email, uid, cid, cname, config.host.product, callback);
+  });
+};
+
+/**
  * 发送反馈邮件
  * @param {String} email 用户邮箱
  * @param {String} content 内容

@@ -12,6 +12,7 @@ var jwt = require('jsonwebtoken');
 var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var donlerValidator = require('../services/donler_validator.js');
+var validator = require('validator');
 var emailService = require('../services/email.js');
 var uploader = require('../services/uploader.js');
 var auth = require('../services/auth.js');
@@ -703,6 +704,41 @@ module.exports = function (app) {
       });
     },
 
+    inviteUser: function (req, res, next) {
+
+      if (!validator.isEmail(req.body.email)) {
+        res.status(400).send({ msg: '请填写正确的邮箱地址' });
+      }
+
+      if (req.user.provider !== 'company') {
+        res.status(403).send({ msg: '您没有权限' });
+        return;
+      }
+      var user = new User({
+        email: req.body.email,
+        active: true,
+        mail_active: false,
+        invited: true,
+        cid: req.user._id,
+        cname: req.user.info.name,
+        company_official_name: req.user.info.official_name
+      });
+      user.save(function (err) {
+        if (err) {
+          next(err);
+        } else {
+          emailService.sendInvitedStaffActiveMail(user.email, user.id, req.user.id, req.user.info.name, function (err) {
+            if (err) {
+              next(err);
+            } else {
+              res.status(201).send({ msg: '成功发送邀请信' });
+            }
+          });
+        }
+      });
+
+    },
+
     getUserPhotosValidate: function (req, res, next) {
       donlerValidator({
         start: {
@@ -799,7 +835,7 @@ module.exports = function (app) {
           log(err);
           res.sendStatus(500);
         });
-    },
+    }
   };
 };
 
