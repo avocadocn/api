@@ -693,10 +693,9 @@ module.exports = function (app) {
       var queryDateList = [];
       // 最近5周时间的查询分界点
       var nowWeek = moment().isoWeek();
-      for (var i = total - 1; i >= 0; i--) {
+      for (var i = total - 1; i >= -1; i--) {
         queryDateList.push(moment().isoWeek(nowWeek - i).day(0).valueOf());
       }
-      queryDateList.push(Date.now());
       // 生成查询条件
       var queryList = [];
       for (var i = 0; i < total; i++) {
