@@ -3,7 +3,8 @@
 var mongoose = require('mongoose');
 var Report = mongoose.model('Report'),
     donlerValidator = require('../services/donler_validator.js'),
-    log = require('../services/error_log.js');
+    log = require('../services/error_log.js'),
+    auth = require('../services/auth.js');
 module.exports = function (app) {
 
   return {
@@ -115,6 +116,70 @@ module.exports = function (app) {
           }
         });
       });
+    },
+    //hr处理举报
+    dealReport: function (req, res) {
+      var _status;
+      if(req.body.flag == true){
+        _status = 'active';
+      }
+      else{
+        _status = 'inactive';
+      }
+      var hostModel;
+      if(req.body.host_type==='comment'){
+        hostModel ='Comment';
+      }
+      else if(req.body.host_type==='user'){
+        hostModel ='User';
+      }
+      else{
+        return res.status(400).send({msg: '数据格式错误' });
+      }
+      Report.update({'hr_status':'verifying','host_type': req.body.host_type,'host_id':req.body.host_id,'content_poster.cid': req.user._id,},{$set:{'hr_status':_status}},{multi: true},function(err,num){
+        if(err){
+          log(err);
+        }
+      });
+      if(_status==='active'){
+        mongoose.model(hostModel).findOne({
+          _id: req.body.host_id
+        }).exec()
+        .then(function (reportModel) {
+          if (reportModel) {
+            if(req.body.host_type==='comment'){
+              if(reportModel.poster.cid.toString()==req.user._id.toString()) {
+                reportModel.status = 'shield';
+              }
+            }
+            else if(req.body.host_type==='user'){
+              if(reportModel.cid.toString()==req.user._id.toString()) {
+                reportModel.disabled = true;
+              }
+            }
+            reportModel.save(function (err) {
+                if (err) {
+                  log(err);
+                  return res.status(500).send({msg: err });
+                } else {
+
+                  return res.sendStatus(200);
+                }
+              });
+          }
+          else{
+            log(err);
+            return res.status(500).send({msg: err });
+          }
+        })
+        .then(null, function (err) {
+          log(err);
+          return res.status(500).send({msg: err });
+        });
+      }
+      else{
+        return res.sendStatus(200);
+      }
     }
   }
 };

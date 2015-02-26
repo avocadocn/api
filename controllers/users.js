@@ -6,6 +6,7 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var Company = mongoose.model('Company');
 var Photo = mongoose.model('Photo');
+var Comment = mongoose.model('Comment');
 
 var jwt = require('jsonwebtoken');
 var log = require('../services/error_log.js');
@@ -776,6 +777,30 @@ module.exports = function (app) {
           log(err);
           res.sendStatus(500);
         });
-    }
+    },
+    getUserComments: function (req, res) {
+      var srcUser = req.resourceUser;
+      var role = auth.getRole(req.user, {
+        companies: [srcUser.cid]
+      });
+      var allow = auth.auth(role, ['getUserComments']);
+      if (!allow.getUserComments) {
+        res.status(403).send({ msg: '您没有权限' });
+        return;
+      }
+      Comment.find({'poster._id':req.params.userId})
+        .sort('-create_date')
+        .limit(10)
+        .exec()
+        .then(function (comments) {
+          res.status(200).send(comments);
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
+    },
   };
 };
+
+

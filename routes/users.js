@@ -20,4 +20,5 @@ module.exports = function (app, ctrl) {
   app.post('/users/logout', token.needToken, ctrl.logout);
 
   app.get('/users/:userId/photos', token.needToken, ctrl.getUserPhotosValidate, ctrl.getUserPhotos);
+  app.get('/users/:userId/comments', token.needToken, getById.getUserById, ctrl.getUserComments);
 };

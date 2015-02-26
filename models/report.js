@@ -15,8 +15,14 @@ var Report = new Schema({
   //举报的补充
   content: String,
   content_poster:{
-    uid:Schema.Types.ObjectId,
-    cid:Schema.Types.ObjectId
+    uid:{
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    cid:{
+      type:Schema.Types.ObjectId,
+      ref:'Company'
+    }
   },
   report_type:Number,
   //0:淫秽色情
@@ -43,7 +49,14 @@ var Report = new Schema({
     uid:Schema.Types.ObjectId,
     cid:Schema.Types.ObjectId
   },
+  //管理员的处理状态
   status:{
+    type: String,
+    enum:['active','inactive','verifying'],
+    default: 'verifying'
+  },
+  //hr的处理状态，优先级低于管理员
+  hr_status:{
     type: String,
     enum:['active','inactive','verifying'],
     default: 'verifying'

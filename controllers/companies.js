@@ -11,7 +11,7 @@ var CompanyGroup = mongoose.model('CompanyGroup');
 var Department = mongoose.model('Department');
 var CompanyRegisterInviteCode = mongoose.model('CompanyRegisterInviteCode');
 var Campaign = mongoose.model('Campaign');
-
+var Report = mongoose.model('Report');
 var jwt = require('jsonwebtoken');
 var async = require('async');
 var moment = require('moment');
@@ -907,7 +907,34 @@ module.exports = function (app) {
           res.sendStatus(500);
         });
     },
-
+    getCompanyReportedMembers: function (req, res) {
+      Report.find({
+        host_type:'user',
+        'content_poster.cid': req.params.companyId,
+        status:'verifying',
+        hr_status:'verifying'
+      }).populate('content_poster.uid')
+      .exec()
+        .then(function (reports) {
+          var resUsers = [];
+          reports.forEach(function (report) {
+            var _user = {
+              _id:report.content_poster.uid._id,
+              username:report.content_poster.uid.username,
+              nickname:report.content_poster.uid.nickname
+            }
+            resUsers.push({
+              user: _user,
+              report_date: report.create_date
+            });
+          });
+          res.status(200).send(resUsers);
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
+    },
     getCompanyDepartments: function (req, res) {
       var option = {
         'company._id': req.params.companyId

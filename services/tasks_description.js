@@ -302,6 +302,9 @@ var registeredTasks = {
 
   deleteCircleComment: {
     user: ['self']
+  },
+  getUserComments: {
+    company: ['hr']
   }
 };
 
