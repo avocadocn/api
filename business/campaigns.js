@@ -363,7 +363,7 @@ exports.queryAndFormat = function (opts, callback) {
       dbQueryOptions.end_time = { '$gte': new Date(parseInt(opts.reqQuery.from)) };
     }
     if (opts.reqQuery.page_id) {
-      dbQueryOptions._id = { '$le': opts.reqQuery.page_id };
+      dbQueryOptions._id = { '$lte': opts.reqQuery.page_id };
     }
   };
 
@@ -374,27 +374,37 @@ exports.queryAndFormat = function (opts, callback) {
     // todo 查询公司或小队活动
     if (opts.campaignOwner.company && !opts.campaignOwner.teams) {
       dbQueryOptions.cid = opts.campaignOwner.company._id;
+      dbQueryOptions.campaign_type = 1;
     } else if (opts.campaignOwner.teams && !opts.campaignOwner.company) {
       dbQueryOptions.tid = opts.campaignOwner.teams.map(function (team) { return team._id });
     } else if (opts.campaignOwner.teams && opts.campaignOwner.company) {
       dbQueryOptions.$or = [
-        { cid: opts.campaignOwner.company._id },
+        { $and: [{ cid: opts.campaignOwner.company._id }, { campaign_type: 1 }]  },
         { tid: opts.campaignOwner.teams.map(function (team) { return team._id }) }
       ];
     }
-    dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize);
+    setPagerOptions();
+    dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize + 1);
   }
 
   dbQuery.exec()
     .then(function (campaigns) {
-      var plainCampaigns = campaigns.map(function (campaign) {
+      var nextCampaign;
+      if (campaigns.length > pageSize) {
+        nextCampaign = campaigns[pageSize];
+      }
+      var plainCampaigns = campaigns.slice(0, pageSize).map(function (campaign) {
         return campaign.toObject({ virtuals: true });
       });
       formatter(plainCampaigns, formatterOptions, function (err, resCampaigns) {
         if (err) {
           callback(err);
         } else {
-          callback(null, { campaigns: resCampaigns });
+          callback(null, {
+            campaigns: resCampaigns,
+            hasNext: !!nextCampaign,
+            nextId: nextCampaign ? nextCampaign.id : undefined
+          });
         }
       });
     })
