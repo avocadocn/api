@@ -216,6 +216,7 @@ module.exports = function () {
       });
     });
 
+    // todo 正在调整api，暂且跳过测试
     describe('1.2', function () {
 
       describe('hr', function () {
@@ -238,18 +239,30 @@ module.exports = function () {
             });
 
         });
-        it('应该正常获取公司活动', function (done) {
+        it('获取公司活动', function (done) {
           request.get('/campaigns')
             .set('x-access-token', hrAccessToken)
             .query({
-              cp_type: 'com_all',
-              target_id: data[5].model.id,
-              result: 'hr_manager_list'
+              cid: data[5].model.id,
+              result: 'managerList'
             })
             .expect(200)
             .end(function (err, res) {
               if (err) return done(err);
-              console.log(res.body);
+              done();
+            });
+        });
+        it('获取公司或小队活动', function (done) {
+          request.get('/campaigns')
+            .set('x-access-token', hrAccessToken)
+            .query({
+              cid: data[5].model.id,
+              tid: [data[5].teams[0].model.id, data[5].teams[1].model.id],
+              result: 'managerList'
+            })
+            .expect(200)
+            .end(function (err, res) {
+              if (err) return done(err);
               done();
             });
         });

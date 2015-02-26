@@ -1931,9 +1931,78 @@
         "operationId": "getCampaign",
         "parameters": [
           {
+            "name": "cid",
+            "description": "获取公司的活动时，对应的公司id(v1.2)",
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "tids",
+            "description": "获取小队的活动时，对应的小队id(v1.2)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "uid",
+            "description": "获取用户的活动时，对应的用户id(v1.2)",
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "result",
+            "description": "返回的结果类型(v1.2)",
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "page_id",
+            "description": "分页用的id(v1.2)",
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "attrs",
+            "description": "附加属性(v1.2)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "sort",
+            "description": "排序依据(v1.2)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "from",
+            "description": "活动结束时间的最小值(v1.0, v1.2)",
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "to",
+            "description": "活动开始时间的最大值(v1.0, v1.2)",
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "限制数(v1.0, v1.2)",
+            "type": "integer",
+            "format": "int32",
+            "in": "query"
+          },
+          {
             "name": "requestType",
-            "description": "获取活动的主体类型：user,team,company",
-            "required": true,
+            "description": "获取活动的主体类型：user,team,company (v1.0)",
             "type": "string",
             "in": "query",
             "enum": [
@@ -1944,60 +2013,33 @@
           },
           {
             "name": "requestId",
-            "description": "获取活动的主体id",
-            "required": true,
-            "type": "string",
-            "in": "query"
-          },
-          {
-            "name": "from",
-            "description": "活动结束时间的最小值",
-            "required": false,
-            "type": "string",
-            "in": "query"
-          },
-          {
-            "name": "to",
-            "description": "活动开始时间的最大值",
-            "required": false,
+            "description": "获取活动的主体id(v1.0)",
             "type": "string",
             "in": "query"
           },
           {
             "name": "select_type",
-            "description": "选择的活动类型--0:全部1:即将开始的活动2:正在进行的活动3:已经结束的活动4:新活动（未参加）5:未确认的挑战 6:发同事圈需要的活动",
-            "required": false,
+            "description": "选择的活动类型--0:全部1:即将开始的活动2:正在进行的活动3:已经结束的活动4:新活动（未参加）5:未确认的挑战 6:发同事圈需要的活动 (v1.0)",
             "type": "integer",
             "format": "int32",
             "in": "query"
           },
           {
             "name": "join_flag",
-            "description": "是否为已经参加的活动",
-            "required": false,
+            "description": "是否为已经参加的活动(v1.0)",
             "type": "integer",
             "format": "int32",
             "in": "query"
           },
           {
             "name": "sortBy",
-            "description": "排序的依据",
-            "required": false,
+            "description": "排序的依据(v1.0)",
             "type": "string",
             "in": "query"
           },
           {
-            "name": "limit",
-            "description": "限制数",
-            "required": false,
-            "type": "integer",
-            "format": "int32",
-            "in": "query"
-          },
-          {
             "name": "populate",
-            "description": "populate的属性，数组，用，隔开",
-            "required": false,
+            "description": "populate的属性，数组，用，隔开(v1.0)",
             "type": "array",
             "items": {
               "type": "string"
