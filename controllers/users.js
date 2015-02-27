@@ -708,34 +708,83 @@ module.exports = function (app) {
 
       if (!validator.isEmail(req.body.email)) {
         res.status(400).send({ msg: '请填写正确的邮箱地址' });
+        return;
       }
 
       if (req.user.provider !== 'company') {
         res.status(403).send({ msg: '您没有权限' });
         return;
       }
-      var user = new User({
-        email: req.body.email,
-        active: true,
-        mail_active: false,
-        invited: true,
-        cid: req.user._id,
-        cname: req.user.info.name,
-        company_official_name: req.user.info.official_name
-      });
-      user.save(function (err) {
-        if (err) {
-          next(err);
-        } else {
-          emailService.sendInvitedStaffActiveMail(user.email, user.id, req.user.id, req.user.info.name, function (err) {
-            if (err) {
-              next(err);
+
+      // 判断邮箱后缀是否为企业允许的邮箱后缀
+      var emailDomain = req.body.email.split('@')[1];
+      if (req.user.email.domain.indexOf(emailDomain) === -1) {
+        res.status(400).send({ msg: '该邮箱不是企业允许的邮箱。如果您需要向该邮箱发送邀请链接，请先在企业账号设置中添加邮箱。' });
+        return;
+      }
+
+      // 查询该邮箱是否已被注册过了
+      User.findOne({
+        email: req.body.email
+      }, {
+        _id: 1,
+        email: 1,
+        mail_active: 1,
+        invited: 1
+      }).exec()
+        .then(function (user) {
+          if (!user) {
+            // 没有注册则新创建用户
+            createNewUser();
+          } else {
+            if (user.mail_active === true) {
+              // 如果已经激活，则返回提示
+              res.send({ msg: '该用户已激活，无须再发送邀请信了。' });
             } else {
-              res.status(201).send({ msg: '成功发送邀请信' });
+              // 还没有激活，则重新发送邀请信
+              sendEmail(user);
             }
-          });
-        }
-      });
+          }
+
+        })
+        .then(null, function (err) {
+          next(err);
+        });
+
+      function createNewUser() {
+        var user = new User({
+          email: req.body.email,
+          active: true,
+          mail_active: false,
+          invited: true,
+          cid: req.user._id,
+          cname: req.user.info.name,
+          company_official_name: req.user.info.official_name
+        });
+        user.save(function (err) {
+          if (err) {
+            next(err);
+          } else {
+            sendEmail(user);
+          }
+        });
+      }
+
+      function sendEmail(user) {
+        emailService.sendInvitedStaffActiveMail(user.email, {
+          inviteKey: req.user.invite_key,
+          uid: user.id,
+          cid: req.user.id,
+          cname: req.user.info.name
+        }, function (err) {
+          if (err) {
+            next(err);
+          } else {
+            res.status(201).send({ msg: '成功发送邀请信' });
+          }
+        });
+      }
+
 
     },
 

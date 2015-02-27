@@ -157,12 +157,17 @@ exports.sendNewStaffActiveMail = function (email, uid, cid, host, callback) {
   });
 };
 
-exports.sendInvitedStaffActiveMail = function (email, uid, cid, cname, host, callback) {
+exports.sendInvitedStaffActiveMail = function (email, host, data, callback) {
+  var inviteKey = data.inviteKey;
+  var uid = data.uid;
+  var cid = data.cid;
+  var cname = data.cname;
+
   var from = '动梨<service@donler.com>';
   var to = email;
   var subject = '动梨账号激活';
   var description = cname + '邀请您注册动梨，请点击下面的链接来激活帐户：';
-  var link = 'http://' + host + '/users/inviteActive?key=' + encrypt.encrypt(uid, secret) + '&uid=' + uid + '&cid=' + cid;
+  var link = 'http://' + host + '/users/invite?key=' + inviteKey + '&uid=' + uid + '&cid=' + cid;
 
   fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
     if (err) throw err;
