@@ -319,7 +319,7 @@ var formatterList = {
     for(var i=0; i<campaignsLength; i++) {
       var formatCampaign = {
         _id: campaigns[i]._id,
-        unitId: campaigns[i].campaign_type===1 ? campaigns[i].campaign_unit[0].company._id : campaigns[i].campaign_unit[0].team._id,
+        unitId: campaigns[i].campaign_type===1 || campaigns[i].campaign_type>5? campaigns[i].cid[0]: campaigns[i].campaign_unit[0].team._id,
         campaignType:campaigns[i].campaign_type,
         theme: campaigns[i].theme,
         startTime: campaigns[i].start_time,
