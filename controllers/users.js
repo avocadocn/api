@@ -18,7 +18,7 @@ var uploader = require('../services/uploader.js');
 var auth = require('../services/auth.js');
 var tools = require('../tools/tools.js');
 var syncData = require('../services/sync_data.js');
-
+var departmentController = require('../controllers/departments');
 module.exports = function (app) {
 
   return {
@@ -556,7 +556,22 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
-        res.sendStatus(200);
+        if(req.body.did && !user.department._id || user.department._id.toString()!= req.body.did) {
+          departmentController(app).joinDepartment(user,req.body.did,function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+              return;
+            }
+            else {
+              res.sendStatus(200);
+            }
+          });
+        }
+        else {
+          res.sendStatus(200);
+        }
+
         if (req.updatePhoto) {
           syncData.updateUlogo(user._id);
         }
