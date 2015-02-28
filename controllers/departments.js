@@ -4,6 +4,7 @@ var mongoose = require('mongoose');
 var Department = mongoose.model('Department'),
   Company = mongoose.model('Company'),
   CompanyGroup = mongoose.model('CompanyGroup'),
+  User = mongoose.model('User'),
   donlerValidator = require('../services/donler_validator.js'),
   log = require('../services/error_log.js'),
   auth = require('../services/auth.js'),
@@ -153,91 +154,88 @@ module.exports = function (app) {
 
     createDepartment: function (req, res, next) {
       // todo 从yali原封不动移到这里，现在可用，但应该改进这部分代码
-      if (req.user.provider === 'company') {
-        var did = req.body.did;
-        var name = req.body.name;
-        var cid = req.body.cid;
+      var did = req.body.did;
+      var name = req.body.name;
+      var cid = req.body.cid;
 
-        if (req.user._id.toString() !== cid) {
-          res.status(403);
-          next('forbidden');
-          return;
-        }
-
-        var team_create = {
-          'cid': req.user._id,
-          'gid': '0',
-          'group_type': 'virtual',
-          'name':req.body.name,
-          'cname': req.user.info.name,
-          'entity_type': 'virtual'
-        }
-        CompanyGroup.create(team_create, function(err, company_group) {
-          if (err || !company_group) {
-            res.send({
-              'msg': 'TEAM_CREATE_FAILURE'
-            });
-          } else {
-            var department_create = {
-              'parent_department': did,
-              'name': name,
-              'company': {
-                '_id': req.user._id,
-                'name': req.user.info.name,
-                'logo': req.user.info.logo
-              },
-              'team': company_group._id
-            };
-            Department.create(department_create, function(err, department) {
-              if (err || !department) {
-                res.send({
-                  'msg': 'DEPARTMENT_CREATE_FAILURE'
-                });
-              } else {
-                Company.findOne({
-                  '_id': req.user._id
-                }, function(err, company) {
-                  if (err || !company) {
-                    res.send({
-                      'msg': 'DEPARTMENT_UPDATE_FAILURE'
-                    });
-                  } else {
-                    var child = {
-                      '_id': department._id,
-                      'level':0,
-                      'name': name,
-                      'department': []
-                    };
-                    var param = {
-                      'type': 0,
-                      'child': child
-                    };
-                    company.department = departmentFindAndUpdate(req.user, did, param).department;
-
-                    company.save(function(err) {
-                      if (err) {
-                        res.send({
-                          'msg': 'DEPARTMENT_UPDATE_FAILURE'
-                        });
-                      } else {
-                        res.send({
-                          '_id': req.user._id,
-                          'name': req.user.info.name,
-                          'department': company.department
-                        });
-                      }
-                    });
-                  }
-                });
-              }
-            });
-          }
-        });
-      } else {
-        res.status(403);
-        next('forbidden');
+      var role = auth.getRole(req.user, {
+        companies: [cid]
+      });
+      var allow = auth.auth(role, ['operateDepartment']);
+      if (!allow.operateDepartment) {
+        res.status(403).send({ msg: '权限不足' });
         return;
       }
+
+      var team_create = {
+        'cid': req.user._id,
+        'gid': '0',
+        'group_type': 'virtual',
+        'name':req.body.name,
+        'cname': req.user.info.name,
+        'entity_type': 'virtual'
+      }
+      CompanyGroup.create(team_create, function(err, company_group) {
+        if (err || !company_group) {
+          res.send({
+            'msg': 'TEAM_CREATE_FAILURE'
+          });
+        } else {
+          var department_create = {
+            'parent_department': did,
+            'name': name,
+            'company': {
+              '_id': req.user._id,
+              'name': req.user.info.name,
+              'logo': req.user.info.logo
+            },
+            'team': company_group._id
+          };
+          Department.create(department_create, function(err, department) {
+            if (err || !department) {
+              res.send({
+                'msg': 'DEPARTMENT_CREATE_FAILURE'
+              });
+            } else {
+              Company.findOne({
+                '_id': req.user._id
+              }, function(err, company) {
+                if (err || !company) {
+                  res.send({
+                    'msg': 'DEPARTMENT_UPDATE_FAILURE'
+                  });
+                } else {
+                  var child = {
+                    '_id': department._id,
+                    'level':0,
+                    'name': name,
+                    'department': []
+                  };
+                  var param = {
+                    'type': 0,
+                    'child': child
+                  };
+                  company.department = departmentFindAndUpdate(req.user, did, param).department;
+
+                  company.save(function(err) {
+                    if (err) {
+                      res.send({
+                        'msg': 'DEPARTMENT_UPDATE_FAILURE'
+                      });
+                    } else {
+                      res.send({
+                        '_id': req.user._id,
+                        'name': req.user.info.name,
+                        'department': company.department
+                      });
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
     },
 
     getDepartment: function (req, res, next) {
@@ -259,11 +257,6 @@ module.exports = function (app) {
 
     updateDepartment: function (req, res, next) {
       // todo 可用，但需要改进
-      if (req.role !== 'HR') {
-        res.status(403);
-        next('forbidden');
-        return;
-      }
 
       var did = req.body.did;
       var name = req.body.name;
@@ -292,6 +285,16 @@ module.exports = function (app) {
                 .populate('team')
                 .exec()
                 .then(function(department) {
+
+                  var role = auth.getRole(req.user, {
+                    companies: [department.company._id]
+                  });
+                  var allow = auth.auth(role, ['operateDepartment']);
+                  if (!allow.operateDepartment) {
+                    res.status(403).send({ msg: '权限不足' });
+                    return;
+                  }
+
                   department.name = name;
                   department.save(function(err) {
                     if (err) {
@@ -338,11 +341,6 @@ module.exports = function (app) {
 
     deleteDepartment: function (req, res, next) {
       // todo 可用，但需要改进
-      if (req.role !== 'HR') {
-        res.status(403);
-        next('forbidden');
-        return;
-      }
 
       var did = req.params.departmentId;
       if (did.toString() === req.user._id.toString()) {
@@ -394,7 +392,19 @@ function deleteFromRoot(department, seq, req, res) {
   }, function(err, departments) {
     var user_ids = [];
     var team_ids = [];
-    if (departments) {
+    if (departments && departments.length > 0) {
+
+      // 权限判断
+      var role = auth.getRole(req.user, {
+        companies: [departments[0].company._id]
+      });
+      var allow = auth.auth(role, ['operateDepartment']);
+      if (!allow.operateDepartment) {
+        res.status(403).send({ msg: '权限不足' });
+        return;
+      }
+
+
       for (var i = 0; i < departments.length; i++) {
         for (var j = 0; j < departments[i].member.length; j++) {
           user_ids.push(departments[i].member[j]._id);
@@ -504,4 +514,84 @@ function operateFromRootAndDeleteOne(did, req, res) {
       'department': req.user.department
     });
   }
+}
+
+//深度优先修改算法
+//第一次传进来的是company
+function departmentFindAndUpdate(department, did, param) {
+  var stack = new StackAndQueue.stack();
+  //如果department._id === did 就不用深搜了,直接在department的department里放入子部门
+  if (department._id.toString() === did) {
+    //操作
+    switch (param.type) {
+    case 0:
+      param.child.parent_id = department._id;
+      var parent_level = (department.level != undefined && department.level != null) ? department.level : 0;
+      param.child.level = parent_level + 1;
+
+      //console.log(parent_level);
+
+      department.department.push(param.child);
+
+      Department.update({'_id':param.child._id},{'$set':{'level':param.child.level}},function(err,department){
+        if(!department){
+          console.log({'msg':'DEPARTMENT_LEVEL_SET_NOT_FOUND'});
+        }
+        if(err){
+          console.log({'msg':'DEPARTMENT_LEVEL_SET_ERROR','date':err});
+        }
+      });
+      return department;
+    case 1:
+      if (department.department.name != undefined) {
+        department.department.name = param.name;
+      }
+      return department;
+    default:
+      break;
+    }
+    //did肯定在department的子部门里,因此要深度搜索找到did对应的部门,在其department中放入子部门
+  } else {
+    stack.push({
+      '_id': department._id,
+      'department': department.department
+    });
+    while (!stack.isEmpty()) {
+      var pop = stack.pop();
+      if (pop.department.length > 0) {
+        for (var i = 0; i < pop.department.length; i++) {
+          if (pop.department[i]._id.toString() === did.toString()) {
+            //操作
+            switch (param.type) {
+            case 0:
+              param.child.level = pop.department[i].level + 1;
+              param.child.parent_id = pop.department[i]._id;
+              param.child.department = [];
+              pop.department[i].department.push(param.child);
+
+              //console.log(pop.department[i].level);
+
+              Department.update({'_id':param.child._id},{'$set':{'level':param.child.level}},function(err,department){
+                if(!department){
+                  console.log({'msg':'DEPARTMENT_LEVEL_SET_NOT_FOUND'});
+                }
+                if(err){
+                  console.log({'msg':'DEPARTMENT_LEVEL_SET_ERROR','date':err});
+                }
+              });
+              return department;
+            case 1:
+              pop.department[i].name = param.name;
+              return department;
+            default:
+              break;
+            }
+          } else {
+            stack.push(pop.department[i]);
+          }
+        }
+      }
+    }
+  }
+  return department;
 }
