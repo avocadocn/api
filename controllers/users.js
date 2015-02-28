@@ -408,11 +408,28 @@ module.exports = function (app) {
       }else{//用户取来通讯录用
         outputOptions = {'email':1,'nickname':1};
       }
+      var pageNum = 4;
+      var limitNum=0,
+          skipNum =0;
+      if(req.query.page) {
+        limitNum = pageNum+1;
+        skipNum = pageNum *(req.query.page-1);
+      }
       User.find(findOptions,outputOptions)
       .sort('nickname')
+      .limit(limitNum)
+      .skip(skipNum)
       .exec()
       .then(function (users){
-        return res.status(200).send(users);
+        if(req.query.page) {
+          return res.status(200).send({
+            users:users.slice(0,pageNum),
+            hasNext:users.length==limitNum
+          });
+        }
+        else{
+          return res.status(200).send(users);
+        }
       })
       .then(null, function (err){
         log(err);
