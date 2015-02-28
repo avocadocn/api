@@ -313,8 +313,39 @@ var formatRestTime = exports.formatRestTime = function (start_time, end_time) {
  */
 var formatterList = {
   managerList: function (campaigns, options, callback) {
-    // todo hr活动管理中的活动列表信息
-    callback(null, campaigns);
+    // hr活动管理中的活动列表信息
+    var campaignsLength = campaigns.length;
+    var formatCampaigns = [];
+    for(var i=0; i<campaignsLength; i++) {
+      var formatCampaign = {
+        _id: campaigns[i]._id,
+        unitId: campaigns[i].campaign_type===1 ? campaigns[i].campaign_unit[0].company._id : campaigns[i].campaign_unit[0].team._id,
+        campaignType:campaigns[i].campaign_type,
+        theme: campaigns[i].theme,
+        startTime: campaigns[i].start_time,
+        endTime: campaigns[i].end_time,
+        memberNumber: campaigns[i].members.length
+      };
+      if(campaigns[i].start_time > new Date()) formatCampaign.status = '未开始';
+      else if(campaigns[i].end_time < new Date()) formatCampaign.status = '已结束';
+      else formatCampaign.status = '进行中';
+      formatCampaigns.push(formatCampaign);
+    }
+    callback(null, formatCampaigns);
+  },
+  calendar: function (campaigns, options, callback) {
+    var campaignsLength = campaigns.length;
+    var formatCampaigns = [];
+    for(var i=0; i<campaignsLength; i++) {
+      var formatCampaign = {
+        _id: campaigns[i]._id,
+        start: new Date(campaigns[i].start_time).valueOf(),
+        end: new Date(campaigns[i].end_time).valueOf(),
+        class: 'event-info'
+      };
+      formatCampaigns.push(formatCampaign);
+    }
+    callback(null, formatCampaigns);
   }
 };
 
@@ -374,14 +405,10 @@ exports.queryAndFormat = function (opts, callback) {
     // todo 查询公司或小队活动
     if (opts.campaignOwner.company && !opts.campaignOwner.teams) {
       dbQueryOptions.cid = opts.campaignOwner.company._id;
-      dbQueryOptions.campaign_type = 1;
-    } else if (opts.campaignOwner.teams && !opts.campaignOwner.company) {
+      if(!opts.reqQuery.attrs || opts.reqQuery.attrs.indexOf('allCampaign')===-1)//非HR取所有公司所有小队
+        dbQueryOptions.campaign_type = 1;
+    } else if (opts.campaignOwner.teams) {
       dbQueryOptions.tid = opts.campaignOwner.teams.map(function (team) { return team._id });
-    } else if (opts.campaignOwner.teams && opts.campaignOwner.company) {
-      dbQueryOptions.$or = [
-        { $and: [{ cid: opts.campaignOwner.company._id }, { campaign_type: 1 }]  },
-        { tid: opts.campaignOwner.teams.map(function (team) { return team._id }) }
-      ];
     }
     setPagerOptions();
     dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize + 1);
@@ -399,7 +426,11 @@ exports.queryAndFormat = function (opts, callback) {
       formatter(plainCampaigns, formatterOptions, function (err, resCampaigns) {
         if (err) {
           callback(err);
-        } else {
+        }
+        else if(opts.reqQuery.result==='calendar') {
+          callback(null, {success:1, result:resCampaigns});
+        }
+        else {
           callback(null, {
             campaigns: resCampaigns,
             hasNext: !!nextCampaign,
