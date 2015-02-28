@@ -408,7 +408,7 @@ module.exports = function (app) {
       }else{//用户取来通讯录用
         outputOptions = {'email':1,'nickname':1};
       }
-      var pageNum = 4;
+      var pageNum = 10;
       var limitNum=0,
           skipNum =0;
       if(req.query.page) {
