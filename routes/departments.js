@@ -12,4 +12,6 @@ module.exports = function (app, ctrl) {
   app.put('/departments/:departmentId', token.needToken, ctrl.updateDepartment);
   app.delete('/departments/:departmentId', token.needToken, ctrl.deleteDepartment);
 
+  app.post('/departments/:departmentId/actions/appointManager', token.needToken, ctrl.appointManager);
+
 };

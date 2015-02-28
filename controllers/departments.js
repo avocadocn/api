@@ -352,13 +352,39 @@ module.exports = function (app) {
       }
     },
     joinDepartment: function (user, did,callback) {
-      if(user.department) {
-        departmentOperate({did:user.department._id,user:user,method:false},function () {
-          departmentOperate({did:did,user:user,method:true},callback)
+      if (user.department) {
+        departmentOperate({did: user.department._id, user: user, method: false}, function () {
+          departmentOperate({did: did, user: user, method: true}, callback)
         })
       }
       else {
-        departmentOperate({did:did,user:user,method:true},callback)
+        departmentOperate({did: did, user: user, method: true}, callback)
+      }
+    },
+
+    appointManager: function (req, res, next) {
+      // todo 从yali移过来，需要改善
+      var operate = req.body.operate;
+      var did = req.body.did;
+      if (operate === 'appoint') {
+        if (req.body.member.wait_for_join) {
+          teamOperate({
+            did: did,
+            operate: {
+              '$push': {
+                'member': req.body.member
+              }
+            },
+            user: req.body.member,
+            method: true
+          }, function (err, data) {
+            managerUpdate(did, operate, req.body.member, res)
+          });
+        } else {
+          managerUpdate(did, operate, req.body.member, res);
+        }
+      } else {
+        managerUpdate(did, operate, req.body.member, res);
       }
     }
 
@@ -678,3 +704,130 @@ function departmentFindAndUpdate(department, did, param) {
   }
   return department;
 }
+
+function teamOperate(options, callback) {
+  var did = options.did;
+  var operate = options.operate;
+  var user = options.user;
+  var method = options.method;
+  Department.findByIdAndUpdate({'_id': did}, operate, function (err, department) {
+    if (err) {
+      callback(err);
+    }
+    else if (!department) {
+      callback('not found');
+    } else {
+      CompanyGroup.findByIdAndUpdate({'_id': department.team}, operate, function (err, company_group) {
+        if (err) {
+          callback(err);
+        } else if (!company_group) {
+          callback('not found');
+        }
+        else {
+          var _set;
+          //加入
+          if (method) {
+            _set = {'department': {'_id': did, 'name': department.name}};
+            var _push = {
+              'team': {
+                'gid': '0',
+                'group_type': 'virtual',
+                'entity_type': 'virtual',
+                '_id': company_group._id,
+                'name': company_group.name,
+                'logo': company_group.logo
+              }
+            };
+            User.findByIdAndUpdate({'_id': user._id}, {'$set': _set, '$push': _push}, function (err, user) {
+              if (err) {
+                callback(err)
+              } else if (!user) {
+                callback('not found');
+              } else {
+                callback(null, {'member': company_group.member});
+              }
+            });
+            //退出
+          } else {
+            User.findOne({'_id': user._id}, function (err, user) {
+              if (err) {
+                callback(err)
+              } else if (!user) {
+                callback('not found');
+              } else {
+                user.department = null;
+                var quit_leader_id = null;
+                for (var i = 0; i < user.team.length; i++) {
+                  if (user.team[i]._id.toString() === company_group._id.toString()) {
+                    if (user.team[i].leader === true) {
+                      quit_leader_id = user._id;
+                    }
+                    user.team.splice(i, 1);
+                    break;
+                  }
+                }
+                user.save(function (err) {
+                  if (err) {
+                    callback(err);
+                  } else {
+                    if (quit_leader_id != null)managerUpdate(did, 'dismiss', {'_id': quit_leader_id}, null);
+                    callback(null, {'member': company_group.member})
+                  }
+                });
+              }
+            });
+          }
+        }
+      });
+    }
+  });
+}
+
+function managerUpdate(did, operate, member, res) {
+  var department_set, team_set;
+  if (operate === 'appoint') {
+    department_set = {'$push': {'manager': member}};
+    team_set = {'$push': {'leader': member}};
+  } else {
+    department_set = {'$pull': {'manager': {'_id': member._id}}};
+    team_set = {'$pull': {'leader': {'_id': member._id}}};
+  }
+  Department.findByIdAndUpdate({
+    '_id': did
+  }, department_set, function (err, department) {
+    if (err || !department) {
+      if (res != null)res.send(500);
+    } else {
+      CompanyGroup.findByIdAndUpdate({'_id': department.team}, team_set, function (err, company_group) {
+        if (err || !company_group) {
+          if (res != null)res.send(500);
+        } else {
+          User.findOne({'_id': member._id}, function (err, user) {
+            if (err || !user) {
+              if (res != null)res.send(500);
+            } else {
+              for (var i = 0; i < user.team.length; i++) {
+                if (user.team[i]._id.toString() === company_group._id.toString()) {
+                  user.team[i].leader = operate == 'appoint';
+                  break;
+                }
+              }
+              user.save(function (err) {
+                if (err) {
+                  if (res != null)res.send(500);
+                } else {
+                  if (res != null) {
+                    res.send(200, {
+                      'manager': member
+                    });
+                  }
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+  });
+}
+
