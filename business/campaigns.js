@@ -318,13 +318,14 @@ var formatterList = {
     var formatCampaigns = [];
     for(var i=0; i<campaignsLength; i++) {
       var formatCampaign = {
-        _id: campaigns[i]._id,
-        unitId: campaigns[i].campaign_type===1 || campaigns[i].campaign_type>5? campaigns[i].cid[0]: campaigns[i].campaign_unit[0].team._id,
-        campaignType:campaigns[i].campaign_type,
-        theme: campaigns[i].theme,
-        startTime: campaigns[i].start_time,
-        endTime: campaigns[i].end_time,
-        memberNumber: campaigns[i].members.length
+        '_id': campaigns[i]._id,
+        'unitId': campaigns[i].campaign_type===1 || campaigns[i].campaign_type>5? campaigns[i].cid[0]: campaigns[i].campaign_unit[0].team._id,
+        'campaignType':campaigns[i].campaign_type,
+        'theme': campaigns[i].theme,
+        'startTime': campaigns[i].start_time,
+        'endTime': campaigns[i].end_time,
+        'memberNumber': campaigns[i].members.length,
+        'active': campaigns[i].active
       };
       if(campaigns[i].start_time > new Date()) formatCampaign.status = '未开始';
       else if(campaigns[i].end_time < new Date()) formatCampaign.status = '已结束';
@@ -410,6 +411,8 @@ exports.queryAndFormat = function (opts, callback) {
     } else if (opts.campaignOwner.teams) {
       dbQueryOptions.tid = opts.campaignOwner.teams.map(function (team) { return team._id });
     }
+    if(!opts.reqQuery.attrs || opts.reqQuery.attrs.indexOf('showClose')===-1)
+      dbQueryOptions.active =  true;
     setPagerOptions();
     dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize + 1);
   }
