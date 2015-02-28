@@ -7,9 +7,9 @@ module.exports = function (app, ctrl) {
   app.get('/departmentTree/:companyId', token.needToken, ctrl.getDepartmentTree);
   app.get('/departmentTree/:companyId/detail', token.needToken, ctrl.getDepartmentTreeDetail);
 
-  app.post('/department', token.needToken, ctrl.createDepartment);
-  app.get('/department/:departmentId', token.needToken, ctrl.getDepartment);
-  app.put('/department/:departmentId', token.needToken, ctrl.updateDepartment);
-  app.delete('/department/:departmentId', token.needToken, ctrl.deleteDepartment);
+  app.post('/departments', token.needToken, ctrl.createDepartment);
+  app.get('/departments/:departmentId', token.needToken, ctrl.getDepartment);
+  app.put('/departments/:departmentId', token.needToken, ctrl.updateDepartment);
+  app.delete('/departments/:departmentId', token.needToken, ctrl.deleteDepartment);
 
 };
