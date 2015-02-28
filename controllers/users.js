@@ -566,7 +566,7 @@ module.exports = function (app) {
           var token = jwt.sign({
             type: "user",
             id: user._id.toString(),
-            exp: app.get('tokenExpires')
+            exp: app.get('tokenExpires') + Date.now()
           }, app.get('tokenSecret'));
           var pushInfo = req.body.pushInfo ||{};
           user.addDevice(req.headers, token, pushInfo);

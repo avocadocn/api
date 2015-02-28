@@ -41,7 +41,7 @@ var app = express();
 // app config
 app.set('root', __dirname);
 app.set('tokenSecret', 'donler');
-app.set('tokenExpires', moment().add('days', 7).valueOf());
+app.set('tokenExpires',1000 * 60 * 60 * 24 * 7);
 
 app.use(cors({
   methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']
