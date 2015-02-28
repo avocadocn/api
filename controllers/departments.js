@@ -244,11 +244,11 @@ module.exports = function (app) {
         'status':{'$ne':'delete'}
       }).populate('team').exec(function(err, department) {
         if (err || !department) {
-          res.send(500, {
+          res.status(500).send({
             'department': null
           });
         } else {
-          res.send(200, {
+          res.send({
             'department': department
           })
         }
