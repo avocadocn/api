@@ -192,11 +192,21 @@ exports.sendFeedBackMail = function (email, content, callback) {
   var from = '动梨<service@donler.com>';
   var to = 'service@donler.com';
   var subject = '动梨用户反馈';
-  var content = '<p>' + content + '</p>' + '<p>来自--' + email + '</p>';
-  transport.sendMail({
-    from: from,
-    to: to,
-    subject: subject,
-    html: content
-  }, callback);
+  var description = content + '  (来自  ' + email + ')';
+
+  fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
+    if (err) throw err;
+    var fn = jade.compile(data);
+    var html = fn({
+      'title': '用户反馈',
+      'description': description,
+      'who': to
+    });
+    transport.sendMail({
+      from: from,
+      to: to,
+      subject: subject,
+      html: html
+    }, callback);
+  });
 };
