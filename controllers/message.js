@@ -3,6 +3,8 @@
 //站内信
 //将JavaScript的回调特性用到了极致...
 
+var util = require('util');
+
 var mongoose = require('mongoose'),
     async = require('async'),
     Campaign = mongoose.model('Campaign'),
@@ -90,114 +92,16 @@ module.exports = function (app) {
   return {
     //private
     _sendMessage: __sendMessage,
-    sendMessage: function(req, res) {
-      var param = {
-        'type':req.body.type,
-        'caption':req.body.caption,
-        'content':req.body.content,
-        'specific_type': req.body.specific_type,
-        'company_id':req.body.companyId,
-        'campaign_id':req.body.campaignId,
-        'deadline':(new Date())+time_out,
-        'auto': false,
-        'sender':[
-        {
-          _id:req.user._id,
-          nickname:req.user.nickname || req.user.info.official_name,
-          photo:req.user.photo || req.user.info.logo,
-          role:req.user.provider=='company' ? 'HR' :'LEADER'
-        }]
+    sendMessage: function(req, res, next) {
+      // 站内信的类型描述
+      switch (req.body.msgType) {
+      case 'leaderToLeader':
+        sendLeaderToLeaderMsg(req, res, next);
+        break;
+      default:
+        // todo 这里仍有两种站内信类型，以后可以将其拆分出来
+        sendTeamMsg(req, res, next);
       }
-      var teamIds = req.body.team;
-      var role = auth.getRole(req.user, {
-        companies: req.body.companyId ? [req.body.companyId] : [],
-        teams: (teamIds &&teamIds.constructor === Array) ? teamIds :[]
-      });
-      var allow = auth.auth(role, ['publishTeamMessage']);
-      var campaignAllow;
-      // if(!allow.publishTeamMessage){
-      //   return res.status(403).send({msg:'您没有权限发此站内信'});
-      // }
-      async.parallel([
-        function(callback){
-          if(teamIds &&teamIds.constructor === Array){
-            CompanyGroup
-              .find({_id:{'$in':teamIds}})
-              .exec()
-              .then(function (companyGroups) {
-                param.team = [];
-                param.receiver =[];
-                teamIds.forEach(function(teamId){
-                  for(var i =0; i<companyGroups.length; i++){
-                    if(companyGroups[i]._id.toString()==teamId){
-                      param.team.push({
-                        _id : companyGroups[i]._id,
-                        name : companyGroups[i].name,
-                        logo : companyGroups[i].logo
-                      });
-                      if(param.type =='team'){
-                        companyGroups[i].member.forEach(function(member){
-                          param.receiver.push(member._id);
-                        });
-                      }
-                    }
-                  }
-                });
-                callback(null);
-              })
-              .then(null,function(err){
-                callback(err)
-              });
-          }
-          else{
-            callback(null)
-          }
-        },
-        function(callback){
-          if(req.body.campaignId && param.type =='private'){
-            Campaign
-              .findOne({_id:req.body.campaignId})
-              .exec()
-              .then(function (campaign) {
-                var role = auth.getRole(req.user, {
-                  companies: campaign.cid,
-                  teams: campaign.tid
-                });
-                campaignAllow = auth.auth(role, ['publishTeamMessage']);
-                param.receiver =[];
-                campaign.members.forEach(function(member){
-                  param.receiver.push(member._id);
-                });
-                callback(null)
-              })
-              .then(null,function(err){
-                callback(err)
-              });
-          }
-          else{
-            callback(null)
-          }
-        }
-      ],function(err, values){
-        if(err){
-          log(err);
-          return res.status(500).send({ msg: '服务器错误'});
-        }
-        else{
-          if(!allow.publishTeamMessage &&campaignAllow &&!campaignAllow.publishTeamMessage){
-            return res.status(403).send('您没有权限发此站内信');
-          }else{
-            __sendMessage(param,function(err){
-              if(err){
-                return res.status(500).send({ msg: '服务器错误'});
-              }
-              else {
-                return res.sendStatus(200);
-              }
-            })
-          }
-        }
-      });
     },
     getMessageList: function(req, res) {
       var requestType = req.query.requestType;
@@ -478,3 +382,201 @@ module.exports = function (app) {
   }
 }
 
+// 发送小队站内信，活动公告
+// todo 还可以拆分成两个方法
+function sendTeamMsg(req, res, next) {
+  var param = {
+    'type':req.body.type,
+    'caption':req.body.caption,
+    'content':req.body.content,
+    'specific_type': req.body.specific_type,
+    'company_id':req.body.companyId,
+    'campaign_id':req.body.campaignId,
+    'deadline':(new Date())+time_out,
+    'auto': false,
+    'sender':[
+      {
+        _id:req.user._id,
+        nickname:req.user.nickname || req.user.info.official_name,
+        photo:req.user.photo || req.user.info.logo,
+        role:req.user.provider=='company' ? 'HR' :'LEADER'
+      }]
+  }
+  var teamIds = req.body.team;
+  var role = auth.getRole(req.user, {
+    companies: req.body.companyId ? [req.body.companyId] : [],
+    teams: (teamIds &&teamIds.constructor === Array) ? teamIds :[]
+  });
+  var allow = auth.auth(role, ['publishTeamMessage']);
+  var campaignAllow;
+  // if(!allow.publishTeamMessage){
+  //   return res.status(403).send({msg:'您没有权限发此站内信'});
+  // }
+  async.parallel([
+    function(callback){
+      if(teamIds &&teamIds.constructor === Array){
+        CompanyGroup
+          .find({_id:{'$in':teamIds}})
+          .exec()
+          .then(function (companyGroups) {
+            param.team = [];
+            param.receiver =[];
+            teamIds.forEach(function(teamId){
+              for(var i =0; i<companyGroups.length; i++){
+                if(companyGroups[i]._id.toString()==teamId){
+                  param.team.push({
+                    _id : companyGroups[i]._id,
+                    name : companyGroups[i].name,
+                    logo : companyGroups[i].logo
+                  });
+                  if(param.type =='team'){
+                    companyGroups[i].member.forEach(function(member){
+                      param.receiver.push(member._id);
+                    });
+                  }
+                }
+              }
+            });
+            callback(null);
+          })
+          .then(null,function(err){
+            callback(err)
+          });
+      }
+      else{
+        callback(null)
+      }
+    },
+    function(callback){
+      if(req.body.campaignId && param.type =='private'){
+        Campaign
+          .findOne({_id:req.body.campaignId})
+          .exec()
+          .then(function (campaign) {
+            var role = auth.getRole(req.user, {
+              companies: campaign.cid,
+              teams: campaign.tid
+            });
+            campaignAllow = auth.auth(role, ['publishTeamMessage']);
+            param.receiver =[];
+            campaign.members.forEach(function(member){
+              param.receiver.push(member._id);
+            });
+            callback(null)
+          })
+          .then(null,function(err){
+            callback(err)
+          });
+      }
+      else{
+        callback(null)
+      }
+    }
+  ],function(err, values){
+    if(err){
+      log(err);
+      return res.status(500).send({ msg: '服务器错误'});
+    }
+    else{
+      if(!allow.publishTeamMessage &&campaignAllow &&!campaignAllow.publishTeamMessage){
+        return res.status(403).send('您没有权限发此站内信');
+      }else{
+        __sendMessage(param,function(err){
+          if(err){
+            return res.status(500).send({ msg: '服务器错误'});
+          }
+          else {
+            return res.sendStatus(200);
+          }
+        })
+      }
+    }
+  });
+}
+
+function sendLeaderToLeaderMsg(req, res, next) {
+  // todo
+
+  // todo 通过id查找活动，判断是否有权限发送，并取活动主题作为站内信标题的一部分
+  Campaign.findById(req.body.campaignId, {
+    _id: 1,
+    theme: 1,
+    'campaign_unit.team._id': 1,
+    campaign_type: 1,
+    confirm_status: 1
+  }).exec()
+    .then(function (campaign) {
+      if (campaign.campaign_unit.length < 2) {
+        res.status(403).send({ msg: '单小队的活动无法发送私信' });
+      } else if (!campaign.confirm_status) {
+        res.status(403).send({ msg: '对方还没有应战，不能向对方队长发送私信' });
+      } else {
+        queryTeams(campaign);
+      }
+    })
+    .then(null, function (err) {
+      next(err);
+    });
+
+  function queryTeams(campaign) {
+    CompanyGroup.find({
+      _id: campaign.campaign_unit.map(function (unit) { return unit.team._id; })
+    }, {
+      _id: 1,
+      'leader._id': 1
+    }).exec()
+      .then(function (teams) {
+        var leaderTeamIndex = -1, targetLeaderIds = [];
+        for (var i = 0; i < teams.length; i++) {
+          for (var j = 0; j < teams[i].leaders.length; j++) {
+            if (req.user.id === teams[i].leaders[j]._id.toString()) {
+              leaderTeamIndex = i;
+              break;
+            }
+          }
+        }
+
+        // 不是队长，没有权限
+        if (leaderTeamIndex === -1) {
+          res.status(403).send({ msg: '只有队长才可以向对方队长发送私信' });
+          return;
+        }
+
+        // 抽取目标小队（考虑到3个及以上的小队的情况，尽管现在是不存在的）
+        for (var i = 0; i < teams.length; i++) {
+          if (i !== leaderTeamIndex) {
+            teams[i].leader.forEach(function (leader) {
+              targetLeaderIds.push(leader._id);
+            });
+          }
+        }
+
+        sendMsg(campaign, targetLeaderIds);
+
+      })
+      .then(null, function (err) {
+        next(err);
+      });
+  }
+
+  function sendMsg(campaign, targetLeaderIds) {
+    __sendMessage({
+      type: 'private',
+      caption: util.format('来自活动“%s”的消息'),
+      content: req.body.content,
+      sender: {
+        _id: req.user._id,
+        nickname: req.user.nickname,
+        photo: req.user.photo,
+        role: 'LEADER'
+      },
+      specific_type: {
+        value: 7
+      }
+    });
+  }
+
+
+  // todo 设置站内信参数，调用_sendMessage发送
+
+}
