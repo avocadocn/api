@@ -40,7 +40,7 @@ var _team = new Schema({
   logo: String
 });
 
-var latestCommentCampaign = new Schema({
+var chatroom = new Schema({
   _id: Schema.Types.ObjectId,
   unread: {
     type: Number,
@@ -152,8 +152,11 @@ var UserSchema = new Schema({
     ref: 'Campaign'
   },
   last_comment_time: Date, //个人首页需要用的
-  commentCampaigns: [latestCommentCampaign], //参加了的讨论列表
-  unjoinedCommentCampaigns: [latestCommentCampaign], //未参加的讨论列表
+
+  //- 讨论变为小组聊天室
+  chatrooms: [chatroom],
+  // commentCampaigns: [latestCommentCampaign], //参加了的讨论列表
+  // unjoinedCommentCampaigns: [latestCommentCampaign], //未参加的讨论列表
   score: {
     // 积分总数
     total: {

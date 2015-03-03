@@ -123,121 +123,121 @@ var setDeleteAuth = function setDeleteAuth(data, callback) {
   }
 };
 //for push comment
-var updateUserCommentList = function(campaign, user, reqUserId ,callback){
-  var arrayMaxLength = 30;
-  var isInTeams = false;
-  var teamLength = campaign.tid.length;
-  for(var i=0; i<teamLength; i++){
-    if(tools.arrayObjectIndexOf(user.team,campaign.tid[i],'_id')>-1) {
-      isInTeams = true;
-      break;
-    }
-  }
-  // if(campaign.whichUnit(user._id)) {//已参加->在小队
-  if(isInTeams){//在campaign所在小队
-    var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns, campaign._id, '_id');
-    if(campaignIndex === -1) {//如果user中没有
-      //放到最前,数组长度到max值时去掉最后面的campaign
-      user.commentCampaigns.unshift({
-        '_id': campaign._id,
-        'unread': user._id.toString() == reqUserId.toString() ? 0 : 1
-      });
-      if(user.commentCampaigns.length>arrayMaxLength) {
-        user.commentCampaigns.length = arrayMaxLength;
-      }
-    }else{//如果存在于user中
-      //更新到最前,如果不是自己发的,unread数增加
-      if(user._id.toString() != reqUserId.toString())
-        user.commentCampaigns[campaignIndex].unread++;
-      var campaignNeedUpdate = user.commentCampaigns.splice(campaignIndex,1);
-      user.commentCampaigns.unshift(campaignNeedUpdate[0]);
-    }
-  }else{//未参加
-    var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns, campaign._id, '_id');
-    if(campaignIndex === -1) {//如果user中没有
-      //放到最前,数组长度到max值时去掉最后面的campaign
-      user.unjoinedCommentCampaigns.unshift({
-        '_id': campaign._id,
-        'unread': user._id.toString() == reqUserId.toString() ? 0 : 1
-      });
-      if(user.unjoinedCommentCampaigns.length>arrayMaxLength) {
-        user.unjoinedCommentCampaigns.length = arrayMaxLength;
-      }
-    }else{//如果存在于user中
-      //更新到最前,如果不是自己发的,unread数增加
-      if(user._id.toString() != reqUserId.toString())
-        user.unjoinedCommentCampaigns[campaignIndex].unread++;
-      var campaignNeedUpdate = user.unjoinedCommentCampaigns.splice(campaignIndex,1);
-      user.unjoinedCommentCampaigns.unshift(campaignNeedUpdate[0]);
-    }
-  }
-  user.save(function(err){
-    if(err){
-      console.log('user save error:',err);
-    }else{
-      callback();
-    }
-  });
-};
+// var updateUserCommentList = function(campaign, user, reqUserId ,callback){
+//   var arrayMaxLength = 30;
+//   var isInTeams = false;
+//   var teamLength = campaign.tid.length;
+//   for(var i=0; i<teamLength; i++){
+//     if(tools.arrayObjectIndexOf(user.team,campaign.tid[i],'_id')>-1) {
+//       isInTeams = true;
+//       break;
+//     }
+//   }
+//   // if(campaign.whichUnit(user._id)) {//已参加->在小队
+//   if(isInTeams){//在campaign所在小队
+//     var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns, campaign._id, '_id');
+//     if(campaignIndex === -1) {//如果user中没有
+//       //放到最前,数组长度到max值时去掉最后面的campaign
+//       user.commentCampaigns.unshift({
+//         '_id': campaign._id,
+//         'unread': user._id.toString() == reqUserId.toString() ? 0 : 1
+//       });
+//       if(user.commentCampaigns.length>arrayMaxLength) {
+//         user.commentCampaigns.length = arrayMaxLength;
+//       }
+//     }else{//如果存在于user中
+//       //更新到最前,如果不是自己发的,unread数增加
+//       if(user._id.toString() != reqUserId.toString())
+//         user.commentCampaigns[campaignIndex].unread++;
+//       var campaignNeedUpdate = user.commentCampaigns.splice(campaignIndex,1);
+//       user.commentCampaigns.unshift(campaignNeedUpdate[0]);
+//     }
+//   }else{//未参加
+//     var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns, campaign._id, '_id');
+//     if(campaignIndex === -1) {//如果user中没有
+//       //放到最前,数组长度到max值时去掉最后面的campaign
+//       user.unjoinedCommentCampaigns.unshift({
+//         '_id': campaign._id,
+//         'unread': user._id.toString() == reqUserId.toString() ? 0 : 1
+//       });
+//       if(user.unjoinedCommentCampaigns.length>arrayMaxLength) {
+//         user.unjoinedCommentCampaigns.length = arrayMaxLength;
+//       }
+//     }else{//如果存在于user中
+//       //更新到最前,如果不是自己发的,unread数增加
+//       if(user._id.toString() != reqUserId.toString())
+//         user.unjoinedCommentCampaigns[campaignIndex].unread++;
+//       var campaignNeedUpdate = user.unjoinedCommentCampaigns.splice(campaignIndex,1);
+//       user.unjoinedCommentCampaigns.unshift(campaignNeedUpdate[0]);
+//     }
+//   }
+//   user.save(function(err){
+//     if(err){
+//       console.log('user save error:',err);
+//     }else{
+//       callback();
+//     }
+//   });
+// };
 
-var socketPush = function(campaign, comment, joinedUids, unjoinedUids){
-  var commentCampaign = {
-    '_id':campaign._id,
-    'theme': campaign.theme,
-    'latestComment': campaign.latestComment
-  };
-  var ct = campaign.campaign_type;
-  if(ct===1){
-    commentCampaign.logo = campaign.campaign_unit[0].company.logo;
-  }
-  else if(ct===2||ct===6){//是单小队/部门活动
-    commentCampaign.logo = campaign.campaign_unit[0].team.logo;
-  }else{//是挑战
-    commentCampaign.logo = '/img/icons/vs.png';//图片todo
-  }
-  var socketComment = {
-    '_id': comment._id,
-    'poster': comment.poster,
-    'createDate': comment.create_date,
-    'content': comment.content,
-    'randomId': comment.randomId
-  };
-  if(comment.photos){
-    socketComment.photos = comment.photos;
-  }
-  socketClient.pushComment(joinedUids, unjoinedUids, commentCampaign, socketComment);
-};
+// var socketPush = function(campaign, comment, joinedUids, unjoinedUids){
+//   var commentCampaign = {
+//     '_id':campaign._id,
+//     'theme': campaign.theme,
+//     'latestComment': campaign.latestComment
+//   };
+//   var ct = campaign.campaign_type;
+//   if(ct===1){
+//     commentCampaign.logo = campaign.campaign_unit[0].company.logo;
+//   }
+//   else if(ct===2||ct===6){//是单小队/部门活动
+//     commentCampaign.logo = campaign.campaign_unit[0].team.logo;
+//   }else{//是挑战
+//     commentCampaign.logo = '/img/icons/vs.png';//图片todo
+//   }
+//   var socketComment = {
+//     '_id': comment._id,
+//     'poster': comment.poster,
+//     'createDate': comment.create_date,
+//     'content': comment.content,
+//     'randomId': comment.randomId
+//   };
+//   if(comment.photos){
+//     socketComment.photos = comment.photos;
+//   }
+//   socketClient.pushComment(joinedUids, unjoinedUids, commentCampaign, socketComment);
+// };
 
 /**
  * [userReadComment description]
  * @param  {object} user 用户
  * @param  {string} campaignId 看的是哪个活动的评论
  */
-var userReadComment = function (user, campaignId, callback) {
-  var find = false;
-  for(var i=0; i<user.commentCampaigns.length; i++){
-    if(campaignId.toString()===user.commentCampaigns[i]._id.toString()) {
-      user.commentCampaigns[i].unread = 0;
-      find = true;
-      break;
-    }
-  }
-  if(!find){
-    for(var i=0; i<user.unjoinedCommentCampaigns.length; i++){
-      if(campaignId.toString()===user.unjoinedCommentCampaigns[i]._id.toString()) {
-        user.unjoinedCommentCampaigns[i].unread = 0;
-        find = true;
-        break;
-      }
-    }
-  }
-  user.save(function(err){
-    if(err){
-      console.log('user save error:',err);
-    }
-    callback();
-  });
-};
+// var userReadComment = function (user, campaignId, callback) {
+//   var find = false;
+//   for(var i=0; i<user.commentCampaigns.length; i++){
+//     if(campaignId.toString()===user.commentCampaigns[i]._id.toString()) {
+//       user.commentCampaigns[i].unread = 0;
+//       find = true;
+//       break;
+//     }
+//   }
+//   if(!find){
+//     for(var i=0; i<user.unjoinedCommentCampaigns.length; i++){
+//       if(campaignId.toString()===user.unjoinedCommentCampaigns[i]._id.toString()) {
+//         user.unjoinedCommentCampaigns[i].unread = 0;
+//         find = true;
+//         break;
+//       }
+//     }
+//   }
+//   user.save(function(err){
+//     if(err){
+//       console.log('user save error:',err);
+//     }
+//     callback();
+//   });
+// };
 
 module.exports = function (app) {
 
@@ -441,18 +441,18 @@ module.exports = function (app) {
               'nickname': req.user.nickname,
               'photo': req.user.photo
             };
-            campaign.latestComment = {
-              '_id': comment._id,
-              'poster': poster,
-              'createDate': comment.create_date
-            };
-            if (content) {
-              campaign.latestComment.content = content;
-            }
+            // campaign.latestComment = {
+            //   '_id': comment._id,
+            //   'poster': poster,
+            //   'createDate': comment.create_date
+            // };
+            // if (content) {
+            //   campaign.latestComment.content = content;
+            // }
             //如果不在已评论过的人列表
-            if (tools.arrayObjectIndexOf(campaign.commentMembers, req.user._id, '_id') === -1) {
-              campaign.commentMembers.push(poster);
-            }
+            // if (tools.arrayObjectIndexOf(campaign.commentMembers, req.user._id, '_id') === -1) {
+            //   campaign.commentMembers.push(poster);
+            // }
             
             campaign.save(function (err) {
               if (err) {
@@ -460,24 +460,24 @@ module.exports = function (app) {
               }
             });
             //获取在此小队的人
-            var getUidsInTeams = function (tids, callback) {
-              CompanyGroup.find({'_id':{'$in':tids}},function(err, teams){
-                if(err){
-                  console.log(err);
-                  callback(null,err);
-                }else {
-                  var teamUids = [];
-                  var teamLength = teams.length;
-                  for(var i=0; i<teamLength; i++) {
-                    var memberLength = teams[i].member.length;
-                    for(var j=0;j<memberLength;j++) {
-                      teamUids.push(teams[i].member[j]._id.toString());
-                    }
-                  }
-                  callback(teamUids);
-                }
-              })
-            };
+            // var getUidsInTeams = function (tids, callback) {
+            //   CompanyGroup.find({'_id':{'$in':tids}},function(err, teams){
+            //     if(err){
+            //       console.log(err);
+            //       callback(null,err);
+            //     }else {
+            //       var teamUids = [];
+            //       var teamLength = teams.length;
+            //       for(var i=0; i<teamLength; i++) {
+            //         var memberLength = teams[i].member.length;
+            //         for(var j=0;j<memberLength;j++) {
+            //           teamUids.push(teams[i].member[j]._id.toString());
+            //         }
+            //       }
+            //       callback(teamUids);
+            //     }
+            //   })
+            // };
             //for users操作 & socket
             //参加的人->在此小队的人
             // var joinedUids = [];
@@ -485,42 +485,42 @@ module.exports = function (app) {
             //   joinedUids.push(campaign.members[i]._id.toString());
             // }
             //未参加
-            getUidsInTeams(campaign.tid,function(teamUids,err){
-              if(!err){
-                var joinedUids = teamUids ;
-                //未参加->不在此小队的评论过的人
-                var unjoinedUids = [];
-                for(var i = 0; i<campaign.commentMembers.length;i++) {
-                  if(joinedUids.indexOf(campaign.commentMembers[i]._id.toString()) === -1){
-                    unjoinedUids.push(campaign.commentMembers[i]._id.toString());
-                  }
-                }
-                //---socket
-                if(req.body.randomId){
-                  comment.randomId=req.body.randomId;
-                }
-                if (req.randomId) {
-                  comment.randomId=req.randomId;
-                }
-                socketPush(campaign, comment, joinedUids, unjoinedUids);
+            // getUidsInTeams(campaign.tid,function(teamUids,err){
+            //   if(!err){
+            //     var joinedUids = teamUids ;
+            //     //未参加->不在此小队的评论过的人
+            //     var unjoinedUids = [];
+            //     for(var i = 0; i<campaign.commentMembers.length;i++) {
+            //       if(joinedUids.indexOf(campaign.commentMembers[i]._id.toString()) === -1){
+            //         unjoinedUids.push(campaign.commentMembers[i]._id.toString());
+            //       }
+            //     }
+            //     //---socket
+            //     if(req.body.randomId){
+            //       comment.randomId=req.body.randomId;
+            //     }
+            //     if (req.randomId) {
+            //       comment.randomId=req.randomId;
+            //     }
+            //     socketPush(campaign, comment, joinedUids, unjoinedUids);
 
-                //users操作
-                var revalentUids = joinedUids.concat(unjoinedUids);
-                User.find({'_id':{'$in':revalentUids}},{'commentCampaigns':1,'unjoinedCommentCampaigns':1,'team':1},function(err,users){
-                  if(err){
-                    console.log(err);
-                  }else{
-                    async.map(users,function(user,callback){
-                      updateUserCommentList(campaign, user, req.user._id, function(){
-                        callback();
-                      });
-                    },function(err, results) {
-                      return;
-                    });
-                  }
-                });
-              }
-            });
+            //     //users操作
+            //     var revalentUids = joinedUids.concat(unjoinedUids);
+            //     User.find({'_id':{'$in':revalentUids}},{'commentCampaigns':1,'unjoinedCommentCampaigns':1,'team':1},function(err,users){
+            //       if(err){
+            //         console.log(err);
+            //       }else{
+            //         async.map(users,function(user,callback){
+            //           updateUserCommentList(campaign, user, req.user._id, function(){
+            //             callback();
+            //           });
+            //         },function(err, results) {
+            //           return;
+            //         });
+            //       }
+            //     });
+            //   }
+            // });
           }
         }
       });
@@ -549,22 +549,22 @@ module.exports = function (app) {
                 if (err) console.log(err);
                 // 即使错误依然会做基本的权限设置（公司可删自己员工的，自己可以删自己的），所以依旧返回数据
                 res.status(202).send({'comments': comments, nextStartDate: nextStartDate});
-                userReadComment(req.user, req.query.requestId, function(){});
+                // userReadComment(req.user, req.query.requestId, function(){});
               });
             });
           }
         }
       })
     },
-    readComments: function(req, res) {
-      if(req.user.provider==='company') {
-        return res.status(403).send({msg:'无此功能'});
-      }
-      var host_id = req.body.requestId;
-      userReadComment(req.user, host_id, function() {
-        return res.status(200).send();
-      });
-    },
+    // readComments: function(req, res) {
+    //   if(req.user.provider==='company') {
+    //     return res.status(403).send({msg:'无此功能'});
+    //   }
+    //   var host_id = req.body.requestId;
+    //   userReadComment(req.user, host_id, function() {
+    //     return res.status(200).send();
+    //   });
+    // },
 
     deleteComment: function(req, res) {
 
@@ -706,73 +706,73 @@ module.exports = function (app) {
         return res.status(500).send({msg: 'Comment not found'});
       });
     },
-    getCommentList: function(req, res) {
-      if(req.user.provider==='company') {
-        return res.status(403).send({msg: '无此功能'});
-      }
-      var campaigns= [];
-      if(req.query.type==='joined')
-        campaigns = req.user.commentCampaigns;
-      else if(req.query.type === 'unjoined')
-        campaigns = req.user.unjoinedCommentCampaigns;
-      var campaignIds = [];
-      for(var i = 0; i<campaigns.length; i++){
-        campaignIds.push(campaigns[i]._id);
-      }
-      Campaign.find({_id:{'$in':campaignIds}})
-      .sort('-latestComment.createDate')
-      .exec()
-      .then(function (commentCampaigns) {
-        var formatCommentCampaigns = [];
-        for(var i = 0; i<commentCampaigns.length; i++){
-          var campaign = commentCampaigns[i];
-          var logo = '';
-          var ct = campaign.campaign_type;
-          if(ct===1){
-            logo = campaign.campaign_unit[0].company.logo;
-          }
-          else if(ct===2||ct===6){//是单小队/部门活动
-            logo = campaign.campaign_unit[0].team.logo;
-          }else{//是挑战
-            logo = '/img/icons/vs.png';//图片todo
-          }
-          var indexOfUser = tools.arrayObjectIndexOf(campaigns, campaign._id ,'_id');
-          var unread = campaigns[indexOfUser].unread;
-          formatCommentCampaigns.push({
-            _id: campaign._id,
-            theme: campaign.theme,
-            latestComment: campaign.latestComment,
-            unread: unread,
-            logo: logo
-          });
-        }
-        if(req.query.type==='joined') {
-          var unjoinedCampaigns = req.user.unjoinedCommentCampaigns;
-          var unreadUnjoined = false; // 是否有未读的未参加活动讨论
-          for(var i =0; i<unjoinedCampaigns.length; i++){
-            if(unjoinedCampaigns[i].unread){
-              unreadUnjoined = true;
-              break;
-            }
-          }
-          if(unjoinedCampaigns.length>0){
-            Campaign.findOne({'_id':unjoinedCampaigns[0]._id}, {'latestComment':1,'theme':1}, function(err, unjoinedCampaign){
-              if(err){
-                log(err);
-              }
-              return res.status(200).send({'commentCampaigns':formatCommentCampaigns, 'newUnjoinedCampaignComment':unreadUnjoined, 'latestUnjoinedCampaign':unjoinedCampaign});
-            });
-          }else{
-            return res.status(200).send({'commentCampaigns':formatCommentCampaigns});
-          }
-        }else{
-          return res.status(200).send({'commentCampaigns':formatCommentCampaigns})
-        }
-      })
-      .then(null, function (err) {
-        log(err);
-        return res.status(500).send({msg: 'Campaign not found'});
-      });
-    }
+    // getCommentList: function(req, res) {
+    //   if(req.user.provider==='company') {
+    //     return res.status(403).send({msg: '无此功能'});
+    //   }
+    //   var campaigns= [];
+    //   if(req.query.type==='joined')
+    //     campaigns = req.user.commentCampaigns;
+    //   else if(req.query.type === 'unjoined')
+    //     campaigns = req.user.unjoinedCommentCampaigns;
+    //   var campaignIds = [];
+    //   for(var i = 0; i<campaigns.length; i++){
+    //     campaignIds.push(campaigns[i]._id);
+    //   }
+    //   Campaign.find({_id:{'$in':campaignIds}})
+    //   .sort('-latestComment.createDate')
+    //   .exec()
+    //   .then(function (commentCampaigns) {
+    //     var formatCommentCampaigns = [];
+    //     for(var i = 0; i<commentCampaigns.length; i++){
+    //       var campaign = commentCampaigns[i];
+    //       var logo = '';
+    //       var ct = campaign.campaign_type;
+    //       if(ct===1){
+    //         logo = campaign.campaign_unit[0].company.logo;
+    //       }
+    //       else if(ct===2||ct===6){//是单小队/部门活动
+    //         logo = campaign.campaign_unit[0].team.logo;
+    //       }else{//是挑战
+    //         logo = '/img/icons/vs.png';//图片todo
+    //       }
+    //       var indexOfUser = tools.arrayObjectIndexOf(campaigns, campaign._id ,'_id');
+    //       var unread = campaigns[indexOfUser].unread;
+    //       formatCommentCampaigns.push({
+    //         _id: campaign._id,
+    //         theme: campaign.theme,
+    //         latestComment: campaign.latestComment,
+    //         unread: unread,
+    //         logo: logo
+    //       });
+    //     }
+    //     if(req.query.type==='joined') {
+    //       var unjoinedCampaigns = req.user.unjoinedCommentCampaigns;
+    //       var unreadUnjoined = false; // 是否有未读的未参加活动讨论
+    //       for(var i =0; i<unjoinedCampaigns.length; i++){
+    //         if(unjoinedCampaigns[i].unread){
+    //           unreadUnjoined = true;
+    //           break;
+    //         }
+    //       }
+    //       if(unjoinedCampaigns.length>0){
+    //         Campaign.findOne({'_id':unjoinedCampaigns[0]._id}, {'latestComment':1,'theme':1}, function(err, unjoinedCampaign){
+    //           if(err){
+    //             log(err);
+    //           }
+    //           return res.status(200).send({'commentCampaigns':formatCommentCampaigns, 'newUnjoinedCampaignComment':unreadUnjoined, 'latestUnjoinedCampaign':unjoinedCampaign});
+    //         });
+    //       }else{
+    //         return res.status(200).send({'commentCampaigns':formatCommentCampaigns});
+    //       }
+    //     }else{
+    //       return res.status(200).send({'commentCampaigns':formatCommentCampaigns})
+    //     }
+    //   })
+    //   .then(null, function (err) {
+    //     log(err);
+    //     return res.status(500).send({msg: 'Campaign not found'});
+    //   });
+    // }
   };
 };

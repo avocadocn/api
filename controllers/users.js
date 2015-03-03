@@ -272,21 +272,21 @@ module.exports = function (app) {
         return res.status(200).send(user);
       }
       //获取某活动的未读评论数
-      if(req.query.commentCampaignId) {
-        var indexOfCC = tools.arrayObjectIndexOf(req.user.commentCampaigns, req.query.commentCampaignId, '_id');
-        if(indexOfCC > -1) {
-          var unreadNumbers = req.user.commentCampaigns[indexOfCC].unread;
-          return res.status(200).send({unreadNumbers: unreadNumbers});
-        }else {
-          var indexOfUCC = tools.arrayObjectIndexOf(req.user.unjoinedCommentCampaigns, req.query.commentCampaignId, '_id');
-          if(indexOfUCC > -1) {
-            var unreadNumbers = req.user.unjoinedCommentCampaigns[indexOfUCC].unread;
-            return res.status(200).send({unreadNumbers: unreadNumbers});
-          } else {
-            return res.status(200).send({unreadNumbers: 0});
-          }
-        }
-      }
+      // if(req.query.commentCampaignId) {
+      //   var indexOfCC = tools.arrayObjectIndexOf(req.user.commentCampaigns, req.query.commentCampaignId, '_id');
+      //   if(indexOfCC > -1) {
+      //     var unreadNumbers = req.user.commentCampaigns[indexOfCC].unread;
+      //     return res.status(200).send({unreadNumbers: unreadNumbers});
+      //   }else {
+      //     var indexOfUCC = tools.arrayObjectIndexOf(req.user.unjoinedCommentCampaigns, req.query.commentCampaignId, '_id');
+      //     if(indexOfUCC > -1) {
+      //       var unreadNumbers = req.user.unjoinedCommentCampaigns[indexOfUCC].unread;
+      //       return res.status(200).send({unreadNumbers: unreadNumbers});
+      //     } else {
+      //       return res.status(200).send({unreadNumbers: 0});
+      //     }
+      //   }
+      // }
       
       //非获取免打扰
       User.findById(req.params.userId).exec()

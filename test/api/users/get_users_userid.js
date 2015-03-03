@@ -113,20 +113,20 @@ module.exports = function () {
         });
     });
 
-    it('获取某活动的未读评论数应获取到此活动的数目', function (done) {
-      request.get('/users/' + user.id )
-        .query({commentCampaignId : data[0].campaigns[0]._id})
-        .set('x-access-token', accessToken)
-        .expect(200)
-        .end(function (err, res) {
-          if (err) {
-            console.log(res.body);
-            return done(err);
-          }
-          res.body.unreadNumbers.should.be.a.Number;
-          done();
-        });
-    });
+    // it('获取某活动的未读评论数应获取到此活动的数目', function (done) {
+    //   request.get('/users/' + user.id )
+    //     .query({commentCampaignId : data[0].campaigns[0]._id})
+    //     .set('x-access-token', accessToken)
+    //     .expect(200)
+    //     .end(function (err, res) {
+    //       if (err) {
+    //         console.log(res.body);
+    //         return done(err);
+    //       }
+    //       res.body.unreadNumbers.should.be.a.Number;
+    //       done();
+    //     });
+    // });
 
   });
 
