@@ -1,11 +1,12 @@
 'use strict';
 
 var path = require('path'),
-    fs = require('fs');
+  fs = require('fs');
 var mongoose = require('mongoose');
 var Photo = mongoose.model('Photo'),
-    User = mongoose.model('User'),
-    CompanyGroup = mongoose.model('CompanyGroup');
+  User = mongoose.model('User'),
+  Chat = mongoose.model('Chat'),
+  CompanyGroup = mongoose.model('CompanyGroup');
 // var async = require('async');
 var auth = require('../services/auth.js'),
     log = require('../services/error_log.js'),
@@ -118,6 +119,85 @@ module.exports = function (app) {
     },
     createChat: function (req, res, next) {
 
+    },
+
+    getChatRooms: function (req, res, next) {
+
+      var role = auth.getRole(req.user, {
+        companies: [req.user.getCid()]
+      });
+      var allow = auth.auth(role, ['getChatRooms']);
+      if (!allow.getChatRooms) {
+        res.status(403).send({ msg: '抱歉，您没有权限做此操作。' });
+        return;
+      }
+
+      var chatRoomIds = [];
+      var chatRoomList = [];
+      if (req.user.team) {
+        chatRoomIds = req.user.team.map(function (team) {
+          return team._id;
+        });
+
+        chatRoomList = req.user.team.map(function (team) {
+          return {
+            kind: 'team',
+            _id: team._id,
+            name: team.name,
+            logo: team.logo
+          };
+        });
+      }
+      chatRoomIds.push(req.user.getCid());
+      chatRoomList.push({
+        kind: 'company',
+        _id: req.user.cid,
+        name: req.user.company_official_name
+      });
+
+      Chat.aggregate()
+        .match({
+          chatroom_id: chatRoomIds,
+          status: 'active'
+        })
+        .sort('-create_date')
+        .group({
+          _id: '$chatroom_id',
+          docs: {
+            $first: '$$ROOT'
+          }
+        })
+        .exec()
+        .then(function (results) {
+          chatRoomList.forEach(function (chatRoom) {
+            var latestChat;
+            for (var i = 0; i < results.length; i++) {
+              if (chatRoom._id.toString() === results[i]._id.toString()) {
+                latestChat = results[i].docs[0];
+                break;
+              }
+            }
+
+            chatRoom.latestChat = {
+              _id: latestChat._id,
+              content: latestChat.content,
+              create_date: latestChat.create_date,
+              poster: latestChat.poster,
+              photos: latestChat.photos ? latestChat.photos.map(function (photo) {
+                return {
+                  uri: photo.uri,
+                  width: photo.width,
+                  height: photo.height
+                };
+              }) : null
+            };
+          });
+
+          res.send({ chatRoomList: chatRoomList });
+        })
+        .then(null, function (err) {
+          next(err);
+        });
     }
   };
 

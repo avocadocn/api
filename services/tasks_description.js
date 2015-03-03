@@ -310,6 +310,11 @@ var registeredTasks = {
   // 基本的部门操作：添加、修改、删除、任命管理员
   operateDepartment: {
     company: ['hr']
+  },
+
+  // 获取讨论组列表
+  getChatRooms: {
+    company: ['member']
   }
 };
 
