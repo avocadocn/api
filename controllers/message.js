@@ -16,77 +16,7 @@ var log = require('../services/error_log.js'),
     auth = require('../services/auth.js');
 
 var time_out = 72*24*3600;
-    /**
-     * [_sendMessage description]
-     * @param  {[type]} param [description]
-     *                   type
-     *                   specific_type
-     *                   caption
-     *                   content
-     *                   sender
-     *                   team
-     *                   campaign_id
-     *                   auto
-     *                   receiver
-     * @return {[type]}       [description]
-     */
-var __sendMessage = function(param,callback) {
-      callback = callback || function(err){};
-      var MC={
-        'type':param.type,
-        'caption':param.caption,
-        'content':param.content,
-        'sender':param.sender,
-        'receiver':param.receiver,
-        'team':param.team,
-        'specific_type':param.specific_type,
-        'company_id':param.company_id,
-        'campaign_id':param.campaign_id,
-        'deadline':(new Date())+time_out,
-        'auto':param.auto
-      };
-      MessageContent.create(MC,function(err,message_content){
-        if(err){
-          log(err);
-          callback(err);
-        } else {
-          if(MC.type!='global'&&MC.type!=='company') {
-            var counter = {'i':0};
-            async.whilst(
-              function() { return counter.i < param.receiver.length},
-              function(__callback){
-                var M = {
-                  'type':param.type,
-                  'rec_id':param.receiver[counter.i]._id,
-                  'MessageContent':message_content._id,
-                  'specific_type':MC.specific_type,
-                  'status':'unread'
-                };
-                Message.create(M,function(err,message){
-                  if(err){
-                    log(err);
-                  } else {
-                    counter.i++;__callback();
-                  }
-                })
-              },
-              function(err){
-                if(err){
-                 log(err);
-                 callback(err);
-                }
-                else{
-                  callback(null);
-                }
-              }
-            );
-          }
-          else {
-            callback(null);
-          }
-        }
-      })
-    }
+
 module.exports = function (app) {
 
   return {
@@ -95,7 +25,7 @@ module.exports = function (app) {
     sendMessage: function(req, res, next) {
       // 站内信的类型描述
       switch (req.body.msgType) {
-      case 'leaderToLeader':
+      case 'inProvokeLeaders':
         sendLeaderToLeaderMsg(req, res, next);
         break;
       default:
@@ -380,7 +310,101 @@ module.exports = function (app) {
     }
       
   }
+};
+
+
+/**
+ * [发送站内信]
+ * example:
+ *  __sendMessage({
+ *    type: 'private',
+ *    specific_type: {
+ *      value: 7
+ *    },
+ *    caption: '',
+ *    content: '',
+ *    sender: {
+ *      _id: user._id,
+ *      nickname: user.nickname,
+ *      photo: user.photo,
+ *      role: 'LEADER'
+ *    },
+ *    receiver: [ids],
+ *    team: [{
+ *      _id: team._id,
+ *      name: team.name,
+ *      logo: team.logo
+ *    }],
+ *    company_id: cid,
+ *    campaign_id: cpid,
+ *    auto: false
+ *  }, function (err) {})
+ * @param {Object} param 参数，见示例及模型Message,MessageContent的说明
+ * @param {Function} callback
+ */
+function __sendMessage(param, callback) {
+  callback = callback || function (err) {
+  };
+  var MC = {
+    'type': param.type,
+    'caption': param.caption,
+    'content': param.content,
+    'sender': param.sender,
+    'receiver': param.receiver,
+    'team': param.team,
+    'specific_type': param.specific_type,
+    'company_id': param.company_id,
+    'campaign_id': param.campaign_id,
+    'deadline': (new Date()) + time_out,
+    'auto': param.auto
+  };
+  MessageContent.create(MC, function (err, message_content) {
+    if (err) {
+      log(err);
+      callback(err);
+    } else {
+      if (MC.type != 'global' && MC.type !== 'company') {
+        // todo 这里应该使用map方法，不该使用循环
+        var counter = {'i': 0};
+        async.whilst(
+          function () {
+            return counter.i < param.receiver.length
+          },
+          function (__callback) {
+            var M = {
+              'type': param.type,
+              'rec_id': param.receiver[counter.i]._id,
+              'MessageContent': message_content._id,
+              'specific_type': MC.specific_type,
+              'status': 'unread'
+            };
+            Message.create(M, function (err, message) {
+              if (err) {
+                log(err);
+              } else {
+                counter.i++;
+                __callback();
+              }
+            })
+          },
+          function (err) {
+            if (err) {
+              log(err);
+              callback(err);
+            }
+            else {
+              callback(null);
+            }
+          }
+        );
+      }
+      else {
+        callback(null);
+      }
+    }
+  })
 }
+
 
 // 发送小队站内信，活动公告
 // todo 还可以拆分成两个方法
@@ -495,9 +519,7 @@ function sendTeamMsg(req, res, next) {
 }
 
 function sendLeaderToLeaderMsg(req, res, next) {
-  // todo
-
-  // todo 通过id查找活动，判断是否有权限发送，并取活动主题作为站内信标题的一部分
+  // 通过id查找活动，判断是否有权限发送，并取活动主题作为站内信标题的一部分
   Campaign.findById(req.body.campaignId, {
     _id: 1,
     theme: 1,
@@ -520,16 +542,18 @@ function sendLeaderToLeaderMsg(req, res, next) {
 
   function queryTeams(campaign) {
     CompanyGroup.find({
-      _id: campaign.campaign_unit.map(function (unit) { return unit.team._id; })
+      _id: { $in: campaign.campaign_unit.map(function (unit) { return unit.team._id; }) }
     }, {
       _id: 1,
+      name: 1,
+      logo: 1,
       'leader._id': 1
     }).exec()
       .then(function (teams) {
         var leaderTeamIndex = -1, targetLeaderIds = [];
         for (var i = 0; i < teams.length; i++) {
-          for (var j = 0; j < teams[i].leaders.length; j++) {
-            if (req.user.id === teams[i].leaders[j]._id.toString()) {
+          for (var j = 0; j < teams[i].leader.length; j++) {
+            if (req.user.id === teams[i].leader[j]._id.toString()) {
               leaderTeamIndex = i;
               break;
             }
@@ -551,7 +575,9 @@ function sendLeaderToLeaderMsg(req, res, next) {
           }
         }
 
-        sendMsg(campaign, targetLeaderIds);
+        var ownerTeam = teams[leaderTeamIndex];
+
+        sendMsg(campaign, ownerTeam, targetLeaderIds);
 
       })
       .then(null, function (err) {
@@ -559,10 +585,13 @@ function sendLeaderToLeaderMsg(req, res, next) {
       });
   }
 
-  function sendMsg(campaign, targetLeaderIds) {
+  function sendMsg(campaign, ownerTeam, targetLeaderIds) {
     __sendMessage({
       type: 'private',
-      caption: util.format('来自活动“%s”的消息'),
+      specific_type: {
+        value: 7
+      },
+      caption: util.format('来自活动“%s”的消息', campaign.theme),
       content: req.body.content,
       sender: {
         _id: req.user._id,
@@ -570,13 +599,23 @@ function sendLeaderToLeaderMsg(req, res, next) {
         photo: req.user.photo,
         role: 'LEADER'
       },
-      specific_type: {
-        value: 7
+      receiver: targetLeaderIds,
+      team: [{
+        _id: ownerTeam._id,
+        name: ownerTeam.name,
+        logo: ownerTeam.logo
+      }],
+      company_id: req.user.getCid(),
+      campaign_id: campaign._id,
+      auto: false
+    }, function (err) {
+      if (err) {
+        next(err);
+      } else {
+        res.send({ msg: '发送成功' });
       }
     });
   }
 
-
-  // todo 设置站内信参数，调用_sendMessage发送
 
 }
