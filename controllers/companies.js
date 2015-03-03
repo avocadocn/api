@@ -579,7 +579,16 @@ module.exports = function (app) {
         company.password = req.body.password;
       }
       if (req.body.domain) {
-        company.email.domain = req.body.domain.split(' ');
+        //去重，最多三个
+        var newDomain = req.body.domain.split(' ');
+        var sortedDomain = newDomain.sort();
+        var results = [];
+        for (var i = 0; i < sortedDomain.length; i++) {
+          if (sortedDomain[i + 1] !== sortedDomain[i]) {
+            results.push(sortedDomain[i]);
+          }
+        }
+        company.email.domain = results.slice(0,3);
       }
       if (req.body.province) {
         company.info.city.province = req.body.province;
