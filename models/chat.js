@@ -13,14 +13,10 @@ var Chat = new Schema({
     type:Date,
     default: Date.now
   },
-  //todo
+  //发评论者id
   poster:{
-    _id:Schema.Types.ObjectId,
-    cid:Schema.Types.ObjectId,
-    cname:String,
-    nickname : String,
-    realname:String,
-    photo:String
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   },
   status:{
     type: String,
