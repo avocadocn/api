@@ -3665,6 +3665,10 @@ definitions:
         type: string
       specific_type:
         $ref: MessageSpecificType
+      msgType:
+        type: string
+        enum:
+          - inProvokeLeaders
   MessageSpecificType:
     title: MessageSpecificType
     descriptions: 站内信的类型

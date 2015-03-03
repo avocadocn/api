@@ -699,7 +699,7 @@ var createCampaigns = function (companyDataList, callback) {
           start_confirm:  argument.start_confirm ? argument.start_confirm[1] : true
         }],
         campaign_type: 5,
-        start_confirm: argument.start_confirm ? argument.start_confirm[0] && argument.start_confirm[1] : true,
+        confirm_status: argument.start_confirm ? argument.start_confirm[0] && argument.start_confirm[1] : true,
         poster: {
           cid: companyDataList[0].model._id,                       //活动发起者所属的公司
           cname: companyDataList[0].model.info.official_name,

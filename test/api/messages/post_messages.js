@@ -99,7 +99,7 @@ module.exports = function () {
         });
     });
 
-    it('队长发队长间的活动私信', function (done) {
+    it('队长可以发队长间的活动私信', function (done) {
       request.post('/messages')
         .send({
           type: 'private',
@@ -116,7 +116,76 @@ module.exports = function () {
         });
     });
 
+    it('队员不能发队长间的活动私信', function (done) {
+      request.post('/messages')
+        .send({
+          type: 'private',
+          content: 'hi',
+          msgType: 'inProvokeLeaders',
+          campaignId: data[0].teams[0].campaigns[8].id
+        })
+        .set('x-access-token', memberToken)
+        .expect(403)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.msg.should.equal('只有队长才可以向对方队长发送私信');
+          done();
+        });
+    });
+
+    it('hr不能发队长间的活动私信', function (done) {
+      request.post('/messages')
+        .send({
+          type: 'private',
+          content: 'hi',
+          msgType: 'inProvokeLeaders',
+          campaignId: data[0].teams[0].campaigns[8].id
+        })
+        .set('x-access-token', hrToken)
+        .expect(403)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.msg.should.equal('只有队长才可以向对方队长发送私信');
+          done();
+        });
+    });
+
+    it('未应战的活动不能发队长间的私信', function (done) {
+      request.post('/messages')
+        .send({
+          type: 'private',
+          content: 'hi',
+          msgType: 'inProvokeLeaders',
+          campaignId: data[0].teams[0].campaigns[14].id
+        })
+        .set('x-access-token', accessToken)
+        .expect(403)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.msg.should.equal('对方还没有应战，不能向对方队长发送私信');
+          done();
+        });
+    });
+
+    it('单小队的活动不能发队长间的私信', function (done) {
+      request.post('/messages')
+        .send({
+          type: 'private',
+          content: 'hi',
+          msgType: 'inProvokeLeaders',
+          campaignId: data[0].teams[0].campaigns[0].id
+        })
+        .set('x-access-token', accessToken)
+        .expect(403)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.msg.should.equal('单小队的活动无法发送私信');
+          done();
+        });
+    });
+
     it('hr可以发布活动公告', function (done) {
+      console.log(data[0].teams[0].campaigns[0])
       request.post('/messages')
         .send({
           type:'private',
