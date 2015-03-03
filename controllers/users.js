@@ -573,7 +573,7 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
-        if(req.body.did && !user.department._id || user.department._id.toString()!= req.body.did) {
+        if(req.body.did && (!user.department || !user.department._id || user.department._id.toString()!= req.body.did)) {
           departmentController(app).joinDepartment(user,req.body.did,function (err) {
             if (err) {
               log(err);
