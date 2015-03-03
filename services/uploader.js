@@ -33,9 +33,9 @@ exports.tempDir = tempDir;
  *      // url为保存成功后的带日期目录的文件路径，如2014-9/21912323434.jpg
  *      // 如果有设置subDir,则url为2014-9/123/21912323434.jpg
  *      // oriName为上传的源文件的名字
- *      oriCallback(path, name, function (err) {
+ *      oriCallback(path, name, function (err, ori_name) {
  *        console.log(err);
- *      }); // path为原图路径，其根目录已设为yali网站目录，不能是绝对路径；name为不含后缀的文件名。
+ *      }); // path为原图路径，其根目录已设为yali网站目录，不能是绝对路径；name为不含后缀的文件名, ori_name为含后缀的文件名。
  *    },
  *    error: function (err) {
  *      console.log(err);
@@ -111,7 +111,7 @@ exports.uploadImg = function (req, options) {
                 mkdirp.sync(oriDir);
               }
               fs.rename(file.path, path.join(yaliDir, oriPath, oriName + '.' + ext), function (err) {
-                oriCallback(err);
+                oriCallback(err, oriName + '.' + ext);
               });
             };
             options.success(path.join(dateDirName, dateImgName), file.originalFilename, saveOrigin);

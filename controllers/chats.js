@@ -3,10 +3,10 @@
 var path = require('path'),
   fs = require('fs');
 var mongoose = require('mongoose');
-var Photo = mongoose.model('Photo'),
-  User = mongoose.model('User'),
+var User = mongoose.model('User'),
   Chat = mongoose.model('Chat'),
   CompanyGroup = mongoose.model('CompanyGroup');
+
 // var async = require('async');
 var auth = require('../services/auth.js'),
     log = require('../services/error_log.js'),
@@ -15,6 +15,10 @@ var auth = require('../services/auth.js'),
     tools = require('../tools/tools.js');
 
 var shieldTip = "该评论已经被系统屏蔽";
+
+var updateUserChatroom = function(chatroomId, user, reqUserId, callback) {
+
+}
 
 module.exports = function (app) {
 
@@ -51,64 +55,21 @@ module.exports = function (app) {
           imgSize = size;
         },
         success: function (url, oriName, oriCallback) {
-          // 此处不再判断，只有user可以上传，禁止hr上传
-          var uploadUser = {
-            _id: req.user._id,
-            name: req.user.nickname,
-            type: 'user'
-          };
-          oriCallback('','',function(err) {
+          var now = new Date();
+          var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
+          oriCallback(path.join('/chat_ori_img', dateDirName), now.valueOf() ,function(err, ori_name) {
+            if(err) {
+              log(err);
+            }else {
+              req.photo = {
+                uri: path.join('/img/chats', url),
+                width: imgSize.width,
+                height: imgSize.height,
+                ori_uri: path.join('/chat_ori_img', dateDirName) + '/' + ori_name
+              };
+            }
             next();
           })
-          // var photo = new Photo({
-          //   photo_album: photoAlbum._id,
-          //   owner: {
-          //     companies: photoAlbum.owner.companies,
-          //     teams: photoAlbum.owner.teams
-          //   },
-          //   uri: path.join('/img/photo_album', url),
-          //   width: imgSize.width,
-          //   height: imgSize.height,
-          //   name: oriName,
-          //   upload_user: uploadUser
-          // });
-          // req.photo = photo;
-          // photo.save(function (err) {
-          //   if (err) {
-          //     log(err);
-          //     res.sendStatus(500);
-          //   } else {
-          //     var now = new Date();
-          //     var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
-          //     oriCallback(path.join('/ori_img', dateDirName), photo._id, function (err) {
-          //       if (err) {
-          //         log(err);
-          //       }
-          //     });
-          //     next();
-
-          //     // 照片保存成功后，意味着上传已经成功了，之后的更新相册数据的操作无论成功与否，都视为上传照片成功
-          //     photoAlbum.pushPhoto({
-          //       _id: photo._id,
-          //       uri: photo.uri,
-          //       width: photo.width,
-          //       height: photo.height,
-          //       upload_date: photo.upload_date,
-          //       click: photo.click,
-          //       name: photo.name,
-          //       upload_user: photo.upload_user
-          //     });
-          //     photoAlbum.update_user = uploadUser;
-          //     photoAlbum.update_date = Date.now();
-          //     photoAlbum.photo_count += 1;
-          //     photoAlbum.save(function (err) {
-          //       if (err) {
-          //         log(err);
-          //       }
-          //     });
-          //   }
-          // });
-
         },
         error: function (err) {
           log(err);
@@ -118,7 +79,23 @@ module.exports = function (app) {
 
     },
     createChat: function (req, res, next) {
-
+      var chat = new Chat({
+        chatroom_id: req.query.chatroomId,
+        content: req.body.content,
+        poster: req.user._id,
+        photos: [req.photo]
+      });
+      chat.save(function (err) {
+        if(err) {
+          log(err)
+          return res.status(500).send({msg: '聊天保存失败'});
+        }else {
+          res.status(200).send({'chat': chat});
+          //user更新
+          // User.find({'cid': req.user.cid, 'chatrooms':chat.chatroom_id}, {''}, function())
+          //socket推送
+        }
+      })      
     },
 
     getChatRooms: function (req, res, next) {

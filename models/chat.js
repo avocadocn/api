@@ -29,6 +29,7 @@ var Chat = new Schema({
     uri: String,
     width: Number,
     height: Number,
+    ori_uri: String
     // upload_user: {
     //   _id: Schema.Types.ObjectId,
     //   name: String,
