@@ -102,9 +102,11 @@ module.exports = function (app) {
       var chat = new Chat({
         chatroom_id: req.params.chatroomId,
         content: req.body.content,
-        poster: req.user._id,
-        photos: [req.photo]
+        poster: req.user._id
       });
+      if (req.photo) {
+        chat.photos = req.photo;
+      }
       chat.save(function (err) {
         if(err) {
           log(err)
@@ -272,14 +274,20 @@ module.exports = function (app) {
 
       Chat.aggregate()
         .match({
-          chatroom_id: chatRoomIds,
+          chatroom_id: { $in: chatRoomIds },
           status: 'active'
         })
         .sort('-create_date')
         .group({
           _id: '$chatroom_id',
-          docs: {
-            $first: '$$ROOT'
+          latestChat: {
+            $first: {
+              chatroom_id: '$chatroom_id',
+              content: '$content',
+              create_date: '$create_date',
+              poster: '$poster',
+              photos: '$photos'
+            }
           }
         })
         .exec()
@@ -291,19 +299,18 @@ module.exports = function (app) {
             var latestChat;
             for (var i = 0; i < results.length; i++) {
               if (chatRoom._id.toString() === results[i]._id.toString()) {
-                latestChat = results[i].docs[0];
+                latestChat = results[i].latestChat;
                 break;
               }
             }
 
             posterIdList.push(latestChat.poster);
-
             chatRoom.latestChat = {
               _id: latestChat._id,
               content: latestChat.content,
               create_date: latestChat.create_date,
               poster: latestChat.poster,
-              photos: latestChat.photos ? latestChat.photos.map(function (photo) {
+              photos: latestChat.photos && latestChat.photos.length > 0 ? latestChat.photos.map(function (photo) {
                 return {
                   uri: photo.uri,
                   width: photo.width,
@@ -322,7 +329,7 @@ module.exports = function (app) {
 
       function queryPosters(posterIdList, chatRoomList) {
         User.find({
-          _id: posterIdList
+          _id: { $in: posterIdList }
         }, {
           _id: 1,
           cid: 1,
@@ -334,8 +341,8 @@ module.exports = function (app) {
             // 填充chatRoomList的poster，原先为id，现将其替换为含用户昵称头像的对象
             chatRoomList.forEach(function (chatRoom) {
               for (var i = 0; i < users.length; i++) {
-                if (chatRoom.poster.toString() === users[i]._id.toString()) {
-                  chatRoom.poster = users[i];
+                if (chatRoom.latestChat.poster.toString() === users[i]._id.toString()) {
+                  chatRoom.latestChat.poster = users[i];
                   break;
                 }
               }

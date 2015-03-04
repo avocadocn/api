@@ -5,7 +5,7 @@ var async = require('async');
 var tools = require('../../../tools/tools.js');
 
 module.exports = function () {
-  describe.skip('get /chatrooms', function () {
+  describe('get /chatrooms', function () {
 
     var data, userToken = [];
     before(function (done) {
