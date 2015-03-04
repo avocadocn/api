@@ -3967,6 +3967,28 @@
           }
         }
       }
+    },
+    "/chatrooms": {
+      "get": {
+        "tags": [
+          "chats"
+        ],
+        "summary": "获取讨论列表",
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "schema": {
+              "$ref": "ChatRoomListResData"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -6453,6 +6475,139 @@
         "target_user_id": {
           "description": "评论用户的id",
           "type": "string"
+        }
+      }
+    },
+    "ChatRoomListResData": {
+      "title": "ChatRoomListResData",
+      "type": "object",
+      "required": [
+        "chatRoomList"
+      ],
+      "properties": {
+        "chatRoomList": {
+          "description": "讨论列表",
+          "type": "array",
+          "items": {
+            "$ref": "ChatRoom"
+          }
+        }
+      }
+    },
+    "ChatRoom": {
+      "title": "ChatRoom",
+      "type": "object",
+      "required": [
+        "kind",
+        "_id",
+        "name"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "讨论组类型，company or team"
+        },
+        "_id": {
+          "type": "string",
+          "description": "讨论组的id"
+        },
+        "name": {
+          "type": "string",
+          "description": "讨论组的名字（公司或小队名）"
+        },
+        "logo": {
+          "type": "string",
+          "description": "讨论组的logo"
+        },
+        "latestChat": {
+          "$ref": "LatestChat"
+        }
+      }
+    },
+    "LatestChat": {
+      "title": "LatestChat",
+      "type": "object",
+      "required": [
+        "_id",
+        "content",
+        "create_date",
+        "poster"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "讨论_id"
+        },
+        "content": {
+          "type": "string",
+          "description": "讨论文本内容"
+        },
+        "create_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "讨论发表时间"
+        },
+        "poster": {
+          "$ref": "Poster"
+        },
+        "photos": {
+          "type": "array",
+          "items": {
+            "$ref": "ChatPhoto"
+          }
+        }
+      }
+    },
+    "Poster": {
+      "title": "Poster",
+      "type": "object",
+      "required": [
+        "_id",
+        "cid",
+        "nickname",
+        "photo"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "用户_id"
+        },
+        "cid": {
+          "type": "string",
+          "description": "公司id"
+        },
+        "nickname": {
+          "type": "string",
+          "description": "用户昵称"
+        },
+        "photo": {
+          "type": "string",
+          "description": "用户头像"
+        }
+      }
+    },
+    "ChatPhoto": {
+      "title": "ChatPhoto",
+      "type": "object",
+      "required": [
+        "uri",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "图片uri"
+        },
+        "width": {
+          "type": "integer",
+          "format": "int32",
+          "description": "图片宽度"
+        },
+        "height": {
+          "type": "integer",
+          "format": "int32",
+          "description": "图片高度"
         }
       }
     }

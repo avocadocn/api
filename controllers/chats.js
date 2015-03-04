@@ -109,6 +109,7 @@ module.exports = function (app) {
         return;
       }
 
+      // 讨论组列表其实就是用户的小队列表加上一个公司的讨论组，如果用户不是队长，则没有该讨论组
       var chatRoomIds = [];
       var chatRoomList = [];
       if (req.user.team) {
@@ -125,12 +126,15 @@ module.exports = function (app) {
           };
         });
       }
-      chatRoomIds.push(req.user.getCid());
-      chatRoomList.push({
-        kind: 'company',
-        _id: req.user.cid,
-        name: req.user.company_official_name
-      });
+      // 只有是队长才可以参与公司管理讨论组
+      if (req.user.role === 'LEADER') {
+        chatRoomIds.push(req.user.getCid());
+        chatRoomList.push({
+          kind: 'company',
+          _id: req.user.cid,
+          name: req.user.company_official_name
+        });
+      }
 
       Chat.aggregate()
         .match({
@@ -146,7 +150,10 @@ module.exports = function (app) {
         })
         .exec()
         .then(function (results) {
+          var posterIdList = [];
+
           chatRoomList.forEach(function (chatRoom) {
+            // 从查询结果中查找该讨论组匹配的最新讨论
             var latestChat;
             for (var i = 0; i < results.length; i++) {
               if (chatRoom._id.toString() === results[i]._id.toString()) {
@@ -154,6 +161,8 @@ module.exports = function (app) {
                 break;
               }
             }
+
+            posterIdList.push(latestChat.poster);
 
             chatRoom.latestChat = {
               _id: latestChat._id,
@@ -170,11 +179,40 @@ module.exports = function (app) {
             };
           });
 
-          res.send({ chatRoomList: chatRoomList });
+          // 查询poster
+          queryPosters(posterIdList, chatRoomList);
         })
         .then(null, function (err) {
           next(err);
         });
+
+      function queryPosters(posterIdList, chatRoomList) {
+        User.find({
+          _id: posterIdList
+        }, {
+          _id: 1,
+          cid: 1,
+          nickname: 1,
+          photo: 1
+        })
+          .exec()
+          .then(function (users) {
+            // 填充chatRoomList的poster，原先为id，现将其替换为含用户昵称头像的对象
+            chatRoomList.forEach(function (chatRoom) {
+              for (var i = 0; i < users.length; i++) {
+                if (chatRoom.poster.toString() === users[i]._id.toString()) {
+                  chatRoom.poster = users[i];
+                  break;
+                }
+              }
+            });
+            res.send({ chatRoomList: chatRoomList });
+          })
+          .then(null, function (err) {
+            next(err);
+          });
+      }
+
     }
   };
 
