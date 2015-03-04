@@ -151,16 +151,20 @@ module.exports = function (app) {
       var chatRoomList = [];
       if (req.user.team) {
         chatRoomIds = req.user.team.map(function (team) {
-          return team._id;
+          if (team.entity_type !== 'virtual') {
+            return team._id;
+          }
         });
 
         chatRoomList = req.user.team.map(function (team) {
-          return {
-            kind: 'team',
-            _id: team._id,
-            name: team.name,
-            logo: team.logo
-          };
+          if (team.entity_type !== 'virtual') {
+            return {
+              kind: 'team',
+              _id: team._id,
+              name: team.name,
+              logo: team.logo
+            };
+          }
         });
       }
       // 只有是队长才可以参与公司管理讨论组
