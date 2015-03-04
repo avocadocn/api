@@ -31,7 +31,7 @@ var Chat = mongoose.model('Chat');
  *      // 如果没有队长也没有成员，则为空
  *    }],
  *    ...
- *    chats: [doc] // 50个
+ *    chats: [doc] // 30个
  *  }
  *
  * @param {Object} companyData
@@ -99,7 +99,7 @@ function createCompanyChats(companyData, callback) {
   }
   companyData.chats = new Array(50);
 
-  async.times(50, function (n, next) {
+  async.times(30, function (n, next) {
     var leaderIndex = chance.integer({ min: 0, max: leaders.length -1 });
     createChat(companyData.model._id, leaders[leaderIndex], function (err, chat) {
       companyData.chats[n] = chat;
