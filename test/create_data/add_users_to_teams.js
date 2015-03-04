@@ -66,7 +66,19 @@ var addUsersToTeams = function (companyData, callback) {
           leader : relationship[i][j]===2,
           logo : companyData.teams[j].model.logo
         });
-        if(relationship[i][j]===2) companyData.users[i].role = 'LEADER';
+        companyData.users[i].chatrooms.push({
+          _id: companyData.teams[j].model._id,
+          unread: 0
+        });
+        if(relationship[i][j]===2) {
+          if(companyData.users[i].role==='EMPLOYEE') {
+            companyData.users[i].chatrooms.push({
+              _id: companyData.users[i].cid,
+              unread: 0
+            })
+          }
+          companyData.users[i].role = 'LEADER';
+        }
         //修改team的model
         var member =  {
           _id : companyData.users[i]._id,

@@ -39,6 +39,9 @@ module.exports = function (app) {
       if(!req.body.chatroomId) {
         return res.status(422).send({msg:'参数不合法'});
       }
+      if(req.user.provider==='company') {
+        return res.status(403).send({ msg: '权限错误'});
+      }
       //如果是这个队伍的人则能发
       var index = tools.arrayObjectIndexOf(req.user.chatrooms, req.body.chatroomId, '_id');
       if(index===-1) {
@@ -94,6 +97,9 @@ module.exports = function (app) {
 
     },
     createChat: function (req, res) {
+      if(!req.photo && !req.body.content) {
+        return res.status(422).send({msg:'未填写内容'});
+      }
       var chat = new Chat({
         chatroom_id: req.body.chatroomId,
         content: req.body.content,
