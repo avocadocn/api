@@ -105,6 +105,7 @@ module.exports = function (app) {
           log(err)
           return res.status(500).send({msg: '聊天保存失败'});
         }else {
+          if(req.photo) chat.photos[0].ori_uri = null; //对外隐藏此属性
           res.status(200).send({'chat': chat});
           //找出相关人员
           User.find({'cid': req.user.cid, 'chatrooms':{'$elemMatch': {'_id':chat.chatroom_id}}}, {'chatrooms':1}, function(err, users) {
@@ -130,9 +131,8 @@ module.exports = function (app) {
               })
             }
           })
-          
         }
-      })      
+      })
     },
 
     getChatRooms: function (req, res, next) {

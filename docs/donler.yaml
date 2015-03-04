@@ -2690,6 +2690,27 @@ paths:
           description: error
           schema:
             $ref: Error
+  /chats:
+    # get:
+    post:
+      tags:
+        - chats
+      summary: 发布讨论
+      operationId: createChat
+      parameters:
+        - name: body
+          description: 发布讨论数据
+          schema:
+            $ref: PostChatForm
+          in: body 
+      responses:
+        "200":
+          description: 发布成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+
   /chatrooms:
     get:
       tags:
@@ -4416,6 +4437,15 @@ definitions:
         type: array
         items:
           type: string
+  PostChatForm:
+    title: postChatForm
+    required:
+      - chatroomId
+    properties:
+      chatroomId:
+        type: string
+      content:
+        type: string
   ReportForm:
     title: ReportForm
     required:
