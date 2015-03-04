@@ -21,6 +21,7 @@ var createFamilyPhotos = require('./create_family_photos.js');
 var createPhotoAlbums = require('./create_photo_albums.js');
 var createMessages = require('./create_messages.js');
 var createCircle = require('./create_circle.js');
+var createChats = require('./create_chats.js');
 
 /**
  * 公司数据列表，保存公司及其员工、小队、活动数据
@@ -140,8 +141,13 @@ exports.createData = function (callback) {
           });
         },
         function (waterfallCallback) {
+          console.log('创建小队相册成功');
+          console.log('开始创建chats');
+          createChats(resCompanyData, waterfallCallback);
+        },
+        function (waterfallCallback) {
           // 生成除跨公司挑战外的活动并让部分成员加入
-          console.log('创建小队相册成功，开始生成除跨公司挑战外的活动');
+          console.log('创建chats成功，开始生成除跨公司挑战外的活动');
           createCampaigns([resCompanyData], function (err, companyData) {
             waterfallCallback(err, companyData);
           });
