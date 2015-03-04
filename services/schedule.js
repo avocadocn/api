@@ -201,79 +201,83 @@ var teamPoint = function(){
         regions.forEach(function (region) {
           region.city.forEach(function(city){
             groups.forEach(function(group){
-              CompanyGroup.find({'city.province':region.name,'city.city': city.name,gid:group._id}).sort('-score.total').exec(function (err,teams) {
+              //虚拟组不计算
+              if(group._id!="0"){
+                CompanyGroup.find({'city.province':region.name,'city.city': city.name,gid:group._id}).sort('-score.total').exec(function (err,teams) {
                 
-                var activityRank = new Rank();
-                activityRank.rank_type = 'activity';
-                activityRank.group_type ={
-                  _id:group._id,
-                  name:group.group_type
-                }
-                activityRank.city = {
-                  province: region.name,
-                  city: city.name
-                }
-                teams.forEach(function (team,index) {
-                  team.score.rank = index+1;
-                  if(index<10){
-                    activityRank.team.push({
-                      _id: team._id,
-                      cid: team.cid,
-                      name: team.name,
-                      logo: team.logo,
-                      score: team.score.total,
-                      rank: index+1
-                    })
+                  var activityRank = new Rank();
+                  activityRank.rank_type = 'activity';
+                  activityRank.group_type ={
+                    _id:group._id,
+                    name:group.group_type
                   }
-                });
-
-                if(activityRank.team.length>0){
-                  activityRank.save(function (err) {
-                    if(err){
-                      log(err)
-                    }
-                  })
-                }
-                teams.sort(function (first,last) {
-                  return first.score_rank.score-first.score_rank.score;
-                })
-                var scoreRank = new Rank();
-                scoreRank.rank_type = 'score';
-                scoreRank.group_type ={
-                  _id:group._id,
-                  name:group.group_type
-                }
-                scoreRank.city = {
-                  province: region.name,
-                  city: city.name
-                }
-                teams.forEach(function (team,index) {
-                  team.score_rank.rank = index+1;
-                  if(index<10){
-                    scoreRank.team.push({
-                      _id: team._id,
-                      cid: team.cid,
-                      name: team.name,
-                      logo: team.logo,
-                      score: team.score_rank.score,
-                      rank: index+1
-                    });
+                  activityRank.city = {
+                    province: region.name,
+                    city: city.name
                   }
-                  team.save(function (err) {
-                    if(err){
-                      log(err);
-                    }
-                  })
-                });
-                if(scoreRank.team.length>0){
-                  scoreRank.save(function (err) {
-                    if(err){
-                      log(err)
+                  teams.forEach(function (team,index) {
+                    team.score.rank = index+1;
+                    if(index<10){
+                      activityRank.team.push({
+                        _id: team._id,
+                        cid: team.cid,
+                        name: team.name,
+                        logo: team.logo,
+                        score: team.score.total,
+                        rank: index+1
+                      })
                     }
                   });
-                }
 
-              });
+                  if(activityRank.team.length>0){
+                    activityRank.save(function (err) {
+                      if(err){
+                        log(err)
+                      }
+                    })
+                  }
+                  teams.sort(function (first,last) {
+                    return first.score_rank.score-first.score_rank.score;
+                  })
+                  var scoreRank = new Rank();
+                  scoreRank.rank_type = 'score';
+                  scoreRank.group_type ={
+                    _id:group._id,
+                    name:group.group_type
+                  }
+                  scoreRank.city = {
+                    province: region.name,
+                    city: city.name
+                  }
+                  teams.forEach(function (team,index) {
+                    team.score_rank.rank = index+1;
+                    if(index<10){
+                      scoreRank.team.push({
+                        _id: team._id,
+                        cid: team.cid,
+                        name: team.name,
+                        logo: team.logo,
+                        score: team.score_rank.score,
+                        rank: index+1
+                      });
+                    }
+                    team.save(function (err) {
+                      if(err){
+                        log(err);
+                      }
+                    })
+                  });
+                  if(scoreRank.team.length>0){
+                    scoreRank.save(function (err) {
+                      if(err){
+                        log(err)
+                      }
+                    });
+                  }
+
+                });
+              }
+
             });
           });
         })
