@@ -7,7 +7,7 @@ var User = mongoose.model('User'),
   Chat = mongoose.model('Chat'),
   CompanyGroup = mongoose.model('CompanyGroup');
 
-// var async = require('async');
+var async = require('async');
 var auth = require('../services/auth.js'),
     log = require('../services/error_log.js'),
     socketClient = require('../services/socketClient'),
@@ -17,15 +17,30 @@ var auth = require('../services/auth.js'),
 var shieldTip = "该评论已经被系统屏蔽";
 
 var updateUserChatroom = function(chatroomId, user, reqUserId, callback) {
-
-}
-
+  if(user._id.toString() !== reqUserId.toString()) {
+    var index = tools.arrayObjectIndexOf(user.chatrooms, chatroomId, '_id');
+    if(index>-1) {
+      user.chatrooms[index].unread++;
+      user.save(function(err) {
+        if(err) log(err);
+        callback();
+      });
+    }else{
+      callback();
+    }
+  }else {
+    callback();
+  }
+};
 module.exports = function (app) {
 
   return {
     canPublishChat: function (req, res, next) {
+      if(!req.body.chatroomId) {
+        return res.status(422).send({msg:'参数不合法'});
+      }
       //如果是这个队伍的人则能发
-      var index = tools.arrayObjectIndexOf(req.user.chatrooms, req.params.chatroomId, '_id');
+      var index = tools.arrayObjectIndexOf(req.user.chatrooms, req.body.chatroomId, '_id');
       if(index===-1) {
         return res.status(403).send({ msg: '权限错误'});
       }else {
@@ -78,9 +93,9 @@ module.exports = function (app) {
       });
 
     },
-    createChat: function (req, res, next) {
+    createChat: function (req, res) {
       var chat = new Chat({
-        chatroom_id: req.query.chatroomId,
+        chatroom_id: req.body.chatroomId,
         content: req.body.content,
         poster: req.user._id,
         photos: [req.photo]
@@ -91,9 +106,31 @@ module.exports = function (app) {
           return res.status(500).send({msg: '聊天保存失败'});
         }else {
           res.status(200).send({'chat': chat});
-          //user更新
-          // User.find({'cid': req.user.cid, 'chatrooms':chat.chatroom_id}, {''}, function())
-          //socket推送
+          //找出相关人员
+          User.find({'cid': req.user.cid, 'chatrooms':{'$elemMatch': {'_id':chat.chatroom_id}}}, {'chatrooms':1}, function(err, users) {
+            if(err) {
+              log(err);
+            }
+            else {
+              //socket推送
+              var userIds = [];
+              var usersLength = users.length;
+              for(var i=0; i<usersLength; i++) {
+                userIds.push(users[i]._id);
+              }
+              socketClient.pushChat(chat.chatroom_id, chat, userIds);
+              //users更新
+              async.map(users, function(user, callback) {
+                updateUserChatroom(chat.chatroom_id, user, req.user._id, function() {
+                  callback();
+                })
+              }, function(err, results) {
+                if(err) log(err);
+                return;
+              })
+            }
+          })
+          
         }
       })      
     },

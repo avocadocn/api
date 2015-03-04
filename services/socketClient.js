@@ -23,9 +23,13 @@ socket.on('connect',function(){
 });
 
 //发评论push
-exports.pushComment = function (joinedUids, unjoinedUids, campaign, comment) {
-  socket.emit('commentFromServer', joinedUids, unjoinedUids, campaign, comment);
-};
+// exports.pushComment = function (joinedUids, unjoinedUids, campaign, comment) {
+//   socket.emit('commentFromServer', joinedUids, unjoinedUids, campaign, comment);
+// };
+exports.pushChat = function (chatroomId, chat, uids) {
+  socket.emit('chatFromServer', chatroomId, chat, uids);
+}
+
 
 //发新朋友圈的push 应该push给公司除了自己所有人
 exports.pushCircleContent = function (cid, poster) {
