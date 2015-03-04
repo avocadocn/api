@@ -150,21 +150,21 @@ module.exports = function (app) {
       var chatRoomIds = [];
       var chatRoomList = [];
       if (req.user.team) {
-        chatRoomIds = req.user.team.map(function (team) {
-          if (team.entity_type !== 'virtual') {
-            return team._id;
-          }
+        var teams = req.user.team.filter(function (team) {
+          return (team.entity_type !== 'virtual');
         });
 
-        chatRoomList = req.user.team.map(function (team) {
-          if (team.entity_type !== 'virtual') {
-            return {
-              kind: 'team',
-              _id: team._id,
-              name: team.name,
-              logo: team.logo
-            };
-          }
+        chatRoomIds = teams.map(function (team) {
+          return team._id;
+        });
+
+        chatRoomList = teams.map(function (team) {
+          return {
+            kind: 'team',
+            _id: team._id,
+            name: team.name,
+            logo: team.logo
+          };
         });
       }
       // 只有是队长才可以参与公司管理讨论组
