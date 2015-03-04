@@ -4039,6 +4039,33 @@
         }
       }
     },
+    "/chats/{chatId}": {
+      "delete": {
+        "tags": [
+          "chats"
+        ],
+        "summary": "删除一条讨论的消息",
+        "parameters": [
+          {
+            "name": "chatId",
+            "type": "string",
+            "description": "消息id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "descritpion": "删除成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/chatrooms": {
       "get": {
         "tags": [

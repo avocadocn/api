@@ -156,7 +156,8 @@ module.exports = function (app) {
 
       var pageSize = 20;
       var queryOptions = {
-        chatroom_id: req.query.chatroom
+        chatroom_id: req.query.chatroom,
+        status: 'active'
       };
       if (req.query.nextDate) {
         queryOptions.create_date = {
@@ -186,6 +187,36 @@ module.exports = function (app) {
           }
           resData.chats = chats.slice(0, pageSize);
           res.send(resData);
+        })
+        .then(null, function (err) {
+          next(err);
+        });
+    },
+
+    deleteChat: function (req, res, next) {
+      Chat.findOne({
+        _id: req.params.chatId,
+        status: 'active'
+      }).exec()
+        .then(function (chat) {
+          if (!chat) {
+            res.status(404).send({ msg: '找不到该消息' });
+            return;
+          }
+
+          if (req.user.id !== chat.poster.toString()) {
+            res.status(403).send({ msg: '抱歉，您没有权限' });
+            return;
+          }
+
+          chat.status = 'delete';
+          chat.save(function (err) {
+            if (err) {
+              next(err);
+            } else {
+              res.send({ msg: '删除成功' });
+            }
+          });
         })
         .then(null, function (err) {
           next(err);
