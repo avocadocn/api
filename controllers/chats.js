@@ -148,7 +148,7 @@ module.exports = function (app) {
       } else {
         var isInChatRoomList = false;
         for (var i = 0; i < req.user.chatrooms.length; i++) {
-          if (req.query.chatroom === req.users.chatrooms[i]._id.toString()) {
+          if (req.query.chatroom === req.user.chatrooms[i]._id.toString()) {
             isInChatRoomList = true;
             break;
           }
