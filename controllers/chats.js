@@ -135,6 +135,63 @@ module.exports = function (app) {
       })
     },
 
+    getChats: function (req, res, next) {
+
+      if (req.user.provider !== 'user') {
+        res.status(403).send({ msg: '抱歉，您没有权限' });
+        return;
+      } else {
+        var isInChatRoomList = false;
+        for (var i = 0; i < req.user.chatrooms.length; i++) {
+          if (req.query.chatroom === req.users.chatrooms[i]._id.toString()) {
+            isInChatRoomList = true;
+            break;
+          }
+        }
+        if (!isInChatRoomList) {
+          res.status(403).send({ msg: '抱歉，您没有权限' });
+          return;
+        }
+      }
+
+      var pageSize = 20;
+      var queryOptions = {
+        chatroom_id: req.query.chatroom
+      };
+      if (req.query.nextDate) {
+        queryOptions.create_date = {
+          $gt: new Date(req.query.nextDate)
+        };
+      }
+      if (req.query.nextId) {
+        queryOptions._id = {
+          $lte: req.query.nextId
+        }
+      }
+
+      Chat.find(queryOptions, {
+        'photos.ori_uri': 0
+      })
+        .sort('-create_date -_id')
+        .limit(pageSize + 1)
+        .exec()
+        .then(function (chats) {
+          var resData = {
+            hasNextPage: false
+          };
+          if (chats.length > pageSize) {
+            resData.hasNextPage = true;
+            resData.nextDate = chats[pageSize].create_date;
+            resData.nextId = chats[pageSize].id;
+          }
+          resData.chats = chats.slice(0, pageSize);
+          res.send(resData);
+        })
+        .then(null, function (err) {
+          next(err);
+        });
+    },
+
     getChatRooms: function (req, res, next) {
 
       var role = auth.getRole(req.user, {
@@ -142,7 +199,7 @@ module.exports = function (app) {
       });
       var allow = auth.auth(role, ['getChatRooms']);
       if (!allow.getChatRooms) {
-        res.status(403).send({ msg: '抱歉，您没有权限做此操作。' });
+        res.status(403).send({ msg: '抱歉，您没有权限' });
         return;
       }
 

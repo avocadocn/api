@@ -2715,12 +2715,40 @@ paths:
     get:
       tags:
         - chats
-      summary: 获取讨论列表
+      summary: 获取讨论组列表
       responses:
         "200":
           description: 获取成功
           schema:
             $ref: ChatRoomListResData
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /chats:
+    get:
+      tags:
+        - chats
+      summary: 获取讨论内容
+      parameters:
+        - name: chatroom
+          description: 讨论组的id
+          type: string
+          in: query
+          required: true
+        - name: nextDate
+          description: 下一页的第一个讨论的发表时间
+          type: string
+          in: query
+        - name: nextId
+          description: 下一页的第一个讨论的id
+          type: string
+          in: query
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: ChatListResData
         default:
           description: error
           schema:
@@ -4641,9 +4669,9 @@ definitions:
         type: string
         description: 讨论组的logo
       latestChat:
-        $ref: LatestChat
-  LatestChat:
-    title: LatestChat
+        $ref: Chat
+  Chat:
+    title: Chat
     type: object
     required:
       - _id
@@ -4707,6 +4735,27 @@ definitions:
         type: integer
         format: int32
         description: 图片高度
+  ChatListResData:
+    title: ChatListResData
+    type: object
+    required:
+      - hasNextPage
+      - chats
+    properties:
+      hasNextPage:
+        type: boolean
+        description: 是否还有下一页
+      nextDate:
+        type: string
+        format: date-time
+        description: 下一页第一个讨论的发表时间
+      nextId:
+        type: string
+        description: 下一页第一个讨论的id
+      chats:
+        type: array
+        items:
+          $ref: Chat
   RankCity:
     title: RankCity
     type: object
