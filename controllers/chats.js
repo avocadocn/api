@@ -36,14 +36,14 @@ module.exports = function (app) {
 
   return {
     canPublishChat: function (req, res, next) {
-      if(!req.body.chatroomId) {
+      if(!req.params.chatroomId) {
         return res.status(422).send({msg:'参数不合法'});
       }
       if(req.user.provider==='company') {
         return res.status(403).send({ msg: '权限错误'});
       }
       //如果是这个队伍的人则能发
-      var index = tools.arrayObjectIndexOf(req.user.chatrooms, req.body.chatroomId, '_id');
+      var index = tools.arrayObjectIndexOf(req.user.chatrooms, req.params.chatroomId, '_id');
       if(index===-1) {
         return res.status(403).send({ msg: '权限错误'});
       }else {
@@ -51,11 +51,10 @@ module.exports = function (app) {
       }
     },
     uploadPhotoForChat: function (req, res, next) {
-      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
+      if (!req.headers['content-type'] || req.headers['content-type'].indexOf('multipart/form-data') === -1) {
         next();
         return;
       }
-
       var imgSize;
       var randomId;
       uploader.uploadImg(req, {
@@ -101,7 +100,7 @@ module.exports = function (app) {
         return res.status(422).send({msg:'未填写内容'});
       }
       var chat = new Chat({
-        chatroom_id: req.body.chatroomId,
+        chatroom_id: req.params.chatroomId,
         content: req.body.content,
         poster: req.user._id,
         photos: [req.photo]

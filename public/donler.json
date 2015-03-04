@@ -4009,7 +4009,9 @@
             }
           }
         }
-      },
+      }
+    },
+    "/chatrooms/{chatroomId}/chats": {
       "post": {
         "tags": [
           "chats"
@@ -4017,6 +4019,14 @@
         "summary": "发布讨论",
         "operationId": "createChat",
         "parameters": [
+          {
+            "name": "chatroomId",
+            "description": "讨论组id",
+            "default": "53aa701011fd597b3e1be25d",
+            "type": "string",
+            "required": true,
+            "in": "path"
+          },
           {
             "name": "body",
             "description": "发布讨论数据",
@@ -6427,13 +6437,7 @@
     },
     "PostChatForm": {
       "title": "postChatForm",
-      "required": [
-        "chatroomId"
-      ],
       "properties": {
-        "chatroomId": {
-          "type": "string"
-        },
         "content": {
           "type": "string"
         }
