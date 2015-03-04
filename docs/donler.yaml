@@ -2691,7 +2691,33 @@ paths:
           schema:
             $ref: Error
   /chats:
-    # get:
+    get:
+      tags:
+        - chats
+      summary: 获取讨论内容
+      parameters:
+        - name: chatroom
+          description: 讨论组的id
+          type: string
+          in: query
+          required: true
+        - name: nextDate
+          description: 下一页的第一个讨论的发表时间
+          type: string
+          in: query
+        - name: nextId
+          description: 下一页的第一个讨论的id
+          type: string
+          in: query
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: ChatListResData
+        default:
+          description: error
+          schema:
+            $ref: Error
     post:
       tags:
         - chats
@@ -2725,34 +2751,7 @@ paths:
           description: error
           schema:
             $ref: Error
-  /chats:
-    get:
-      tags:
-        - chats
-      summary: 获取讨论内容
-      parameters:
-        - name: chatroom
-          description: 讨论组的id
-          type: string
-          in: query
-          required: true
-        - name: nextDate
-          description: 下一页的第一个讨论的发表时间
-          type: string
-          in: query
-        - name: nextId
-          description: 下一页的第一个讨论的id
-          type: string
-          in: query
-      responses:
-        "200":
-          description: 获取成功
-          schema:
-            $ref: ChatListResData
-        default:
-          description: error
-          schema:
-            $ref: Error
+
   /rank:
     get:
       tags:
