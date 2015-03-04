@@ -467,8 +467,13 @@ module.exports = function (app) {
               var index = tools.arrayObjectIndexOf(user.team, true, 'leader');
               if(index===-1){
                 user.role = 'EMPLOYEE';
+                var companyChatroomIndex = tools.arrayObjectIndexOf(user.chatrooms, user.cid,'_id');
+                user.chatrooms.splice(companyChatroomIndex,1);
               }
             }else{//如果被任命了
+              if(user.role ==='EMPLOYEE') {
+                user.chatrooms.push({'_id':user.cid, 'unread': 0})
+              }
               user.role = 'LEADER';
               var index = tools.arrayObjectIndexOf(user.team, team._id, '_id');
               if(index>-1){//如果本来就在这个队
@@ -758,6 +763,7 @@ module.exports = function (app) {
           'name':team.name,
           'logo':team.logo
         });
+        user.chatrooms.push({'_id':team._id, 'unread':0});
         team.save(function (err) {
           if (err) {
             log(err);
@@ -839,6 +845,10 @@ module.exports = function (app) {
       var teamIndex = tools.arrayObjectIndexOf(user.team,team._id,'_id');
       if(teamIndex>-1){
         user.team.splice(teamIndex,1);
+      }
+      var chatroomIndex = tools.arrayObjectIndexOf(user.chatrooms, team._id, '_id');
+      if(chatroomIndex>-1) {
+        user.chatrooms.splice(chatroomIndex,1);
       }
 
       team.save(function(err){

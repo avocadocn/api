@@ -436,11 +436,11 @@ module.exports = function (app) {
           if (req.campaign) {
             var campaign = req.campaign;
             campaign.comment_sum++;
-            var poster = {
-              '_id': req.user._id,
-              'nickname': req.user.nickname,
-              'photo': req.user.photo
-            };
+            // var poster = {
+            //   '_id': req.user._id,
+            //   'nickname': req.user.nickname,
+            //   'photo': req.user.photo
+            // };
             // campaign.latestComment = {
             //   '_id': comment._id,
             //   'poster': poster,
