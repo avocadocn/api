@@ -12,8 +12,22 @@ var _team = new Schema({
 });
 
 var Rank = new Schema({
-  year: Number,
-  month:Number,
+  create_date: {
+    type:Date,
+    default: Date.now
+  },
+  city: {
+    province: String,
+    city: String
+  },
+  group_type:{
+    _id:String,
+    name:String
+  },
+  rank_type:{
+    type: String,
+    enum: ['activity', 'score']
+  },
   name: String,
   team: [_team]
 });

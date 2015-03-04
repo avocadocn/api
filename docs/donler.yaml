@@ -2704,6 +2704,49 @@ paths:
           description: error
           schema:
             $ref: Error
+  /rank:
+    get:
+      tags:
+        - rank
+      summary: 获取榜单
+      operationId: getRank
+      consumes:
+        - application/json
+      parameters:
+        - name: province
+          description: 省
+          required: true
+          type: string
+          in: query
+        - name: city
+          description: 城市
+          required: true
+          type: string
+          in: query
+        - name: gid
+          description: 小队类型
+          required: true
+          type: string
+          in: query
+        - name: rankType
+          description: "榜单类型,活跃度，积分"
+          required: true
+          type: string
+          in: query
+          enum:
+            - activity
+            - score
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: Rank
+        default:
+          description: error
+          schema:
+            $ref: Error
 definitions:
   LoginForm:
     title: LoginForm
@@ -4634,3 +4677,80 @@ definitions:
         type: integer
         format: int32
         description: 图片高度
+  RankCity:
+    title: RankCity
+    type: object
+    required:
+      - province
+      - city
+    properties:
+      province:
+        description: 省
+        type: string
+      city:
+        description: 市
+        type: string
+  RankGroupType:
+    title: RankGroupType
+    type: object
+    required:
+      - _id
+      - name
+    properties:
+      _id:
+        description: 小队类型id
+        type: string
+      name:
+        description: 小队类型名称
+        type: string
+  RankTeam:
+    title: RankTeam
+    type: object
+    required:
+      - _id
+      - name
+    properties:
+      _id:
+        description: 小队id
+        type: string
+      name:
+        description: 小队名称
+        type: string
+      cid:
+        description: 小队的公司id
+        type: string
+      logo:
+        description: 小队logo
+        type: string
+      rank:
+        description: 小队排名
+        type: string
+      score:
+        description: 小队分数
+        type: string
+  Rank:
+    title: Rank
+    type: object
+    properties:
+      create_date:
+        description: 创建时间
+        type: string
+        format: date-time
+      city:
+        $ref: RankCity
+      group_type:
+        $ref: RankGroupType
+      rank_type:
+        description: 榜单类型
+        type: string
+        enum:
+          - activity
+          - score
+      name:
+        description: 榜单名称
+        type: string
+      team:
+        description: 小队
+        type: array
+        items:
+          $ref: RankTeam

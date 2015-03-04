@@ -72,7 +72,7 @@ walk(path.join(rootPath, 'routes/'), function (file, path) {
   }
   require(path)(app, ctrl);
 });
-
+require('../services/schedule').init();
 app.use(errorHandle);
 
 app.use(serveStatic(path.join(rootPath, 'public/')));

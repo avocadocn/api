@@ -24,7 +24,8 @@
     "mime": "1.2.11",
     "socket.io-client": "~1.2.1",
     "mongoose-paginate": "^3.1.3",
-    "request": "~2.51.0"
+    "request": "~2.51.0",
+    "node-schedule": "latest"
   },
   "devDependencies": {
     "gulp": "~3.8.10",

@@ -118,7 +118,13 @@ var CompanyGroup = new Schema({
             type: Number,
             default: 0
         },
+        //活跃度积分
         total:{
+            type: Number,
+            default: 0
+        },
+        //活跃度排名
+        rank:{
             type: Number,
             default: 0
         }
@@ -177,6 +183,18 @@ var CompanyGroup = new Schema({
         _id: Schema.Types.Object,
         theme: String,
         start_time: Date
+    },
+    score_rank:{
+        //战绩积分
+        score:{
+            type: Number,
+            default: 0
+        },
+        //战绩排名
+        rank:{
+            type: Number,
+            default: 0
+        }
     }
 });
 

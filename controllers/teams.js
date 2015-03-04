@@ -62,6 +62,7 @@ module.exports = function (app) {
                 companyGroup.entity_type = group.entity_type;
                 companyGroup.name = tname;
                 companyGroup.logo = '/img/icons/group/' + group.entity_type.toLowerCase() + '_on.png';
+                companyGroup.city = company.info.city;
                 if(groupLevel===1){//个人小队保存谁发的并将此人设为队长.
                   companyGroup.poster = {role: 'Personal', _id: req.user._id};
                   var member = {
