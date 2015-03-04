@@ -69,7 +69,7 @@ var addTeamScore = function (scoreBoard) {
       return;
     }
     teams.forEach(function(team, index){
-      var _index;
+      var _index=0;
       if(scoreBoard.playing_teams[0].tid.toString()!==team._id.toString()){
         _index =1;
       }
