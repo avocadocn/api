@@ -71,12 +71,22 @@
   </div>
 
   <div id="circleContentPhotoTest">
+    <h1>同事圈测试</h1>
+    <p>No Photo</p>
+    <form id="circleContentForm" enctype="multipart/form-data">
+      <input type="text" name="content" value="test" placeholder="circle-content"/>
+      <input type="text" name="campaign_id" placeholder="campaign_id" required/>
+    </form>
+    <button class="js_submit">提交</button>
+  </div>
+
+  <div id="circleContentPhotoTestWithPhoto">
     <h1>同事圈照片</h1>
     <p>Photo</p>
-    <form id="circleContentForm" enctype="multipart/form-data">
-      <input type="text" name="content" value="good!" placeholder="circle-content"/>
-      <input type="text" name="tid" />
-      <input type="text" name="campaign_id" />
+    <form id="circleContentFormWithPhoto" enctype="multipart/form-data">
+      <input type="text" name="content" value="test" placeholder="circle-content"/>
+      <input type="file" name="photo" required/>
+      <input type="text" name="campaign_id" placeholder="campaign_id" required/>
     </form>
     <button class="js_submit">提交</button>
   </div>

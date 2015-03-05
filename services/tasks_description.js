@@ -302,6 +302,22 @@ var registeredTasks = {
 
   deleteCircleComment: {
     user: ['self']
+  },
+
+  publishCompanyCircle: function(role) {
+    if (role.user == 'self' && role.company == 'member') {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  publishTeamCircle: function(role) {
+    if (role.user == 'self' && (role.team == 'leader' || role.team == 'member')) {
+      return true;
+    } else {
+      return false;
+    }
   }
 };
 

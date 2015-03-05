@@ -10,6 +10,12 @@ var user = {
   comment_num: {
     type: Number,
     required: true
+  },
+  // 参与评论者是否点赞
+  appreciated: {
+    type: Boolean,
+    default: false,
+    required: true
   }
 };
 
@@ -49,8 +55,14 @@ var CircleContent = new Schema({
     required: true,
     default: 'show'
   },
-  comment_users: [user] // 参与过评论的用户id
-  
+  // 发布者是否点赞
+  appreciated: {
+    type: Boolean,
+    default: false,
+    required: true
+  },
+  comment_users: [user], // 参与过评论的用户id(除消息发布者)
+  relative_cids: [Schema.Types.ObjectId] // 参加同事圈消息所属的活动的所有公司id
 });
 
 CircleContent.pre('save', function (next) {

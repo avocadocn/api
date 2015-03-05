@@ -186,5 +186,30 @@
 
   })();
 
+  (function () {
+
+    var circleContentPhotoTestEle = $('#circleContentPhotoTestWithPhoto');
+    var submit = circleContentPhotoTestEle.find('.js_submit');
+
+    submit.click(function () {
+      var fd = new FormData($('#circleContentFormWithPhoto')[0]);
+      $.ajax({
+        url: baseUrl + '/circle_contents',
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        headers: getCommonHeaders(),
+        success: function (data, status) {
+          alert('success');
+          console.log(data, status);
+        },
+        error: function (data, status) {
+          console.log(data, status);
+        }
+      });
+    });
+
+  })();
 
 })(jQuery);
