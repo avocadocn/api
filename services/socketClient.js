@@ -36,13 +36,14 @@ exports.pushCircleContent = function (cid, poster) {
   User.find({'cid':cid, 'active':true, 'mail_active':true , 'disabled':false, '_id':{'$ne':poster._id}},null, function(err, users) {
     if(err) {
       console.log(err.stack);
-    }else {
+    }
+    else {
       var userIds = [];
       var length = users.length;
       for(var i=0; i<length; i++) {
         userIds.push(users[i]._id);
       }
-      socket.emit('circleContent', userIds, cid, poster);
+      socket.emit('circleContent', userIds, poster);
     }
   });
 };
