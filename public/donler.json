@@ -4098,6 +4098,34 @@
         }
       }
     },
+    "/chatrooms/actions/read": {
+      "post": {
+        "tags": [
+          "chats"
+        ],
+        "summary": "将某组讨论列表的未读消息数清零",
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "ReadChatRoomPostData"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "清零成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/rank": {
       "get": {
         "tags": [
@@ -6970,6 +6998,18 @@
           "type": "array",
           "items": {
             "$ref": "RankTeam"
+          }
+        }
+      }
+    },
+    "ReadChatRoomPostData": {
+      "title": "ReadChatRoomPostData",
+      "type": "object",
+      "properties": {
+        "chatRoomIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         }
       }

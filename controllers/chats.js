@@ -9,26 +9,28 @@ var User = mongoose.model('User'),
 
 var async = require('async');
 var auth = require('../services/auth.js'),
-    log = require('../services/error_log.js'),
-    socketClient = require('../services/socketClient'),
-    uploader = require('../services/uploader.js'),
-    tools = require('../tools/tools.js');
+  log = require('../services/error_log.js'),
+  socketClient = require('../services/socketClient'),
+  uploader = require('../services/uploader.js'),
+  tools = require('../tools/tools.js');
 
 var shieldTip = "该评论已经被系统屏蔽";
 
-var updateUserChatroom = function(chatroomId, user, reqUserId, callback) {
-  if(user._id.toString() !== reqUserId.toString()) {
+var updateUserChatroom = function (chatroomId, user, reqUserId, callback) {
+  if (user._id.toString() !== reqUserId.toString()) {
     var index = tools.arrayObjectIndexOf(user.chatrooms, chatroomId, '_id');
-    if(index>-1) {
+    if (index > -1) {
       user.chatrooms[index].unread++;
-      user.save(function(err) {
-        if(err) log(err);
+      user.save(function (err) {
+        if (err) log(err);
         callback();
       });
-    }else{
+    }
+    else {
       callback();
     }
-  }else {
+  }
+  else {
     callback();
   }
 };
@@ -36,17 +38,18 @@ module.exports = function (app) {
 
   return {
     canPublishChat: function (req, res, next) {
-      if(!req.params.chatroomId) {
-        return res.status(422).send({msg:'参数不合法'});
+      if (!req.params.chatroomId) {
+        return res.status(422).send({msg: '参数不合法'});
       }
-      if(req.user.provider==='company') {
-        return res.status(403).send({ msg: '权限错误'});
+      if (req.user.provider === 'company') {
+        return res.status(403).send({msg: '权限错误'});
       }
       //如果是这个队伍的人则能发
       var index = tools.arrayObjectIndexOf(req.user.chatrooms, req.params.chatroomId, '_id');
-      if(index===-1) {
-        return res.status(403).send({ msg: '权限错误'});
-      }else {
+      if (index === -1) {
+        return res.status(403).send({msg: '权限错误'});
+      }
+      else {
         next();
       }
     },
@@ -63,7 +66,7 @@ module.exports = function (app) {
         subDir: req.user.getCid().toString(),
         saveOrigin: true,
         getFields: function (fields) {
-          if(fields.randomId) {
+          if (fields.randomId) {
             randomId = fields.randomId[0];
             req.randomId = randomId;
           }
@@ -74,10 +77,11 @@ module.exports = function (app) {
         success: function (url, oriName, oriCallback) {
           var now = new Date();
           var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
-          oriCallback(path.join('/chat_ori_img', dateDirName), now.valueOf() ,function(err, ori_name) {
-            if(err) {
+          oriCallback(path.join('/chat_ori_img', dateDirName), now.valueOf(), function (err, ori_name) {
+            if (err) {
               log(err);
-            }else {
+            }
+            else {
               req.photo = {
                 uri: path.join('/img/chats', url),
                 width: imgSize.width,
@@ -96,8 +100,8 @@ module.exports = function (app) {
 
     },
     createChat: function (req, res) {
-      if(!req.photo && !req.body.content) {
-        return res.status(422).send({msg:'未填写内容'});
+      if (!req.photo && !req.body.content) {
+        return res.status(422).send({msg: '未填写内容'});
       }
       var chat = new Chat({
         chatroom_id: req.params.chatroomId,
@@ -108,32 +112,36 @@ module.exports = function (app) {
         chat.photos = req.photo;
       }
       chat.save(function (err) {
-        if(err) {
+        if (err) {
           log(err)
           return res.status(500).send({msg: '聊天保存失败'});
-        }else {
-          if(req.photo) chat.photos[0].ori_uri = null; //对外隐藏此属性
+        }
+        else {
+          if (req.photo) chat.photos[0].ori_uri = null; //对外隐藏此属性
           res.status(200).send({'chat': chat});
           //找出相关人员
-          User.find({'cid': req.user.cid, 'chatrooms':{'$elemMatch': {'_id':chat.chatroom_id}}}, {'chatrooms':1}, function(err, users) {
-            if(err) {
+          User.find({
+            'cid': req.user.cid,
+            'chatrooms': {'$elemMatch': {'_id': chat.chatroom_id}}
+          }, {'chatrooms': 1}, function (err, users) {
+            if (err) {
               log(err);
             }
             else {
               //socket推送
               var userIds = [];
               var usersLength = users.length;
-              for(var i=0; i<usersLength; i++) {
+              for (var i = 0; i < usersLength; i++) {
                 userIds.push(users[i]._id);
               }
               socketClient.pushChat(chat.chatroom_id, chat, userIds);
               //users更新
-              async.map(users, function(user, callback) {
-                updateUserChatroom(chat.chatroom_id, user, req.user._id, function() {
+              async.map(users, function (user, callback) {
+                updateUserChatroom(chat.chatroom_id, user, req.user._id, function () {
                   callback();
                 })
-              }, function(err, results) {
-                if(err) log(err);
+              }, function (err, results) {
+                if (err) log(err);
                 return;
               })
             }
@@ -145,9 +153,10 @@ module.exports = function (app) {
     getChats: function (req, res, next) {
 
       if (req.user.provider !== 'user') {
-        res.status(403).send({ msg: '抱歉，您没有权限' });
+        res.status(403).send({msg: '抱歉，您没有权限'});
         return;
-      } else {
+      }
+      else {
         var isInChatRoomList = false;
         for (var i = 0; i < req.user.chatrooms.length; i++) {
           if (req.query.chatroom === req.user.chatrooms[i]._id.toString()) {
@@ -156,7 +165,7 @@ module.exports = function (app) {
           }
         }
         if (!isInChatRoomList) {
-          res.status(403).send({ msg: '抱歉，您没有权限' });
+          res.status(403).send({msg: '抱歉，您没有权限'});
           return;
         }
       }
@@ -207,12 +216,12 @@ module.exports = function (app) {
       }).exec()
         .then(function (chat) {
           if (!chat) {
-            res.status(404).send({ msg: '找不到该消息' });
+            res.status(404).send({msg: '找不到该消息'});
             return;
           }
 
           if (req.user.id !== chat.poster.toString()) {
-            res.status(403).send({ msg: '抱歉，您没有权限' });
+            res.status(403).send({msg: '抱歉，您没有权限'});
             return;
           }
 
@@ -220,14 +229,26 @@ module.exports = function (app) {
           chat.save(function (err) {
             if (err) {
               next(err);
-            } else {
-              res.send({ msg: '删除成功' });
+            }
+            else {
+              res.send({msg: '删除成功'});
             }
           });
         })
         .then(null, function (err) {
           next(err);
         });
+    },
+
+    readChatRoomChats: function (req, res, next) {
+      clearUserChatRoomUnReadCount(req.user, req.body.chatRoomIds, function (err) {
+        if (err) {
+          next(err);
+        }
+        else {
+          res.send({msg: '清零成功'});
+        }
+      });
     },
 
     getChatRooms: function (req, res, next) {
@@ -237,7 +258,7 @@ module.exports = function (app) {
       });
       var allow = auth.auth(role, ['getChatRooms']);
       if (!allow.getChatRooms) {
-        res.status(403).send({ msg: '抱歉，您没有权限' });
+        res.status(403).send({msg: '抱歉，您没有权限'});
         return;
       }
 
@@ -274,7 +295,7 @@ module.exports = function (app) {
 
       Chat.aggregate()
         .match({
-          chatroom_id: { $in: chatRoomIds },
+          chatroom_id: {$in: chatRoomIds},
           status: 'active'
         })
         .sort('-create_date')
@@ -329,7 +350,7 @@ module.exports = function (app) {
 
       function queryPosters(posterIdList, chatRoomList) {
         User.find({
-          _id: { $in: posterIdList }
+          _id: {$in: posterIdList}
         }, {
           _id: 1,
           cid: 1,
@@ -347,7 +368,7 @@ module.exports = function (app) {
                 }
               }
             });
-            res.send({ chatRoomList: chatRoomList });
+            res.send({chatRoomList: chatRoomList});
           })
           .then(null, function (err) {
             next(err);
@@ -358,3 +379,31 @@ module.exports = function (app) {
   };
 
 };
+
+/**
+ * 将用户的chatroom未读标记清零
+ * @param {Object} user mongoose.model('User')
+ * @param {ObjectId|String|Array} roomIds chatRoomId，可以是单个，或是数组
+ * @param {Function} callback 执行后的回调function (err) {}
+ */
+function clearUserChatRoomUnReadCount(user, roomIds, callback) {
+  if (!user.chatrooms) {
+    callback(new Error('该用户没有chatrooms'));
+  }
+  else {
+    if (!roomIds instanceof Array) {
+      roomIds = [roomIds];
+    }
+    for (var i = 0, ilen = roomIds.length; i < ilen; i++) {
+      for (var j = 0, jlen = user.chatrooms.length; j < jlen; j++) {
+        if (roomIds[i].toString() === user.chatrooms[j]._id.toString()) {
+          user.chatrooms[j].unread = 0;
+          break;
+        }
+      }
+    }
+    user.save(function (err) {
+      callback && callback(err);
+    });
+  }
+}
