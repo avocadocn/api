@@ -2818,6 +2818,39 @@ paths:
           description: error
           schema:
             $ref: Error
+  "/rank/{teamId}":
+    get:
+      tags:
+        - rank
+      summary: 获取小队榜单
+      operationId: getTeamRank
+      consumes:
+        - application/json
+      parameters:
+        - name: teamId
+          description: 小队Id
+          required: true
+          type: string
+          in: path
+        - name: rankType
+          description: "榜单类型,活跃度，积分"
+          required: true
+          type: string
+          in: query
+          enum:
+            - activity
+            - score
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: RankTeam
+        default:
+          description: error
+          schema:
+            $ref: Error
 definitions:
   LoginForm:
     title: LoginForm
