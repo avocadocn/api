@@ -6,17 +6,19 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var Company = mongoose.model('Company');
 var Photo = mongoose.model('Photo');
+var Comment = mongoose.model('Comment');
 
 var jwt = require('jsonwebtoken');
 var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var donlerValidator = require('../services/donler_validator.js');
+var validator = require('validator');
 var emailService = require('../services/email.js');
 var uploader = require('../services/uploader.js');
 var auth = require('../services/auth.js');
 var tools = require('../tools/tools.js');
 var syncData = require('../services/sync_data.js');
-
+var departmentController = require('../controllers/departments');
 module.exports = function (app) {
 
   return {
@@ -406,11 +408,28 @@ module.exports = function (app) {
       }else{//用户取来通讯录用
         outputOptions = {'email':1,'nickname':1};
       }
+      var pageNum = 10;
+      var limitNum=0,
+          skipNum =0;
+      if(req.query.page) {
+        limitNum = pageNum+1;
+        skipNum = pageNum *(req.query.page-1);
+      }
       User.find(findOptions,outputOptions)
       .sort('nickname')
+      .limit(limitNum)
+      .skip(skipNum)
       .exec()
       .then(function (users){
-        return res.status(200).send(users);
+        if(req.query.page) {
+          return res.status(200).send({
+            users:users.slice(0,pageNum),
+            hasNext:users.length==limitNum
+          });
+        }
+        else{
+          return res.status(200).send(users);
+        }
       })
       .then(null, function (err){
         log(err);
@@ -554,7 +573,22 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
-        res.sendStatus(200);
+        if(req.body.did && (!user.department || !user.department._id || user.department._id.toString()!= req.body.did)) {
+          departmentController(app).joinDepartment(user,req.body.did,function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+              return;
+            }
+            else {
+              res.sendStatus(200);
+            }
+          });
+        }
+        else {
+          res.sendStatus(200);
+        }
+
         if (req.updatePhoto) {
           syncData.updateUlogo(user._id);
         }
@@ -595,7 +629,7 @@ module.exports = function (app) {
           var token = jwt.sign({
             type: "user",
             id: user._id.toString(),
-            exp: app.get('tokenExpires')
+            exp: app.get('tokenExpires') + Date.now()
           }, app.get('tokenSecret'));
           var pushInfo = req.body.pushInfo ||{};
           user.addDevice(req.headers, token, pushInfo);
@@ -702,6 +736,90 @@ module.exports = function (app) {
       });
     },
 
+    inviteUser: function (req, res, next) {
+
+      if (!validator.isEmail(req.body.email)) {
+        res.status(400).send({ msg: '请填写正确的邮箱地址' });
+        return;
+      }
+
+      if (req.user.provider !== 'company') {
+        res.status(403).send({ msg: '您没有权限' });
+        return;
+      }
+
+      // 判断邮箱后缀是否为企业允许的邮箱后缀
+      var emailDomain = req.body.email.split('@')[1];
+      if (req.user.email.domain.indexOf(emailDomain) === -1) {
+        res.status(400).send({ msg: '该邮箱不是企业允许的邮箱。如果您需要向该邮箱发送邀请链接，请先在企业账号设置中添加邮箱。' });
+        return;
+      }
+
+      // 查询该邮箱是否已被注册过了
+      User.findOne({
+        email: req.body.email
+      }, {
+        _id: 1,
+        email: 1,
+        mail_active: 1,
+        invited: 1
+      }).exec()
+        .then(function (user) {
+          if (!user) {
+            // 没有注册则新创建用户
+            createNewUser();
+          } else {
+            if (user.mail_active === true) {
+              // 如果已经激活，则返回提示
+              res.send({ msg: '该用户已激活，无须再发送邀请信了。' });
+            } else {
+              // 还没有激活，则重新发送邀请信
+              sendEmail(user);
+            }
+          }
+
+        })
+        .then(null, function (err) {
+          next(err);
+        });
+
+      function createNewUser() {
+        var user = new User({
+          email: req.body.email,
+          active: true,
+          mail_active: false,
+          invited: true,
+          cid: req.user._id,
+          cname: req.user.info.name,
+          company_official_name: req.user.info.official_name
+        });
+        user.save(function (err) {
+          if (err) {
+            next(err);
+          } else {
+            sendEmail(user);
+          }
+        });
+      }
+
+      function sendEmail(user) {
+        emailService.sendInvitedStaffActiveMail(user.email, {
+          inviteKey: req.user.invite_key,
+          uid: user.id,
+          cid: req.user.id,
+          cname: req.user.info.name
+        }, function (err) {
+          if (err) {
+            next(err);
+          } else {
+            res.status(201).send({ msg: '成功发送邀请信' });
+          }
+        });
+      }
+
+
+    },
+
     getUserPhotosValidate: function (req, res, next) {
       donlerValidator({
         start: {
@@ -776,6 +894,30 @@ module.exports = function (app) {
           log(err);
           res.sendStatus(500);
         });
+    },
+    getUserComments: function (req, res) {
+      var srcUser = req.resourceUser;
+      var role = auth.getRole(req.user, {
+        companies: [srcUser.cid]
+      });
+      var allow = auth.auth(role, ['getUserComments']);
+      if (!allow.getUserComments) {
+        res.status(403).send({ msg: '您没有权限' });
+        return;
+      }
+      Comment.find({'poster._id':req.params.userId})
+        .sort('-create_date')
+        .limit(10)
+        .exec()
+        .then(function (comments) {
+          res.status(200).send(comments);
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
     }
   };
 };
+
+

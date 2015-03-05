@@ -101,6 +101,7 @@ exports.formatCampaign = function (campaign, user, callback) {
     '_id': campaign._id,
     'active': campaign.active,
     'confirm_status': campaign.confirm_status,
+    'create_time': campaign.create_time,
     'theme': campaign.theme,
     'content': campaign.content ? campaign.content.replace(/<\/?[^>]*>/g, '') : '',
     'member_max': campaign.member_max,
@@ -309,59 +310,78 @@ var formatRestTime = exports.formatRestTime = function (start_time, end_time) {
 
 /**
  * 将活动数据转换为前端需要的格式的方法集合
- * @type {{}}
  */
 var formatterList = {
-  hrManageList: function (campaigns, options, callback) {
-    // todo hr活动管理中的活动列表信息
-    callback(null, campaigns);
+  managerList: function (campaigns, options, callback) {
+    // hr活动管理中的活动列表信息
+    var campaignsLength = campaigns.length;
+    var formatCampaigns = [];
+    for(var i=0; i<campaignsLength; i++) {
+      var formatCampaign = {
+        '_id': campaigns[i]._id,
+        'unitId': campaigns[i].campaign_type===1 || campaigns[i].campaign_type>5? campaigns[i].cid[0]: campaigns[i].campaign_unit[0].team._id,
+        'campaignType':campaigns[i].campaign_type,
+        'theme': campaigns[i].theme,
+        'startTime': campaigns[i].start_time,
+        'endTime': campaigns[i].end_time,
+        'memberNumber': campaigns[i].members.length,
+        'active': campaigns[i].active
+      };
+      if(campaigns[i].start_time > new Date()) formatCampaign.status = '未开始';
+      else if(campaigns[i].end_time < new Date()) formatCampaign.status = '已结束';
+      else formatCampaign.status = '进行中';
+      formatCampaigns.push(formatCampaign);
+    }
+    callback(null, formatCampaigns);
   },
-  appCampaignCard: function (campaigns, options, callback) {
-    // todo app 活动卡片
-  },
-  appTimelineCard: function (campaigns, options, callback) {
-    // todo app 足迹卡片
+  calendar: function (campaigns, options, callback) {
+    var campaignsLength = campaigns.length;
+    var formatCampaigns = [];
+    for(var i=0; i<campaignsLength; i++) {
+      var formatCampaign = {
+        _id: campaigns[i]._id,
+        start: new Date(campaigns[i].start_time).valueOf(),
+        end: new Date(campaigns[i].end_time).valueOf(),
+        class: 'event-info'
+      };
+      formatCampaigns.push(formatCampaign);
+    }
+    callback(null, formatCampaigns);
   }
 };
 
 /**
  * 根据需要获取的活动类型和结果类型返回权限判断任务列表
- * @param {Array} cpTypes
+ * @param {Object} owner
+ * @param {Array} attrs 需要查询的活动的附加属性，如已参加、正在进行等
  * @param {String} resultType
  * @return {Array}
  */
-exports.getAuthTasks = function (cpTypes, resultType) {
+exports.getAuthTasks = function (owner, attrs, resultType) {
   var tasks = ['getCampaigns'];
-  switch (cpTypes[0]) {
-  case 'user':
-    if (resultType === 'app_calendar') {
-      tasks = ['getUserAllCampaignsForCalendar'];
-    }
-    break;
-  }
+  // 现在暂时没有其它相关的权限任务，直接使用通用的获取活动任务
   return tasks;
 };
 
 /**
  * 查询并将活动转换为需要的格式
  *  queryAndFormat({
- *    campaignTypes: ['com', 'all'],
  *    reqQuery: req.query,
- *    targetModel: req.targetModel,
+ *    campaignOwner: req.campaignOwner,
  *    user: req.user
- *  }, function (err, campaigns) {})
+ *  }, function (err, data) {})
  * @param opts
  * @param callback
  */
 exports.queryAndFormat = function (opts, callback) {
   var dbQueryOptions = {};
-  var formatter = 'default';
+  var formatter = formatterList[opts.reqQuery.result];
   var formatterOptions;
   var dbQuery;
 
   var pageSize = 20;
   if (opts.reqQuery.limit) {
-    pageSize = opts.reqQuery.limit;
+    pageSize = Number(opts.reqQuery.limit);
   }
 
   var sortOptions = '-start_time -_id';
@@ -369,95 +389,56 @@ exports.queryAndFormat = function (opts, callback) {
 
   var setPagerOptions = function () {
     if(opts.reqQuery.to){
-      dbQueryOptions.start_time = { '$lte':new Date(parseInt(opts.reqQuery.to)) };
+      dbQueryOptions.start_time = { '$lte': new Date(parseInt(opts.reqQuery.to)) };
     }
     if(opts.reqQuery.from){
-      dbQueryOptions.end_time = { '$gte':new Date(parseInt(opts.reqQuery.from)) };
+      dbQueryOptions.end_time = { '$gte': new Date(parseInt(opts.reqQuery.from)) };
     }
     if (opts.reqQuery.page_id) {
-      dbQueryOptions._id = { '$le': opts.reqQuery.page_id };
+      dbQueryOptions._id = { '$lte': opts.reqQuery.page_id };
     }
   };
 
-  switch (opts.campaignTypes[0]) {
-  case 'com':
-    dbQueryOptions = {
-      cid: opts.targetModel._id,
-      active: true
-    };
-    if (opts.reqQuery.result === 'hr_manager_list') {
-      formatter = formatterList.hrManageList;
+  // todo 根据campaignOwner和result等条件设置查询
+  if (opts.campaignOwner.user) {
+    // todo 查询用户的活动
+  } else {
+    // todo 查询公司或小队活动
+    if (opts.campaignOwner.company && !opts.campaignOwner.teams) {
+      dbQueryOptions.cid = opts.campaignOwner.company._id;
+      if(!opts.reqQuery.attrs || opts.reqQuery.attrs.indexOf('allCampaign')===-1)//非HR取所有公司所有小队
+        dbQueryOptions.campaign_type = 1;
+    } else if (opts.campaignOwner.teams) {
+      dbQueryOptions.tid = opts.campaignOwner.teams.map(function (team) { return team._id });
     }
+    if(!opts.reqQuery.attrs || opts.reqQuery.attrs.indexOf('showClose')===-1)
+      dbQueryOptions.active =  true;
     setPagerOptions();
-    dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize);
-    break;
-  case 'team':
-    dbQueryOptions = {
-      tid: opts.targetModel._id,
-      active: true
-    };
-    if (opts.reqQuery.result === 'hr_manager_list') {
-      formatter = formatterList.hrManagerList;
-    }
-    setPagerOptions();
-    dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize);
-    break;
-  case 'user':
-    // todo 获取用户活动只是做好结构，还没有具体实现
-    dbQueryOptions = {
-      cid: opts.targetModel.cid,
-      active: true
-    };
-    switch (opts.campaignTypes[1]) {
-    case 'all':
-
-      break;
-    case 'tostart':
-
-      break;
-    case 'playing':
-      break;
-    case 'end':
-      break;
-    case 'provoke':
-      break;
-    case 'join':
-      break;
-    case 'unjoin':
-      break;
-    default:
-      // todo
-    }
-
-    setPagerOptions();
-    dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize);
-
-    switch (opts.reqQuery.result) {
-    case 'app_cp_card':
-      formatter = formatterList.appCampaignCard;
-      dbQuery = dbQuery.populate('photo_album');
-      break;
-    case 'app_tl_card':
-      formatter = formatterList.appTimelineCard;
-      dbQuery = dbQuery.populate('photo_album');
-      break;
-    }
-
-    break;
-  default:
-    // todo
+    dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize + 1);
   }
 
   dbQuery.exec()
     .then(function (campaigns) {
-      var plainCampaigns = campaigns.map(function (campaign) {
+      var nextCampaign;
+      if (campaigns.length > pageSize) {
+        nextCampaign = campaigns[pageSize];
+      }
+      var plainCampaigns = campaigns.slice(0, pageSize).map(function (campaign) {
         return campaign.toObject({ virtuals: true });
       });
       formatter(plainCampaigns, formatterOptions, function (err, resCampaigns) {
         if (err) {
           callback(err);
-        } else {
-          callback(null, resCampaigns);
+        }
+        else if(opts.reqQuery.result==='calendar') {
+          callback(null, {success:1, result:resCampaigns});
+        }
+        else {
+          callback(null, {
+            campaigns: resCampaigns,
+            hasNext: !!nextCampaign,
+            nextId: nextCampaign ? nextCampaign.id : undefined
+          });
         }
       });
     })

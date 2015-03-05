@@ -6,7 +6,7 @@ module.exports = {
   env: 'production',
   token: {
     secret: 'donler',
-    expires: moment().add('days', 7).valueOf()
+    expires: 1000 * 60 * 60 * 24 * 7
   },
   serverListenPort: 3002,
   db: 'mongodb://localhost/donler-beta'

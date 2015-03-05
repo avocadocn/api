@@ -514,9 +514,10 @@ module.exports = function (app) {
           location: req.body.location,
           campaign_mold: req.body.campaign_mold,
           start_time: req.body.start_time,
-          end_time: req.body.end_time
+          end_time: req.body.end_time,
+          content: req.body.content
         };
-        if(req.body.tid){
+        if(req.body.tid){ 
           param.tid = req.body.tid;
         }
         async.parallel([
@@ -564,48 +565,95 @@ module.exports = function (app) {
               param.poster.uid = req.user._id;
               param.poster.nickname = req.user.nickname;
             }
-
-
+            //unit
             param.campaign_unit = [];
-            param.cid.forEach(function(cid,index){
-              var unit ={};
-              for (var i = values[0].length - 1; i >= 0; i--) {
-                if(values[0][i]._id.toString()===cid){
+
+            //如果是递归活动
+            if(param.campaign_type === 2 && param.tid.length>1) {
+              var length = req.body.tid.length;
+              var i = 0;
+              var results = [];
+              async.whilst(
+                function() {return i< length},
+                function(cb) {
+                  var newParam = param;
+                  newParam.tid = [req.body.tid[i]];
+                  var unit = {};
                   unit.company = {
-                    _id: cid,
-                    name: values[0][i].info.official_name,
-                    logo: values[0][i].info.logo
+                    _id: param.cid[0],
+                    name: values[0][0].info.official_name,
+                    logo: values[0][0].info.logo
+                  };
+                  for(var j = 0; j<values[1].length; j++) {
+                    if(newParam.tid.toString() === values[1][j]._id.toString()) {
+                      unit.team = {
+                        _id: values[1][j]._id,
+                        name: values[1][j].name,
+                        logo: values[1][j].logo
+                      };
+                    }
                   }
-                  break;
+                  newParam.campaign_unit=[unit];
+                  i++;
+                  _postCampaign(newParam, function(err, result){
+                    if(err){
+                      cb(err);
+                    }
+                    else{
+                      results.push(result);
+                      cb(null);
+                    }
+                  });
+                },
+                function(err) {
+                  if(err) {
+                    cosole.log(err);
+                    res.status(500).send({msg:err});
+                  }else {
+                    res.send(results);
+                  }
                 }
-              };
-              if(param.tid){
-                for (var j = values[1].length - 1; j >= 0; j--) {
-                  if(values[1][j]._id.toString()===param.tid[index]){
-                    unit.team = {
-                      _id: values[1][j]._id,
-                      name: values[1][j].name,
-                      logo: values[1][j].logo
+              );
+            }
+            else {//非递归活动
+              param.cid.forEach(function(cid,index){
+                var unit ={};
+                for (var i = values[0].length - 1; i >= 0; i--) {
+                  if(values[0][i]._id.toString()===cid){
+                    unit.company = {
+                      _id: cid,
+                      name: values[0][i].info.official_name,
+                      logo: values[0][i].info.logo
                     }
                     break;
                   }
+                };
+                if(param.tid){
+                  for (var j = values[1].length - 1; j >= 0; j--) {
+                    if(values[1][j]._id.toString()===param.tid[index]){
+                      unit.team = {
+                        _id: values[1][j]._id,
+                        name: values[1][j].name,
+                        logo: values[1][j].logo
+                      }
+                      break;
+                    }
+                  }
                 }
-              }
-              param.campaign_unit.push(unit);
-            })
-            _postCampaign(param, function(err,result){
-              if(err){
-                res.status(500).send({msg:err});
-              }
-              else{
-                res.send(result)
-              }
-            })
+                param.campaign_unit.push(unit);
+              })
+              _postCampaign(param, function(err,result){
+                if(err){
+                  res.status(500).send({msg:err});
+                }
+                else{
+                  res.send(result)
+                }
+              })
+            }
           }
         });
-        
       });
-      
     },
     getCampaign: function (req, res) {
       var campaign = req.campaign;
@@ -1108,9 +1156,12 @@ module.exports = function (app) {
 
     // todo
     getCampaigns: {
-      // 兼容旧版本api，如果请求的url query中没有cp_type，则按1.0的api处理，否则使用1.2的api
+      // 兼容旧版本api，如果请求的url query中没有result，则按1.0的api处理，否则使用1.2的api
+      // 这里不使用版本号区分是出于如下考虑：
+      // api服务器和app及网页客户端不可能完全同时更新，app查询活动部分也没有更新，使用1.2的api必须保证以前的功能可用，可以逐步修改
+      // 使用版本号区分，旧的查询活动请求也可能会附带新的版本号，这样将导致错误；或是在同一app版本中要使用不同版本的api
       switcher: function (req, res, next) {
-        if (!req.query.cp_type) {
+        if (!req.query.result) {
           donlerValidator({
             requestType: {
               name: 'requestType',
@@ -1163,99 +1214,113 @@ module.exports = function (app) {
 
       // 过滤请求数据
       filter: function (req, res, next) {
-        donlerValidator({
-          cp_type: {
-            name: 'cp_type',
-            value: req.query.cp_type,
-            validators: ['required', donlerValidator.enum(['com_all', 'team_all'])] // todo
-          },
-          target_id: {
-            name: 'target_id',
-            value: req.query.target_id,
-            validators: ['required', 'objectId']
-          },
-          result: {
-            name: 'result',
-            value: req.query.result,
-            validators: [donlerValidator.enum(['hr_manager_list'])] // todo
-          },
-          limit: {
-            name: 'limit',
-            value: req.query.limit,
-            validators: ['number']
-          },
-          //sort: {
-          //  name: 'sort',
-          //  value: req.query.sort,
-          //  validators: [] // todo
-          //},
-          // 分页用的id
-          page_id: {
-            name: 'page_id',
-            value: req.query.page_id,
-            validators: ['objectId']
-          }
-        }, 'fast', function (pass, msg) {
-          if (pass) {
-            return next();
-          } else {
-            return res.status(400).send(donlerValidator.combineMsg(msg));
-          }
-        });
+        // todo 调整需要的请求查询参数后，donlerValidators暂时不适用于现在的验证，先跳过，完成api后再补充请求数据的过滤
+        /**
+         * 查询参数:
+         *  cid: 查询公司活动时需要的公司id
+         *  tids: 查询小队活动时需要的小队id, 是一个数组
+         *  uid: 查询用户的活动时所需要的用户id
+         *  result: 返回结果类型
+         *  attrs: 附加属性, 如'join','playing'等, 是一个数组
+         *  limit: 返回的活动数
+         *  sort: 排序依据
+         *  from: 时间区间的开始
+         *  to: 时间区间的结束
+         *  page_id: 分页用的id
+         */
+        next();
       },
 
       // 获取活动所有者的数据，例如获取公司活动，则获取公司数据；如果获取小队活动，则获取小队数据
       getHolder: function (req, res, next) {
-        req.campaignTypes = req.query.cp_type.split('_');
-        var targetModelName;
-        switch (req.campaignTypes[0]) {
-        case 'com':
-          targetModelName = 'Company';
-          break;
-        case 'team':
-          targetModelName = 'CompanyGroup';
-          break;
-        case 'user':
-          targetModelName = 'User';
-          break;
-        }
-        mongoose.model(targetModelName).findById(req.query.target_id).exec()
-          .then(function (targetModel) {
-            if (!targetModel) {
-              return res.status(404).send({ msg: '找不到活动' });
-            } else {
-              req.targetModel = targetModel;
-              return next();
+        // uid 存在时，忽略cid和tids，只考虑个人的活动；如果uid不存在，则cid或tids至少存在一个
+        req.campaignOwner = {};
+        if (req.query.uid) {
+          User.findById(req.query.uid, {
+            _id: 1,
+            cid: 1
+          }).exec()
+            .then(function (user) {
+              if (!user) {
+                res.status(404).send({ msg: '找不到活动' });
+              } else {
+                req.campaignOwner.user = user.toObject();
+                next();
+              }
+            })
+            .then(null, function (err) {
+              next(err);
+            });
+        } else if (req.query.cid || req.query.tids) {
+          async.parallel({
+            company: function (parallelCallback) {
+              if (!req.query.cid) {
+                return parallelCallback();
+              }
+              Company.findById(req.query.cid, {
+                _id: 1
+              }).exec()
+                .then(function (company) {
+                  if (!company) {
+                    res.status(404).send({ msg: '找不到活动' });
+                  } else {
+                    req.campaignOwner.company = company.toObject();
+                    parallelCallback();
+                  }
+                })
+                .then(null, function (err) {
+                  parallelCallback(err);
+                });
+            },
+            teams: function (parallelCallback) {
+              if (!req.query.tids) {
+                return parallelCallback();
+              }
+              CompanyGroup.find({
+                _id: req.query.tids
+              }, {
+                _id: 1,
+                cid: 1
+              }).exec()
+                .then(function (teams) {
+                  var length = 1;
+                  if (req.query.tids instanceof Array) {
+                    length = req.query.tids.length;
+                  }
+                  if (teams.length !== length) {
+                    res.status(404).send({ msg: '找不到活动' });
+                  } else {
+                    req.campaignOwner.teams = teams.map(function (team) { return team.toObject(); });
+                    parallelCallback();
+                  }
+                })
+                .then(null, function (err) {
+                  parallelCallback(err);
+                });
             }
-          })
-          .then(null, function (err) {
-            return next(err);
+          }, function (err, result) {
+            if (err) {
+              next(err);
+            } else {
+              next();
+            }
           });
+        } else {
+          res.status(400).send({ msg: '请求参数错误' });
+        }
+
       },
 
       // 权限判断
       auth: function (req, res, next) {
-        var tasks = campaignBusiness.getAuthTasks(req.campaignTypes, req.query.result);
-        var owner;
-        switch (req.campaignTypes[0]) {
-        case 'com':
-          owner = {
-            companies: [req.targetModel._id]
-          };
-          break;
-        case 'team':
-          owner = {
-            companies: [req.targetModel.cid],
-            teams: [req.targetModel._id]
-          };
-          break;
-        case 'user':
-          owner = {
-            companies: [req.targetModel.cid],
-            users: [req.targetModel._id]
-          };
-          break;
-        }
+        var tasks = campaignBusiness.getAuthTasks(req.campaignOwner, req.query.attrs, req.query.result);
+
+        var owner = {
+          companies: req.campaignOwner.company ? [req.campaignOwner.company._id] : [],
+          teams: req.campaignOwner.teams ? req.campaignOwner.teams.map(function (team) { return team._id; }) : [],
+          users: req.campaignOwner.user ? [req.campaignOwner.user._id] : []
+        };
+
         var role = auth.getRole(req.user, owner);
         var allow = auth.auth(role, tasks);
         for (var task in allow) {
@@ -1270,15 +1335,14 @@ module.exports = function (app) {
       queryAndFormat: function (req, res, next) {
 
         campaignBusiness.queryAndFormat({
-          campaignTypes: req.campaignTypes,
           reqQuery: req.query,
-          targetModel: req.targetModel,
+          campaignOwner: req.campaignOwner,
           user: req.user
-        }, function (err, campaigns) {
+        }, function (err, data) {
           if (err) {
             return next(err);
           } else {
-            return res.send(campaigns);
+            return res.send(data);
           }
         });
       }

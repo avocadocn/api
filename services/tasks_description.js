@@ -318,6 +318,15 @@ var registeredTasks = {
     } else {
       return false;
     }
+  },
+
+  getUserComments: {
+    company: ['hr']
+  },
+
+  // 基本的部门操作：添加、修改、删除、任命管理员
+  operateDepartment: {
+    company: ['hr']
   }
 };
 

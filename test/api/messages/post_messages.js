@@ -99,6 +99,23 @@ module.exports = function () {
         });
     });
 
+    it('队长发队长间的活动私信', function (done) {
+      request.post('/messages')
+        .send({
+          type: 'private',
+          content: 'hi',
+          msgType: 'inProvokeLeaders',
+          campaignId: data[0].teams[0].campaigns[8].id
+        })
+        .set('x-access-token', accessToken)
+        .expect(200)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.msg.should.equal('发送成功');
+          done();
+        });
+    });
+
     it('hr可以发布活动公告', function (done) {
       request.post('/messages')
         .send({

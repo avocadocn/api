@@ -69,6 +69,7 @@ var UserSchema = new Schema({
     type: Boolean,
     default: false
   },
+  invited: Boolean, // 是否是通过hr发邀请来注册的
   //已不需要
   //是否填了公司验证码
   // invite_active:{
@@ -207,7 +208,7 @@ var UserSchema = new Schema({
     _id: Schema.Types.ObjectId,
     photo: String,
     nickname: String
-  },
+  }
   // reminds_clear_date: Date,
   // list_clear_date: Date // 上次清空提醒列表的时间
 });

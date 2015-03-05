@@ -157,15 +157,56 @@ exports.sendNewStaffActiveMail = function (email, uid, cid, host, callback) {
   });
 };
 
+exports.sendInvitedStaffActiveMail = function (email, host, data, callback) {
+  var inviteKey = data.inviteKey;
+  var uid = data.uid;
+  var cid = data.cid;
+  var cname = data.cname;
+
+  var from = '动梨<service@donler.com>';
+  var to = email;
+  var subject = '动梨账号激活';
+  var description = cname + '邀请您注册动梨，请点击下面的链接来激活帐户：';
+  var link = 'http://' + host + '/users/invite?key=' + inviteKey + '&uid=' + uid + '&cid=' + cid;
+
+  fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
+    if (err) throw err;
+    var fn = jade.compile(data);
+    var html = fn({
+      'title': '注册激活',
+      'host': siteProtocol + host,
+      'who': email,
+      'description': description,
+      'link': link
+    });
+    transport.sendMail({
+      from: from,
+      to: to,
+      subject: subject,
+      html: html
+    }, callback);
+  });
+};
+
 exports.sendFeedBackMail = function (email, content, callback) {
   var from = '动梨<service@donler.com>';
   var to = 'service@donler.com';
   var subject = '动梨用户反馈';
-  var content = '<p>' + content + '</p>' + '<p>来自--' + email + '</p>';
-  transport.sendMail({
-    from: from,
-    to: to,
-    subject: subject,
-    html: content
-  }, callback);
+  var description = content + '  (来自  ' + email + ')';
+
+  fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
+    if (err) throw err;
+    var fn = jade.compile(data);
+    var html = fn({
+      'title': '用户反馈',
+      'description': description,
+      'who': to
+    });
+    transport.sendMail({
+      from: from,
+      to: to,
+      subject: subject,
+      html: html
+    }, callback);
+  });
 };

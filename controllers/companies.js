@@ -11,7 +11,7 @@ var CompanyGroup = mongoose.model('CompanyGroup');
 var Department = mongoose.model('Department');
 var CompanyRegisterInviteCode = mongoose.model('CompanyRegisterInviteCode');
 var Campaign = mongoose.model('Campaign');
-
+var Report = mongoose.model('Report');
 var jwt = require('jsonwebtoken');
 var async = require('async');
 var moment = require('moment');
@@ -579,7 +579,16 @@ module.exports = function (app) {
         company.password = req.body.password;
       }
       if (req.body.domain) {
-        company.email.domain = req.body.domain.split(' ');
+        //去重，最多三个
+        var newDomain = req.body.domain.split(' ');
+        var sortedDomain = newDomain.sort();
+        var results = [];
+        for (var i = 0; i < sortedDomain.length; i++) {
+          if (sortedDomain[i + 1] !== sortedDomain[i]) {
+            results.push(sortedDomain[i]);
+          }
+        }
+        company.email.domain = results.slice(0,3);
       }
       if (req.body.province) {
         company.info.city.province = req.body.province;
@@ -692,8 +701,9 @@ module.exports = function (app) {
       var total = 5; // 统计5周数据
       var queryDateList = [];
       // 最近5周时间的查询分界点
+      var nowWeek = moment().isoWeek();
       for (var i = total - 1; i >= -1; i--) {
-        queryDateList.push(moment().isoWeek(0 - i).valueOf());
+        queryDateList.push(moment().isoWeek(nowWeek - i).day(0).valueOf());
       }
       // 生成查询条件
       var queryList = [];
@@ -708,6 +718,9 @@ module.exports = function (app) {
 
       var queryForBar = function () {
         // todo 这里需要查询10次数据库！需要改进
+        // 如果精通mongodb的管道操作，或许可以将查询次数变为一次，至少可以变为5次
+        // 统计数据绝对不适宜将数据全取出，即使是取文档的一小部分，然后通过js去计算，这样虽然只查询一次，但效率不高且不安全，尽管实际的公司活动和人次不会很多
+        // 查询只要没有上限，就是不安全的，故先采取查询10次的方法，这是安全的，尽管会增加数据库压力
         // 查询total * 2次数据库，获取统计数据
         async.map(queryList, function (query, mapCallback) {
 
@@ -778,7 +791,8 @@ module.exports = function (app) {
               chartsData: {
                 campaignCounts: campaignCounts,
                 memberCounts: memberCounts
-              }
+              },
+              splitDate: queryDateList
             });
           }
         });
@@ -862,7 +876,7 @@ module.exports = function (app) {
           if (err) {
             next(err);
           } else {
-            res.send({ chartsData: results });
+            res.send({ chartsData: results, splitDate: queryDateList });
           }
         });
       };
@@ -902,7 +916,34 @@ module.exports = function (app) {
           res.sendStatus(500);
         });
     },
-
+    getCompanyReportedMembers: function (req, res) {
+      Report.find({
+        host_type:'user',
+        'content_poster.cid': req.params.companyId,
+        status:'verifying',
+        hr_status:'verifying'
+      }).populate('content_poster.uid')
+      .exec()
+        .then(function (reports) {
+          var resUsers = [];
+          reports.forEach(function (report) {
+            var _user = {
+              _id:report.content_poster.uid._id,
+              username:report.content_poster.uid.username,
+              nickname:report.content_poster.uid.nickname
+            }
+            resUsers.push({
+              user: _user,
+              report_date: report.create_date
+            });
+          });
+          res.status(200).send(resUsers);
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
+    },
     getCompanyDepartments: function (req, res) {
       var option = {
         'company._id': req.params.companyId
@@ -981,7 +1022,7 @@ module.exports = function (app) {
           var token = jwt.sign({
             type: "company",
             id: company._id.toString(),
-            exp: app.get('tokenExpires')
+            exp: app.get('tokenExpires') + Date.now()
           }, app.get('tokenSecret'));
           company.addDevice(req.headers, token);
           company.save(function (err) {

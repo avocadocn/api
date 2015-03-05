@@ -44,19 +44,6 @@ module.exports = function () {
       testFormatRestTime('2015-01-01 6:00:00', '2015-01-01 6:01:05', '1分5秒');
     });
 
-    describe('getAuthTasks', function () {
-      it('一般情况应该返回getCampaigns', function () {
-        var tasks = campaignBusiness.getAuthTasks(['user', 'all'], 'app_card');
-        tasks.should.be.eql(['getCampaigns']);
-      });
-
-      it('获取日程中的活动应该返回getUserAllCampaignsForCalendar', function () {
-        var tasks = campaignBusiness.getAuthTasks(['user', 'all'], 'app_calendar');
-        tasks.should.be.eql(['getUserAllCampaignsForCalendar']);
-      });
-
-    });
-
 
   });
 }
