@@ -830,7 +830,7 @@ module.exports = function(app) {
      * 员工用户获取是否有新评论、新朋友圈内容&消息(包括最新消息人的头像)
      * @param  {Object} req:{query:{has_new:string}}
      * @return {
-     *           comments:boolean, 
+     *           comments:boolean, (2015/3/5 注释by M)
      *           reminds:{number:int, user:{photo:uri}},
      *           new_content:{has_new:boolean, user:{photo:uri}}
      *         }
@@ -848,23 +848,23 @@ module.exports = function(app) {
       if(reminds.number) {
         reminds.user = { photo: req.user.new_comment_user.photo };
       }
-      var comments = false;
-      var length = req.user.commentCampaigns.length;
-      for (var i = 0; i < length; i++) {
-        if (req.user.commentCampaigns[i].unread > 0) {
-          comments = true;
-          break;
-        }
-      }
-      if (!comments) {
-        var length = req.user.unjoinedCommentCampaigns.length;
-        for (var i = 0; i < length; i++) {
-          if (req.user.unjoinedCommentCampaigns[i].unread > 0) {
-            comments = true;
-            break;
-          }
-        }
-      }
+      // var comments = false;
+      // var length = req.user.commentCampaigns.length;
+      // for (var i = 0; i < length; i++) {
+      //   if (req.user.commentCampaigns[i].unread > 0) {
+      //     comments = true;
+      //     break;
+      //   }
+      // }
+      // if (!comments) {
+      //   var length = req.user.unjoinedCommentCampaigns.length;
+      //   for (var i = 0; i < length; i++) {
+      //     if (req.user.unjoinedCommentCampaigns[i].unread > 0) {
+      //       comments = true;
+      //       break;
+      //     }
+      //   }
+      // }
       var new_content = {has_new:req.user.has_new_content};//是否有新的同事圈内容
       if(new_content.has_new) {
         CircleContent.find({'cid':req.user.cid, 'status':'show'},{'post_user_id':1})
@@ -879,7 +879,7 @@ module.exports = function(app) {
               new_content.user = {photo: user.photo};
             }
             return res.status(200).send({
-              comments: comments,
+              // comments: comments,
               reminds: reminds,
               new_content: new_content
             });
@@ -888,14 +888,14 @@ module.exports = function(app) {
         .then(null, function (err) {
           log(err);
           return res.status(500).send({
-            comments: comments,
+            // comments: comments,
             reminds: reminds,
             new_content: new_content
           });
         });
       }else {
         return res.status(200).send({
-          comments: comments,
+          // comments: comments,
           reminds: reminds,
           new_content: new_content
         });

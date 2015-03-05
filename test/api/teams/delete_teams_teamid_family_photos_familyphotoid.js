@@ -56,7 +56,7 @@ module.exports = function() {
               .expect(200)
               .end(function (err, res) {
                 if (err) {
-                  console.log(res.body);
+                  // console.log(res.body);
                   cb(err);
                 }
                 tokens[j*2+1] = res.body.token;
