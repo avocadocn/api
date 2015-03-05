@@ -7,6 +7,7 @@ var mongoose = require('mongoose');
 var CircleContent = mongoose.model('CircleContent'),
   CircleComment = mongoose.model('CircleComment'),
   User = mongoose.model('User'),
+  Campaign = mongoose.model('Campaign'),
   async = require('async');
 var auth = require('../services/auth.js'),
   log = require('../services/error_log.js'),
@@ -29,7 +30,7 @@ module.exports = function(app) {
     getFormData: function(req, res, next) {
       if (req.user.provider === 'company') {
         return res.status(403).send({
-          msg: '公司账号暂无朋友圈功能'
+          msg: '公司账号暂无同事圈功能'
         });
       }
 
@@ -44,19 +45,58 @@ module.exports = function(app) {
           return res.sendStatus(500);
         }
         
-        // Send error when don't have content and images
+        // Send error(400) when don't have content and images
         if ((fields['content'] == undefined || !fields['content'][0]) && !files[fieldName]) {
-          return res.sendStatus(500);
+          return res.sendStatus(400);
         }
         
-        req.tid = (fields['tid'] && fields['tid'][0]) ? fields['tid'][0] : [];
+        // req.tid = (fields['tid'] && fields['tid'][0]) ? fields['tid'][0] : [];
         req.campaign_id = (fields['campaign_id'] && fields['campaign_id'][0]) ? fields['campaign_id'][0] : null;
         req.content = (fields['content'] && fields['content'][0]) ? fields['content'][0] : null;
-        
-        if (files[fieldName]) {
-          req.imgFiles = files[fieldName];
+
+        // send error(400) when campain_id is null
+        if (!req.campaign_id) {
+          return res.status(400).send({
+            msg: '参数错误'
+          });
         }
-        next();
+
+        // Judge authority
+        Campaign.findById(req.campaign_id).exec()
+          .then(function(campaign) {
+            if (!campaign) {
+              return res.status(400).send({
+                msg: '无此活动'
+              });
+            }
+            var role = auth.getRole(req.user, {
+              companies: campaign.cid,
+              teams: campaign.tid,
+              users: campaign.relativeMemberIds
+            });
+            var taskName = campaign.campaign_type == 1 ? 'publishCompanyCircle' : 'publishTeamCircle';
+            var allow = auth.auth(role, [taskName]);
+            if (!allow[taskName]) {
+              return res.status(403).send({
+                msg: '您没有权限发同事圈'
+              });
+            }
+            // set req.tid
+            req.tid = campaign.campaign_type == 1 ? [] : campaign.tid;
+            req.relative_cids = campaign.cid;
+
+            if (files[fieldName]) {
+              req.imgFiles = files[fieldName];
+            }
+            next();
+
+          })
+          .then(null, function(err) {
+            log(err);
+            return res.sendStatus(500);
+          })
+
+
       });
     },
     /**
@@ -137,6 +177,9 @@ module.exports = function(app) {
 
         // // 参与过评论的用户id(包括发消息用户id)
         // comment_users: comment_users
+        
+        // 参加同事圈消息所属的活动的所有公司id
+        relative_cids: req.relative_cids
       });
       
       circleContent.save(function(err) {
@@ -145,10 +188,12 @@ module.exports = function(app) {
           return res.sendStatus(500);
         } else {
           res.status(200).send({
-            msg: '同事圈消息发送成功'
+            // 'msg': '同事圈消息发送成功',
+            'circleContent': circleContent // this field is used for test 
           });
           //发新朋友圈的push 应该push给公司所有人
-          socketClient.pushCircleContent(req.user.getCid(), req.user);
+          // socketClient.pushCircleContent(req.user.getCid(), req.user);
+          
           // Update the relative user's have_new_content status(if true, not update
           // ; if false, update has_new_content and new_content_date)
           // TODO: update user(add conditions: active, provider)
@@ -201,11 +246,13 @@ module.exports = function(app) {
     getCircleContents: function(req, res) {
       if (req.user.provider === 'company') {
         return res.status(403).send({
-          msg: '公司账号暂无朋友圈功能'
+          msg: '公司账号暂无同事圈功能'
         });
       }
+      // TODO: think twice for this options
       var options = {
-        'cid': req.user.cid,
+        'relative_cids': req.user.cid,
+        // 'cid': req.user.cid,
         'status': 'show'
       };
 
@@ -225,7 +272,7 @@ module.exports = function(app) {
           if (!contents) {
             return res.status(404).send({
               msg: '未找到同事圈消息'
-            }); // 
+            });
           } else {
             async.map(contents, function(content, callback) {
                 var result = {};
@@ -279,7 +326,7 @@ module.exports = function(app) {
     getCircleContentById: function(req, res, next) {
       if (req.user.provider === 'company') {
         return res.status(403).send({
-          msg: '公司账号暂无朋友圈功能'
+          msg: '公司账号暂无同事圈功能'
         });
       }
 
@@ -369,20 +416,73 @@ module.exports = function(app) {
      * @return {[type]}     [description]
      */
     createCircleComment: function(req, res) {
+      // var judgeAppreciated = function(req, circleContent, callback) {
+      //   if(req.body.kind != 'appreciate')
+      //     callback(null, false);
+      //   if (req.user._id.toString() == circleContent.post_user_id.toString() && circleContent.appreciated == true) {
+      //     callback(null, true);
+      //   } else {
+      //     circleContent.comment_users.forEach(function(user) {
+      //       if (req.user._id.toString() == user._id.toString() && user.appreciated == true) {
+      //         callback(null, true)
+      //       }
+      //     });
+      //   }
+      //   callback(null, false)
+      // }
 
       var circleContent = req.circleContent;
 
       // Judge authority
-      var companies = [];
-      companies.push(circleContent.cid);
       var role = auth.getRole(req.user, {
-        companies: companies
+        companies: circleContent.relative_cids
       });
       var allow = auth.auth(role, ['createCircleComment']);
       if (!allow.createCircleComment) {
         return res.status(403).send({
           msg: '权限错误'
         });
+      }
+
+      /** 
+       * parameters limit:
+       * 1. is_only_to_content is not null(or undefined) and must be true or false(see definition)
+       * 2. kind must be 'comment' or 'appreciate'
+       * 3. content is null(or undefined) when kind is 'appreciate'
+       * 4. content is not null(or undefined) when kind is 'comment'
+       * 5. target_user_id is null(or undefined) when is_only_to_content is true
+       * 6. target_user_id is not null(or undefined) when is_only_to_content is false
+       */
+      if (!req.body.is_only_to_content || (req.body.kind != 'comment' && req.body.kind != 'appreciate') || (req.body.content && req.body.kind == 'appreciate') 
+        || (!req.body.content && req.body.kind == 'comment') || (req.body.is_only_to_content == true && req.body.target_user_id) || 
+        (req.body.is_only_to_content == false && !req.body.target_user_id))
+        return res.status(400).send({
+          msg: '参数错误'
+        });
+      
+      // judgeAppreciated(req, circleContent, function(err, result) {
+      //   if (result) {
+      //     return res.status(403).send({
+      //       msg: '已点赞'
+      //     });
+      //   }
+      // });
+      if (req.body.kind == 'appreciate') {
+        var isAppreciate = false;
+        if (req.user._id.toString() == circleContent.post_user_id.toString() && circleContent.appreciated == true) {
+          isAppreciate = true;
+        } else {
+          circleContent.comment_users.forEach(function(user) {
+            if (req.user._id.toString() == user._id.toString() && user.appreciated == true) {
+              isAppreciate = true;
+            }
+          });
+        }
+        if (isAppreciate) {
+          return res.status(403).send({
+            msg: '已点赞'
+          });
+        }
       }
 
       var relative_user = []; // the other commenters (exclude the current commenter) 
@@ -413,8 +513,12 @@ module.exports = function(app) {
       } else {
         var new_comment_user = {
           _id: req.user._id,
-          comment_num: 1
+          comment_num: 1,
+          appreciated: false
         };
+        if(req.body.kind == 'appreciate') {
+          new_comment_user.appreciated = true;
+        }
         circleContent.comment_users.forEach(function(user) {
           if (user._id.toString() == req.user._id.toString()) {
             new_comment_user.comment_num = user.comment_num + 1;
@@ -424,7 +528,7 @@ module.exports = function(app) {
         });
         comment_users.push(new_comment_user);
       }
-      
+
       var circleComment = new CircleComment({
         // 类型，评论或赞
         kind: req.body.kind,
@@ -446,18 +550,20 @@ module.exports = function(app) {
 
         relative_user: relative_user
       });
-      
+
       circleComment.save(function(err) {
         if (err) {
           log(err);
           return res.sendStatus(500);
         } else {
+          
           res.status(200).send({
-            msg: '评论或点赞成功'
+            // msg: '评论或点赞成功',
+            'circleComment': circleComment // the field is used for test
           });
 
-          socketClient.pushCircleComment(relative_user_ids, req.user.photo);
-          
+          // socketClient.pushCircleComment(relative_user_ids, req.user.photo);
+
           var new_comment_user = {
             _id: req.user._id,
             photo: req.user.photo,
@@ -482,14 +588,20 @@ module.exports = function(app) {
               log(err);
             }
           });
+
+          var options = {
+            'comment_users': comment_users
+          };
+
+          if(req.user._id.toString() == circleContent.post_user_id.toString() && req.body.kind == 'appreciate') {
+            options.appreciated = true;
+          }
           // Update the feild comment_users of CircleContent Schema
           CircleContent.findOneAndUpdate({
             _id: req.params.contentId,
             status: 'show'
-          }, {
-            comment_users: comment_users
-          }, function(err) {
-            if(err) {
+          }, options, function(err) {
+            if (err) {
               log(err);
             }
           });
@@ -518,7 +630,7 @@ module.exports = function(app) {
           return res.sendStatus(500);
         }
         if (!comment) {
-          return res.status(200).send({
+          return res.status(404).send({
             msg: '无法找到评论'
           });
         }
@@ -570,18 +682,24 @@ module.exports = function(app) {
               });
 
               // Update comment_users of circle content
-              // Reference: http://stackoverflow.com/questions/11184079/how-to-increment-mongodb-document-object-fields-inside-an-array
+              // Reference: http://stackoverflow.com/questions/11184079/how-to-increment-mongodb-document-object-fields-inside-an-arra
+              var options = {
+                $inc: {
+                  'comment_users.$.comment_num': -1
+                }
+              };
+              if (comment.kind == 'appreciate') {
+                options.$set = {
+                  'comment_users.$.appreciated': false
+                }
+              }
               CircleContent.update({
                   _id: comment.target_content_id,
                   'comment_users._id': req.user._id,
                   'comment_users.comment_num': {
                     $gte: 1
                   }
-                }, {
-                  $inc: {
-                    'comment_users.$.comment_num': -1
-                  }
-                },
+                }, options,
                 function(err) {
                   if (err) {
                     log(err);
@@ -591,7 +709,6 @@ module.exports = function(app) {
           });
       });
     },
-
     /**
      * 获取同事圈提醒
      * @param  {Object} req:{ query:{last_comment_date(optional):date ,limit:int} }

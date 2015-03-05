@@ -227,6 +227,16 @@ Campaign.virtual('members').get(function () {
   return members;
 });
 
+Campaign.virtual('relativeMemberIds').get(function () {
+  var relativeMemberIds = [];
+  this.campaign_unit.forEach(function (unit) {
+    unit.member.forEach(function(user){
+      relativeMemberIds.push(user._id);
+    })
+  });
+  return relativeMemberIds;
+});
+
 Campaign.virtual('isProvoke').get(function () {
   
   return [4,5,7,9].indexOf(this.campaign_type)>-1;
