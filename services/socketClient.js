@@ -42,7 +42,7 @@ exports.pushCircleContent = function (cid, poster) {
       for(var i=0; i<length; i++) {
         userIds.push(users[i]._id);
       }
-      socket.emit('circleContent', userIds, poster.photo);
+      socket.emit('circleContent', userIds, cid, poster);
     }
   });
 };
