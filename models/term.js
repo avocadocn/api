@@ -14,7 +14,8 @@ var Term = new Schema({
   content: String,   //描述
   status: {
     type: String,
-    enum: ['active', 'delete']
+    enum: ['active', 'delete'],
+    default: 'active'
   }
 });
 

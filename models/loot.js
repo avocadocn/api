@@ -18,7 +18,8 @@ var Loot = new Schema({
   status: {
     type: String,
     //可抢、被抢了、被关了、结束了没人抢到
-    enum: ['active', 'looted', 'closed', 'unlooted']
+    enum: ['active', 'looted', 'closed', 'unlooted'],
+    default: 'active'
   },
   looted_team: {  //哪个队抢到的
     type: Schema.Types.ObjectId,
