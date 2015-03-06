@@ -24,7 +24,12 @@ var Stadium = new Schema({
   group_type: String,
 
   // 简介
-  introduce: String
+  introduce: String,
+
+  status: {
+    type: String,
+    enum: ['active', 'delete']
+  }
 });
 
 mongoose.model('Stadium', Stadium);
