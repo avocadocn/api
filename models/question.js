@@ -9,8 +9,8 @@ var Question = new Schema({
   content: String, //问题内容
   answer: String, //问题答案
   status: {
-    type: string,
-    enum: ['active', 'delete']
+    type: String,
+    enum: ['active', 'delete'],
     default: 'active'
   }
 });

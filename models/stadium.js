@@ -17,6 +17,11 @@ var Stadium = new Schema({
       default: 'Point'
     },
     coordinates: [],
+    city: {//省市区
+      province: String,
+      city: String,
+      district: String
+    },
     name: String // 详细地址
   },
 
@@ -28,7 +33,8 @@ var Stadium = new Schema({
 
   status: {
     type: String,
-    enum: ['active', 'delete']
+    enum: ['active', 'delete'],
+    default: 'active'
   }
 });
 
