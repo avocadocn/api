@@ -13,6 +13,8 @@ var LootTeam = new Schema({
   // 参与争夺场地的成员
   loot_members: [{
     _id: Schema.Types.ObjectId,
+    photo: String,
+    nickname: String,
     is_success: Boolean // 是否争取成功
   }]
 
