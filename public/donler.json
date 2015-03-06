@@ -4154,20 +4154,9 @@
           {
             "name": "gid",
             "description": "小队类型",
-            "required": true,
+            "required": false,
             "type": "string",
             "in": "query"
-          },
-          {
-            "name": "rankType",
-            "description": "榜单类型,活跃度，积分",
-            "required": true,
-            "type": "string",
-            "in": "query",
-            "enum": [
-              "activity",
-              "score"
-            ]
           }
         ],
         "responses": {
@@ -4189,7 +4178,7 @@
         }
       }
     },
-    "/rank/{teamId}": {
+    "/rank/team/{teamId}": {
       "get": {
         "tags": [
           "rank"
@@ -4206,17 +4195,6 @@
             "required": true,
             "type": "string",
             "in": "path"
-          },
-          {
-            "name": "rankType",
-            "description": "榜单类型,活跃度，积分",
-            "required": true,
-            "type": "string",
-            "in": "query",
-            "enum": [
-              "activity",
-              "score"
-            ]
           }
         ],
         "responses": {
@@ -4226,6 +4204,47 @@
               "type": "array",
               "items": {
                 "$ref": "RankTeam"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/rank/company/{companyId}": {
+      "get": {
+        "tags": [
+          "rank"
+        ],
+        "summary": "获取公司所有小队的榜单",
+        "operationId": "getCompanyRank",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "description": "公司Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "RankTeam"
+                }
               }
             }
           },
@@ -6980,14 +6999,6 @@
         },
         "group_type": {
           "$ref": "RankGroupType"
-        },
-        "rank_type": {
-          "description": "榜单类型",
-          "type": "string",
-          "enum": [
-            "activity",
-            "score"
-          ]
         },
         "name": {
           "description": "榜单名称",
