@@ -38,7 +38,7 @@ var Comment = new Schema({
   },
   host_type:{
     type: String,
-    enum: ['message', 'album', 'campaign', 'competition', 'campaign_detail', 'photo', 'comment']
+    enum: ['message', 'album', 'campaign', 'competition', 'campaign_detail', 'photo', 'comment', 'competition_message']
   },
   //2014/10以后代码中不会有message、campaign_detail了～
   photos: [{
