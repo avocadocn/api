@@ -7,6 +7,7 @@ var log = require('../services/error_log.js');
 var Campaign = mongoose.model('Campaign');
 var CompanyGroup = mongoose.model('CompanyGroup');
 var donlerValidator = require('../services/donler_validator.js');
+var tools = require('../tools/tools.js');
 /**
  * 发送比分请求、接受比分的站内信
  * @param  {Object} req        request
@@ -319,6 +320,148 @@ module.exports = function (app) {
         });
       }
 
+    },
+    Vote : {
+      vote: function (req, res) {
+        donlerValidator({
+          tid: {
+            name: 'tid',
+            value: req.body.tid,
+            validators: ['required']
+          }
+        }, 'fast', function (pass, msg) {
+          if (pass) {
+            if(!mongoose.Types.ObjectId.isValid(req.params.componentId) || !mongoose.Types.ObjectId.isValid(req.body.tid)){
+              console.log(1);
+              return res.status(400).send({ msg: '参数错误' });
+            }
+            mongoose.model('Vote').findById(req.params.componentId).exec()
+            .then(function (vote) {
+              if (!vote) {
+                res.status(404).send({msg: '找不到该组件' });
+              } else {
+                CompanyGroup.findById(req.body.tid).exec()
+                .then(function (team) {
+                  if(team) {
+                    if(tools.arrayObjectIndexOf(team.member,req.user._id,'_id')>-1){
+                      var unitIndex = tools.arrayObjectIndexOf(vote.units,req.body.tid,'tid');
+                      if(unitIndex>-1) {
+                        var memberIndex = vote.units[unitIndex].positive_member.indexOf(req.user._id);
+                        if(memberIndex==-1) {
+                          vote.units[unitIndex].positive_member.push(req.user._id);
+                          vote.units[unitIndex].positive++;
+                          vote.save(function (err) {
+                            if(err) {
+                              log(err);
+                              return res.status(500).send({msg: err });
+                            }
+                            else{
+                              return res.send(vote);
+                            }
+                          });
+                        }
+                        else{
+                          return res.status(400).send({ msg: '您已经赞成过，无法继续赞成' });
+                        }
+                      }
+                      else{
+                        return res.status(400).send({ msg: '该小队不属于此组件' });
+                      }
+                    }
+                    else{
+                      return res.status(400).send({ msg: '您未参加该小队' });
+                    }
+                  }
+                  else{
+                    return res.status(400).send({ msg: '未找到该小队' });
+                  }
+                })
+                .then(null, function (err) {
+                  log(err);
+                  return res.status(500).send({msg: err });
+                });
+              }
+            })
+            .then(null, function (err) {
+              log(err);
+              return res.status(500).send({msg: err });
+            });
+          } else {
+            var resMsg = donlerValidator.combineMsg(msg);
+            return res.status(400).send({ msg: resMsg });
+          }
+        });
+      },
+      cancelVote: function (req, res) {
+        donlerValidator({
+          tid: {
+            name: 'tid',
+            value: req.body.tid,
+            validators: ['required']
+          }
+        }, 'fast', function (pass, msg) {
+          if (pass) {
+            if(!mongoose.Types.ObjectId.isValid(req.params.componentId)){
+              return res.status(400).send({ msg: '参数错误' });
+            }
+            mongoose.model('Vote').findById(req.params.componentId).exec()
+            .then(function (vote) {
+              if (!vote) {
+                res.status(404).send({msg: '找不到该组件' });
+              } else {
+                var unitIndex = tools.arrayObjectIndexOf(vote.units,req.body.tid,'tid');
+                if(unitIndex>-1) {
+                  var memberIndex = vote.units[unitIndex].positive_member.indexOf(req.user._id);
+                  if(memberIndex>-1) {
+                    vote.units[unitIndex].positive_member.splice(memberIndex,1);
+                    vote.units[unitIndex].positive--;
+                    vote.save(function (err) {
+                      if(err) {
+                        log(err);
+                        return res.status(500).send({msg: err });
+                      }
+                      else{
+                        return res.send(vote);
+                      }
+                    })
+                  }
+                  else {
+                    return res.status(400).send({ msg: '您未点过赞，无法取消' });
+                  }
+                }
+                else {
+                  return res.status(400).send({ msg: '该小队不属于此组件' });
+                }
+              }
+            })
+            .then(null, function (err) {
+              log(err);
+              return res.status(500).send({msg: err });
+            });
+          } else {
+            var resMsg = donlerValidator.combineMsg(msg);
+            return res.status(400).send({ msg: resMsg });
+          }
+        });
+      },
+      getVote: function (req, res) {
+        mongoose.model('Vote').findById(req.params.componentId).exec()
+        .then(function (vote) {
+          if (!vote) {
+            res.status(404).send({msg: '找不到该组件' });
+          } else {
+            res.send(vote);
+          }
+        })
+        .then(null, function (err) {
+          log(err);
+          return res.status(500).send({msg: err });
+        });
+      }
+
     }
   }
 }
+
+
+

@@ -2479,6 +2479,125 @@
         }
       }
     },
+    "/components/Vote/{componentId}": {
+      "post": {
+        "tags": [
+          "components"
+        ],
+        "summary": "投赞成票",
+        "operationId": "vote",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "componentId",
+            "description": "组件 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "小队Id",
+            "required": true,
+            "schema": {
+              "$ref": "VoteData"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "Vote"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "components"
+        ],
+        "summary": "取消赞成票",
+        "operationId": "cancelVote",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "componentId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "tid",
+            "description": "小队Id",
+            "required": true,
+            "schema": {
+              "$ref": "VoteData"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "Vote"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "components"
+        ],
+        "summary": "获取投票信息",
+        "operationId": "getVote",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "componentId",
+            "description": "活动 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "Vote"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/timeline/record/{requestType}/{requestId}": {
       "get": {
         "tags": [
@@ -7067,6 +7186,60 @@
         },
         "team": {
           "$ref": "RankTeam"
+        }
+      }
+    },
+    "VoteUnit": {
+      "title": "VoteUnit",
+      "type": "object",
+      "properties": {
+        "tid": {
+          "description": "小队Id",
+          "type": "string"
+        },
+        "positive": {
+          "description": "赞成数",
+          "type": "integer",
+          "format": "int32"
+        },
+        "positive_member": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Vote": {
+      "title": "Vote",
+      "type": "object",
+      "properties": {
+        "host_id": {
+          "description": "主题Id",
+          "type": "string"
+        },
+        "host_type": {
+          "description": "主体类型",
+          "type": "string",
+          "enum": [
+            "campaign"
+          ]
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "$ref": "VoteUnit"
+          }
+        }
+      }
+    },
+    "VoteData": {
+      "title": "VoteData",
+      "type": "object",
+      "properties": {
+        "tid": {
+          "description": "小队Id",
+          "type": "string"
         }
       }
     }
