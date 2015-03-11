@@ -309,7 +309,7 @@ module.exports = function (app) {
       CompanyGroup
         .find(req.options, req.outputOptions)
         .populate('poster._id')
-        .sort('-score.total')
+        .sort('-score_rank.score -score.total')
         .exec()
         .then(function (companyGroups) {
           var formatCompanyGroups = [];
@@ -361,7 +361,8 @@ module.exports = function (app) {
               familyPhotos: familyPhotos,
               lastCampaign: companyGroups[i].last_campaign,
               score: companyGroups[i].score,
-              officialTeam: companyGroups[i].poster.role=='Personal' ? false : true
+              officialTeam: companyGroups[i].poster.role=='Personal' ? false : true,
+              score_rank: companyGroups[i].score_rank
             };
             if(role.company=='hr'){
               briefTeam.count = companyGroups[i].count;

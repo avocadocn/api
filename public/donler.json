@@ -4154,7 +4154,7 @@
           {
             "name": "gid",
             "description": "小队类型",
-            "required": false,
+            "required": true,
             "type": "string",
             "in": "query"
           }
