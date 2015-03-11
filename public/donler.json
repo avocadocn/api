@@ -4147,7 +4147,7 @@
           {
             "name": "city",
             "description": "城市",
-            "required": true,
+            "required": false,
             "type": "string",
             "in": "query"
           },
@@ -4163,10 +4163,7 @@
           "200": {
             "description": "成功",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "Rank"
-              }
+              "$ref": "RankResult"
             }
           },
           "default": {
@@ -4216,24 +4213,15 @@
         }
       }
     },
-    "/rank/company/{companyId}": {
+    "/rank/user": {
       "get": {
         "tags": [
           "rank"
         ],
-        "summary": "获取公司所有小队的榜单",
-        "operationId": "getCompanyRank",
+        "summary": "获取个人所有参加的小队的榜单",
+        "operationId": "getUserTeamRank",
         "consumes": [
           "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "companyId",
-            "description": "公司Id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          }
         ],
         "responses": {
           "200": {
@@ -4241,10 +4229,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "type": "array",
-                "items": {
-                  "$ref": "RankTeam"
-                }
+                "$ref": "RankTeamList"
               }
             }
           },
@@ -6982,6 +6967,10 @@
         "score": {
           "description": "小队分数",
           "type": "string"
+        },
+        "activity_score": {
+          "description": "小队活跃度",
+          "type": "string"
         }
       }
     },
@@ -7022,6 +7011,36 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "RankResult": {
+      "title": "RankResult",
+      "type": "object",
+      "properties": {
+        "rank": {
+          "$ref": "Rank"
+        },
+        "team": {
+          "type": "array",
+          "items": {
+            "$ref": "RankTeam"
+          }
+        }
+      }
+    },
+    "RankTeamList": {
+      "title": "RankTeamList",
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "RankTeam"
+          }
+        },
+        "team": {
+          "$ref": "RankTeam"
         }
       }
     }

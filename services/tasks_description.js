@@ -332,6 +332,10 @@ var registeredTasks = {
   // 获取讨论组列表
   getChatRooms: {
     company: ['member']
+  },
+  // 获取小组的排行榜信息
+  getTeamRank: {
+    company: ['member']
   }
 };
 

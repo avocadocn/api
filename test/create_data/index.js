@@ -4,7 +4,7 @@ var util = require('util');
 
 var common = require('../support/common');
 var mongoose = common.mongoose;
-
+var schedule = require('../../services/schedule.js');
 var async = require('async');
 
 var createCompanies = require('./create_companies.js');
@@ -170,6 +170,7 @@ exports.createData = function (callback) {
         resCompanyDataList = companyDataList;
         console.log('成功生成所有测试数据');
         callback();
+        schedule.teamPoint();
       });
     });
 

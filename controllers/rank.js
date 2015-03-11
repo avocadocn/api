@@ -8,7 +8,8 @@ var Rank = mongoose.model('Rank'),
     CompanyGroup = mongoose.model('CompanyGroup');
 var async = require('async');
 var log = require('../services/error_log.js'),
-    donlerValidator = require('../services/donler_validator.js');
+    donlerValidator = require('../services/donler_validator.js'),
+    auth = require('../services/auth.js');
 var timeLimit = 7 * 24 * 60 * 60 * 1000;
 var forwardTeamNum = 2;
 var backwardTeamNum = 2;
@@ -78,6 +79,13 @@ module.exports = function (app) {
     },
     getTeamRank: function (req, res) {
       var team = req.companyGroup;
+      var role = auth.getRole(req.user, {
+        companies:[team.cid]
+      });
+      var allow = auth.auth(role,['getTeamRank']);
+      if(!allow.getTeamRank) {
+        return res.status(403).send({msg: '权限错误'});
+      }
       var option ={
         'city.province':unescape(team.city.province),
         'city.city':unescape(team.city.city),
@@ -141,7 +149,7 @@ module.exports = function (app) {
       });
     },
     getUserTeamRank: function (req, res) {
-      CompanyGroup.find({'member._id':req.user._id,gid:{$ne:'0'}},{city: 1, gid:1, score_rank:1})
+      CompanyGroup.find({'member._id':req.user._id,gid:{$ne:'0'}},{city: 1, gid:1,score: 1, score_rank:1,name: 1,logo: 1})
       .sort('-score_rank.score -score.total')
       .exec()
       .then(function (teams) {
@@ -176,40 +184,6 @@ module.exports = function (app) {
               } else {
                 res.send(results);
               }
-          });
-        }
-      })
-      .then(null, function (err) {
-        log(err);
-        res.sendStatus(500);
-      });
-    },
-    getUserFirstTeamRank: function (req, res) {
-      CompanyGroup.findOne({_id:req.user.team[0]._id},{city: 1,gid: 1,score_rank:1})
-      .exec()
-      .then(function (team) {
-        if (!team) {
-          res.status(400).send({ msg: '没有找到对应的小队' });
-        } else {
-          var option ={
-            'city.province':unescape(team.city.province),
-            'city.city':unescape(team.city.city),
-            'gid':team.gid,
-            'score_rank.rank':{
-              '$lte' : team.score_rank.rank + backwardTeamNum,
-              '$gte' : team.score_rank.rank - forwardTeamNum
-            }
-          }
-          CompanyGroup.find(option,{score: 1,score_rank: 1,name: 1,logo: 1,gid:1})
-          .sort('score_rank.rank')
-          .limit(rankTeamNum)
-          .exec(function (err, _team) {
-            if( err ) {
-              log(err)
-              res.sendStatus(500);
-            } else {
-              res.send({list:_team,team:team});
-            }
           });
         }
       })

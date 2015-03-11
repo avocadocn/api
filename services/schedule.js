@@ -14,7 +14,7 @@ var winScore =3;
 var tieScore = 1;
 var loseScore = 0;
 //统计所有小组的活动数、人员参与数、评论数、照片从而得出分数
-var teamPoint = function(){
+var teamPoint = exports.teamPoint =function(){
   var now = new Date()
   // CompanyGroup.find({'active':true}).populate('photo_album_list').exec(function(err,teams){
   //   if(err){
