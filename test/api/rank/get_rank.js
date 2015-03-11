@@ -36,7 +36,7 @@ module.exports = function () {
 
       request.get('/rank')
         .set('x-access-token', accessToken)
-        .query({province:data[0].model.city.province,city:data[0].model.city.city,gid:7})
+        .query({province:data[0].model.info.city.province,city:data[0].model.info.city.city,gid:7})
         .expect(200)
         .end(function (err, res) {
           if (err) {
@@ -56,8 +56,8 @@ module.exports = function () {
 
       request.get('/rank')
         .set('x-access-token', accessToken)
-        .query({province:data[0].model.city.province,city:data[0].model.city.city})
-        .expect(200)
+        .query({province:data[0].model.info.city.province,city:data[0].model.info.city.city})
+        .expect(400)
         .end(function (err, res) {
           if (err) {
             console.log(res.body);

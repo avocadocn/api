@@ -41,7 +41,7 @@ module.exports = function () {
           }
           res.body.should.be.an.Array;
           res.body[0].should.have.property('list');
-          res.body[0].should.have.property('name');
+          res.body[0].should.have.property('team');
           done();
         });
     });
