@@ -14,7 +14,7 @@ var winScore =3;
 var tieScore = 1;
 var loseScore = 0;
 //统计所有小组的活动数、人员参与数、评论数、照片从而得出分数
-var teamPoint = function(){
+var teamPoint = exports.teamPoint =function(){
   var now = new Date()
   // CompanyGroup.find({'active':true}).populate('photo_album_list').exec(function(err,teams){
   //   if(err){
@@ -203,78 +203,39 @@ var teamPoint = function(){
             groups.forEach(function(group){
               //虚拟组不计算
               if(group._id!="0"){
-                CompanyGroup.find({'city.province':region.name,'city.city': city.name,gid:group._id}).sort('-score.total').exec(function (err,teams) {
+                CompanyGroup.find({'city.province':region.name,'city.city': city.name,gid:group._id}).sort('-score_rank.score -score.total').exec(function (err,teams) {
                 
-                  var activityRank = new Rank();
-                  activityRank.rank_type = 'activity';
-                  activityRank.group_type ={
+                  var rank = new Rank();
+                  rank.group_type ={
                     _id:group._id,
                     name:group.group_type
                   }
-                  activityRank.city = {
+                  rank.city = {
                     province: region.name,
                     city: city.name
                   }
                   teams.forEach(function (team,index) {
                     team.score.rank = index+1;
                     if(index<10){
-                      activityRank.team.push({
+                      rank.team.push({
                         _id: team._id,
                         cid: team.cid,
                         name: team.name,
                         logo: team.logo,
-                        score: team.score.total,
+                        activity_score: team.score.total,
+                        score: team.score_rank.score,
                         rank: index+1
                       })
                     }
                   });
 
-                  if(activityRank.team.length>0){
-                    activityRank.save(function (err) {
+                  if(rank.team.length>0){
+                    rank.save(function (err) {
                       if(err){
                         log(err)
                       }
                     })
                   }
-                  teams.sort(function (first,last) {
-                    return first.score_rank.score-first.score_rank.score;
-                  })
-                  var scoreRank = new Rank();
-                  scoreRank.rank_type = 'score';
-                  scoreRank.group_type ={
-                    _id:group._id,
-                    name:group.group_type
-                  }
-                  scoreRank.city = {
-                    province: region.name,
-                    city: city.name
-                  }
-                  teams.forEach(function (team,index) {
-                    team.score_rank.rank = index+1;
-                    if(index<10){
-                      scoreRank.team.push({
-                        _id: team._id,
-                        cid: team.cid,
-                        name: team.name,
-                        logo: team.logo,
-                        score: team.score_rank.score,
-                        rank: index+1
-                      });
-                    }
-                    team.save(function (err) {
-                      if(err){
-                        log(err);
-                      }
-                    })
-                  });
-                  if(scoreRank.team.length>0){
-                    scoreRank.save(function (err) {
-                      if(err){
-                        log(err)
-                      }
-                    });
-                  }
-
                 });
               }
 
@@ -299,6 +260,6 @@ exports.init = function(){
   var teamPointSchedule = schedule.scheduleJob(teamPointRule, function(){
     teamPoint();
   });
-  teamPoint();
+  // teamPoint();
 };
 

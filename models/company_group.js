@@ -123,11 +123,6 @@ var CompanyGroup = new Schema({
             type: Number,
             default: 0
         },
-        //活跃度排名
-        rank:{
-            type: Number,
-            default: 0
-        }
     },
     photo_album_list: [{
         type: Schema.Types.ObjectId,

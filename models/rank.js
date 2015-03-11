@@ -7,13 +7,14 @@ var _team = new Schema({
   cid:Schema.Types.ObjectId,
   name: String,
   logo: String,
+  activity_score: Number,
   score: Number,
   rank: Number
 });
 
 var Rank = new Schema({
   create_date: {
-    type:Date,
+    type: Date,
     default: Date.now
   },
   city: {
@@ -23,10 +24,6 @@ var Rank = new Schema({
   group_type:{
     _id:String,
     name:String
-  },
-  rank_type:{
-    type: String,
-    enum: ['activity', 'score']
   },
   name: String,
   team: [_team]

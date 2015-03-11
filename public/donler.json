@@ -4169,7 +4169,7 @@
           {
             "name": "city",
             "description": "城市",
-            "required": true,
+            "required": false,
             "type": "string",
             "in": "query"
           },
@@ -4179,27 +4179,13 @@
             "required": true,
             "type": "string",
             "in": "query"
-          },
-          {
-            "name": "rankType",
-            "description": "榜单类型,活跃度，积分",
-            "required": true,
-            "type": "string",
-            "in": "query",
-            "enum": [
-              "activity",
-              "score"
-            ]
           }
         ],
         "responses": {
           "200": {
             "description": "成功",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "Rank"
-              }
+              "$ref": "RankResult"
             }
           },
           "default": {
@@ -4211,7 +4197,7 @@
         }
       }
     },
-    "/rank/{teamId}": {
+    "/rank/team/{teamId}": {
       "get": {
         "tags": [
           "rank"
@@ -4228,17 +4214,6 @@
             "required": true,
             "type": "string",
             "in": "path"
-          },
-          {
-            "name": "rankType",
-            "description": "榜单类型,活跃度，积分",
-            "required": true,
-            "type": "string",
-            "in": "query",
-            "enum": [
-              "activity",
-              "score"
-            ]
           }
         ],
         "responses": {
@@ -4248,6 +4223,35 @@
               "type": "array",
               "items": {
                 "$ref": "RankTeam"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/rank/user": {
+      "get": {
+        "tags": [
+          "rank"
+        ],
+        "summary": "获取个人所有参加的小队的榜单",
+        "operationId": "getUserTeamRank",
+        "consumes": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "RankTeamList"
               }
             }
           },
@@ -6989,6 +6993,10 @@
         "score": {
           "description": "小队分数",
           "type": "string"
+        },
+        "activity_score": {
+          "description": "小队活跃度",
+          "type": "string"
         }
       }
     },
@@ -7006,14 +7014,6 @@
         },
         "group_type": {
           "$ref": "RankGroupType"
-        },
-        "rank_type": {
-          "description": "榜单类型",
-          "type": "string",
-          "enum": [
-            "activity",
-            "score"
-          ]
         },
         "name": {
           "description": "榜单名称",
@@ -7037,6 +7037,36 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "RankResult": {
+      "title": "RankResult",
+      "type": "object",
+      "properties": {
+        "rank": {
+          "$ref": "Rank"
+        },
+        "team": {
+          "type": "array",
+          "items": {
+            "$ref": "RankTeam"
+          }
+        }
+      }
+    },
+    "RankTeamList": {
+      "title": "RankTeamList",
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "RankTeam"
+          }
+        },
+        "team": {
+          "$ref": "RankTeam"
         }
       }
     }
