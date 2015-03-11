@@ -194,24 +194,25 @@ var UserSchema = new Schema({
   campaignCount: Number,
 
   // 有没有同事发新消息, 如果已经为true了再有新消息，则不要再写入更新，在查询时设置条件过滤
-  has_new_content: {
-    type: Boolean,
-    default: false
-  },
+  // has_new_content: {
+  //   type: Boolean,
+  //   default: false
+  // },
 
   // new_content_date: Date, //所有未读新消息中最早的时间
 
-  new_comment_num: {
-    type: Number,
-    default: 0
-  },
+  // new_comment_num: {
+  //   type: Number,
+  //   default: 0
+  // },
 
   // 发赞或评论的用户
-  new_comment_user: {
-    _id: Schema.Types.ObjectId,
-    photo: String,
-    nickname: String
-  }
+  // new_comment_user: {
+  //   _id: Schema.Types.ObjectId,
+  //   photo: String,
+  //   nickname: String
+  // }
+  
   // reminds_clear_date: Date,
   // list_clear_date: Date // 上次清空提醒列表的时间
 });

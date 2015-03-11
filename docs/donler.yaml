@@ -2196,14 +2196,21 @@ paths:
             $ref: Error
         "200":
           description: 成功
+  /circle/company:
     get:
       tags:
         - circles
-      summary: 获取同事圈内容
-      operationId: getCircleContents
+      summary: 获取公司同事圈内容
+      operationId: getCompanyCircle
       parameters:
-        - name: last_comment_date
-          description: 上一条评论的评论时间
+        - name: latest_content_date
+          description: 最新一个消息发布时间
+          required: false
+          type: string
+          format: date-time
+          in: query
+        - name: last_content_date
+          description: 最后一个消息发布时间
           required: false
           type: string
           format: date-time
@@ -2213,6 +2220,52 @@ paths:
           required: false
           type: number
           in: query
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: ResCircle
+  /circle/campaign/{campaignId}:
+    get:
+      tags:
+        - circles
+      summary: 获取活动同事圈内容
+      operationId: getCampaignCircle
+      parameters:
+        - name: campaignId
+          description: 活动id
+          required: true
+          type: string
+          in: path
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: ResCircle
+  /circle/team/{teamId}:
+    get:
+      tags:
+        - circles
+      summary: 获取小队同事圈内容
+      operationId: getCampaignCircle
+      parameters:
+        - name: teamId
+          description: 小队id
+          required: true
+          type: string
+          in: path
       responses:
         default:
           description: error
@@ -2268,7 +2321,7 @@ paths:
             $ref: Error
         "200":
           description: 成功
-  /circle_contents/{contentId}/comments/{commentId}:
+  /circle_comments/{commentId}:
     delete:
       tags:
         - circles
@@ -2292,27 +2345,27 @@ paths:
             $ref: Error
         "200":
           description: 成功
-  /circle_reminds:
-    get:
-      tags:
-        - circles
-      summary: 获取是否有新评论、新朋友圈内容、消息(包括最新消息人的头像)
-      operationId: getReminds
-      parameters:
-        - name: has_new
-          description: 标明是否获取是否有新消息
-          required: true
-          type: boolean
-          in: query
-      responses:
-        default:
-          description: error
-          schema:
-            $ref: Error
-        "200":
-          description: 成功
-          schema:
-            $ref: NewReminds
+  # /circle_reminds:
+  #   get:
+  #     tags:
+  #       - circles
+  #     summary: 获取是否有新评论、新朋友圈内容、消息(包括最新消息人的头像)
+  #     operationId: getReminds
+  #     parameters:
+  #       - name: has_new
+  #         description: 标明是否获取是否有新消息
+  #         required: true
+  #         type: boolean
+  #         in: query
+  #     responses:
+  #       default:
+  #         description: error
+  #         schema:
+  #           $ref: Error
+  #       "200":
+  #         description: 成功
+  #         schema:
+  #           $ref: NewReminds
   /circle_reminds/comments:
     get:
       tags:
@@ -2322,16 +2375,17 @@ paths:
       consumes:
         - application/json
       parameters:
-        - name: last_comment_date
-          description: 上一条评论的评论时间
+        - name: latest_content_date
+          description: 最新消息的发布时间
           required: false
           type: string
           format: date-time
           in: query
-        - name: limit
-          description: 数量限制
+        - name: last_comment_date
+          description: 上一次查询评论的时间
           required: false
-          type: number
+          type: string
+          format: date-time
           in: query
       responses:
         default:
@@ -2344,24 +2398,24 @@ paths:
             type: array
             items:
               $ref: CircleCommentRespond
-    delete:
-      tags:
-        - circles
-      summary: 删除消息列表
-      operationId: deleteCircleComment
-      parameters:
-        - name: commentId
-          description: 评论id(若无，则删除列表所有消息)
-          required: false
-          type: string
-          in: query
-      responses:
-        default:
-          description: error
-          schema:
-            $ref: Error
-        "200":
-          description: 成功
+    # delete:
+    #   tags:
+    #     - circles
+    #   summary: 删除消息列表
+    #   operationId: deleteCircleComment
+    #   parameters:
+    #     - name: commentId
+    #       description: 评论id(若无，则删除列表所有消息)
+    #       required: false
+    #       type: string
+    #       in: query
+    #   responses:
+    #     default:
+    #       description: error
+    #       schema:
+    #         $ref: Error
+    #     "200":
+    #       description: 成功
 
   /messages:
     post:
@@ -4575,11 +4629,14 @@ definitions:
     title: ResCircle
     required:
       - CircleContent
+      - photo
       - comments
     properties:
       CircleContent:
         type: CircleContent
         description: 消息相关信息
+      photo:
+        type: string
       comments:
         type: array
         description: 消息相关评论数组

@@ -55,13 +55,19 @@ var CircleContent = new Schema({
     required: true,
     default: 'show'
   },
-  // 发布者是否点赞
-  appreciated: {
-    type: Boolean,
-    default: false,
+  // // 发布者是否点赞
+  // appreciated: {
+  //   type: Boolean,
+  //   default: false,
+  //   required: true
+  // },
+  // 最新评论时间
+  latest_comment_date: {
+    type: Date,
+    default: Date.now,
     required: true
   },
-  comment_users: [user], // 参与过评论的用户id(除消息发布者)
+  comment_users: [user], // 参与过评论的用户
   relative_cids: [Schema.Types.ObjectId] // 参加同事圈消息所属的活动的所有公司id
 });
 

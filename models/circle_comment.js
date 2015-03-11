@@ -2,18 +2,18 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var user = {
-  _id: {
-    type: Schema.Types.ObjectId,
-    required: true
-  },
-  // 评论消息列表显示状态
-  list_status: {
-    type: String,
-    enum: ['show', 'delete'],
-    default: 'show'
-  }
-};
+// var user = {
+//   _id: {
+//     type: Schema.Types.ObjectId,
+//     required: true
+//   },
+//   // 评论消息列表显示状态
+//   list_status: {
+//     type: String,
+//     enum: ['show', 'delete'],
+//     default: 'show'
+//   }
+// };
 
 var CircleComment = new Schema({
 
@@ -64,7 +64,7 @@ var CircleComment = new Schema({
     default: 'show'
   },
   // 与该评论相关的用户集合
-  relative_user: [user]
+  // relative_user: [user]
 });
 
 mongoose.model('CircleComment', CircleComment);
