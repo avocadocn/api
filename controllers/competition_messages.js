@@ -19,7 +19,7 @@ module.exports = function (app) {
             callback(false, '挑战小队数据错误');
           }
           else {
-            if(teams[0].gid===teams[1].gid || teams[0].cid===teams[1].cid)
+            if(teams[0].gid===teams[1].gid || teams[0].cid.toString()===teams[1].cid.toString())
               callback(true);
             else
               callback(false, '挑战小队数据错误');
@@ -98,12 +98,21 @@ module.exports = function (app) {
     getMessages: {
       filter: function (req, res, next) {
         var options = {};
+        if(req.user.provider==='company') {
+          return res.status(403).send({msg:'权限错误'});
+        }
         //有此参数则代表看小队发出的
-        if(req.query.sponsor) {
+        else if(req.query.sponsor) {
+          if(!req.user.isTeamMember(req.query.sponsor)) {
+            return res.status(403).send({msg:'权限错误'});
+          }
           options.sponsor_team = req.query.sponsor;
         }
         //有此参数则代表看小队收到的
         else if(req.query.opposite) {
+          if(!req.user.isTeamMember(req.query.opposite)) {
+            return res.status(403).send({msg:'权限错误'});
+          }
           options.opposite_team = req.query.opposite;
         }
         else {
