@@ -2,7 +2,8 @@
 
 var mongoose = require('mongoose');
 var CompetitionMessage = mongoose.model('CompetitionMessage'),
-    CompanyGroup = mongoose.model('CompanyGroup');
+    CompanyGroup = mongoose.model('CompanyGroup'),
+    Vote = mongoose.model('Vote');
 var donlerValidator = require('../services/donler_validator.js'),
     log = require('../services/error_log.js');
 
@@ -74,6 +75,7 @@ module.exports = function (app) {
         competition_type: req.body.type,
         content: req.body.content
       });
+
       message.save(function(err) {
         if(err) {
           log(err);

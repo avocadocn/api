@@ -21,8 +21,8 @@ var Vote = new Schema({
   host_id: Schema.Types.ObjectId, //主体id,如挑战信等
   host_type: {                    //主体类型
     type: String,
-    enum: ['campaign'],
-    default: 'campaign'
+    enum: ['Campaign', 'CompetitionMessage'],
+    default: 'CompetitionMessage'
   },
   units: [unit]
 
@@ -40,7 +40,7 @@ Vote.statics = {
     var playingTeams = [];
     switch (modelName) {
       case 'Campaign':
-        var host_type = 'campaign';
+        var host_type = 'Campaign';
         var host_id = host._id;
         var _units = [];
         host.campaign_unit.forEach(function(_campaignUnit, index){

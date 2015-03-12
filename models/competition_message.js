@@ -32,7 +32,11 @@ var CompetitionMessage = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Campaign'
   },
-  content: String   //挑战词
+  content: String,  //挑战词
+  vote: {
+    type: Schema.Types.ObjectId,
+    ref: 'Vote'
+  }
 
 });
 
