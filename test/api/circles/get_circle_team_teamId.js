@@ -10,13 +10,14 @@ module.exports = function() {
   var data, userToken, userToken1, hrToken;
   var circleContentIds = [];
   var circleCommentIds = [];
+
   before(function(done) {
     data = dataService.getData();
     async.series([
       function(callback) {
         async.parallel([
           function(callback) {
-            var user = data[0].users[0];
+            var user = data[2].users[0];
             request.post('/users/login')
               .send({
                 email: user.email,
@@ -33,7 +34,7 @@ module.exports = function() {
               });
           },
           function(callback) {
-            var user = data[0].users[1];
+            var user = data[0].users[0];
             request.post('/users/login')
               .send({
                 email: user.email,
@@ -50,7 +51,7 @@ module.exports = function() {
               });
           },
           function(callback) {
-            var company = data[0].model;
+            var company = data[2].model;
             request.post('/companies/login')
               .send({
                 username: company.username,
@@ -84,22 +85,22 @@ module.exports = function() {
             pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
           }));
         }
-
         async.map(contents, function(content, callback) {
           request.post('/circle_contents')
             .field(
               'content', content
             )
             .field(
-              'campaign_id', data[0].teams[0].campaigns[0]._id.toString()
+              'campaign_id', data[2].teams[0].campaigns[0]._id.toString()
             )
             .set('x-access-token', userToken)
             .expect(200)
             .end(function(err, res) {
+              if(err) console.log(err);
               circleContentIds.push(res.body.circleContent._id.toString());
               callback();
             })
-
+          
         }, function(err, results) {
           if (err) {
             callback(err);
@@ -121,7 +122,7 @@ module.exports = function() {
         async.map(comments, function(comment, callback) {
           request.post('/circle_contents/' + circleContentIds[0] + '/comments')
             .send(comment)
-            .set('x-access-token', userToken1)
+            .set('x-access-token', userToken)
             .expect(200)
             .end(function(err, res) {
               circleCommentIds.push(res.body.circleComment._id.toString());
@@ -138,13 +139,10 @@ module.exports = function() {
     });
   })
 
-  describe('delete /circle_reminds/comments', function() {
+  describe('get /circle/team/:teamId', function() {
     describe('本公司成员', function() {
-      it('本公司用户应能删除消息列表中的指定消息', function(done) {
-        request.delete('/circle_reminds/comments')
-          .query({
-            commentId: circleCommentIds[0]
-          })
+      it('用户应能获取所参加小队同事圈', function(done) {
+        request.get('/circle/team/' + data[2].teams[0].model._id.toString())
           .set('x-access-token', userToken)
           .expect(200)
           .end(function(err, res) {
@@ -153,20 +151,19 @@ module.exports = function() {
           })
       });
 
-      it('本公司用户应能删除消息列表', function(done) {
-        request.delete('/circle_reminds/comments')
-          .set('x-access-token', userToken)
-          .expect(200)
+      it('用户应不能获取未参加小队同事圈', function(done) {
+        request.get('/circle/team/' + data[2].teams[0].model._id.toString())
+          .set('x-access-token', userToken1)
+          .expect(403)
           .end(function(err, res) {
             if (err) return done(err);
             done();
           })
       });
-
     });
     describe('hr', function() {
-      it('hr没有删除消息列表功能', function(done) {
-        request.delete('/circle_reminds/comments')
+      it('hr应不能获取小队同事圈', function(done) {
+        request.get('/circle/team/' + data[2].teams[0].model._id.toString())
           .set('x-access-token', hrToken)
           .expect(403)
           .end(function(err, res) {

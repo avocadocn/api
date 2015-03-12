@@ -370,7 +370,18 @@ module.exports = function(app) {
           msg: '公司账号暂无同事圈功能'
         });
       }
-      // TODO: think conditions twice and set date conditions
+      var isTeamMember = false;
+      for(var i = 0; i < req.user.team.length; i++) {
+        if(req.user.team[i]._id.toString() == req.params.teamId) {
+          isTeamMember = true;
+        }
+      }
+      if (!isTeamMember) {
+        return res.status(403).send({
+          msg: '权限错误'
+        });
+      }
+      // TODO: think conditions twice. For example: set limit conditions; judge the team users
       var conditions = {
         'tid': req.params.teamId,
         'status': 'show'

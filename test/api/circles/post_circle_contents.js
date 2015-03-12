@@ -75,7 +75,7 @@ module.exports = function() {
 
   describe('post /circle_contents', function() {
     describe('本公司成员', function() {
-      it('本公司用户应能在所参加活动中发表带字无图帖子', function(done) {
+      it('用户应能在所参加活动中发表带字无图帖子', function(done) {
         request.post('/circle_contents')
           .field(
             'content', chance.string({
@@ -94,7 +94,7 @@ module.exports = function() {
           })
       });
 
-      it('本公司用户应能在所参加活动中发表带图无字帖子', function(done) {
+      it('用户应能在所参加活动中发表带图无字帖子', function(done) {
         request.post('/circle_contents')
           .field(
             'campaign_id', data[0].teams[0].campaigns[0]._id.toString()
@@ -108,7 +108,7 @@ module.exports = function() {
           })
       });
 
-      it('本公司用户应能发表带图有字帖子', function(done) {
+      it('用户应能在所参加活动中发表带图有字帖子', function(done) {
         request.post('/circle_contents')
           .field(
             'content', chance.string({
@@ -128,7 +128,7 @@ module.exports = function() {
           })
       });
 
-      it('本公司用户应不能在未参加活动中发帖子', function(done) {
+      it('用户应不能在未参加活动中发帖子', function(done) {
         request.post('/circle_contents')
           .field(
             'content', chance.string({
@@ -147,7 +147,7 @@ module.exports = function() {
           })
       });
 
-      it('本公司用户应不能发表无图无字帖子', function(done) {
+      it('用户应不能发表无图无字帖子', function(done) {
         request.post('/circle_contents')
           .field(
             'campaign_id', data[0].teams[0].campaigns[0]._id.toString()
@@ -160,7 +160,7 @@ module.exports = function() {
           })
       });
 
-      it('本公司用户应不能发表帖子(若无活动id参数)', function(done) {
+      it('用户应不能发表帖子(若无活动id参数)', function(done) {
         request.post('/circle_contents')
           .field(
             'content', chance.string({
@@ -176,7 +176,7 @@ module.exports = function() {
             done();
           })
       });
-      it('本公司用户应不能上传非图像文件', function(done) {
+      it('用户应不能上传非图像文件', function(done) {
         request.post('/circle_contents')
           .field(
             'campaign_id', data[0].teams[0].campaigns[0]._id.toString()

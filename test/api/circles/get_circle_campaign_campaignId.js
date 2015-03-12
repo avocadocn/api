@@ -1,12 +1,12 @@
 var app = require('../../../config/express.js'),
   request = require('supertest')(app);
 
+var util = require('util');
 var dataService = require('../../create_data');
-var tools = require('../../../tools/tools.js');
 var chance = require('chance').Chance();
 var async = require('async');
 
-module.exports = function () {
+module.exports = function() {
   var data, userToken, userToken1, hrToken;
   var circleContentIds = [];
   var circleCommentIds = [];
@@ -17,7 +17,7 @@ module.exports = function () {
       function(callback) {
         async.parallel([
           function(callback) {
-            var user = data[0].users[0];
+            var user = data[2].users[0];
             request.post('/users/login')
               .send({
                 email: user.email,
@@ -34,7 +34,7 @@ module.exports = function () {
               });
           },
           function(callback) {
-            var user = data[1].users[0];
+            var user = data[0].users[0];
             request.post('/users/login')
               .send({
                 email: user.email,
@@ -51,7 +51,7 @@ module.exports = function () {
               });
           },
           function(callback) {
-            var company = data[0].model;
+            var company = data[2].model;
             request.post('/companies/login')
               .send({
                 username: company.username,
@@ -85,18 +85,18 @@ module.exports = function () {
             pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
           }));
         }
-
         async.map(contents, function(content, callback) {
           request.post('/circle_contents')
             .field(
               'content', content
             )
             .field(
-              'campaign_id', data[0].teams[0].campaigns[0]._id.toString()
+              'campaign_id', data[2].teams[0].campaigns[0]._id.toString()
             )
             .set('x-access-token', userToken)
             .expect(200)
             .end(function(err, res) {
+              if(err) console.log(err);
               circleContentIds.push(res.body.circleContent._id.toString());
               callback();
             })
@@ -138,39 +138,39 @@ module.exports = function () {
       else done();
     });
   })
-  
-  describe('get /circle_reminds', function () {
-    it('用户应该可以获取到是否有新消息', function (done) {
-      request.get('/circle_reminds')
-      .set('x-access-token', userToken)
-      .query({has_new:true})
-      .expect(200)
-      .end(function (err,res) {
-        if(err) return done(err);
-        res.body.reminds.number.should.be.a.Number;
-        done();
-      });
-    });
 
-    it('当参数错误应该不能获取', function (done) {
-      request.get('/circle_reminds')
-      .set('x-access-token', userToken)
-      .expect(422)
-      .end(function (err,res) {
-        if(err) return done(err);
-        done();
+  describe('get /circle/campaign/:campaignId', function() {
+    describe('本公司成员', function() {
+      it('用户应能获取公司所参加活动的同事圈', function(done) {
+        request.get('/circle/campaign/' + data[2].teams[0].campaigns[0]._id.toString())
+          .set('x-access-token', userToken)
+          .expect(200)
+          .end(function(err, res) {
+            if (err) return done(err);
+            done();
+          })
       });
-    });
 
-    it('HR应该不能获取到是否有新消息', function (done) {
-      request.get('/circle_reminds')
-      .set('x-access-token', hrToken)
-      .query({has_new:true})
-      .expect(403)
-      .end(function (err,res) {
-        if(err) return done(err);
-        done();
+      it('用户应不能获取公司未参加活动的同事圈', function(done) {
+        request.get('/circle/campaign/' + data[2].teams[0].campaigns[0]._id.toString())
+          .set('x-access-token', userToken1)
+          .expect(404)
+          .end(function(err, res) {
+            if (err) return done(err);
+            done();
+          })
       });
     });
-  });
-};
+    describe('hr', function() {
+      it('hr应不能获取活动同事圈', function(done) {
+        request.get('/circle/campaign/' + data[2].teams[0].campaigns[0]._id.toString())
+          .set('x-access-token', hrToken)
+          .expect(403)
+          .end(function(err, res) {
+            if (err) return done(err);
+            done();
+          })
+      });
+    });
+  })
+}

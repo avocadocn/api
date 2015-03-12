@@ -139,27 +139,28 @@ module.exports = function () {
   })
   
   describe('get /circle_reminds/comments', function () {
-    it('用户不带参数应该可以获取到同事圈提醒', function (done) {
+    it('用户应不能未带参数获取到公司同事圈提醒', function (done) {
       request.get('/circle_reminds/comments')
       .set('x-access-token', userToken)
-      .expect(200)
+      .expect(400)
       .end(function (err,res) {
         if(err) return done(err);
-        res.body.should.be.an.instanceOf(Array);
         done();
       });
     });
 
-    it('用户带参数请求应该可以获取到同事圈提醒', function (done) {
+    it('用户带参数请求应该可以获取到公司同事圈提醒', function(done) {
       request.get('/circle_reminds/comments')
-      .set('x-access-token', userToken)
-      .query({last_comment_date: Date.now(), limit:20})
-      .expect(200)
-      .end(function (err,res) {
-        if(err) return done(err);
-        res.body.should.be.an.instanceOf(Array);
-        done();
-      });
+        .set('x-access-token', userToken)
+        .query({
+          latest_content_date: Date.now(),
+          last_comment_date: Date.now() - 1
+        })
+        .expect(200)
+        .end(function(err, res) {
+          if (err) return done(err);
+          done();
+        });
     });
 
     it('HR应该不能获取到是否有新消息', function (done) {

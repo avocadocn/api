@@ -10,13 +10,14 @@ module.exports = function() {
   var data, userToken, userToken1, hrToken;
   var circleContentIds = [];
   var circleCommentIds = [];
+
   before(function(done) {
     data = dataService.getData();
     async.series([
       function(callback) {
         async.parallel([
           function(callback) {
-            var user = data[0].users[0];
+            var user = data[2].users[0];
             request.post('/users/login')
               .send({
                 email: user.email,
@@ -33,7 +34,7 @@ module.exports = function() {
               });
           },
           function(callback) {
-            var user = data[1].users[0];
+            var user = data[0].users[0];
             request.post('/users/login')
               .send({
                 email: user.email,
@@ -50,7 +51,7 @@ module.exports = function() {
               });
           },
           function(callback) {
-            var company = data[0].model;
+            var company = data[2].model;
             request.post('/companies/login')
               .send({
                 username: company.username,
@@ -84,18 +85,18 @@ module.exports = function() {
             pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
           }));
         }
-
         async.map(contents, function(content, callback) {
           request.post('/circle_contents')
             .field(
               'content', content
             )
             .field(
-              'campaign_id', data[0].teams[0].campaigns[0]._id.toString()
+              'campaign_id', data[2].teams[0].campaigns[0]._id.toString()
             )
             .set('x-access-token', userToken)
             .expect(200)
             .end(function(err, res) {
+              if(err) console.log(err);
               circleContentIds.push(res.body.circleContent._id.toString());
               callback();
             })
@@ -138,10 +139,10 @@ module.exports = function() {
     });
   })
 
-  describe('delete /circle_contents/:contentId/comments/:commentId', function() {
+  describe('get /circle/company', function() {
     describe('本公司成员', function() {
-      it('用户应能删除自己的同事圈评论', function(done) {
-        request.delete('/circle_contents/:contentId/comments/' + circleCommentIds[0])
+      it('用户应能不带参数获取同事圈', function(done) {
+        request.get('/circle/company')
           .set('x-access-token', userToken)
           .expect(200)
           .end(function(err, res) {
@@ -149,11 +150,26 @@ module.exports = function() {
             done();
           })
       });
-
-      it('用户不能删除其他用户同事圈评论', function(done) {
-        request.delete('/circle_contents/:contentId/comments/' + circleCommentIds[1])
-          .set('x-access-token', userToken1)
-          .expect(403)
+      it('用户应能刷新同事圈', function(done) {
+        request.get('/circle/company')
+          .query({
+            last_content_date: Date.now() - 1,
+          })
+          .set('x-access-token', userToken)
+          .expect(200)
+          .end(function(err, res) {
+            if (err) return done(err);
+            done();
+          })
+      });
+      it('用户应能获取下一页同事圈', function(done) {
+        request.get('/circle/company')
+          .query({
+            last_content_date: Date.now(),
+            limit: 20
+          })
+          .set('x-access-token', userToken)
+          .expect(200)
           .end(function(err, res) {
             if (err) return done(err);
             done();
@@ -161,8 +177,8 @@ module.exports = function() {
       });
     });
     describe('hr', function() {
-      it('hr没有删除朋友圈消息功能', function(done) {
-        request.delete('/circle_contents/:contentId/comments/' + circleCommentIds[1])
+      it('hr应不能获取公司同事圈', function(done) {
+        request.get('/circle/company')
           .set('x-access-token', hrToken)
           .expect(403)
           .end(function(err, res) {
