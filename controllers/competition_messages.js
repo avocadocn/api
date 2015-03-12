@@ -107,21 +107,24 @@ module.exports = function (app) {
           else if(req.query.messageType === 'sponsor') {
             options.sponsor_team = {'$in':teamIds};
           } else {
-
+            return res.status(422).send({msg:'参数错误'});
           }
         }
         req.options = options;
+        next();
       },
       queryAndFormat : function (req, res) {
         CompetitionMessage.find(req.options)
         .sort('-create_time')
+        .populate('sponsor_team', {name:1, logo:1})
+        .populate('opposite_team', {name:1, logo:1})
         .exec()
         .then(function(messages) {
           return res.status(200).send({messages: messages});
         })
         .then(null,function(err) {
           log(err);
-          return res.status(500).sedn({msg: '查询错误'});
+          return res.status(500).send({msg: '查询错误'});
         });
       }
     },

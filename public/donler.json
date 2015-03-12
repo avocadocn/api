@@ -4382,6 +4382,131 @@
           }
         }
       }
+    },
+    "/competition_messages": {
+      "get": {
+        "tags": [
+          "competition_messages"
+        ],
+        "summary": "获取挑战信（个人/小队，发出/收到的挑战日志）",
+        "operationId": "getCompetitionMessages",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "sponsor",
+            "in": "query",
+            "type": "string",
+            "description": "挑战发起方id 两个id都不填为个人获取"
+          },
+          {
+            "name": "opposite",
+            "in": "query",
+            "type": "string",
+            "description": "被挑战方id 两个id都不填为个人获取"
+          },
+          {
+            "name": "messageType",
+            "in": "query",
+            "type": "string",
+            "description": "个人接收或发出的列表",
+            "enum": [
+              "receive",
+              "sponsor"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "CompetitionMessage"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "competition_messages"
+        ],
+        "summary": "发挑战信",
+        "operationId": "postCompetitionMessages",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "postCompetitionMessage"
+            },
+            "required": true,
+            "description": "发挑战信数据"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/competition_messages/{messageId}": {
+      "put": {
+        "tags": [
+          "competition_messages"
+        ],
+        "summary": "接收/拒绝挑战",
+        "operationId": "putCompetitionMessages",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "messageId",
+            "in": "path",
+            "type": "string",
+            "description": "挑战信id",
+            "required": true
+          },
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "putCompetitionMessage"
+            },
+            "in": "body",
+            "description": "接受、拒绝参数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -7042,6 +7167,102 @@
           "items": {
             "$ref": "Chat"
           }
+        }
+      }
+    },
+    "postCompetitionMessage": {
+      "title": "postCompetitionMessage",
+      "type": "object",
+      "required": [
+        "sponsor",
+        "opposite",
+        "type",
+        "content"
+      ],
+      "properties": {
+        "sponsor": {
+          "type": "string",
+          "description": "发起方id"
+        },
+        "opposite": {
+          "type": "string",
+          "description": "被挑方id"
+        },
+        "type": {
+          "type": "number",
+          "description": "挑战or联谊",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "content": {
+          "type": "string",
+          "description": "挑战词"
+        }
+      }
+    },
+    "putCompetitionMessage": {
+      "title": "putCompetitionMessage",
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "accept",
+            "reject"
+          ]
+        }
+      }
+    },
+    "CompetitionMessage": {
+      "title": "CompetitionMessage",
+      "type": "object",
+      "required": [
+        "sponsor_team",
+        "opposite_team",
+        "competition_type",
+        "create_time",
+        "status",
+        "content"
+      ],
+      "properties": {
+        "sponsor_team": {
+          "type": "object",
+          "$ref": "Team"
+        },
+        "opposite_team": {
+          "type": "object",
+          "$ref": "Team"
+        },
+        "competition_type": {
+          "type": "number",
+          "description": "类型，1为挑战，2为联谊"
+        },
+        "create_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "创建时间"
+        },
+        "deal_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "处理事件"
+        },
+        "status": {
+          "type": "string",
+          "description": "状态"
+        },
+        "campaign": {
+          "type": "string",
+          "description": "活动id"
+        },
+        "content": {
+          "type": "string",
+          "description": "挑战词"
         }
       }
     },
