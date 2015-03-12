@@ -342,6 +342,7 @@ module.exports = function (app) {
               } else {
                 CompanyGroup.findById(req.body.tid).exec()
                 .then(function (team) {
+                  var msg = '';
                   if(team) {
                     if(tools.arrayObjectIndexOf(team.member,req.user._id,'_id')>-1){
                       var unitIndex = tools.arrayObjectIndexOf(vote.units,req.body.tid,'tid');
@@ -361,19 +362,22 @@ module.exports = function (app) {
                           });
                         }
                         else{
-                          return res.status(400).send({ msg: '您已经赞成过，无法继续赞成' });
+                          msg = '您已经赞成过，无法继续赞成';
                         }
                       }
                       else{
-                        return res.status(400).send({ msg: '该小队不属于此组件' });
+                        msg = '该小队不属于此组件';
                       }
                     }
                     else{
-                      return res.status(400).send({ msg: '您未参加该小队' });
+                      msg = '您未参加该小队';
                     }
                   }
                   else{
-                    return res.status(400).send({ msg: '未找到该小队' });
+                    msg = '未找到该小队';
+                  }
+                  if(msg!='') {
+                    return res.status(400).send({ msg: msg });
                   }
                 })
                 .then(null, function (err) {

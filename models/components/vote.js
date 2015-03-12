@@ -38,11 +38,15 @@ Vote.statics = {
   establish: function (host, callback) {
     var modelName = host.constructor.modelName;
     var playingTeams = [];
+    var host_type = modelName;
+    var host_id = host._id;
+    var _units = [];
     switch (modelName) {
+      case 'CompetitionMessage':
+        _units.push({tid:host.sponsor_team});
+        _units.push({tid:host.opposite_team});
+        break;
       case 'Campaign':
-        var host_type = 'Campaign';
-        var host_id = host._id;
-        var _units = [];
         host.campaign_unit.forEach(function(_campaignUnit, index){
           _units.push({
             tid:_campaignUnit.team._id
@@ -50,7 +54,7 @@ Vote.statics = {
         });
         break;
       default:
-        return callback('投票板只允许在活动中使用');
+        return callback('投票板无法在该主体中使用');
     }
     var Vote = new this({
       host_type: host_type,

@@ -75,14 +75,23 @@ module.exports = function (app) {
         competition_type: req.body.type,
         content: req.body.content
       });
-
-      message.save(function(err) {
-        if(err) {
+      Vote.establish(message, function (err, vote) {
+        if (err) {
           log(err);
           return res.status(500).send({msg: '保存出错'});
         }
-        return res.status(200).send({msg: '挑战信发送成功'});
+        else {
+          message.vote = vote._id;
+          message.save(function(err) {
+            if(err) {
+              log(err);
+              return res.status(500).send({msg: '保存出错'});
+            }
+            return res.status(200).send({msg: '挑战信发送成功'});
+          });
+        }
       });
+      
     },
 
     //获取 个人/小队，发出/收到 的挑战日志
