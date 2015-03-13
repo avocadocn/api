@@ -8,14 +8,15 @@ var Campaign = mongoose.model('Campaign'),
     PhotoAlbum = mongoose.model('PhotoAlbum'),
     Photo = mongoose.model('Photo'),
     User = mongoose.model('User'),
-    CompanyGroup = mongoose.model('CompanyGroup');
+    CompanyGroup = mongoose.model('CompanyGroup'),
+    CompetitionMessage = mongoose.model('CompetitionMessage');
 var async = require('async');
 var auth = require('../services/auth.js'),
     log = require('../services/error_log.js'),
     socketClient = require('../services/socketClient'),
     uploader = require('../services/uploader.js'),
-    tools = require('../tools/tools.js');
-
+    tools = require('../tools/tools.js'),
+    donlerValidator = require('../services/donler_validator.js');
 var shieldTip = "该评论已经被系统屏蔽";
 /**
  * 为comments的每个comment设置权限
@@ -247,31 +248,53 @@ module.exports = function (app) {
       var hostId = req.params.hostId;
       var hostType = req.params.hostType;
       switch (hostType) {
-      case 'campaign':
-        Campaign.findById(hostId).exec()
-          .then(function (campaign) {
-            if (!campaign) {
-              return res.status(400).send({ msg: '无此活动' });
-            }
-            var role = auth.getRole(req.user, {
-              companies: campaign.cid,
-              teams: campaign.tid
+        case 'campaign':
+          Campaign.findById(hostId).exec()
+            .then(function (campaign) {
+              if (!campaign) {
+                return res.status(400).send({ msg: '无此活动' });
+              }
+              var role = auth.getRole(req.user, {
+                companies: campaign.cid,
+                teams: campaign.tid
+              });
+              var allow = auth.auth(role, ['publishComment']);
+              if (!allow.publishComment) {
+                return res.status(403).send({ msg: '权限错误' });
+              }
+              req.campaign = campaign;
+              req.photoAlbumId = campaign.photo_album;
+              next();
+            })
+            .then(null, function (err) {
+              log(err);
+              res.sendStatus(500);
             });
-            var allow = auth.auth(role, ['publishComment']);
-            if (!allow.publishComment) {
-              return res.status(403).send({ msg: '权限错误' });
-            }
-            req.campaign = campaign;
-            req.photoAlbumId = campaign.photo_album;
-            next();
-          })
-          .then(null, function (err) {
-            log(err);
-            res.sendStatus(500);
-          });
-        break;
-      default:
-        return res.status(403).send({ msg: '权限错误' });
+          break;
+        case 'competition_message':
+          CompetitionMessage.findById(hostId).exec()
+            .then(function (competitionMessage) {
+              if (!competitionMessage) {
+                return res.status(400).send({ msg: '无此挑战信' });
+              }
+              var role = auth.getRole(req.user, {
+                companies: [competitionMessage.sponsor_cid, competitionMessage.opposite_cid],
+                teams: [competitionMessage.sponsor_team, competitionMessage.opposite_team]
+              });
+              var allow = auth.auth(role, ['publishComment']);
+              if (!allow.publishComment) {
+                return res.status(403).send({ msg: '权限错误' });
+              }
+              req.competitionMessage = competitionMessage;
+              next();
+            })
+            .then(null, function (err) {
+              log(err);
+              res.sendStatus(500);
+            });
+          break;
+        default:
+          return res.status(403).send({ msg: '权限错误' });
       }
 
     },
@@ -528,33 +551,80 @@ module.exports = function (app) {
 
 
     getComments: function(req, res) {
-      //先判断权限
-      Campaign.findOne({_id: req.query.requestId}, function(err, campaign) {
-        if(err || !campaign) return res.status(500).send('无对应活动');
-        else {
-          if(req.user.provider === 'company' && campaign.cid.indexOf(req.user._id) === -1 || req.user.provider === 'user' && campaign.cid.indexOf(req.user.cid)) 
-            return res.status(403).send('权限错误');
-          else {
-            //获取评论，只有comment 无reply
-            Comment.getComments({
-              hostType: req.query.requestType,
-              hostId: req.query.requestId
-            }, req.query.createDate, req.query.limit, function (err, comments, nextStartDate) {
-              setDeleteAuth({
-                host_type: req.query.requestType,
-                host_id: req.query.requestId,
-                user: req.user,
-                comments: comments
-              }, function (err) {
-                if (err) console.log(err);
-                // 即使错误依然会做基本的权限设置（公司可删自己员工的，自己可以删自己的），所以依旧返回数据
-                res.status(202).send({'comments': comments, nextStartDate: nextStartDate});
-                // userReadComment(req.user, req.query.requestId, function(){});
-              });
-            });
+      donlerValidator({
+        requestType: {
+          name: '主体类型',
+          value: req.query.requestType,
+          validators: ['required']
+        },
+        requestId: {
+          name: '主体ID',
+          value: req.query.requestId,
+          validators: ['required']
+        },
+        limit: {
+          name: '数量限制',
+          value: req.query.limit,
+          validators: ['number']
+        }
+      }, 'complete', function (pass, msg) {
+        if(pass) {
+          //先判断权限
+          var model = '';
+          switch(req.query.requestType) {
+            case 'campaign':
+              model ='Campaign';
+              break;
+            case 'competition_message':
+              model='CompetitionMessage';
+              break;
+            default:
+              return res.status(400).send({msg:'无法获取该类型的评论'});
           }
+          mongoose.model(model).findOne({_id: req.query.requestId}, function(err, model) {
+            if(err || !model) return res.status(500).send({msg:'无对应的主体'});
+            else {
+              var requestCid;
+              switch(req.query.requestType) {
+                case 'campaign':
+                  requestCid =campaign.cid;
+                  break;
+                case 'competition_message':
+                  requestCid =[model.sponsor_cid, model.opposite_cid];
+                  break;
+              }
+              console.log(requestCid.indexOf(req.user.cid)=== -1);
+              if(req.user.provider === 'company' && requestCid.indexOf(req.user._id) === -1 && req.user.provider === 'user' && requestCid.indexOf(req.user.cid)=== -1) {
+                return res.status(403).send({msg:'权限错误'});
+              }
+              else {
+                //获取评论，只有comment 无reply
+                Comment.getComments({
+                  hostType: req.query.requestType,
+                  hostId: req.query.requestId
+                }, req.query.createDate, req.query.limit, function (err, comments, nextStartDate) {
+                  setDeleteAuth({
+                    host_type: req.query.requestType,
+                    host_id: req.query.requestId,
+                    user: req.user,
+                    comments: comments
+                  }, function (err) {
+                    if (err) console.log(err);
+                    // 即使错误依然会做基本的权限设置（公司可删自己员工的，自己可以删自己的），所以依旧返回数据
+                    res.status(202).send({'comments': comments, nextStartDate: nextStartDate});
+                    // userReadComment(req.user, req.query.requestId, function(){});
+                  });
+                });
+              }
+            }
+          })
+        }
+        else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          return res.status(422).send({ msg: resMsg });
         }
       })
+
     },
     // readComments: function(req, res) {
     //   if(req.user.provider==='company') {

@@ -2151,6 +2151,7 @@ paths:
           in: path
           enum:
             - campaign
+            - competition_message
         - name: hostId
           type: string
           description: hostId

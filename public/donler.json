@@ -3165,7 +3165,8 @@
             "required": true,
             "in": "path",
             "enum": [
-              "campaign"
+              "campaign",
+              "competition_message"
             ]
           },
           {
