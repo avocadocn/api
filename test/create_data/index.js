@@ -192,24 +192,11 @@ exports.createData = function (callback) {
         if(err) {
           return callback(err);
         }
-        // console.log(results);
         resCompanyDataList = results;
         console.log('成功生成所有测试数据');
         callback();
         schedule.teamPoint();
       });
-      
-      // createCampaigns(results, function (err, companyDataList) {
-      //   if (err) {
-      //     console.log('生成跨公司挑战数据失败');
-      //     callback(err);
-      //     return;
-      //   }
-      //   resCompanyDataList = companyDataList;
-      //   console.log('成功生成所有测试数据');
-      //   callback();
-      //   schedule.teamPoint();
-      // });
       
     });
 

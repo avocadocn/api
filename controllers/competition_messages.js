@@ -14,11 +14,13 @@ module.exports = function (app) {
     sendMessageValidate: function (req, res, next) {
       //验证两个队是不是一个类型或者一个公司
       var teamsValidator = function(name, value, callback) {
+        if(value[0]===value[1]) callback(false, '挑战小队数据错误'); //自己队不能给自己队发
         CompanyGroup.find({'_id':{'$in':value}},{'gid':1, 'cid':1},function(err, teams) {
           if(err||teams.length<2) {
             callback(false, '挑战小队数据错误');
           }
           else {
+            req.teams = teams;//给下面保存cid用的= -.
             if(teams[0].gid===teams[1].gid || teams[0].cid.toString()===teams[1].cid.toString())
               callback(true);
             else
@@ -71,7 +73,9 @@ module.exports = function (app) {
     createMessage : function (req, res) {
       var message = new CompetitionMessage({
         sponsor_team: req.body.sponsor,
+        sponsor_cid: req.teams[0]._id.toString() === req.body.sponsor ? req.teams[0].cid:req.teams[1].cid,
         opposite_team: req.body.opposite,
+        opposite_cid: req.teams[0]._id.toString() === req.body.sponsor ? req.teams[1].cid:req.teams[0].cid,
         competition_type: req.body.type,
         content: req.body.content
       });
@@ -99,6 +103,7 @@ module.exports = function (app) {
       filter: function (req, res, next) {
         var options = {};
         if(req.user.provider==='company') {
+          //以后可以有获取全公司的
           return res.status(403).send({msg:'权限错误'});
         }
         //有此参数则代表看小队发出的
@@ -115,6 +120,7 @@ module.exports = function (app) {
           }
           options.opposite_team = req.query.opposite;
         }
+        //否则就代表是看个人的
         else {
           var teamIds = [];
           var length = req.user.team.length;
@@ -136,8 +142,7 @@ module.exports = function (app) {
       queryAndFormat : function (req, res) {
         CompetitionMessage.find(req.options)
         .sort('-create_time')
-        .populate('sponsor_team', {name:1, logo:1})
-        .populate('opposite_team', {name:1, logo:1})
+        .populate([{'path':'sponsor_team', 'select':{name:1, logo:1}}, {'path':'opposite_team', 'select':{name:1, logo:1}}])
         .exec()
         .then(function(messages) {
           return res.status(200).send({messages: messages});
