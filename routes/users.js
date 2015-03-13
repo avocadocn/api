@@ -18,6 +18,7 @@ module.exports = function (app, ctrl) {
   app.post('/users/actions/invite', token.needToken, ctrl.inviteUser);
 
   app.post('/users/login', ctrl.login);
+  app.post('/users/refresh/token', token.needToken, ctrl.refreshToken);
   app.post('/users/logout', token.needToken, ctrl.logout);
 
   app.get('/users/:userId/photos', token.needToken, ctrl.getUserPhotosValidate, ctrl.getUserPhotos);

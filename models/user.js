@@ -365,6 +365,24 @@ UserSchema.methods = {
     }
     this.device.push(device);
   },
+
+  /**
+   * 更新某个设备的token
+   * @param  {String} oldToken 旧的token
+   * @param  {String} newToken 新的token
+   * @return {Boolean} 如果有找到匹配的token，则返回true，否则返回false
+   */
+  updateDeviceToken: function (oldToken, newToken) {
+    for (var i = 0, deviceLen = this.device.length; i < deviceLen; i++) {
+      var device = this.device[i];
+      if (device.access_token === oldToken) {
+        device.access_token = newToken;
+        return true;
+      }
+    }
+    return false;
+  },
+
   /**
    * 移除用户的设备记录中的设备信息
    * @param  {[type]} headers [description]
