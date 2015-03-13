@@ -11,64 +11,10 @@ var mongoose = require('mongoose'),
  * 用于子文档嵌套
  */
 var _member = {
-  // camp: {                //阵营
-  //   type: String,
-  //   enum: ['A', 'B']
-  // },
-  // cid: String,
   _id: Schema.Types.ObjectId,
   nickname: String,
   photo: String
-  // team: {
-  //   _id: Schema.Types.ObjectId,
-  //   name: String,
-  //   logo: String
-  // }
 };
-
-//旧数据，不用了
-//阵形图子文档
-// var _formation = new Schema({
-//   uid: String,
-//   x: Number,
-//   y: Number
-// });
-// //阵营
-// var _camp = new Schema({
-//   id: Schema.Types.ObjectId,               //小队id
-//   logo: String,                            //队徽路径
-//   tname: String,
-//   member: [_member],
-//   member_quit: [_member],
-//   cid: String,
-//   gid: String,
-//   start_confirm: {                         //双方组长都确认后才能开战
-//     type: Boolean,
-//     default: false
-//   },
-//   formation: [_formation],
-//   result: {                                //比赛结果确认
-//     confirm: {
-//       type: Boolean,
-//       default: false
-//     },
-//     content: String,
-//     start_date: Date
-//   },
-//   score: Number,
-//   vote: {
-//     positive: {                             //赞成员工投票数
-//       type: Number,
-//       default: 0
-//     },
-//     positive_member: [_member],             //赞成员工id,cid
-//     negative: {                             //反对员工投票数
-//       type: Number,
-//       default: 0
-//     },
-//     negative_member: [_member]              //反对员工id,cid
-//   }
-// });
 
 //新阵营
 var _campaignUnit={
@@ -84,19 +30,6 @@ var _campaignUnit={
   },
   member:[_member],
   member_quit: [_member],
-  //投票不要了
-  // vote:{
-  //   positive: {                             //赞成员工投票数
-  //     type: Number,
-  //     default: 0
-  //   },
-  //   positive_member: [_member],             //赞成员工id
-  //   negative: {                             //反对员工投票数
-  //     type: Number,
-  //     default: 0
-  //   },
-  //   negative_member: [_member]              //反对员工id
-  // },
   start_confirm: {                         //双方组长都确认后才能开战
     type: Boolean,
     default: false
@@ -217,6 +150,10 @@ var Campaign = new Schema({
   //     default: Date.now
   //   }
   // }
+  competition_message: {
+    type: Schema.Types.ObjectId,
+    ref: 'CompetitionMessage'
+  }
 });
 
 Campaign.virtual('members').get(function () {

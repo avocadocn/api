@@ -156,6 +156,8 @@ module.exports = function (app) {
         }
         else {
           if(req.user.provider==='user' && req.user.isTeamLeader(message.opposite_team)) {
+            if(message.status!=='sent')
+              return res.status(400).send({msg: '此挑战信已处理过，无法继续处理。'});
             req.message = message;
             next();
           }

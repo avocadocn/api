@@ -21,6 +21,7 @@ var createFamilyPhotos = require('./create_family_photos.js');
 var createPhotoAlbums = require('./create_photo_albums.js');
 var createMessages = require('./create_messages.js');
 var createChats = require('./create_chats.js');
+var createCompetitionMessages = require('./create_competition_messages.js');
 
 /**
  * 公司数据列表，保存公司及其员工、小队、活动数据
@@ -32,6 +33,7 @@ var createChats = require('./create_chats.js');
  *      users: [doc], // mongoose.model('User')
  *      leaders: [doc], // mongoose.model('User')
  *      photoAlbums: [doc] // mongoose.model('PhotoAlbum')
+ *      chats: [doc] // mongoose.model('Chat')
  *    }],
  *    users: [doc], // mongoose.model('User')
  *    campaigns: [doc] // mongoose.model('Campaign')
@@ -40,7 +42,10 @@ var createChats = require('./create_chats.js');
  *                  content: //mongoose.model('CircleContent')
  *                  comments: [doc] // mongoose.model('CircleComment')
  *                }
- *              ]
+ *              ],
+ *     chats: [doc], // mongoose.model('Chat')
+ *     competitionMessages: [doc] // mongoose.model('CompetitionMessage')
+ *     
  *  }]
  * @type {Array}
  */
@@ -160,18 +165,52 @@ exports.createData = function (callback) {
         return;
       }
       // 生成跨公司的挑战数据
-      console.log('开始生成跨公司挑战的数据');
-      createCampaigns(results, function (err, companyDataList) {
-        if (err) {
-          console.log('生成跨公司挑战数据失败');
-          callback(err);
-          return;
+      async.waterfall([
+        function(waterfallCallback) {
+          console.log('开始生成挑战信');
+          createCompetitionMessages(results, function (err, companyDataList) {
+            if(err) {
+              console.log('生成挑战信失败');
+              waterfallCallback(err);
+              return;
+            }
+            waterfallCallback(null, companyDataList);
+          })
+        },
+        function(waterfallResults, waterfallCallback) {
+          console.log('开始生成跨公司挑战的数据');
+          createCampaigns(waterfallResults, function (err, companyDataList) {
+            if (err) {
+              console.log('生成跨公司挑战数据失败');
+              waterfallCallback(err);
+              return;
+            }
+            waterfallCallback(null, companyDataList);
+          });
         }
-        resCompanyDataList = companyDataList;
+      ], function(err, results) {
+        if(err) {
+          return callback(err);
+        }
+        // console.log(results);
+        resCompanyDataList = results;
         console.log('成功生成所有测试数据');
         callback();
         schedule.teamPoint();
       });
+      
+      // createCampaigns(results, function (err, companyDataList) {
+      //   if (err) {
+      //     console.log('生成跨公司挑战数据失败');
+      //     callback(err);
+      //     return;
+      //   }
+      //   resCompanyDataList = companyDataList;
+      //   console.log('成功生成所有测试数据');
+      //   callback();
+      //   schedule.teamPoint();
+      // });
+      
     });
 
   });

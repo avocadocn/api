@@ -5,15 +5,16 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var CompetitionMessage = new Schema({
-  //要不要cid...???
-  sponsor_team: {   //发起方
+  sponsor_team: {   //发起方小队
     type: Schema.Types.ObjectId,
     ref: 'CompanyGroup'
   },
-  opposite_team: {  //被挑战方
+  sponsor_cid: Schema.Types.ObjectId, //发起方cid
+  opposite_team: {  //被挑战方小队
     type: Schema.Types.ObjectId,
     ref: 'CompanyGroup'
   },
+  opposite_cid: Schema.Types.ObjectId,//被挑战方cid
   competition_type: Number,     //类型，1为挑战，2为联谊
   create_time: {    //创建时间
     type: Date,
