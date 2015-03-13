@@ -776,6 +776,27 @@ module.exports = function (app) {
         });
     },
 
+    refreshToken: function (req, res, next) {
+      var newToken = jwt.sign({
+        type: 'company',
+        id: req.user._id.toString(),
+        exp: app.get('tokenExpires') + Date.now()
+      }, app.get('tokenSecret'));
+      req.user.updateDeviceToken(req.headers['x-access-token'], newToken);
+      req.user.save(function (err) {
+        if (err) {
+          console.log(err.stack || err);
+          res.status(500).send({msg: '服务器错误'});
+        }
+        else {
+          res.send({
+            msg: '更新成功',
+            newToken: newToken
+          });
+        }
+      });
+    },
+
     logout: function (req, res) {
       if (req.user.provider !== 'company') {
         res.sendStatus(403);

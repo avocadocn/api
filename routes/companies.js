@@ -17,5 +17,6 @@ module.exports = function (app, ctrl) {
   app.get('/companies/:companyId/departments', token.needToken, ctrl.getCompanyDepartments);
   app.get('/companies/:companyId/tags', token.needToken, ctrl.getCompanyTags);
   app.post('/companies/login', ctrl.login);
+  app.post('/companies/refresh/token', token.needToken, ctrl.refreshToken);
   app.post('/companies/logout', token.needToken, ctrl.logout);
 };
