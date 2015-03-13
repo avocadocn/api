@@ -153,6 +153,26 @@ module.exports = function (app) {
         });
       }
     },
+    //获取某条message
+    getMessage:  function (req, res) {
+      if(req.user.provider==='company') {
+        return res.status(403).send({msg:'权限错误'});
+      }
+      CompetitionMessage.findOne({_id: req.params.messageId})
+      .populate([{'path':'sponsor_team', 'select':{name:1, logo:1}}, {'path':'opposite_team', 'select':{name:1, logo:1}}])
+      .populate('vote',{'units':1})
+      .exec()
+      .then(function(message) {
+        if(req.user.isTeamMember(message.sponsor_team._id) || req.user.isTeamMember(message.opposite_team._id))
+          return res.status(200).send({message: message});
+        else
+          return res.status(403).send({msg:'权限错误'});
+      })
+      .then(null,function(err) {
+        log(err);
+        return res.status(500).send({msg: '查询错误'});
+      });
+    },
     //验证他能否接受/拒绝挑战
     dealValidate: function (req, res ,next) {
       CompetitionMessage.findOne({_id:req.params.messageId}, function(err, message) {

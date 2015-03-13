@@ -51,10 +51,9 @@ module.exports = function () {
       })
     });
 
-    it('本队队长应能成功应战别的小队发来的挑战信', function(done) {
+    it('本队成员应能成功获取别的小队发来的挑战信详情', function(done) {
       var messageId = data[0].competitionMessages[0]._id;
-      request.put('/competition_messages/'+messageId)
-      .send({action:'accept'})
+      request.get('/competition_messages/'+messageId)
       .set('x-access-token', userToken)
       .expect(200)
       .end(function (err, res) {
@@ -62,32 +61,9 @@ module.exports = function () {
         done();
       });
     });
-    it('本队队长应能成功拒绝别的小队发来的挑战信', function(done) {
-      var messageId = data[0].competitionMessages[8]._id;
-      request.put('/competition_messages/'+messageId)
-      .send({action:'reject'})
-      .set('x-access-token', userToken)
-      .expect(200)
-      .end(function (err, res) {
-        if (err) return done(err);
-        done();
-      });
-    });
-    it('本队队长应不能应战已应战过的挑战信', function(done) {
-      var messageId = data[0].competitionMessages[1]._id;
-      request.put('/competition_messages/'+messageId)
-      .send({action:'accept'})
-      .set('x-access-token', userToken)
-      .expect(400)
-      .end(function (err, res) {
-        if (err) return done(err);
-        done();
-      });
-    });
-    it('非本队队长应不能应战别的小队发来的挑战信', function(done) {
+    it('非本队成员应能不能获取别的小队发来的挑战信详情', function(done) {
       var messageId = data[0].competitionMessages[5]._id;
-      request.put('/competition_messages/'+messageId)
-      .send({action:'accept'})
+      request.get('/competition_messages/'+messageId)
       .set('x-access-token', userToken)
       .expect(403)
       .end(function (err, res) {
@@ -95,10 +71,9 @@ module.exports = function () {
         done();
       });
     });
-    it('HR应不能应战其它小队发来的挑战信', function(done) {
-      var messageId = data[0].competitionMessages[2]._id;
-      request.put('/competition_messages/'+messageId)
-      .send({action:'accept'})
+    it('HR应不能获取挑战信详情', function(done) {
+      var messageId = data[0].competitionMessages[0]._id;
+      request.get('/competition_messages/'+messageId)
       .set('x-access-token', hrToken)
       .expect(403)
       .end(function (err, res) {

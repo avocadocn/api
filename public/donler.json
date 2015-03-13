@@ -4469,6 +4469,39 @@
       }
     },
     "/competition_messages/{messageId}": {
+      "get": {
+        "tags": [
+          "competition_messages"
+        ],
+        "summary": "查看某挑战",
+        "operationId": "getCompetitionMessage",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "messageId",
+            "in": "path",
+            "type": "string",
+            "description": "挑战信id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "CompetitionMessage"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "competition_messages"
