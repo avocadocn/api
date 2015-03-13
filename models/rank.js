@@ -7,9 +7,31 @@ var _team = new Schema({
   cid:Schema.Types.ObjectId,
   name: String,
   logo: String,
-  activity_score: Number,
-  score: Number,
-  rank: Number
+  activity_score: {
+    type: Number,
+    default: 0
+  },
+  score: {
+    type: Number,
+    default: 0
+  },
+  rank: Number,
+  win: {
+    type: Number,
+    default: 0
+  },
+  tie: {
+    type: Number,
+    default: 0
+  },
+  lose: {
+    type: Number,
+    default: 0
+  },
+  member_num: {
+    type: Number,
+    default: 0
+  }
 });
 
 var Rank = new Schema({

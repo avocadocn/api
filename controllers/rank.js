@@ -40,10 +40,12 @@ module.exports = function (app) {
             'city.province': unescape(req.query.province),
             'city.city':unescape(req.query.city),
             'rank_type':req.query.rankType,
-            'create_date':{$gte:new Date(Date.now()-timeLimit)},
+            // 'create_date':{$gte:new Date(Date.now()-timeLimit)},
             'group_type._id':req.query.gid
           }
-          Rank.findOne(option)
+          Rank.find(option)
+          .sort('-create_date')
+          .limit(1)
           .exec()
           .then(function (rank) {
             if (!rank) {
@@ -54,14 +56,14 @@ module.exports = function (app) {
               .exec()
               .then(function (teams) {
                 if (!teams) {
-                  res.send({rank:rank});
+                  res.send({rank:rank[0]});
                 } else {
-                  res.send({rank:rank,team:teams});
+                  res.send({rank:rank[0],team:teams});
                 }
               })
               .then(null, function (err) {
                 log(err);
-                res.send({rank:rank});
+                res.send({rank:rank[0]});
               });
               
             }

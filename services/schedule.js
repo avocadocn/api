@@ -13,6 +13,7 @@ var mongoose = require('mongoose'),
 var winScore =3;
 var tieScore = 1;
 var loseScore = 0;
+var rankLimit = 10;
 //统计所有小组的活动数、人员参与数、评论数、照片从而得出分数
 var teamPoint = exports.teamPoint =function(){
   var now = new Date()
@@ -203,7 +204,7 @@ var teamPoint = exports.teamPoint =function(){
             groups.forEach(function(group){
               //虚拟组不计算
               if(group._id!="0"){
-                CompanyGroup.find({'city.province':region.name,'city.city': city.name,gid:group._id}).sort('-score_rank.score -score.total').exec(function (err,teams) {
+                CompanyGroup.find({'city.province':region.name,'city.city': city.name,gid:group._id}).sort('-score_rank.score -score.total -score.win_percent -score.campaign -score.member').exec(function (err,teams) {
                 
                   var rank = new Rank();
                   rank.group_type ={
@@ -216,23 +217,28 @@ var teamPoint = exports.teamPoint =function(){
                   }
                   teams.forEach(function (team,index) {
                     team.score.rank = index+1;
-                    if(index<10){
+                    if(index<rankLimit){
+                      var competitionCount = team.score_rank.win + team.score_rank.tie + team.score_rank.lose;
                       rank.team.push({
                         _id: team._id,
                         cid: team.cid,
                         name: team.name,
                         logo: team.logo,
+                        member_num: team.member.length,
                         activity_score: team.score.total,
                         score: team.score_rank.score,
-                        rank: index+1
-                      })
+                        rank: index+1,
+                        win: team.score_rank.win,
+                        tie: team.score_rank.tie,
+                        lose: team.score_rank.lose
+                      });
                     }
                   });
 
                   if(rank.team.length>0){
                     rank.save(function (err) {
                       if(err){
-                        log(err)
+                        console.log(err)
                       }
                     })
                   }

@@ -6,7 +6,7 @@ var app = require('../../../config/express.js'),
 var dataService = require('../../create_data');
 
 module.exports = function() {
-  describe('get /components/ScoreBoard/:componentId', function() {
+  describe.skip('get /components/ScoreBoard/:componentId', function() {
     describe('用户获取比分', function() {
       var accessToken;
       var data;
