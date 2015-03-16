@@ -16,24 +16,6 @@ var auth = require('../services/auth.js'),
 
 var shieldTip = "该评论已经被系统屏蔽";
 
-var updateUserChatroom = function (chatroomId, user, reqUserId, callback) {
-  if (user._id.toString() !== reqUserId.toString()) {
-    var index = tools.arrayObjectIndexOf(user.chatrooms, chatroomId, '_id');
-    if (index > -1) {
-      user.chatrooms[index].unread++;
-      user.save(function (err) {
-        if (err) log(err);
-        callback();
-      });
-    }
-    else {
-      callback();
-    }
-  }
-  else {
-    callback();
-  }
-};
 module.exports = function (app) {
 
   return {
@@ -135,15 +117,6 @@ module.exports = function (app) {
                 userIds.push(users[i]._id);
               }
               socketClient.pushChat(chat.chatroom_id, chat, userIds);
-              //users更新
-              async.map(users, function (user, callback) {
-                updateUserChatroom(chat.chatroom_id, user, req.user._id, function () {
-                  callback();
-                })
-              }, function (err, results) {
-                if (err) log(err);
-                return;
-              })
             }
           })
         }
@@ -157,14 +130,8 @@ module.exports = function (app) {
         return;
       }
       else {
-        var isInChatRoomList = false;
-        for (var i = 0; i < req.user.chatrooms.length; i++) {
-          if (req.query.chatroom === req.user.chatrooms[i]._id.toString()) {
-            isInChatRoomList = true;
-            break;
-          }
-        }
-        if (!isInChatRoomList) {
+        var index = tools.arrayObjectIndexOf(req.user.chatrooms, req.query.chatroom, '_id');
+        if (index===-1) {
           res.status(403).send({msg: '抱歉，您没有权限'});
           return;
         }
@@ -173,11 +140,13 @@ module.exports = function (app) {
       var pageSize = 20;
       var queryOptions = {
         chatroom_id: req.query.chatroom,
-        status: 'active'
-      };
+        status: 'active',
+        create_date: {'$gt':req.user.chatrooms[index].join_time}
+      };//只取加入之后的
       if (req.query.nextDate) {
+        var timeCompare = new Date(req.query.nextDate) > req.user.chatrooms[index].join_time ;
         queryOptions.create_date = {
-          $gt: new Date(req.query.nextDate)
+          $gt: timeCompare ? new Date(req.query.nextDate) : req.user.chatrooms[index].join_time
         };
       }
       if (req.query.nextId) {
@@ -250,6 +219,32 @@ module.exports = function (app) {
         }
       });
     },
+    getChatroomsUnread: function (req, res, next) {
+      var role = auth.getRole(req.user, {
+        companies: [req.user.getCid()]
+      });
+      var allow = auth.auth(role, ['getChatRooms']);
+      if (!allow.getChatRooms) {
+        res.status(403).send({msg: '抱歉，您没有权限'});
+        return;
+      }
+      async.map(req.user.chatrooms, function(chatroom, callback) {
+        console.log(chatroom);
+        Chat.find({chatroom_id: chatroom._id, create_date: {'$gt':chatroom.read_time}},{'_id':1},function(err, chats) {
+          if(err) {
+            callback(err);
+          }else {
+            callback(null, {_id: chatroom._id, count: chats.length});
+          }
+        });
+      }, function(err, results) {
+        if(err) {
+          next(err);
+        }else {
+          res.status(200).send({chatrooms: results});
+        }
+      });
+    },
 
     getChatRooms: function (req, res, next) {
 
@@ -292,7 +287,6 @@ module.exports = function (app) {
           name: req.user.company_official_name
         });
       }
-
       Chat.aggregate()
         .match({
           chatroom_id: {$in: chatRoomIds},
@@ -314,31 +308,31 @@ module.exports = function (app) {
         .exec()
         .then(function (results) {
           var posterIdList = [];
-
           chatRoomList.forEach(function (chatRoom) {
             // 从查询结果中查找该讨论组匹配的最新讨论
             var latestChat;
             for (var i = 0; i < results.length; i++) {
               if (chatRoom._id.toString() === results[i]._id.toString()) {
-                latestChat = results[i].latestChat;
+                var latestChat = results[i].latestChat;
                 break;
               }
             }
-
-            posterIdList.push(latestChat.poster);
-            chatRoom.latestChat = {
-              _id: latestChat._id,
-              content: latestChat.content,
-              create_date: latestChat.create_date,
-              poster: latestChat.poster,
-              photos: latestChat.photos && latestChat.photos.length > 0 ? latestChat.photos.map(function (photo) {
-                return {
-                  uri: photo.uri,
-                  width: photo.width,
-                  height: photo.height
-                };
-              }) : null
-            };
+            if(latestChat) {
+              posterIdList.push(latestChat.poster);
+              chatRoom.latestChat = {
+                _id: latestChat._id,
+                content: latestChat.content,
+                create_date: latestChat.create_date,
+                poster: latestChat.poster,
+                photos: latestChat.photos && latestChat.photos.length > 0 ? latestChat.photos.map(function (photo) {
+                  return {
+                    uri: photo.uri,
+                    width: photo.width,
+                    height: photo.height
+                  };
+                }) : null
+              };
+            }
           });
 
           // 查询poster
@@ -381,7 +375,7 @@ module.exports = function (app) {
 };
 
 /**
- * 将用户的chatroom未读标记清零
+ * 将用户的chatroom未读标记清零->修改读过的时间
  * @param {Object} user mongoose.model('User')
  * @param {ObjectId|String|Array} roomIds chatRoomId，可以是单个，或是数组
  * @param {Function} callback 执行后的回调function (err) {}
@@ -397,7 +391,7 @@ function clearUserChatRoomUnReadCount(user, roomIds, callback) {
     for (var i = 0, ilen = roomIds.length; i < ilen; i++) {
       for (var j = 0, jlen = user.chatrooms.length; j < jlen; j++) {
         if (roomIds[i].toString() === user.chatrooms[j]._id.toString()) {
-          user.chatrooms[j].unread = 0;
+          user.chatrooms[j].read_time = new Date();
           break;
         }
       }

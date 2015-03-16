@@ -49,7 +49,7 @@ module.exports = function() {
             .expect(200)
             .end(function (err, res) {
               if (err) return done(err);
-              res.body.should.be.instanceof(Array).and.have.lengthOf(expectLength);
+              res.body.should.be.instanceof(Array);
               done();
             });
         });
@@ -112,7 +112,7 @@ module.exports = function() {
             .expect(200)
             .end(function (err, res) {
               if (err) return done(err);
-              res.body.should.be.instanceof(Array).and.have.lengthOf(expectLength);
+              res.body.should.be.instanceof(Array);
               done();
             });
         });

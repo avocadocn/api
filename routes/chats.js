@@ -9,5 +9,6 @@ module.exports = function (app, ctrl) {
   app.delete('/chats/:chatId', token.needToken, ctrl.deleteChat);
   app.post('/chatrooms/actions/read', token.needToken, ctrl.readChatRoomChats);
   app.get('/chatrooms', token.needToken, ctrl.getChatRooms);
+  app.get('/chatrooms/unread', token.needToken, ctrl.getChatroomsUnread);
 
 };

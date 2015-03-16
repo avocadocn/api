@@ -2906,6 +2906,16 @@ paths:
           description: error
           schema:
             $ref: Error
+  /chatrooms/unread:
+    get:
+      tags:
+        - chats
+      summary: 获取讨论组未读数
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: ChatroomListUnreadData
   "/chatrooms/actions/read":
     post:
       tags:
@@ -4959,6 +4969,25 @@ definitions:
         type: array
         items:
           $ref: ChatRoom
+  ChatroomListUnreadData:
+    title: ChatroomListUnreadData
+    type: array
+    properties:
+      chatrooms:
+        description: 讨论列表(带未读数)
+        type: array
+        items:
+         $ref: ChatroomUnread
+  ChatroomUnread:
+    title: ChatroomUnread
+    type: object
+    properties:
+      _id:
+        type: string
+        description: 讨论组id
+      count:
+        type: number
+        description: 未读数
   ChatRoom:
     title: ChatRoom
     type: object

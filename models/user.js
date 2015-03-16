@@ -42,9 +42,13 @@ var _team = new Schema({
 
 var chatroom = new Schema({
   _id: Schema.Types.ObjectId,
-  unread: {
-    type: Number,
-    default: 0
+  join_time:{
+    type: Date,
+    default: Date.now
+  },
+  read_time: {
+    type: Date,
+    default: Date.now
   }
 });
 /**

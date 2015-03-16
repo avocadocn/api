@@ -68,13 +68,15 @@ var addUsersToTeams = function (companyData, callback) {
         });
         companyData.users[i].chatrooms.push({
           _id: companyData.teams[j].model._id,
-          unread: 0
+          join_time: new Date(),
+              read_time: new Date()
         });
         if(relationship[i][j]===2) {
           if(companyData.users[i].role==='EMPLOYEE') {
             companyData.users[i].chatrooms.push({
               _id: companyData.users[i].cid,
-              unread: 0
+              join_time: new Date(),
+              read_time: new Date()
             })
           }
           companyData.users[i].role = 'LEADER';

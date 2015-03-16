@@ -473,7 +473,7 @@ module.exports = function (app) {
               }
             }else{//如果被任命了
               if(user.role ==='EMPLOYEE') {
-                user.chatrooms.push({'_id':user.cid, 'unread': 0})
+                user.chatrooms.push({'_id':user.cid, 'join_time':new Date(), 'read_time': new Date()});
               }
               user.role = 'LEADER';
               var index = tools.arrayObjectIndexOf(user.team, team._id, '_id');
@@ -489,6 +489,7 @@ module.exports = function (app) {
                   leader: true,
                   logo: team.logo
                 });
+                user.chatrooms.push({'_id':team._id, 'join_time':new Date(), 'read_time': new Date()});
               }
               //把小队资料改了
               var index = tools.arrayObjectIndexOf(team.member ,uid ,'_id');
@@ -764,7 +765,7 @@ module.exports = function (app) {
           'name':team.name,
           'logo':team.logo
         });
-        user.chatrooms.push({'_id':team._id, 'unread':0});
+        user.chatrooms.push({'_id':team._id, 'join_time':new Date(), 'read_time':new Date()});
         team.save(function (err) {
           if (err) {
             log(err);
