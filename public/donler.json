@@ -5303,6 +5303,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "messageId": {
+          "description": "挑战信id",
+          "type": "string"
         }
       }
     },

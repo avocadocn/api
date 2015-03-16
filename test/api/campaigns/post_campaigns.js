@@ -15,7 +15,7 @@ module.exports = function () {
       var data;
       before(function (done) {
         data = dataService.getData();
-        var user = data[0].teams[0].leaders[0];
+        var user = data[0].teams[1].leaders[0];
         request.post('/users/login')
           .send({
             email: user.email,
@@ -33,8 +33,57 @@ module.exports = function () {
       it('应该成功发活动', function (done) {
         var campaignData = {
           cid: [data[0].model.id],
-          tid: [data[0].teams[0].model.id],
+          tid: [data[0].teams[1].model.id],
           campaign_type: 2,
+          theme:chance.string({length: 10}),
+          location:{
+            name : chance.address(),
+            coordinates : [chance.longitude(), chance.latitude()]
+          },
+          campaign_mold: data[0].teams[1].model.group_type,
+          start_time:chance.date({year: nowYear, month: nowMonth +1}),
+          end_time:chance.date({year: nowYear, month: nowMonth +2})
+        }
+        request.post('/campaigns')
+          .send(campaignData)
+          .set('x-access-token', accessToken)
+          .expect(200)
+          .end(function (err, res) {
+            if (err) return done(err);
+            res.body.should.have.properties('campaign_id','photo_album_id');
+            done();
+          });
+      });
+      it('应该成功发联谊', function (done) {
+        var campaignData = {
+          cid: [data[0].model.id, data[0].model.id],
+          tid: [data[0].teams[1].model.id,data[0].teams[0].model.id],
+          campaign_type: 7,
+          theme:chance.string({length: 10}),
+          location:{
+            name : chance.address(),
+            coordinates : [chance.longitude(), chance.latitude()]
+          },
+          campaign_mold: data[0].teams[1].model.group_type,
+          start_time:chance.date({year: nowYear, month: nowMonth +1}),
+          end_time:chance.date({year: nowYear, month: nowMonth +2})
+        }
+        request.post('/campaigns')
+          .send(campaignData)
+          .set('x-access-token', accessToken)
+          .expect(200)
+          .end(function (err, res) {
+            if (err) return done(err);
+            res.body.should.have.properties('campaign_id','photo_album_id');
+            done();
+          });
+      });
+      it('应该成功发带挑战信的比赛', function (done) {
+        var campaignData = {
+          cid: [data[0].model.id,data[0].model.id],
+          tid: [data[0].teams[1].model.id, data[0].teams[0].model.id],
+          messageId: data[0].competitionMessages[1]._id,
+          campaign_type: 4,
           theme:chance.string({length: 10}),
           location:{
             name : chance.address(),
@@ -63,7 +112,7 @@ module.exports = function () {
             name : chance.address(),
             coordinates : [chance.longitude(), chance.latitude()]
           },
-          campaign_mold: data[0].teams[0].model.group_type,
+          campaign_mold: data[0].teams[1].model.group_type,
           start_time:chance.date({year: nowYear, month: nowMonth +1}),
           end_time:chance.date({year: nowYear, month: nowMonth +2})
         }
@@ -83,14 +132,14 @@ module.exports = function () {
         it(msg, function (done) {
           var _campaignData = {
             cid: campaignData.cid!=undefined ? campaignData.cid : [data[0].model.id],
-            tid: campaignData.tid!=undefined ? campaignData.tid : [data[0].teams[0].model.id],
+            tid: campaignData.tid!=undefined ? campaignData.tid : [data[0].teams[1].model.id],
             campaign_type: campaignData.campaign_type!=undefined ?campaignData.campaign_type: 2,
             theme: campaignData.theme!=undefined ? campaignData.theme : chance.string({length: 10}),
             location:campaignData.location!=undefined ? campaignData.location : {
               name : chance.address(),
               coordinates : [chance.longitude(), chance.latitude()]
             },
-            campaign_mold: campaignData.campaign_mold !=undefined? campaignData.campaign_mold : data[0].teams[0].model.group_type,
+            campaign_mold: campaignData.campaign_mold !=undefined? campaignData.campaign_mold : data[0].teams[1].model.group_type,
             start_time: campaignData.start_time!=undefined ?campaignData.start_time : chance.date({year: nowYear, month: nowMonth +1}),
             end_time: campaignData.end_time!=undefined ?campaignData.end_time : chance.date({year: nowYear, month: nowMonth +2})
           }

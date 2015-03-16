@@ -6,7 +6,8 @@ var Campaign = mongoose.model('Campaign'),
     CampaignMold = mongoose.model('CampaignMold'),
     User = mongoose.model('User'),
     Company = mongoose.model('Company'),
-    CompanyGroup = mongoose.model('CompanyGroup');
+    CompanyGroup = mongoose.model('CompanyGroup'),
+    CompetitionMessage = mongoose.model('CompetitionMessage');
 var moment = require('moment'),
     async = require('async'),
     xss = require('xss');
@@ -162,7 +163,7 @@ var _postCampaign = function (param, callback) {
   // todo 待测试
   if (campaign.campaign_type !== 1) {
     CompanyGroup.find({
-      _id: campaign.tid
+      _id: {'$in':campaign.tid}
     }).exec()
       .then(function (teams) {
         teams.forEach(function (team) {
@@ -451,6 +452,28 @@ module.exports = function (app) {
   return {
 
     postCampaign: function (req, res) {
+      var messageValidator = function(name, value, callback) {
+        CompetitionMessage.findOne({_id: value[0]}, function(err, message) {
+          if(err||!message) {
+            callback(false, '挑战信id错误');
+          }else {
+            if(!req.user.isTeamLeader(message.sponsor_team)) {
+              callback(false, '非挑战发起队队长不能发起挑战');
+            }
+            else if(message.status!=='accepted') {
+              callback(false, '已生成挑战或您的挑战信未被处理');
+            }
+            else if(value[1].indexOf(message.sponsor_team.toString())===-1 
+              || value[1].indexOf(message.opposite_team.toString())===-1) {
+              callback(false, '发挑战小队与站内信小队不符');
+            }
+            else {
+              callback(true);
+            }
+          }
+        });
+      };
+
       donlerValidator({
         cid: {
           name: '公司id',
@@ -491,6 +514,11 @@ module.exports = function (app) {
           name: '结束时间',
           value: req.body.end_time,
           validators: [donlerValidator.after(req.body.start_time)]
+        },
+        messageId: {
+          name: '挑战信id',
+          value: [req.body.messageId, req.body.tid],
+          validators: req.body.messageId ? [messageValidator]: []
         }
       }, 'complete', function (pass, msg) {
         if (!pass) {
@@ -519,6 +547,10 @@ module.exports = function (app) {
         };
         if(req.body.tid){ 
           param.tid = req.body.tid;
+        }
+        //由挑战信来的
+        if(req.body.messageId) {          
+          param.competition_message = req.body.messageId;
         }
         async.parallel([
           function(callback){
@@ -550,6 +582,7 @@ module.exports = function (app) {
             }
           }
         ],function(err, values){
+          //values:[[companies], [teams]]
           if(err){
             log(err);
             return res.status(500).send({ msg: '服务器错误'});
@@ -607,7 +640,7 @@ module.exports = function (app) {
                 },
                 function(err) {
                   if(err) {
-                    cosole.log(err);
+                    console.log(err);
                     res.status(500).send({msg:err});
                   }else {
                     res.send(results);
@@ -636,20 +669,36 @@ module.exports = function (app) {
                         name: values[1][j].name,
                         logo: values[1][j].logo
                       }
+                      if(req.body.messageId) {
+                        unit.start_confirm = true;
+                      }
+                      else if(index===0) {
+                        unit.start_confirm = true;
+                      }
                       break;
                     }
                   }
                 }
                 param.campaign_unit.push(unit);
-              })
+              });
               _postCampaign(param, function(err,result){
                 if(err){
                   res.status(500).send({msg:err});
                 }
                 else{
-                  res.send(result)
+                  res.send(result);
+                  //更新competitionMessage
+                  if(req.body.messageId) {
+                    CompetitionMessage.findByIdAndUpdate(req.body.messageId, 
+                      {'$set':{'status':'competing', 'campaign':result.campaign_id}}, 
+                      function(err, message) {
+                      if(err) {
+                        log(err);
+                      }
+                    });
+                  }
                 }
-              })
+              });
             }
           }
         });
