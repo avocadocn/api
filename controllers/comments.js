@@ -587,14 +587,13 @@ module.exports = function (app) {
               var requestCid;
               switch(req.query.requestType) {
                 case 'campaign':
-                  requestCid =campaign.cid;
+                  requestCid =model.cid;
                   break;
                 case 'competition_message':
                   requestCid =[model.sponsor_cid, model.opposite_cid];
                   break;
               }
-              console.log(requestCid.indexOf(req.user.cid)=== -1);
-              if(req.user.provider === 'company' && requestCid.indexOf(req.user._id) === -1 && req.user.provider === 'user' && requestCid.indexOf(req.user.cid)=== -1) {
+              if(req.user.provider === 'company' && requestCid.indexOf(req.user._id) === -1 || req.user.provider === 'user' && requestCid.indexOf(req.user.cid)=== -1) {
                 return res.status(403).send({msg:'权限错误'});
               }
               else {

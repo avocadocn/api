@@ -11,8 +11,8 @@ var log = require('../services/error_log.js'),
     donlerValidator = require('../services/donler_validator.js'),
     auth = require('../services/auth.js');
 var timeLimit = 7 * 24 * 60 * 60 * 1000;
-var forwardTeamNum = 2;
-var backwardTeamNum = 2;
+var forwardTeamNum = 4;
+var backwardTeamNum = 4;
 var rankTeamNum =5;
 module.exports = function (app) {
   return {
@@ -52,13 +52,29 @@ module.exports = function (app) {
               res.status(400).send({ msg: '没有找到对应的榜单' });
             } else {
               var cid = req.user.cid || req.user._id;
-              CompanyGroup.find({cid: cid ,gid:req.query.gid},{cid: 1,name:1,logo:1,gid: 1,score:1,score_rank:1})
+              CompanyGroup.find({cid: cid ,gid:req.query.gid},{cid: 1,name:1,logo:1,gid: 1,member:1,score:1,score_rank:1})
               .exec()
               .then(function (teams) {
                 if (!teams) {
                   res.send({rank:rank[0]});
                 } else {
-                  res.send({rank:rank[0],team:teams});
+                  var formatTeams = [];
+                  teams.forEach(function (team ) {
+                    formatTeams.push({
+                      "_id":team._id,
+                      "cid":team.cid,
+                      "name":team.name,
+                      "logo":team.logo,
+                      "rank":team.score_rank.rank,
+                      "member_num":team.member.length,
+                      "lose":team.score_rank.lose,
+                      "tie":team.score_rank.tie,
+                      "win":team.score_rank.win,
+                      "score":team.score_rank.score,
+                      "activity_score":team.score.total
+                    });
+                  });
+                  res.send({rank:rank[0],team:formatTeams});
                 }
               })
               .then(null, function (err) {

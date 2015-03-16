@@ -103,7 +103,7 @@ module.exports = function () {
           }
           request.get('/comments')
           .set('x-access-token', userToken[0])
-          .query({hostType:'campaign', requestId:hostId.toString(), limit:20})
+          .query({requestType:'campaign', requestId:hostId.toString(), limit:20})
           .expect(202)
           .end(function (err,res) {
             if(err) return done(err);
@@ -138,7 +138,7 @@ module.exports = function () {
           }
           request.get('/comments')
           .set('x-access-token', hrToken[0])
-          .query({hostType:'campaign', requestId:hostId.toString(), limit:20})
+          .query({requestType:'campaign', requestId:hostId.toString(), limit:20})
           .expect(202)
           .end(function (err,res) {
             if(err) return done(err);
@@ -173,7 +173,7 @@ module.exports = function () {
           }
           request.get('/comments')
           .set('x-access-token', userToken[1])
-          .query({hostType:'campaign', requestId:hostId.toString(), limit:20})
+          .query({requestType:'campaign', requestId:hostId.toString(), limit:20})
           .expect(403)
           .end(function (err,res) {
             if(err) return done(err);
@@ -207,7 +207,7 @@ module.exports = function () {
           }
           request.get('/comments')
           .set('x-access-token', hrToken[1])
-          .query({hostType:'campaign', requestId:hostId.toString(), limit:20})
+          .query({requestType:'campaign', requestId:hostId.toString(), limit:20})
           .expect(403)
           .end(function (err,res) {
             if(err) return done(err);
