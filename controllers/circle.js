@@ -19,6 +19,26 @@ var auth = require('../services/auth.js'),
 
 module.exports = function(app) {
   return {
+
+    singleImgUploadSwitcher: function (req, res, next) {
+
+      /**
+       * 如果前端不能一次上传多张照片，则另外处理。
+       * 此时使用另外的上传文件api，不在此路由上传文件，所以这里可以获取req.body。
+       * 处理流程如下：
+       * 1. 先发一个请求，创建CircleContent，设置其状态为等待上传，并返回id给前端
+       * 2. 发请求上传图片，使用另一个api
+       * 3. 图片全部传好后，再发一次创建CircleContent的请求，确认已经传好，并查询File数据，将uri等相关信息保存到CircleConten中
+       *    激活CircleContent
+       */
+      if (req.body && req.body.singleImg === true) {
+        singleUpload(req, res, next);
+      }
+      else {
+        next();
+      }
+    },
+
     /**
      * [getFormData description]
      * To parse the form data from the fore-end
@@ -1017,3 +1037,8 @@ module.exports = function(app) {
     // }
   };
 };
+
+// 处理只能一次请求只能传一张图片时发同事圈的请求
+function singleUpload(req, res, next) {
+
+}

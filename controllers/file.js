@@ -348,6 +348,7 @@ function extraHandleCircleContentFiles(fileDatas, cid, callback) {
 
       async.map(fileDatas, function (fileData, mapCallback) {
         try {
+          // TODO: 获取尺寸
           gm(fileData.path).write(path.join(systemDir, fileData.name), function (err) {
             if (err) {
               mapCallback(err);

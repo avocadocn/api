@@ -30,6 +30,9 @@ var File = new Schema({
     type: String
   },
 
+  width: Number, // 图片宽度
+  height: Number, // 图片高度
+
   // 文件上传日期
   upload_date: {
     type: Date,
