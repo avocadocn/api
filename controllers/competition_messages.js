@@ -164,7 +164,7 @@ module.exports = function (app) {
       .exec()
       .then(function(message) {
         if(req.user.isTeamMember(message.sponsor_team._id) || req.user.isTeamMember(message.opposite_team._id))
-          return res.status(200).send({message: message});
+          return res.status(200).send({message: message,sponsorLeader:req.user.isTeamLeader(message.sponsor_team._id),oppositeLeader:req.user.isTeamLeader(message.opposite_team._id)});
         else
           return res.status(403).send({msg:'权限错误'});
       })

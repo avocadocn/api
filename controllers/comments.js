@@ -569,7 +569,6 @@ module.exports = function (app) {
         }
       }, 'complete', function (pass, msg) {
         if(pass) {
-          //先判断权限
           var model = '';
           switch(req.query.requestType) {
             case 'campaign':
@@ -590,10 +589,10 @@ module.exports = function (app) {
                   requestCid =model.cid;
                   break;
                 case 'competition_message':
-                  requestCid =[model.sponsor_cid, model.opposite_cid];
+                  requestCid =[model.sponsor_cid.toString(), model.opposite_cid.toString()];
                   break;
               }
-              if(req.user.provider === 'company' && requestCid.indexOf(req.user._id) === -1 || req.user.provider === 'user' && requestCid.indexOf(req.user.cid)=== -1) {
+              if(req.user.provider === 'company' && requestCid.indexOf(req.user._id) === -1 || req.user.provider === 'user' && requestCid.indexOf(req.user.cid.toString())=== -1) {
                 return res.status(403).send({msg:'权限错误'});
               }
               else {

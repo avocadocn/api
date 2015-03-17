@@ -4,8 +4,8 @@
  * Module dependencies.
  */
 var mongoose = require('mongoose'),
-    Schema = mongoose.Schema;
-    // mongoosePaginate = require('mongoose-paginate');
+    Schema = mongoose.Schema,
+    mongoosePaginate = require('mongoose-paginate');
 
 
 
@@ -205,7 +205,7 @@ var CompanyGroup = new Schema({
     }
 });
 
-// CompanyGroup.plugin(mongoosePaginate);
+CompanyGroup.plugin(mongoosePaginate);
 /**
  * Virtuals
  */

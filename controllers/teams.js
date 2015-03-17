@@ -19,6 +19,7 @@ var log = require('../services/error_log.js'),
   tools = require('../tools/tools.js'),
   async = require('async');
 var personalTeamScoreLimit = 100;
+var perPageNum = 4;
 module.exports = function (app) {
 
   return {
@@ -985,9 +986,103 @@ module.exports = function (app) {
         return res.status(403).send({msg:'您的积分不足，无法进行升级'});
       }
       
-    }
-
-
+    },
+    getSearchTeamsOptions: function (req, res, next) {
+      donlerValidator({
+        tid: {
+          name: '小队ID',
+          value: req.query.tid,
+          validators: ['required']
+        },
+        type: {
+          name: '查找类型',
+          value: req.params.type,
+          validators: ['required',donlerValidator.enum(['sameCity','nearbyTeam','search'])]
+        }
+      }, 'fast', function (pass, msg) {
+        if (pass) {
+          CompanyGroup.findById(req.query.tid).exec()
+          .then(function (companyGroup) {
+            if (!companyGroup) {
+              res.status(400).send({ msg: '没有找到对应的小队' });
+            } else {
+              req.companyGroup = companyGroup;
+              if(req.params.type=='search') {
+                var regx = new RegExp(req.query.key);
+                Company.find({'info.name':regx,'status.active':true,'status.mail_active':true},{'_id':1,'team':1},function(err,companies){
+                  if(err){
+                    return res.status(500).send({msg: '查找小队错误'});
+                  }else{
+                    var tids=[];
+                    for(var i=0;i<companies.length;i++){
+                      for(var j=0;j<companies[i].team.length;j++){
+                        if(companies[i].team[j].gid===companyGroup.gid){
+                          tids.push(companies[i].team[j].id);
+                        }
+                      }
+                    }
+                    req.tids = tids;
+                    next();
+                  }
+                });
+              }
+              else{
+                next();
+              }
+              
+            }
+          })
+          .then(null, function (err) {
+            log(err);
+            return res.status(500).send({msg: '查找小队错误'});
+          });
+        } else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+        }
+      });
+    },
+    getSearchTeams: function (req, res) {
+      var searchType = req.params.type;
+      var companyGroup = req.companyGroup;
+      var gid = companyGroup.gid;
+      var page = req.query.page > 0? req.query.page:1;
+      var options = {
+        'gid':req.companyGroup.gid,
+        '_id':{'$ne':req.query.tid},
+        'active':true
+      }
+      switch(searchType) {
+        case 'sameCity':
+          options['city.city'] = companyGroup.city.city;
+          break;
+        case 'nearbyTeam':
+          // var homecourt = companyGroup.home_court[req.query.index];
+          var latitude = parseFloat(req.query.latitude);
+          var longitude = parseFloat(req.query.longitude);
+          if(!latitude || !longitude)
+            return res.status(400).send({msg:'缺少坐标无法查找附近的小队'});
+          options['city.city'] = companyGroup.city.city;
+          options['home_court'] = {'$exists':true};
+          options['home_court.loc'] = {'$nearSphere':[longitude,latitude]};
+          break;
+        case 'search':
+          var regx = new RegExp(req.query.key);
+          options['$or'] =[{'_id':{'$in':req.tids}},{'name':regx}];
+          break;
+        default:
+          return res.status(400).send({msg:'您输入的查找类型不正确！'});
+      }
+      CompanyGroup.paginate(options, page, perPageNum, function(err, pageCount, results, itemCount) {
+        if(err){
+          log(err);
+          res.status(500).send({msg:err});
+        }
+        else{
+          return res.send({'teams':results,'maxPage':pageCount});
+        }
+      },{columns:{'logo':1,'name':1,'cname':1}, sortBy:{'score_rank.score':-1,'score.total':-1}});
+}
   };
 };
 

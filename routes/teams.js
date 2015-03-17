@@ -22,5 +22,5 @@ module.exports = function (app, ctrl) {
   app.get('/groups', token.needToken, ctrl.getGroups);
   app.get('/teams/lead/list', token.needToken, ctrl.getLedTeams);
 
-  
+  app.get('/teams/search/:type', token.needToken, ctrl.getSearchTeamsOptions, ctrl.getSearchTeams);
 };
