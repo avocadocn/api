@@ -229,7 +229,6 @@ module.exports = function (app) {
         return;
       }
       async.map(req.user.chatrooms, function(chatroom, callback) {
-        console.log(chatroom);
         Chat.find({chatroom_id: chatroom._id, create_date: {'$gt':chatroom.read_time}},{'_id':1},function(err, chats) {
           if(err) {
             callback(err);
