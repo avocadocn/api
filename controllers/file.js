@@ -32,7 +32,6 @@ module.exports = function (app) {
 
     /**
      * 上传文件的api对应的控制器
-     * CahaVar <cahavar@55yali.com> 于2015-03-17创建
      *
      * 请求主体:
      *  owner: {
@@ -57,66 +56,10 @@ module.exports = function (app) {
         var data = {};
 
         async.series([
-          function (callback) {
-            // 权限验证
-            if (!fields['owner'][0]) {
-              res.status(400).send({msg: '上传文件须指定所属对象'});
-              callback('break');
-              return;
-            }
-            authUpload(fields['owner'][0], req.user, function (err, canUpload) {
-              if (err) {
-                callback(err);
-              }
-              else {
-                if (canUpload) {
-                  callback();
-                }
-                else {
-                  res.status(403).send({msg: '您没有权限'});
-                  callback('break');
-                }
-              }
-            });
-          },
-          function (callback) {
-            // 将文件从临时目录移到存档目录(并设为只读，不可写和执行)
-            if (!files['files']) {
-              res.status(400).send({msg: '没有上传文件'});
-              callback('break');
-              return;
-            }
-            moveFilesFromTempDirToBackupDir(files['files'], function (err, fileDatas) {
-              if (err) {
-                callback(err);
-              }
-              else {
-                data.fileDatas = fileDatas;
-                callback();
-              }
-            });
-          },
-          function (callback) {
-            // TODO: 特殊类型特殊处理(是公开的图片类用gm写到public目录)
-            callback(); // TODO
-          },
-          function (callback) {
-            // 新建并保存数据模型
-            var uploader = {
-              _id: req.user._id,
-              kind: req.user.provider,
-              cid: req.user.getCid()
-            };
-            var owner = {
-              kind: fields['owner'][0].kind,
-              _id: fields['owner'][0]._id
-            };
-            data.fileDatas.forEach(function (fileData) {
-              fileData.uploader = uploader;
-              fileData.owner = owner;
-            });
-            createAndSaveFileModel(data.fileDatas, callback);
-          }
+          taskAuthUpload,
+          taskMoveFiles,
+          taskExtraHandle,
+          taskCreateAndSave
         ], function (err, results) {
           if (err) {
             if (err === 'break') {
@@ -128,6 +71,70 @@ module.exports = function (app) {
             res.send({msg: '上传成功'});
           }
         });
+
+        function taskAuthUpload(callback) {
+          // 权限验证
+          if (!fields['owner'][0]) {
+            res.status(400).send({msg: '上传文件须指定所属对象'});
+            callback('break');
+            return;
+          }
+          authUpload(fields['owner'][0], req.user, function (err, canUpload) {
+            if (err) {
+              callback(err);
+            }
+            else {
+              if (canUpload) {
+                callback();
+              }
+              else {
+                res.status(403).send({msg: '您没有权限'});
+                callback('break');
+              }
+            }
+          });
+        }
+
+        function taskMoveFiles(callback) {
+          // 将文件从临时目录移到存档目录
+          if (!files['files']) {
+            res.status(400).send({msg: '没有上传文件'});
+            callback('break');
+            return;
+          }
+          moveFilesFromTempDirToBackupDir(files['files'], function (err, fileDatas) {
+            if (err) {
+              callback(err);
+            }
+            else {
+              data.fileDatas = fileDatas;
+              callback();
+            }
+          });
+        }
+
+        function taskExtraHandle(callback) {
+          // 额外的处理（例如发到同事圈的图片用gm写到public目录）
+          extraFilesHandle(data.fileDatas, fields['owner'][0], req.user.getCid(), callback);
+        }
+
+        function taskCreateAndSave(callback) {
+          // 新建并保存数据模型
+          var uploader = {
+            _id: req.user._id,
+            kind: req.user.provider,
+            cid: req.user.getCid()
+          };
+          var owner = {
+            kind: fields['owner'][0].kind,
+            _id: fields['owner'][0]._id
+          };
+          data.fileDatas.forEach(function (fileData) {
+            fileData.uploader = uploader;
+            fileData.owner = owner;
+          });
+          createAndSaveFileModel(data.fileDatas, callback);
+        }
 
       }
 
@@ -147,8 +154,35 @@ module.exports = function (app) {
  * @param {Function} callback 形式为function (err, canUpload) {}, 参数canUpload为Boolean类型，如果有权限上传则为true，否则为false
  */
 function authUpload(owner, user, callback) {
-  // TODO
-  callback(null, true);
+  switch (owner.kind) {
+  case 'CircleContent':
+    authUploadForCircleContent(owner, user, callback);
+    break;
+  default:
+    callback(new Error('owner.kind不是允许的值'));
+  }
+}
+
+/**
+ * 验证是否有权限上传属于同事圈的文件
+ * @param {{kind: String, _id: String}} owner
+ * @param {User} user 上传者
+ * @param callback callback 形式为function (err, canUpload) {}, 参数canUpload为Boolean类型，如果有权限上传则为true，否则为false
+ */
+function authUploadForCircleContent(owner, user, callback) {
+  CircleContent.findById(owner._id).exec()
+    .then(function (circleContent) {
+      if (!circleContent) {
+        callback(null, false);
+      }
+      else {
+        var canUpload = (circleContent.post_user_id.toString() === user.id);
+        callback(null, canUpload);
+      }
+    })
+    .then(null, function (err) {
+      callback(err);
+    });
 }
 
 /**
@@ -235,10 +269,11 @@ function moveFileFromTempDirToBackupDir(file, cid, callback) {
 /**
  * 创建带日期和公司id的路径
  * @param {Object|String} cid
+ * @param {String} format 日期目录的格式，默认为'YYYY/MM'，创建年和月子目录。使用moment.format进行处理，参见http://momentjs.com/docs/#/displaying/format/
  * @returns {String} 返回路径字符串
  */
-function createDateCidDir(cid) {
-  return path.join(moment().format('YYYY/MM'), cid);
+function createDateCidDir(cid, format) {
+  return path.join(moment().format(format || 'YYYY/MM'), cid);
 }
 
 /**
@@ -253,6 +288,88 @@ function createNewDateName(file) {
 }
 
 /**
+ * 对移动完毕的文件作额外的处理工作。例如：使用gm写入到可公开访问的目录
+ *
+ *  fileDatas是一个数组: [{
+ *    originName: String, // 上传的原文件名
+ *    name: String, // 重命名后的文件名
+ *    path: String // 保存后的路径，相对于yali网站目录的路径，如'/backup/2015/03/cid/test.png'
+ *  }]
+ *
+ * @param {Array} fileDatas 文件数据
+ * @param {{kind: String, _id: String}} owner 文件所属的模型
+ * @param {Object|String} cid 公司id
+ * @param {Function} callback 形式为function (err) {}
+ */
+function extraFilesHandle(fileDatas, owner, cid, callback) {
+  switch (owner.kind) {
+  case 'CircleContent':
+    extraHandleCircleContentFiles(fileDatas, cid, callback);
+    break;
+  default:
+    callback(new Error('文件所属的模型的类型不是允许的值'));
+  }
+}
+
+/**
+ * 上传同事圈的文件，移动到'/public/img/circle/{YYYY-MM}/{cid}/{DateTime.ext}'
+ *
+ *  fileDatas是一个数组: [{
+ *    originName: String, // 上传的原文件名
+ *    name: String, // 重命名后的文件名
+ *    path: String // 保存后的路径，相对于yali网站目录的路径，如'/backup/2015/03/cid/test.png'
+ *  }]
+ *
+ * @param {Array} fileDatas 文件数据
+ * @param {Object|String} cid 公司id
+ * @param {Function} callback 形式为function (err) {}
+ */
+function extraHandleCircleContentFiles(fileDatas, cid, callback) {
+  var uriDir = path.join('img/circle', createDateCidDir(cid, 'YYYY-MM'));
+  var systemDir = path.join(yaliDir, 'public', uriDir);
+
+  async.series([
+    function (seriesCallback) {
+      fs.exists(systemDir, function (err, isExists) {
+        if (err) {
+          seriesCallback(err);
+        }
+        else {
+          if (isExists) {
+            seriesCallback();
+          }
+          else {
+            mkdirp(systemDir, seriesCallback);
+          }
+        }
+      });
+    },
+    function (seriesCallback) {
+
+      async.map(fileDatas, function (fileData, mapCallback) {
+        try {
+          gm(fileData.path).write(path.join(systemDir, fileData.name), function (err) {
+            if (err) {
+              mapCallback(err);
+            }
+            else {
+              fileData.uri = path.join(uriDir, fileData.name);
+              mapCallback();
+            }
+          });
+        }
+        catch (e) {
+          mapCallback(e);
+        }
+      }, seriesCallback);
+
+    }
+  ], callback);
+
+}
+
+
+/**
  * 创建文件模型并保存
  *
  * example:
@@ -260,6 +377,7 @@ function createNewDateName(file) {
  *    originName: String, // 原文件名
  *    name: String, // 保存在服务器上的文件名
  *    path: String, // 服务器上的文件路径，相对于yali网站目录的路径
+ *    uri: String, // 可访问的资源路径
  *    uploader: { // 上传者
  *      _id: ObjectId|String, // 上传者_id
  *      kind: String, // 'user' or 'hr'

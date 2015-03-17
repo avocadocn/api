@@ -25,6 +25,11 @@ var File = new Schema({
     required: true
   },
 
+  // 可访问的资源路径
+  uri: {
+    type: String
+  },
+
   // 文件上传日期
   upload_date: {
     type: Date,
