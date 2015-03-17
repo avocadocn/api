@@ -4985,7 +4985,7 @@ definitions:
       _id:
         type: string
         description: 讨论组id
-      count:
+      unread:
         type: number
         description: 未读数
   ChatRoom:

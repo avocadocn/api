@@ -233,7 +233,7 @@ module.exports = function (app) {
           if(err) {
             callback(err);
           }else {
-            callback(null, {_id: chatroom._id, count: chats.length});
+            callback(null, {_id: chatroom._id, unread: chats.length});
           }
         });
       }, function(err, results) {
@@ -355,7 +355,7 @@ module.exports = function (app) {
             // 填充chatRoomList的poster，原先为id，现将其替换为含用户昵称头像的对象
             chatRoomList.forEach(function (chatRoom) {
               for (var i = 0; i < users.length; i++) {
-                if (chatRoom.latestChat.poster.toString() === users[i]._id.toString()) {
+                if (chatRoom.latestChat && chatRoom.latestChat.poster.toString() === users[i]._id.toString()) {
                   chatRoom.latestChat.poster = users[i];
                   break;
                 }
