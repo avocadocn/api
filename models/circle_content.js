@@ -43,7 +43,7 @@ var CircleContent = new Schema({
     type: Schema.Types.ObjectId,
     required: true
   },
-  
+
   post_date: {
     type: Date,
     default: Date.now,
@@ -78,7 +78,7 @@ var CircleContent = new Schema({
 });
 
 CircleContent.pre('save', function (next) {
-  if ((!this.content || this.content === '') && (!this.photos || this.photos.length === 0)) {
+  if (this.status === 'show' && (!this.content || this.content === '') && (!this.photos || this.photos.length === 0)) {
     next(new Error('content或photos属性都为空'));
   } else {
     next();

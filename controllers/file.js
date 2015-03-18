@@ -34,10 +34,8 @@ module.exports = function (app) {
      * 上传文件的api对应的控制器
      *
      * 请求主体:
-     *  owner: {
-     *    kind: String, // 该文件所属模型的名称,
-     *    _id: String, // 该文件所属模型的_id
-     *  },
+     *  owner_kind: String, // 该文件所属模型的名称
+     *  owner_id: String, // 该文件所属模型的_id
      *  files: // 文件，一个或多个
      */
     upload: function (req, res, next) {
@@ -74,12 +72,16 @@ module.exports = function (app) {
 
         function taskAuthUpload(callback) {
           // 权限验证
-          if (!fields['owner'][0]) {
+          if (!fields.owner_kind || !fields.owner_id) {
             res.status(400).send({msg: '上传文件须指定所属对象'});
             callback('break');
             return;
           }
-          authUpload(fields['owner'][0], req.user, function (err, canUpload) {
+          data.owner = {
+            kind: fields.owner_kind[0],
+            _id: fields.owner_id[0]
+          };
+          authUpload(data.owner, req.user, function (err, canUpload) {
             if (err) {
               callback(err);
             }
@@ -97,12 +99,12 @@ module.exports = function (app) {
 
         function taskMoveFiles(callback) {
           // 将文件从临时目录移到存档目录
-          if (!files['files']) {
+          if (!files.files) {
             res.status(400).send({msg: '没有上传文件'});
             callback('break');
             return;
           }
-          moveFilesFromTempDirToBackupDir(files['files'], function (err, fileDatas) {
+          moveFilesFromTempDirToBackupDir(files.files, req.user.getCid(), function (err, fileDatas) {
             if (err) {
               callback(err);
             }
@@ -115,7 +117,7 @@ module.exports = function (app) {
 
         function taskExtraHandle(callback) {
           // 额外的处理（例如发到同事圈的图片用gm写到public目录）
-          extraFilesHandle(data.fileDatas, fields['owner'][0], req.user.getCid(), callback);
+          extraFilesHandle(data.fileDatas, data.owner, req.user.getCid(), callback);
         }
 
         function taskCreateAndSave(callback) {
@@ -125,13 +127,9 @@ module.exports = function (app) {
             kind: req.user.provider,
             cid: req.user.getCid()
           };
-          var owner = {
-            kind: fields['owner'][0].kind,
-            _id: fields['owner'][0]._id
-          };
           data.fileDatas.forEach(function (fileData) {
             fileData.uploader = uploader;
-            fileData.owner = owner;
+            fileData.owner = data.owner;
           });
           createAndSaveFileModel(data.fileDatas, callback);
         }
@@ -200,11 +198,12 @@ function authUploadForCircleContent(owner, user, callback) {
  *  }]
  *
  * @param {Array} files 文件数组
+ * @param {ObjectId|String} 公司id
  * @param {Function} callback 形式为function (err, fileDatas) {}
  */
-function moveFilesFromTempDirToBackupDir(files, callback) {
+function moveFilesFromTempDirToBackupDir(files, cid, callback) {
   async.map(files, function (file, mapCallback) {
-    moveFileFromTempDirToBackupDir(file, mapCallback);
+    moveFileFromTempDirToBackupDir(file, cid, mapCallback);
   }, callback);
 }
 
@@ -228,22 +227,17 @@ function moveFilesFromTempDirToBackupDir(files, callback) {
  */
 function moveFileFromTempDirToBackupDir(file, cid, callback) {
   var resFileData;
-  var backupDir = path.join(yaliDir, 'backup', createDateCidDir(cid));
+  var backupDir = path.join(yaliDir, 'backup_files', createDateCidDir(cid));
   var newDateName = createNewDateName(file);
   async.series([
     function (seriesCallback) {
       // create backup dir if not exists
-      fs.exists(backupDir, function (err, isExists) {
-        if (err) {
-          seriesCallback(err);
+      fs.exists(backupDir, function (isExists) {
+        if (isExists) {
+          seriesCallback();
         }
         else {
-          if (isExists) {
-            seriesCallback();
-          }
-          else {
-            mkdirp(backupDir, seriesCallback);
-          }
+          mkdirp(backupDir, seriesCallback);
         }
       });
 
@@ -259,7 +253,7 @@ function moveFileFromTempDirToBackupDir(file, cid, callback) {
       resFileData = {
         originName: file.originalFilename,
         name: newDateName,
-        path: backupDir
+        path: path.join(backupDir, newDateName)
       };
       callback(null, resFileData);
     }
@@ -273,7 +267,7 @@ function moveFileFromTempDirToBackupDir(file, cid, callback) {
  * @returns {String} 返回路径字符串
  */
 function createDateCidDir(cid, format) {
-  return path.join(moment().format(format || 'YYYY/MM'), cid);
+  return path.join(moment().format(format || 'YYYY/MM'), cid.toString());
 }
 
 /**
@@ -282,7 +276,13 @@ function createDateCidDir(cid, format) {
  * @returns {String} 返回文件名
  */
 function createNewDateName(file) {
-  var ext = mime.extension(file.headers['content-type']);
+  var ext;
+  if (file.headers['content-type']) {
+    ext = mime.extension(file.headers['content-type']);
+  }
+  else {
+    ext = 'jpg';
+  }
   var newDateName = Date.now().toString() + '.' + ext;
   return newDateName;
 }
@@ -327,20 +327,14 @@ function extraFilesHandle(fileDatas, owner, cid, callback) {
 function extraHandleCircleContentFiles(fileDatas, cid, callback) {
   var uriDir = path.join('img/circle', createDateCidDir(cid, 'YYYY-MM'));
   var systemDir = path.join(yaliDir, 'public', uriDir);
-
   async.series([
     function (seriesCallback) {
-      fs.exists(systemDir, function (err, isExists) {
-        if (err) {
-          seriesCallback(err);
+      fs.exists(systemDir, function (isExists) {
+        if (isExists) {
+          seriesCallback();
         }
         else {
-          if (isExists) {
-            seriesCallback();
-          }
-          else {
-            mkdirp(systemDir, seriesCallback);
-          }
+          mkdirp(systemDir, seriesCallback);
         }
       });
     },
@@ -399,8 +393,3 @@ function createAndSaveFileModel(fileDatas, callback) {
     file.save(mapCallback);
   }, callback);
 }
-
-
-
-
-

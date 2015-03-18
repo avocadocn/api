@@ -62,18 +62,18 @@ module.exports = function(app) {
       var form = new multiparty.Form({
         uploadDir: uploader.tempDir
       });
-      
+
       form.parse(req, function(err, fields, files) {
         if (err) {
           log(err);
           return res.sendStatus(500);
         }
-        
+
         // Send error(400) when don't have content and images
         if ((fields['content'] == undefined || !fields['content'][0]) && !files[fieldName]) {
           return res.sendStatus(400);
         }
-        
+
         // req.tid = (fields['tid'] && fields['tid'][0]) ? fields['tid'][0] : [];
         req.campaign_id = (fields['campaign_id'] && fields['campaign_id'][0]) ? fields['campaign_id'][0] : null;
         req.content = (fields['content'] && fields['content'][0]) ? fields['content'][0] : null;
@@ -192,12 +192,12 @@ module.exports = function(app) {
         content: req.content, // 文本内容(content和photos至少要有一个)
 
         photos: photos, // 照片列表
-        
+
         post_user_id: req.user._id, // 发消息的用户的id（头像和昵称再次查询）
-        
+
         relative_cids: req.relative_cids // 参加同事圈消息所属的活动的所有公司id
       });
-      
+
       circleContent.save(function(err) {
         if (err) {
           log(err);
@@ -205,7 +205,7 @@ module.exports = function(app) {
         } else {
           res.status(200).send({
             // 'msg': '同事圈消息发送成功',
-            'circleContent': circleContent // this field is used for test 
+            'circleContent': circleContent // this field is used for test
           });
         }
       });
@@ -332,7 +332,7 @@ module.exports = function(app) {
         'relative_cids': req.user.getCid(), // 该活动必须属于该用户所属公司
         'status': 'show'
       };
-      
+
       CircleContent.find(conditions)
         .sort('-post_date')
         .exec()
@@ -410,7 +410,7 @@ module.exports = function(app) {
         'tid': req.params.teamId,
         'status': 'show'
       };
-      
+
       CircleContent.find(conditions)
         .sort('-post_date')
         .exec()
@@ -565,7 +565,7 @@ module.exports = function(app) {
           msg: '权限错误'
         });
       }
-      /** 
+      /**
        * parameters limit:
        * 1. is_only_to_content is not null(or undefined) and must be true or false(see definition)
        * 2. kind must be 'comment' or 'appreciate'
@@ -1018,7 +1018,7 @@ module.exports = function(app) {
     //   if (req.query.commentId) {
     //     options._id = req.query.commentId;
     //   }
-      
+
     //   CircleComment.update(options, {
     //     $set: {
     //       'relative_user.$.list_status': 'delete'
