@@ -241,6 +241,7 @@ module.exports = function(app) {
           msg: '公司账号暂无同事圈功能'
         });
       }
+      console.log(req.query.last_content_date);
       if (req.query.last_content_date && req.query.latest_content_date) {
         return res.status(400).send({
           msg: '参数错误'
@@ -278,7 +279,7 @@ module.exports = function(app) {
                 var result = {};
                 async.parallel([
                   function(callback) {
-                    User.findById(content.post_user_id, 'photo', function(err, user) {
+                    User.findById(content.post_user_id, 'photo nickname', function(err, user) {
                       if (err) {
                         log(err);
                         callback(err);
@@ -299,7 +300,7 @@ module.exports = function(app) {
                   }
                 ], function(err, results) {
                   result.content = content;
-                  result.photo = results[0].photo;
+                  result.user = results[0];
                   result.comments = results[1];
                   callback(null, result);
                 });

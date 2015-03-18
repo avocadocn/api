@@ -6887,7 +6887,7 @@
       "title": "ResCircle",
       "required": [
         "CircleContent",
-        "photo",
+        "user",
         "comments"
       ],
       "properties": {
@@ -6895,8 +6895,9 @@
           "type": "CircleContent",
           "description": "消息相关信息"
         },
-        "photo": {
-          "type": "string"
+        "user": {
+          "type": "CircleUser",
+          "description": "消息相关用户"
         },
         "comments": {
           "type": "array",
@@ -6904,6 +6905,23 @@
           "items": {
             "type": "CircleComment"
           }
+        }
+      }
+    },
+    "CircleUser": {
+      "title": "ResCircle",
+      "required": [
+        "photo",
+        "nickname"
+      ],
+      "properties": {
+        "photo": {
+          "type": "string",
+          "description": "用户头像"
+        },
+        "nickname": {
+          "type": "string",
+          "description": "用户姓名"
         }
       }
     },
