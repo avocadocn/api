@@ -144,9 +144,10 @@ module.exports = function (app) {
         create_date: {'$gt':req.user.chatrooms[index].join_time}
       };//只取加入之后的
       if (req.query.nextDate) {
-        var timeCompare = new Date(req.query.nextDate) > req.user.chatrooms[index].join_time ;
+        // var timeCompare = new Date(req.query.nextDate) > req.user.chatrooms[index].join_time ;
         queryOptions.create_date = {
-          $gt: timeCompare ? new Date(req.query.nextDate) : req.user.chatrooms[index].join_time
+          '$lt': new Date(req.query.nextDate),
+          '$gt': req.user.chatrooms[index].join_time
         };
       }
       if (req.query.nextId) {
@@ -154,12 +155,20 @@ module.exports = function (app) {
           $lte: req.query.nextId
         }
       }
+      //取某时间之后的所有最新评论
+      if(req.query.preDate) {
+        queryOptions.create_date = {
+          $gt: req.query.preDate
+        };
+        pageSize = 1000;
+      }
 
       Chat.find(queryOptions, {
         'photos.ori_uri': 0
       })
         .sort('-create_date -_id')
         .limit(pageSize + 1)
+        .populate('poster',{'nickname':1, 'photo':1})
         .exec()
         .then(function (chats) {
           var resData = {
