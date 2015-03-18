@@ -1056,7 +1056,7 @@ function singleUpload(req, res, next) {
 function createCircleContent(req, res, next) {
 
   // filter
-  if (!req.body.content || !req.body.campaign_id) {
+  if (!req.body.campaign_id) {
     res.status(400).send({msg: '参数不足'});
     return;
   }
@@ -1089,11 +1089,13 @@ function createCircleContent(req, res, next) {
         cid: req.user.getCid(), // 所属公司id
         tid: tid, // 关联的小队id(可选，不是必要的)
         campaign_id: req.campaign_id, // 关联的活动id(可选，不是必要的)
-        content: req.body.content, // 文本内容(content和photos至少要有一个)
         post_user_id: req.user._id, // 发消息的用户的id（头像和昵称再次查询）
         relative_cids: relative_cids, // 参加同事圈消息所属的活动的所有公司id
         status: 'wait'
       });
+      if (req.body.content) {
+        circleContent.content = req.body.content;
+      }
       circleContent.save(function (err) {
         if (err) {
           next(err);
@@ -1131,6 +1133,11 @@ function activeCircleContent(req, res, next) {
         height: 1
       }).exec()
         .then(function (files) {
+          if (files.length === 0 && (!circleContent.content || circleContent.content === '')) {
+            res.send({msg: '发表失败，不允许既无文本内容又没有图片'});
+            // TODO: 可以考虑将此CircleContent从数据库中删除，或是定期清除
+            return;
+          }
           circleContent.photos = files;
           circleContent.status = 'show';
           circleContent.save(function (err) {
