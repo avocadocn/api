@@ -14,7 +14,7 @@ module.exports = function (app) {
     sendMessageValidate: function (req, res, next) {
       //验证两个队是不是一个类型或者一个公司
       var teamsValidator = function(name, value, callback) {
-        if(value[0]===value[1]) callback(false, '挑战小队数据错误'); //自己队不能给自己队发
+        if(value[0]===value[1]) return callback(false, '挑战小队数据错误'); //自己队不能给自己队发
         CompanyGroup.find({'_id':{'$in':value}},{'gid':1, 'cid':1},function(err, teams) {
           if(err||teams.length<2) {
             callback(false, '挑战小队数据错误');

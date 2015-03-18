@@ -3,7 +3,8 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 // var auth = require('../../services/auth');
-var moment = require('moment');
+var moment = require('moment'),
+    mongoosePaginate = require('mongoose-paginate');
 
 var ScoreBoard = new Schema({
   owner: {
@@ -167,7 +168,7 @@ var setScore = function (scoreBoard, allowSetScore, data) {
 
   scoreBoard.logs.push(log);
 };
-
+ScoreBoard.plugin(mongoosePaginate);
 ScoreBoard.methods = {
 
   /**

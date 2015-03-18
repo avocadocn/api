@@ -15,4 +15,5 @@ module.exports = function (app, ctrl) {
   app.delete('/campaigns/:campaignId/users/:userId', token.needToken, resources.getCampaignByParamId, ctrl.quitCampaign);
   app.put('/campaigns/:campaignId/dealProvoke',token.needToken, resources.getCampaignByParamId, ctrl.dealProvoke);
   app.get('/campaigns/mold/:requestType/:requestId',token.needToken, ctrl.getCampaignMolds);
+  app.get('/campaigns/competition/:fromTeamId/:targetTeamId', token.needToken, ctrl.getCompetitionOfTeams);
 };

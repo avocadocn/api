@@ -7,7 +7,8 @@ var Campaign = mongoose.model('Campaign'),
     User = mongoose.model('User'),
     Company = mongoose.model('Company'),
     CompanyGroup = mongoose.model('CompanyGroup'),
-    CompetitionMessage = mongoose.model('CompetitionMessage');
+    CompetitionMessage = mongoose.model('CompetitionMessage'),
+    ScoreBoard = mongoose.model('ScoreBoard');
 var moment = require('moment'),
     async = require('async'),
     xss = require('xss');
@@ -22,7 +23,7 @@ var logController = require('../controllers/log'),
     tools = require('../tools/tools.js'),
     campaignBusiness = require('../business/campaigns');
 
-
+var perPageNum = 4;
 var searchCampaign = function(select_type, option, sort, limit, requestId, teamIds, populate, callback){
   var now = new Date();
   var _option = {}; 
@@ -1202,7 +1203,28 @@ module.exports = function (app) {
         }
       });
     },
-
+    getCompetitionOfTeams: function  (req, res) {
+      var fromTeamId = req.params.fromTeamId;
+      var targetTeamId = req.params.targetTeamId;
+      var page = req.query.page > 0? req.query.page:1;
+      if(req.user.isTeamMember(fromTeamId) || req.user.isTeamMember(targetTeamId)) {
+        var options = {
+          'playing_teams.tid':  { $all:[ fromTeamId, targetTeamId ]}
+        };
+        ScoreBoard.paginate(options, page, perPageNum, function(err, pageCount, results, itemCount) {
+        if(err){
+          log(err);
+          res.status(500).send({msg:err});
+        }
+        else{
+          return res.send({'competitions':results,'maxPage':pageCount});
+        }
+      },{columns:{'playing_teams':1,'status':1,'create_date':1}, sortBy:{'create_date':-1}});
+      }
+      else{
+        res.status(403).send({msg:'您没有权限获取该信息！'});
+      }
+    },
     // todo
     getCampaigns: {
       // 兼容旧版本api，如果请求的url query中没有result，则按1.0的api处理，否则使用1.2的api
