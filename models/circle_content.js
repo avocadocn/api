@@ -49,9 +49,15 @@ var CircleContent = new Schema({
     default: Date.now,
     required: true
   },
+
+  /**
+   * show: 正常显示
+   * delete: 删除标记，不再显示
+   * wait: 等待图片资源上传
+   */
   status: {
     type: String,
-    enum: ['show', 'delete'],
+    enum: ['show', 'delete', 'wait'],
     required: true,
     default: 'show'
   },

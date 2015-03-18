@@ -6,6 +6,7 @@ var multiparty = require('multiparty');
 var mongoose = require('mongoose');
 var CircleContent = mongoose.model('CircleContent'),
   CircleComment = mongoose.model('CircleComment'),
+  File = mongoose.model('File'),
   User = mongoose.model('User'),
   Campaign = mongoose.model('Campaign'),
   async = require('async');
@@ -30,8 +31,11 @@ module.exports = function(app) {
        * 2. 发请求上传图片，使用另一个api
        * 3. 图片全部传好后，再发一次创建CircleContent的请求，确认已经传好，并查询File数据，将uri等相关信息保存到CircleConten中
        *    激活CircleContent
+       *
+       * req.body.isUploadImgFromFileApi: Boolean // 是否先通过文件api上传完图片再创建
+       * req.body.uploadStep: String // 上传步骤，可以为'create'或'active'对应上述的第1步和第3步
        */
-      if (req.body && req.body.singleImg === true) {
+      if (req.body && req.body.isUploadImgFromFileApi === true) {
         singleUpload(req, res, next);
       }
       else {
@@ -1040,5 +1044,108 @@ module.exports = function(app) {
 
 // 处理只能一次请求只能传一张图片时发同事圈的请求
 function singleUpload(req, res, next) {
+  if (req.body.uploadStep === 'create') {
+    createCircleContent(req, res, next);
+  }
+  else if (req.body.uploadStep === 'active') {
+    activeCircleContent(req, res, next);
+  }
+}
 
+// 创建同事圈的内容
+function createCircleContent(req, res, next) {
+
+  // filter
+  if (!req.body.content || !req.body.campaign_id) {
+    res.status(400).send({msg: '参数不足'});
+    return;
+  }
+
+  // auth
+  Campaign.findById(req.body.campaign_id).exec()
+    .then(function (campaign) {
+      if (!campaign) {
+        res.status(403).send({msg: '您没有权限'});
+        return;
+      }
+
+      var role = auth.getRole(req.user, {
+        companies: campaign.cid,
+        teams: campaign.tid,
+        users: campaign.relativeMemberIds
+      });
+      var taskName = campaign.campaign_type == 1 ? 'publishCompanyCircle' : 'publishTeamCircle';
+      var allow = auth.auth(role, [taskName]);
+      if (!allow[taskName]) {
+        res.status(403).send({msg: '您没有权限'});
+        return;
+      }
+
+      var tid = campaign.campaign_type == 1 ? [] : campaign.tid;
+      var relative_cids = campaign.cid;
+
+      // create
+      var circleContent = new CircleContent({
+        cid: req.user.getCid(), // 所属公司id
+        tid: tid, // 关联的小队id(可选，不是必要的)
+        campaign_id: req.campaign_id, // 关联的活动id(可选，不是必要的)
+        content: req.body.content, // 文本内容(content和photos至少要有一个)
+        post_user_id: req.user._id, // 发消息的用户的id（头像和昵称再次查询）
+        relative_cids: relative_cids, // 参加同事圈消息所属的活动的所有公司id
+        status: 'wait'
+      });
+      circleContent.save(function (err) {
+        if (err) {
+          next(err);
+        }
+        else {
+          res.send({
+            msg: '创建成功，等待文件上传',
+            id: circleContent.id
+          });
+        }
+      });
+
+    })
+    .then(null, next);
+
+}
+
+// 激活
+function activeCircleContent(req, res, next) {
+  CircleContent.findById(req.body.circleContentId).exec()
+    .then(function (circleContent) {
+      if (!circleContent) {
+        res.status(403).send({msg: '您没有权限'});
+        return;
+      }
+
+      // 查找circleContent对应的文件
+      File.find({
+        'owner.kind': 'CircleContent',
+        'owner._id': circleContent._id
+      }, {
+        _id: 0,
+        uri: 1,
+        width: 1,
+        height: 1
+      }).exec()
+        .then(function (files) {
+          circleContent.photos = files;
+          circleContent.status = 'show';
+          circleContent.save(function (err) {
+            if (err) {
+              next(err);
+            }
+            else {
+              res.send({
+                msg: '发表成功',
+                circleContent: circleContent
+              });
+            }
+          });
+        })
+        .then(null, next);
+    })
+    .then(null, next);
 }
