@@ -1696,6 +1696,121 @@
         }
       }
     },
+    "/teams/search/{type}": {
+      "get": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "查找对手",
+        "operationId": "getSearchTeams",
+        "parameters": [
+          {
+            "name": "type",
+            "description": "查找类型",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "sameCity",
+              "nearbyTeam",
+              "search"
+            ],
+            "in": "path"
+          },
+          {
+            "name": "tid",
+            "description": "需要查找对手的小队的id",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "latitude",
+            "description": "查找附近的对手时的纬度",
+            "required": false,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "longtitude",
+            "description": "查找附近的对手时的经度",
+            "required": false,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "key",
+            "description": "按名称查找的关键字",
+            "required": false,
+            "type": "string",
+            "in": "query"
+          },
+          {
+            "name": "page",
+            "description": "页数",
+            "required": false,
+            "type": "number",
+            "format": "int32",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "Team"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/teams/competition/{teamId}/{targetTeamId}": {
+      "get": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "获取同类型的其他小队的简略信息",
+        "operationId": "getCompetitionTeam",
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "需要查找对手的小队的id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "targetTeamId",
+            "description": "目标小队的id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "Team"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/groups": {
       "get": {
         "tags": [
@@ -2360,6 +2475,51 @@
               "type": "array",
               "items": {
                 "$ref": "CampaignMold"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/competition/{fromTeamId}/{targetTeamId}": {
+      "get": {
+        "tags": [
+          "campaigns"
+        ],
+        "summary": "获取两个小队间的比赛列表",
+        "operationId": "getCompetitionOfTeams",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "fromTeamId",
+            "description": "需要获取信息的小队的id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "targetTeamId",
+            "description": "获取的目标小队的id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "Campaign"
               }
             }
           },

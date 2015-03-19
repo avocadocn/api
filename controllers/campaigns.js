@@ -223,7 +223,7 @@ var _postCampaign = function (param, callback) {
         return;
       }
       componentNames = mold.module;
-      if (campaign.campaign_unit.length !== 2) {//单组去除比分板
+      if (campaign.campaign_unit.length !== 2 || campaign.campaign_type==7) {//单组去除比分板,联谊去除比分扳
         var scoreIndex = componentNames.indexOf('ScoreBoard');
         if (scoreIndex > -1)
           componentNames.splice(scoreIndex, 1);
@@ -453,6 +453,7 @@ module.exports = function (app) {
   return {
 
     postCampaign: function (req, res) {
+      var _campaign_type;
       var messageValidator = function(name, value, callback) {
         CompetitionMessage.findOne({_id: value[0]}, function(err, message) {
           if(err||!message) {
@@ -469,12 +470,24 @@ module.exports = function (app) {
               callback(false, '发挑战小队与站内信小队不符');
             }
             else {
+              if(message.competition_type==1) {
+                if(message.opposite_cid.toString()===message.sponsor_cid.toString()) {
+                  _campaign_type =4;
+                }
+                else{
+                  _campaign_type =5;
+                }
+                
+              }
+              else{
+                _campaign_type =7;
+              }
+             
               callback(true);
             }
           }
         });
       };
-
       donlerValidator({
         cid: {
           name: '公司id',
@@ -484,7 +497,7 @@ module.exports = function (app) {
         campaign_type: {
           name: '活动类型',
           value: req.body.campaign_type,
-          validators: ['required', 'number']
+          validators: req.body.messageId ? []:['required', 'number']
         },
         tid: {
           name: '小队tid',
@@ -516,6 +529,21 @@ module.exports = function (app) {
           value: req.body.end_time,
           validators: [donlerValidator.after(req.body.start_time)]
         },
+        deadline: {
+          name: '报名截止时间',
+          value: req.body.deadline,
+          validators: [donlerValidator.after(req.body.start_time),donlerValidator.before(req.body.end_time)]
+        },
+        member_max: {
+          name: '人数上限',
+          value: req.body.member_max,
+          validators: ['number']
+        },
+        member_min: {
+          name: '人数下限',
+          value: req.body.member_min,
+          validators: ['number']
+        },
         messageId: {
           name: '挑战信id',
           value: [req.body.messageId, req.body.tid],
@@ -538,7 +566,7 @@ module.exports = function (app) {
         }
         var param = {
           cid: req.body.cid,
-          campaign_type: req.body.campaign_type,
+          campaign_type: _campaign_type || req.body.campaign_type,
           theme: req.body.theme,
           location: req.body.location,
           campaign_mold: req.body.campaign_mold,
@@ -548,6 +576,15 @@ module.exports = function (app) {
         };
         if(req.body.tid){ 
           param.tid = req.body.tid;
+        }
+        if(req.body.deadline){ 
+          param.deadline = req.body.deadline;
+        }
+        if(req.body.member_max){ 
+          param.member_max = req.body.member_max;
+        }
+        if(req.body.member_min){ 
+          param.member_min = req.body.member_min;
         }
         //由挑战信来的
         if(req.body.messageId) {          

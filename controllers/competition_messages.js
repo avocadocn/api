@@ -77,7 +77,8 @@ module.exports = function (app) {
         opposite_team: req.body.opposite,
         opposite_cid: req.teams[0]._id.toString() === req.body.sponsor ? req.teams[1].cid:req.teams[0].cid,
         competition_type: req.body.type,
-        content: req.body.content
+        content: req.body.content,
+        campaign_mold: req.teams[0].group_type
       });
       Vote.establish(message, function (err, vote) {
         if (err) {
@@ -142,7 +143,7 @@ module.exports = function (app) {
       queryAndFormat : function (req, res) {
         CompetitionMessage.find(req.options)
         .sort('-create_time')
-        .populate([{'path':'sponsor_team', 'select':{name:1, logo:1}}, {'path':'opposite_team', 'select':{name:1, logo:1}}])
+        .populate([{'path':'sponsor_team', 'select':{name:1, logo:1, group_type:1}}, {'path':'opposite_team', 'select':{name:1, logo:1, group_type:1}}])
         .exec()
         .then(function(messages) {
           return res.status(200).send({messages: messages});

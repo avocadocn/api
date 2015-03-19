@@ -83,7 +83,7 @@ module.exports = function () {
           cid: [data[0].model.id,data[0].model.id],
           tid: [data[0].teams[1].model.id, data[0].teams[0].model.id],
           messageId: data[0].competitionMessages[1]._id,
-          campaign_type: 4,
+          // campaign_type: 4,
           theme:chance.string({length: 10}),
           location:{
             name : chance.address(),

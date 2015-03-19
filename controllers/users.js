@@ -748,6 +748,7 @@ module.exports = function (app) {
       }
 
       srcUser.mail_active = true;
+      srcUser.active = true;
       srcUser.save(function (err) {
         if (err) {
           next(err);

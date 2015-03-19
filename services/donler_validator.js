@@ -170,7 +170,7 @@ donlerValidator.isLength = function (length) {
 
 donlerValidator.after = function (date) {
   return function (name, value, callback) {
-    if (validatorModule.isAfter(value, date)) {
+    if (!value || validatorModule.isAfter(value, date)) {
       callback(true);
     } else {
       var formatDate;
@@ -187,7 +187,7 @@ donlerValidator.after = function (date) {
 
 donlerValidator.before = function (date) {
   return function (name, value, callback) {
-    if (validatorModule.isBefore(value, date)) {
+    if (!value || validatorModule.isBefore(value, date)) {
       callback(true);
     } else {
       var formatDate;
