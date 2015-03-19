@@ -341,21 +341,44 @@ function extraHandleCircleContentFiles(fileDatas, cid, callback) {
     function (seriesCallback) {
 
       async.map(fileDatas, function (fileData, mapCallback) {
-        try {
-          // TODO: 获取尺寸
-          gm(fileData.path).write(path.join(systemDir, fileData.name), function (err) {
-            if (err) {
-              mapCallback(err);
+
+        async.parallel({
+          getSize: function (parallelCallback) {
+            try {
+              gm(fileData.path).size(function (err, size) {
+                if (err) {
+                  parallelCallback(err);
+                }
+                else {
+                  fileData.width = size.width;
+                  fileData.height = size.height;
+                  parallelCallback();
+                }
+              });
             }
-            else {
-              fileData.uri = path.join(uriDir, fileData.name);
-              mapCallback();
+            catch (e) {
+              parallelCallback(e);
             }
-          });
-        }
-        catch (e) {
-          mapCallback(e);
-        }
+          },
+          write: function (parallelCallback) {
+            try {
+              gm(fileData.path).write(path.join(systemDir, fileData.name), function (err) {
+                if (err) {
+                  parallelCallback(err);
+                }
+                else {
+                  fileData.uri = path.join(uriDir, fileData.name);
+                  parallelCallback();
+                }
+              });
+            }
+            catch (e) {
+              parallelCallback(e);
+            }
+            
+          }
+        }, mapCallback);
+
       }, seriesCallback);
 
     }
