@@ -143,7 +143,7 @@ module.exports = function (app) {
       queryAndFormat : function (req, res) {
         CompetitionMessage.find(req.options)
         .sort('-create_time')
-        .populate([{'path':'sponsor_team', 'select':{name:1, logo:1, group_type:1}}, {'path':'opposite_team', 'select':{name:1, logo:1, group_type:1}}])
+        .populate([{'path':'sponsor_team', 'select':{name:1, logo:1}}, {'path':'opposite_team', 'select':{name:1, logo:1}}])
         .exec()
         .then(function(messages) {
           return res.status(200).send({messages: messages});
@@ -160,7 +160,7 @@ module.exports = function (app) {
         return res.status(403).send({msg:'权限错误'});
       }
       CompetitionMessage.findOne({_id: req.params.messageId})
-      .populate([{'path':'sponsor_team', 'select':{name:1, logo:1}}, {'path':'opposite_team', 'select':{name:1, logo:1}}])
+      .populate([{'path':'sponsor_team', 'select':{name:1, logo:1, group_type:1}}, {'path':'opposite_team', 'select':{name:1, logo:1, group_type:1}}])
       .populate('vote',{'units':1})
       .exec()
       .then(function(message) {
