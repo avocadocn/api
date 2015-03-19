@@ -367,7 +367,7 @@ function extraHandleCircleContentFiles(fileDatas, cid, callback) {
                   parallelCallback(err);
                 }
                 else {
-                  fileData.uri = path.join(uriDir, fileData.name);
+                  fileData.uri = path.join('/', uriDir, fileData.name);
                   parallelCallback();
                 }
               });
@@ -375,7 +375,7 @@ function extraHandleCircleContentFiles(fileDatas, cid, callback) {
             catch (e) {
               parallelCallback(e);
             }
-            
+
           }
         }, mapCallback);
 
