@@ -116,11 +116,26 @@ module.exports = function (app) {
               for (var i = 0; i < usersLength; i++) {
                 userIds.push(users[i]._id);
               }
-              socketClient.pushChat(chat.chatroom_id, chat, userIds);
+              var socketChat = {
+                '_id': chat._id,
+                'chatroom_id': chat.chatroom_id,
+                'poster': {
+                  '_id': chat.poster,
+                  'photo': req.user.photo,
+                  'nickname': req.user.nickname
+                },
+                'create_date': chat.create_date,
+                'content': chat.content,
+                'randomId': req.body.randomId
+              };
+              if(chat.photos) {
+                socketChat.photos = chat.photos;
+              }
+              socketClient.pushChat(chat.chatroom_id, socketChat, userIds);
             }
-          })
+          });
         }
-      })
+      });
     },
 
     getChats: function (req, res, next) {
