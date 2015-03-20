@@ -575,11 +575,13 @@ module.exports = function(app) {
        * 5. target_user_id is null(or undefined) when is_only_to_content is true
        * 6. target_user_id is not null(or undefined) when is_only_to_content is false
        */
-      if (!req.body.is_only_to_content || (req.body.kind != 'comment' && req.body.kind != 'appreciate') || (req.body.content && req.body.kind == 'appreciate') || (!req.body.content && req.body.kind == 'comment') || (req.body.is_only_to_content == true && req.body.target_user_id) ||
-        (req.body.is_only_to_content == false && !req.body.target_user_id))
+      if (req.body.is_only_to_content === undefined || req.body.is_only_to_content === null || (req.body.kind != 'comment' && req.body.kind != 'appreciate') || (req.body.content && req.body.kind == 'appreciate') || (!req.body.content && req.body.kind == 'comment') || (req.body.is_only_to_content == true && req.body.target_user_id) ||
+        (req.body.is_only_to_content == false && !req.body.target_user_id)) {
         return res.status(400).send({
           msg: '参数错误'
         });
+      }
+
 
       if (req.body.kind == 'appreciate') {
         var isAppreciate = false;
