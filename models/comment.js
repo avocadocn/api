@@ -78,14 +78,17 @@ Comment.statics = {
     if (hostData.hostType === 'campaign_detail' || hostData.hostType === 'campaign') {
       hostType = { '$in': ['campaign', 'campaign_detail'] };
     }
-    this.find({
+    var option = {
       host_type: hostType,
       host_id: hostData.hostId,
-      status: { '$ne': 'delete' },
-      create_date: {
-        '$gte': pageStartDate || Date.now()
+      status: { '$ne': 'delete' }
+    }
+    if(pageStartDate) {
+      option.create_date = {
+        '$gte': pageStartDate
       }
-    })
+    }
+    this.find(option)
       .limit(pageSize + 1)
       .sort('create_date')
       .exec()

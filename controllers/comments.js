@@ -609,7 +609,7 @@ module.exports = function (app) {
                   }, function (err) {
                     if (err) console.log(err);
                     // 即使错误依然会做基本的权限设置（公司可删自己员工的，自己可以删自己的），所以依旧返回数据
-                    res.status(202).send({'comments': comments, nextStartDate: nextStartDate});
+                    res.status(200).send({'comments': comments, nextStartDate: nextStartDate});
                     // userReadComment(req.user, req.query.requestId, function(){});
                   });
                 });
