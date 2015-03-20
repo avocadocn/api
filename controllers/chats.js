@@ -44,7 +44,7 @@ module.exports = function (app) {
       var randomId;
       uploader.uploadImg(req, {
         fieldName: 'photo',
-        targetDir: '/public/img/photo_album',
+        targetDir: '/public/img/chats',
         subDir: req.user.getCid().toString(),
         saveOrigin: true,
         getFields: function (fields) {
@@ -140,7 +140,7 @@ module.exports = function (app) {
                 },
                 'create_date': chat.create_date,
                 'content': chat.content,
-                'randomId': req.body.randomId
+                'randomId': req.body.randomId || req.randomId
               };
               if(chat.photos) {
                 socketChat.photos = chat.photos;
@@ -295,18 +295,18 @@ module.exports = function (app) {
       }
 
       // 讨论组列表其实就是用户的小队列表加上一个公司的讨论组，如果用户不是队长，则没有该讨论组
-      var chatRoomIds = [];
-      var chatRoomList = [];
+      var chatroomIds = [];
+      var chatroomList = [];
       if (req.user.team) {
         var teams = req.user.team.filter(function (team) {
           return (team.entity_type !== 'virtual');
         });
 
-        chatRoomIds = teams.map(function (team) {
+        chatroomIds = teams.map(function (team) {
           return team._id;
         });
 
-        chatRoomList = teams.map(function (team) {
+        chatroomList = teams.map(function (team) {
           return {
             kind: 'team',
             _id: team._id,
@@ -317,16 +317,19 @@ module.exports = function (app) {
       }
       // 只有是队长才可以参与公司管理讨论组
       if (req.user.role === 'LEADER') {
-        chatRoomIds.push(req.user.getCid());
-        chatRoomList.push({
+        chatroomIds.push(req.user.getCid());
+        chatroomList.push({
           kind: 'company',
           _id: req.user.cid,
           name: req.user.company_official_name
         });
       }
+      if(!chatroomList.length) {
+        return res.send({chatroomList: chatroomList});
+      }
       Chat.aggregate()
         .match({
-          chatroom_id: {$in: chatRoomIds},
+          chatroom_id: {$in: chatroomIds},
           status: 'active'
         })
         .sort('-create_date')
@@ -342,44 +345,40 @@ module.exports = function (app) {
             }
           }
         })
+        .sort('-latestChat.create_date')
         .exec()
         .then(function (results) {
+          //---为了排序写两步
+          //先把results里有的放到列表里
           var posterIdList = [];
-          chatRoomList.forEach(function (chatRoom) {
-            // 从查询结果中查找该讨论组匹配的最新讨论
-            var latestChat;
-            for (var i = 0; i < results.length; i++) {
-              if (chatRoom._id.toString() === results[i]._id.toString()) {
-                var latestChat = results[i].latestChat;
-                break;
-              }
+          var resultChatroomList = [];
+          var resultsLength = results.length;
+          for (var i=0; i<results.length; i++) {
+            var index = tools.arrayObjectIndexOf(chatroomList, results[i]._id, '_id');
+            if(index>-1) {
+              var chatroom = chatroomList[index];
+              chatroom.latestChat = results[i].latestChat;
+              resultChatroomList.push(chatroom);
+              posterIdList.push(chatroom.latestChat.poster);
             }
-            if(latestChat) {
-              posterIdList.push(latestChat.poster);
-              chatRoom.latestChat = {
-                _id: latestChat._id,
-                content: latestChat.content,
-                create_date: latestChat.create_date,
-                poster: latestChat.poster,
-                photos: latestChat.photos && latestChat.photos.length > 0 ? latestChat.photos.map(function (photo) {
-                  return {
-                    uri: photo.uri,
-                    width: photo.width,
-                    height: photo.height
-                  };
-                }) : null
-              };
+          }
+          //再把results里没有的放进去
+          var chatroomListLength = chatroomList.length;
+          for (var i=0; i<chatroomListLength; i++) {
+            var index = tools.arrayObjectIndexOf(results, chatroomList[i]._id, '_id');
+            if(index===-1) {
+              resultChatroomList.push(chatroomList[i]);
             }
-          });
+          }
 
           // 查询poster
-          queryPosters(posterIdList, chatRoomList);
+          queryPosters(posterIdList, resultChatroomList);
         })
         .then(null, function (err) {
           next(err);
         });
 
-      function queryPosters(posterIdList, chatRoomList) {
+      function queryPosters(posterIdList, chatroomList) {
         User.find({
           _id: {$in: posterIdList}
         }, {
@@ -390,16 +389,16 @@ module.exports = function (app) {
         })
           .exec()
           .then(function (users) {
-            // 填充chatRoomList的poster，原先为id，现将其替换为含用户昵称头像的对象
-            chatRoomList.forEach(function (chatRoom) {
+            // 填充chatroomList的poster，原先为id，现将其替换为含用户昵称头像的对象
+            chatroomList.forEach(function (chatroom) {
               for (var i = 0; i < users.length; i++) {
-                if (chatRoom.latestChat && chatRoom.latestChat.poster.toString() === users[i]._id.toString()) {
-                  chatRoom.latestChat.poster = users[i];
+                if (chatroom.latestChat && chatroom.latestChat.poster.toString() === users[i]._id.toString()) {
+                  chatroom.latestChat.poster = users[i];
                   break;
                 }
               }
             });
-            res.send({chatRoomList: chatRoomList});
+            res.send({chatroomList: chatroomList});
           })
           .then(null, function (err) {
             next(err);
