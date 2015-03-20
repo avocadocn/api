@@ -87,7 +87,7 @@ Comment.statics = {
       }
     })
       .limit(pageSize + 1)
-      .sort('-create_date')
+      .sort('create_date')
       .exec()
       .then(function (comments) {
         if (comments.length === pageSize + 1) {
