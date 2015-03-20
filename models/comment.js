@@ -83,7 +83,7 @@ Comment.statics = {
       host_id: hostData.hostId,
       status: { '$ne': 'delete' },
       create_date: {
-        '$lt': pageStartDate || Date.now()
+        '$gte': pageStartDate || Date.now()
       }
     })
       .limit(pageSize + 1)
