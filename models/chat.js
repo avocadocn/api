@@ -8,6 +8,15 @@ var Schema = mongoose.Schema;
 
 var Chat = new Schema({
   chatroom_id: Schema.Types.ObjectId,  //聊天室的id,这个主体可以是 一个小队、一个公司
+  chat_type:{
+    type: String,
+    enum:['normal','recommend_team'],
+    default: 'normal'
+  },
+  recommend_teamid:{
+    type: Schema.Types.ObjectId,
+    ref: 'CompanyGroup'
+  },
   content: String,
   create_date:{
     type:Date,

@@ -93,6 +93,20 @@ module.exports = function (app) {
       if (req.photo) {
         chat.photos = req.photo;
       }
+      if(req.body.chatType) {
+        var chatType = req.body.chatType;
+        switch(chatType) {
+          case 'recommend_team':
+            chat.chat_type = chatType;
+            if(req.body.recommendTeamId) {
+              chat.recommend_teamid = req.body.recommendTeamId;
+            }
+            break;
+          case 'normal':
+            
+            break;
+        }
+      }
       chat.save(function (err) {
         if (err) {
           log(err)
