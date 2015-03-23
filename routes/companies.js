@@ -12,6 +12,7 @@ module.exports = function (app, ctrl) {
 
   app.post('/companies/validate', ctrl.companyInfoValidate);
   app.post('/companies/forgetPassword', ctrl.forgetPassword);
+  app.get('/companies/:companyId/undisposed', token.needToken, ctrl.getCompanyUndisposed);
   app.get('/companies/:companyId/statistics', token.needToken, ctrl.getCompanyStatistics);
   app.get('/companies/:companyId/charts', token.needToken, ctrl.getCompanyCharts);
   app.get('/companies/:companyId/members', token.needToken, ctrl.getCompanyMembers);

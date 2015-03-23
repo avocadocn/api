@@ -826,6 +826,32 @@
         }
       }
     },
+    "/companies/{companyId}/undisposed": {
+      "get": {
+        "tags": [
+          "companies"
+        ],
+        "summary": "获取公司的未处理队长、员工",
+        "parameters": [
+          {
+            "name": "companyId",
+            "description": "公司id",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "default": "53aa6fc011fd597b3e1be250"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "未处理数据",
+            "schema": {
+              "$ref": "UndisposedResponse"
+            }
+          }
+        }
+      }
+    },
     "/companies/{companyId}/statistics": {
       "get": {
         "tags": [
@@ -5253,6 +5279,20 @@
             "type": "string",
             "description": "照片url"
           }
+        }
+      }
+    },
+    "UndisposedResponse": {
+      "title": "UndisposedResponse",
+      "type": "object",
+      "properties": {
+        "noLeaderTeams": {
+          "description": "未任命队长人数",
+          "type": "number"
+        },
+        "unActivatedUsers": {
+          "description": "未审核人数",
+          "type": "number"
         }
       }
     },

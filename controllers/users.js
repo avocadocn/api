@@ -399,7 +399,7 @@ module.exports = function (app) {
           //待激活用户
           else if (req.query.resultType=='3') {
             findOptions = {'cid':req.params.companyId, 'active':false};
-            outputOptions = {'username':1,'register_date':1};
+            outputOptions = {'username':1,'register_date':1,'mail_active':1, 'nickname':1};
           }
         }
       }

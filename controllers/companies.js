@@ -636,6 +636,48 @@ module.exports = function (app) {
         }
       });
     },
+    getCompanyUndisposed: function (req, res) {
+      //查询公司没有任命队长的小队和待激活的员工
+      async.parallel({
+        noLeaderTeams: function(callback) {
+          CompanyGroup.find({
+            'cid': req.params.companyId,
+            'leader':[],
+            'gid': {'$ne':0},
+            'active': true
+          }, function (err, teams) {
+            if(err) {
+              callback(err);
+            }
+            else {
+              callback(null,teams.length);
+            }
+          });
+        },
+        unActivatedUsers: function(callback) {
+          User.find({
+            'cid': req.params.companyId,
+            'mail_active': false
+          }, function (err, users) {
+            if(err) {
+              callback(err);
+            }
+            else {
+              callback(null, users.length);
+            }
+          })
+        }
+      }, function(err, results) {
+        if(err) {
+          log(err);
+          res.sendStatus(500);
+          return;
+        }
+        else {
+          res.status(200).send(results);
+        }
+      }); 
+    },
 
     getCompanyStatistics: function (req, res) {
       if(req.user._id.toString() !== req.params.companyId ) {
