@@ -608,7 +608,6 @@ module.exports = function (app) {
                 }
                 else {
                   var leaderTeams = user.team.filter(LeaderFilter);
-                  console.log(leaderTeams.length);
                   if(leaderTeams.length===1) {
                     user.role = 'EMPLOYEE';
                   }
