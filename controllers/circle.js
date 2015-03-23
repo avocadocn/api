@@ -277,7 +277,7 @@ module.exports = function(app) {
           } else {
             // 修正查询逻辑，减少查询次数
             // 1. 将contents的id保存到一个数组中，先将各个contents的评论一次查询出来，然后分组放到各个content中
-            // 2. 将contents的post_user_id及comment的post_user_id不重复地保存到一个数组中，然后一次查出所有用户，然后向各个含post_user_id的对象添加用户信息
+            // 2. 将contents的post_user_id及comment的post_user_id及target_user_id不重复地保存到一个数组中，然后一次查出所有用户，然后向各个含post_user_id的对象添加用户信息
             // 仅需要查询两次数据库，相比之前方案的contents总数*3次(即很可能是60次)要好得多
 
             /**
@@ -320,6 +320,7 @@ module.exports = function(app) {
 
               comments.forEach(function(comment) {
                 pushUserIdToUniqueArray(comment.post_user_id, userIdsForQuery);
+                pushUserIdToUniqueArray(comment.target_user_id, userIdsForQuery);
               });
 
               User.find({
@@ -341,8 +342,18 @@ module.exports = function(app) {
                   }
                 };
 
+                var addTargetInfoToComment = function(comment) {
+                  for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                    if (users[i]._id.toString() === comment.target_user_id.toString()) {
+                      comment.target = users[i];
+                      break;
+                    }
+                  }
+                };
+
                 comments.forEach(function(comment) {
                   addPosterInfoToObj(comment);
+                  addTargetInfoToComment(comment);
                 });
 
                 contents.forEach(function(content) {
@@ -608,7 +619,7 @@ module.exports = function(app) {
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
-    createCircleComment: function(req, res) {
+    createCircleComment: function(req, res, next) {
       var circleContent = req.circleContent;
 
       // Judge authority
@@ -637,6 +648,10 @@ module.exports = function(app) {
         });
       }
 
+      if (req.body.target_user_id === req.user.id) {
+        res.status(400).send({msg: '不可以回复自己的评论'});
+        return;
+      }
 
       if (req.body.kind == 'appreciate') {
         var isAppreciate = false;
@@ -672,13 +687,35 @@ module.exports = function(app) {
 
       circleComment.save(function(err) {
         if (err) {
-          log(err);
-          return res.sendStatus(500);
+          next(err);
         } else {
-          res.status(200).send({
-            // msg: '评论或点赞成功',
-            'circleComment': circleComment // the field is used for test
-          });
+          var resComment = circleComment.toObject();
+          resComment.poster = {
+            _id: req.user._id,
+            nickname: req.user.nickname,
+            photo: req.user.photo
+          };
+
+          if (resComment.is_only_to_content) {
+            res.send({ circleComment: resComment });
+          }
+          else {
+            User.findById(resComment.target_user_id, {
+              _id: 1,
+              nickname: 1,
+              photo: 1
+            }).exec()
+            .then(function(user) {
+              if (!user) {
+                next(new Error('Target user not found.'));
+              }
+              else {
+                resComment.target = user;
+                res.send({ circleComment: resComment });
+              }
+            })
+            .then(null, next);
+          }
 
           var comment_users = []; // the commenter (exclude the owner of content)
 
