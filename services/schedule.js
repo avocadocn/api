@@ -223,6 +223,7 @@ var teamPoint = exports.teamPoint =function(){
                         _id: team._id,
                         cid: team.cid,
                         name: team.name,
+                        cname: team.cname,
                         logo: team.logo,
                         member_num: team.member.length,
                         activity_score: team.score.total,

@@ -52,7 +52,7 @@ module.exports = function (app) {
               res.status(400).send({ msg: '没有找到对应的榜单' });
             } else {
               var cid = req.user.cid || req.user._id;
-              CompanyGroup.find({cid: cid ,gid:req.query.gid},{cid: 1,name:1,logo:1,gid: 1,member:1,score:1,score_rank:1})
+              CompanyGroup.find({active:true, cid: cid ,gid:req.query.gid},{cid: 1,name:1,logo:1,gid: 1,member:1,score:1,score_rank:1})
               .exec()
               .then(function (teams) {
                 if (!teams) {

@@ -1249,6 +1249,30 @@ module.exports = function (app) {
           'playing_teams.tid':  { $all:[ fromTeamId, targetTeamId ]}
         };
         ScoreBoard.paginate(options, page, perPageNum, function(err, pageCount, results, itemCount) {
+          if(err){
+            log(err);
+            res.status(500).send({msg:err});
+          }
+          else{
+            return res.send({'competitions':results,'maxPage':pageCount});
+          }
+        },{columns:{'playing_teams':1,'status':1,'create_date':1}, sortBy:{'create_date':-1}});
+      }
+      else{
+        res.status(403).send({msg:'您没有权限获取该信息！'});
+      }
+    },
+    getCompetitionOfCompanyWithTeam: function  (req, res) {
+      var targetTeam = req.companyGroup;
+      var cid = req.user.cid || req.user._id;
+      console.log(targetTeam.cid ,cid);
+      if(targetTeam.cid.toString() ===cid.toString())
+        return res.status(400).send({msg:'不能获取本公司的小队与公司间的比赛'});
+      var page = req.query.page > 0? req.query.page:1;
+      var options = {
+        'owner.companies': { $all:[ cid, targetTeam.cid ]}
+      };
+      ScoreBoard.paginate(options, page, perPageNum, function(err, pageCount, results, itemCount) {
         if(err){
           log(err);
           res.status(500).send({msg:err});
@@ -1257,10 +1281,6 @@ module.exports = function (app) {
           return res.send({'competitions':results,'maxPage':pageCount});
         }
       },{columns:{'playing_teams':1,'status':1,'create_date':1}, sortBy:{'create_date':-1}});
-      }
-      else{
-        res.status(403).send({msg:'您没有权限获取该信息！'});
-      }
     },
     // todo
     getCampaigns: {

@@ -3,8 +3,15 @@
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema;
 var _team = new Schema({
-  _id: Schema.Types.ObjectId,
-  cid:Schema.Types.ObjectId,
+  _id: {
+    type: Schema.Types.ObjectId,
+    ref: 'CompanyGroup'
+  },
+  cid:{
+    type: Schema.Types.ObjectId,
+    ref: 'Company'
+  },
+  cname: String,
   name: String,
   logo: String,
   activity_score: {

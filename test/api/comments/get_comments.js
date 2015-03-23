@@ -139,7 +139,7 @@ module.exports = function () {
           request.get('/comments')
           .set('x-access-token', hrToken[0])
           .query({requestType:'campaign', requestId:hostId.toString(), limit:20})
-          .expect(202)
+          .expect(200)
           .end(function (err,res) {
             if(err) return done(err);
             res.body.comments.length.should.be.above(-1);

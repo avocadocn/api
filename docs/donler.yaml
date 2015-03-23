@@ -813,6 +813,13 @@ paths:
           type: string
           in: path
           default: 53aa701011fd597b3e1be25d
+        - name: resultType
+          description: 结果类型
+          required: false
+          type: string
+          in: query
+          enum:
+            - simple
       responses:
         "200":
           description: 成功
@@ -1207,32 +1214,6 @@ paths:
             type: array
             items:
               $ref: Team
-        default:
-          description: error
-          schema:
-            $ref: Error
-  "/teams/competition/{teamId}/{targetTeamId}":
-    get:
-      tags:
-        - teams
-      summary:  获取同类型的其他小队的简略信息
-      operationId: getCompetitionTeam
-      parameters:
-        - name: teamId
-          description: 需要查找对手的小队的id
-          required: true
-          type: string
-          in: path
-        - name: targetTeamId
-          description: 目标小队的id
-          required: true
-          type: string
-          in: path
-      responses:
-        "200":
-          description: 成功
-          schema:
-            $ref: Team
         default:
           description: error
           schema:
@@ -1689,6 +1670,31 @@ paths:
             type: array
             items:
               $ref: CampaignMold
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/campaigns/competition/{teamId}":
+    get:
+      tags:
+        - campaigns
+      summary: 获取外公是小队与公司间的比赛列表
+      operationId: getCompetitionOfCompanyWithTeam
+      consumes:
+        - application/json
+      parameters:
+        - name: teamId
+          description: 获取的目标小队的id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: Campaign
         default:
           description: error
           schema:
@@ -5332,6 +5338,9 @@ definitions:
         type: string
       cid:
         description: 小队的公司id
+        type: string
+      cname:
+        description: 小队的公司名称
         type: string
       logo:
         description: 小队logo

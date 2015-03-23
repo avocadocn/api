@@ -23,5 +23,4 @@ module.exports = function (app, ctrl) {
   app.get('/teams/lead/list', token.needToken, ctrl.getLedTeams);
 
   app.get('/teams/search/:type', token.needToken, ctrl.getSearchTeamsOptions, ctrl.getSearchTeams);
-  app.get('/teams/competition/:teamId/:targetTeamId', token.needToken, getById.getTeamById, ctrl.getCompetitionTeam);
 };

@@ -155,6 +155,23 @@ module.exports = function (app) {
       var role = auth.getRole(req.user, {
         companies:[team.cid]
       });
+      if(req.query.resultType=="simple") {
+        var simpleBriefTeam = {
+          _id: team._id,
+          name: team.name,
+          cname: team.cname,
+          logo: team.logo,
+          groupType: team.group_type,
+          createTime: team.create_time,
+          memberCount: team.member.length,
+          homeCourts: team.home_court,
+          score_rank: team.score_rank,
+          activityScore: team.score.total,
+          last_campaign: team.last_campaign,
+          isCompanyTeam: team.cid.toString() ===req.user.cid.toString()
+        };
+        return res.status(200).send(simpleBriefTeam);
+      }
 
       var allow = auth.auth(role,['getTeams']);
       if(!allow.getTeams) {
@@ -1084,41 +1101,9 @@ module.exports = function (app) {
           return res.send({'teams':results,'maxPage':pageCount});
         }
       },{columns:{'logo':1,'name':1,'cname':1,'score_rank':1}, sortBy:{'score_rank.score':-1,'score.total':-1}});
-    },
-    getCompetitionTeam: function (req, res) {
-      if(!req.companyGroup.hasMember(req.user._id)) {
-        return res.status(403).send({msg:'你没有权限获取该信息'});
-      }
-      var targetTeamId = req.params.targetTeamId;
-      CompanyGroup.findById(targetTeamId).exec()
-      .then(function (companyGroup) {
-        if (!companyGroup) {
-          res.status(400).send({ msg: '没有找到对应的小队' });
-        } else {
-          if(req.companyGroup.gid.toString()!==companyGroup.gid.toString()) {
-            return res.status(403).send({msg:'你没有权限获取该信息'});
-          }
-          var simpleBriefTeam = {
-            _id: companyGroup._id,
-            name: companyGroup.name,
-            cname: companyGroup.cname,
-            logo: companyGroup.logo,
-            groupType: companyGroup.group_type,
-            createTime: companyGroup.create_time,
-            memberCount: companyGroup.member.length,
-            homeCourts: companyGroup.home_court,
-            score_rank: companyGroup.score_rank,
-            activityScore: companyGroup.score.total,
-            last_campaign: companyGroup.last_campaign
-          };
-          return res.status(200).send(simpleBriefTeam);
-        }
-      })
-      .then(null, function (err) {
-        log(err);
-        return res.status(500).send({msg: '查找小队错误'});
-      });
     }
   };
 };
+
+
 
