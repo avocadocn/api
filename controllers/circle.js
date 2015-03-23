@@ -314,7 +314,7 @@ module.exports = function(app) {
             CircleComment.find({
               target_content_id: {$in: contentIdsForQuery},
               status: 'show'
-            }).sort('-post_date').exec()
+            }).sort('+post_date').exec()
             .then(function(commentDocs) {
               var comments = commentDocs.map(docToObject);
 
@@ -835,7 +835,7 @@ module.exports = function(app) {
      * @param  {Object}
      * @return [comment]
      */
-    getCircleComments: function(req, res) {
+    getCircleComments: function(req, res, next) {
       if (req.user.provider === 'company') {
         return res.status(403).send({
           msg: '公司账号暂无提醒功能'
@@ -862,6 +862,7 @@ module.exports = function(app) {
             res.status(404).send({
               msg: '无新评论或赞'
             });
+            return;
           }
           var content_ids = [];
           contents.forEach(function(content) {
@@ -878,42 +879,49 @@ module.exports = function(app) {
             })
             .sort('-post_date')
             .exec()
-            .then(function(comments) {
-              async.map(comments, function(comment, callback) {
-                User.find({
-                  '_id': comment.post_user_id
-                }, 'nickname photo', function(err, user) {
-                  var circleContentIndex = tools.arrayObjectIndexOf(contents, comment.target_content_id, '_id');
-                  var circle_comment = {
-                    '_id': comment._id,
-                    'kind': comment.kind,
-                    'content': comment.content,
-                    'targetContent': contents[circleContentIndex], //{_id,conent,photos}
-                    'targetUserId': comment.target_user_id,
-                    'poster': user, //{_id, nickname,photo}
-                    'postDate': comment.post_date
+            .then(function(commentDocs) {
+              var comments = commentDocs.map(function(comment) {
+                return comment.toObject();
+              });
+
+              var userIdsForQuery = [];
+              userIdsForQuery = comments.map(function(comment) {
+                return comment.target_user_id;
+              });
+              userIdsForQuery = userIdsForQuery.concat(comments.map(function(comment) {
+                return comment.post_user_id;
+              }));
+
+              User.find({
+                _id: {$in: userIdsForQuery}
+              }, {
+                _id: 1,
+                nickname: 1,
+                photo: 1
+              }).exec()
+                .then(function(users) {
+
+                  var getUserById = function(id) {
+                    for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                      if (id.toString() === users[i]._id.toString()) {
+                        return users[i];
+                      }
+                    }
                   };
-                  callback(null, circle_comment);
-                });
-              }, function(err, results) {
-                if (err) {
-                  log(err);
-                  return res.sendStatus(500);
-                } else {
-                  console.log(results);
-                  res.status(200).send(results);
-                }
-              })
+
+                  comments.forEach(function(comment) {
+                    var circleContentIndex = tools.arrayObjectIndexOf(contents, comment.target_content_id, '_id');
+                    comment.targetContent = contents[circleContentIndex];
+                    comment.poster = getUserById(comment.post_user_id);
+                    comment.targetUser = getUserById(comment.target_user_id);
+                  });
+                  res.send(comments);
+                })
+                .then(null, next);
             })
-            .then(null, function(err) {
-              log(err);
-              return res.sendStatus(500);
-            });
+            .then(null, next);
         })
-        .then(null, function(err) {
-          log(err);
-          return res.sendStatus(500);
-        })
+        .then(null, next);
     },
     // getCircleComments: function(req, res) {
     //   if (req.user.provider === 'company') {
