@@ -591,12 +591,37 @@ module.exports = function (app) {
         team.save(function(err){
           if(err){
             log(err);
-            return res.status(500).send({msg:'保存错误'});
+            res.status(500).send({msg:'保存错误'});
           }
           else{
-            return res.status(200).send({msg:'成功'});
+            res.status(200).send({msg:'成功'});
+            var LeaderFilter = function(userTeam) {
+              if(userTeam.leader===true) {
+                return true;
+              }
+              return false;
+            };
+            if(team.leader.length>0) {
+              User.findById(team.leader[0]._id, function(err, user) {
+                if(err) {
+                  console.log(err);
+                }
+                else {
+                  var leaderTeams = user.team.filter(LeaderFilter);
+                  console.log(leaderTeams.length);
+                  if(leaderTeams.length===1) {
+                    user.role = 'EMPLOYEE';
+                  }
+                  user.save(function(err) {
+                    if(err) {
+                      console.log(err);
+                    }
+                  })
+                }
+              });
+            }
           }
-        })
+        });
       }
     },
     openTeam : function(req, res) {
@@ -619,9 +644,16 @@ module.exports = function (app) {
             return res.status(500).send({msg:'保存错误'});
           }
           else{
-            return res.status(200).send({msg:'成功'});
+            res.status(200).send({msg:'成功'});
+            if(team.leader.length>0) {
+              User.findByIdAndUpdate(team.leader[0]._id,{'$set': {'role':'LEADER'}}, function(err) {
+                if(err) {
+                  console.log(err);
+                }
+              });
+            }
           }
-        })
+        });
       }
     },
     uploadFamilyPhotos: function (req, res) {
