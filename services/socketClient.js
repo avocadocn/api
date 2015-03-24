@@ -49,8 +49,6 @@ exports.pushCircleContent = function (cid, poster) {
 };
 
 //发新朋友圈评论的push 应push给相关用户
-exports.pushCircleComment = function (relaventUids, photo) {
-  socket.emit('circleComment', relaventUids, photo);
+exports.pushCircleComment = function (relaventUids, comment) {
+  socket.emit('circleComment', relaventUids, comment);
 };
-
-

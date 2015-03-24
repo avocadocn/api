@@ -703,8 +703,14 @@ module.exports = function(app) {
             photo: req.user.photo
           };
 
+          var noticeUserIds = circleContent.comment_users.map(function(commentUser) {
+            return commentUser._id;
+          });
+          noticeUserIds.push(circleContent.post_user_id);
+
           if (resComment.is_only_to_content) {
             res.send({ circleComment: resComment });
+            socketClient.pushCircleComment(noticeUserIds, resComment);
           }
           else {
             User.findById(resComment.target_user_id, {
@@ -719,6 +725,8 @@ module.exports = function(app) {
               else {
                 resComment.target = user;
                 res.send({ circleComment: resComment });
+
+                socketClient.pushCircleComment(noticeUserIds, resComment);
               }
             })
             .then(null, next);
