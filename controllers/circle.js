@@ -207,6 +207,13 @@ module.exports = function(app) {
             // 'msg': '同事圈消息发送成功',
             'circleContent': circleContent // this field is used for test
           });
+          //socket
+          var poster = {
+            _id: req.user._id,
+            nickname: req.user.nickname,
+            photo: req.user.photo
+          };
+          socketClient.pushCircleContent(circleContent.cid, poster);
         }
       });
     },
