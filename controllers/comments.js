@@ -10,7 +10,8 @@ var Campaign = mongoose.model('Campaign'),
     User = mongoose.model('User'),
     CompanyGroup = mongoose.model('CompanyGroup'),
     CompetitionMessage = mongoose.model('CompetitionMessage');
-var async = require('async');
+var async = require('async'),
+    xss = require('xss');;
 var auth = require('../services/auth.js'),
     log = require('../services/error_log.js'),
     socketClient = require('../services/socketClient'),
@@ -445,7 +446,7 @@ module.exports = function (app) {
         }];
       }
       if (req.body && req.body.content) {
-        var content = req.body.content;
+        var content = xss(req.body.content);
         comment.content = content;
       }
       comment.save(function (err) {
