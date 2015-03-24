@@ -9,7 +9,8 @@ var Rank = mongoose.model('Rank'),
 var async = require('async');
 var log = require('../services/error_log.js'),
     donlerValidator = require('../services/donler_validator.js'),
-    auth = require('../services/auth.js');
+    auth = require('../services/auth.js'),
+    schedule = require('../services/schedule.js');
 var timeLimit = 7 * 24 * 60 * 60 * 1000;
 var forwardTeamNum = 4;
 var backwardTeamNum = 4;
@@ -209,6 +210,15 @@ module.exports = function (app) {
         log(err);
         res.sendStatus(500);
       });
+    },
+    update: function (req,res) {
+      if(req.body.token=='55yali') {
+        schedule.teamPoint();
+        res.sendStatus(200);
+      }
+      else{
+        res.status(403).send({msg:'您没有权限进行该操作'})
+      }
     }
   };
 };

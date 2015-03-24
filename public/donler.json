@@ -4595,6 +4595,38 @@
         }
       }
     },
+    "/rank/update": {
+      "post": {
+        "tags": [
+          "rank"
+        ],
+        "summary": "更新榜单",
+        "operationId": "updateRank",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "updateRankForm"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/competition_messages": {
       "get": {
         "tags": [
@@ -7772,6 +7804,16 @@
       "properties": {
         "tid": {
           "description": "小队Id",
+          "type": "string"
+        }
+      }
+    },
+    "updateRankForm": {
+      "title": "updateRankForm",
+      "type": "object",
+      "properties": {
+        "token": {
+          "description": "token",
           "type": "string"
         }
       }
