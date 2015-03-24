@@ -743,6 +743,25 @@ module.exports = function(app) {
           });
           comment_users.push(new_comment_user);
 
+          //socket
+          //应该是给非本人的相关人员推
+          var relaventUids = [];
+          //评论过的人
+          for (var i = 0; i < comment_users.length; i++) {
+            if(req.user._id.toString() !== comment_users[i]._id.toString()) {
+              relaventUids.push(comment_users[i]._id.toString());
+            }
+          };
+          //发这个content的人
+          if(req.user._id.toString() !== circleContent.post_user_id.toString()) {
+            var index = relaventUids.indexOf(circleContent.post_user_id.toString());
+            if(index === -1) {
+              relaventUids.push(circleContent.post_user_id.toString());
+            }
+          }
+          socketClient.pushCircleComment(relaventUids, req.user.photo);
+
+          //update
           var options = {
             'comment_users': comment_users,
             'latest_comment_date': circleComment.post_date
