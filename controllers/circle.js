@@ -732,34 +732,35 @@ module.exports = function(app) {
             .then(null, next);
           }
 
-          var comment_users = []; // the commenter (exclude the owner of content)
-
-          var new_comment_user = {
-            _id: req.user._id,
-            comment_num: 1,
-            appreciated: false
-          };
-          if (req.body.kind == 'appreciate') {
-            new_comment_user.appreciated = true;
-          }
-          circleContent.comment_users.forEach(function(user) {
-            if (user._id.toString() == req.user._id.toString()) {
-              new_comment_user.comment_num = user.comment_num + 1;
-            } else {
-              comment_users.push(user);
+          var hasFindCommentUser = false;
+          for (var i = 0, commentUsersLen = circleContent.comment_users.length; i < commentUsersLen; i++) {
+            var commentUser = circleContent.comment_users[i];
+            if (req.user.id === commentUser._id.toString()) {
+              commentUser.comment_num += 1;
+              if (req.body.kind === 'appreciate') { // 如果是赞，则设置为true，否则不再设置，不可以覆盖之前的赞
+                commentUser.appreciated = true;
+              }
+              hasFindCommentUser = true;
+              break;
             }
-          });
-          comment_users.push(new_comment_user);
+          }
+          if (!hasFindCommentUser) {
+            circleContent.comment_users.push({
+              _id: req.user._id,
+              comment_num: 1,
+              appreciated: req.body.kind === 'appreciate'
+            });
+          }
 
           //socket
           //应该是给非本人的相关人员推
           var relaventUids = [];
           //评论过的人
-          for (var i = 0; i < comment_users.length; i++) {
-            if(req.user._id.toString() !== comment_users[i]._id.toString()) {
-              relaventUids.push(comment_users[i]._id.toString());
+          for (var i = 0; i < circleContent.comment_users.length; i++) {
+            if(req.user._id.toString() !== circleContent.comment_users[i]._id.toString()) {
+              relaventUids.push(circleContent.comment_users[i]._id.toString());
             }
-          };
+          }
           //发这个content的人
           if(req.user._id.toString() !== circleContent.post_user_id.toString()) {
             var index = relaventUids.indexOf(circleContent.post_user_id.toString());
@@ -769,19 +770,10 @@ module.exports = function(app) {
           }
           socketClient.pushCircleComment(relaventUids, req.user.photo);
 
-          //update
-          var options = {
-            'comment_users': comment_users,
-            'latest_comment_date': circleComment.post_date
-          };
-
-          // Update the feild comment_users of CircleContent Schema
-          CircleContent.findOneAndUpdate({
-            _id: req.params.contentId,
-            status: 'show'
-          }, options, function(err) {
+          circleContent.latest_comment_date = circleComment.post_date;
+          circleContent.save(function(err) {
             if (err) {
-              log(err);
+              console.log(err.stack || 'Save circleContent error.');
             }
           });
         }
