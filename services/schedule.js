@@ -234,6 +234,11 @@ var teamPoint = exports.teamPoint =function(){
                         lose: team.score_rank.lose
                       });
                     }
+                    team.save(function (err) {
+                      if(err){
+                        console.log(err)
+                      }
+                    })
                   });
 
                   if(rank.team.length>0){
