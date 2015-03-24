@@ -869,12 +869,15 @@ module.exports = function(app) {
             content_ids.push(content._id);
           });
           CircleComment.find({
-              'post_user_cid': req.user.cid,
-              'target_content_id': {
+              post_user_cid: req.user.cid,
+              target_content_id: {
                 $in: content_ids
               },
-              'post_date': {
-                '$gt': req.query.last_comment_date
+              post_user_id: {
+                $ne: req.user.id
+              },
+              post_date: {
+                $gt: req.query.last_comment_date
               }
             })
             .sort('-post_date')
@@ -913,7 +916,7 @@ module.exports = function(app) {
                     var circleContentIndex = tools.arrayObjectIndexOf(contents, comment.target_content_id, '_id');
                     comment.targetContent = contents[circleContentIndex];
                     comment.poster = getUserById(comment.post_user_id);
-                    comment.targetUser = getUserById(comment.target_user_id);
+                    comment.target = getUserById(comment.target_user_id);
                   });
                   res.send(comments);
                 })
