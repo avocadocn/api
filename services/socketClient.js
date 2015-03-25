@@ -46,7 +46,7 @@ exports.pushCircleContent = function (cid, poster) {
 
 //发新朋友圈评论的push 应push给相关用户
 exports.pushCircleComment = function (relaventUids, comment) {
-  socket.emit('circleComment', relaventUids, comment);
+  socket.emit('circleComment', relaventUids, comment.poster);
 };
 
 //有挑战信或挑战信评论的push,push给对方队长
