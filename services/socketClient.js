@@ -22,10 +22,6 @@ socket.on('connect',function(){
   console.log('connected to socket server');
 });
 
-//发评论push
-// exports.pushComment = function (joinedUids, unjoinedUids, campaign, comment) {
-//   socket.emit('commentFromServer', joinedUids, unjoinedUids, campaign, comment);
-// };
 exports.pushChat = function (chatroomId, chat, uids) {
   socket.emit('chatFromServer', chatroomId, chat, uids);
 }
@@ -51,4 +47,9 @@ exports.pushCircleContent = function (cid, poster) {
 //发新朋友圈评论的push 应push给相关用户
 exports.pushCircleComment = function (relaventUids, comment) {
   socket.emit('circleComment', relaventUids, comment);
+};
+
+//有挑战信或挑战信评论的push,push给对方队长
+exports.pushMessage = function (leaderId) {
+  socket.emit('competitionMessage', leaderId);
 };
