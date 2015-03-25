@@ -73,7 +73,7 @@ module.exports = function(app) {
         if ((fields['content'] == undefined || !fields['content'][0]) && !files[fieldName]) {
           return res.sendStatus(400);
         }
-
+        
         // req.tid = (fields['tid'] && fields['tid'][0]) ? fields['tid'][0] : [];
         req.campaign_id = (fields['campaign_id'] && fields['campaign_id'][0]) ? fields['campaign_id'][0] : null;
         req.content = (fields['content'] && fields['content'][0]) ? fields['content'][0] : null;
@@ -233,8 +233,8 @@ module.exports = function(app) {
      *               post_date: type: Date,
      *               status: type: String,
      *               comment_users: [Schema.Types.ObjectId] // 参与过评论的用户id
+     *               ...
      *             }
-     *             photo: String// 发消息的用户头像
      *             comments: [
      *               ...Reference: Schema CircleComment
      *             ]
@@ -410,45 +410,113 @@ module.exports = function(app) {
       CircleContent.find(conditions)
         .sort('-post_date')
         .exec()
-        .then(function(contents) {
-          if (!contents[0]) {
+        .then(function(contentDocs) {
+          if (contentDocs.length == 0) {
             return res.status(404).send({
               msg: '未找到该活动同事圈消息'
             });
           } else {
-            async.map(contents, function(content, callback) {
-                var result = {};
-                async.parallel([
-                  function(callback) {
-                    User.findById(content.post_user_id, 'photo', function(err, user) {
-                      if (err) {
-                        log(err);
-                        callback(err);
-                      }
-                      callback(null, user)
-                    });
-                  },
-                  function(callback) {
-                    CircleComment.find({
-                      target_content_id: content._id,
-                      status: 'show'
-                    }).sort('-post_date').exec().then(function(comments) {
-                      callback(null, comments);
-                    }).then(null, function(err) {
-                      log(err);
-                      callback(err);
-                    });
-                  }
-                ], function(err, results) {
-                  result.content = content;
-                  result.photo = results[0].photo;
-                  result.comments = results[1];
-                  callback(null, result);
-                });
-              },
-              function(err, results) {
-                return res.status(200).send(results);
+            /**
+             * 响应返回数据，形式为：
+             *  [{
+             *    content: contentDoc,
+             *    comments: [commentDoc]
+             *  }]
+             */
+            var resData = [];
+
+            // 转换为简单对象，以解除mongoose文档的约束，便于修改属性写入响应
+            var docToObject = function(doc) {
+              return doc.toObject();
+            };
+
+            var contents = contentDocs.map(docToObject);
+
+            var contentIdsForQuery = contents.map(function(content) {
+              return content._id;
+            });
+            var userIdsForQuery = []; // 元素为String类型
+
+            // 向用户id数组不重复地添加用户id
+            var pushUserIdToUniqueArray = function(userId, array) {
+              var resultIndex = array.indexOf(userId);
+              if (resultIndex === -1) {
+                array.push(userId.toString());
+              }
+            };
+            contents.forEach(function(content) {
+              pushUserIdToUniqueArray(content.post_user_id, userIdsForQuery);
+            });
+
+            CircleComment.find({
+              target_content_id: {$in: contentIdsForQuery},
+              status: 'show'
+            }).sort('+post_date').exec()
+            .then(function(commentDocs) {
+              var comments = commentDocs.map(docToObject);
+
+              comments.forEach(function(comment) {
+                pushUserIdToUniqueArray(comment.post_user_id, userIdsForQuery);
+                pushUserIdToUniqueArray(comment.target_user_id, userIdsForQuery);
               });
+
+              User.find({
+                _id: {$in: userIdsForQuery}
+              }, {
+                _id: 1,
+                nickname: 1,
+                photo: 1
+              }).exec()
+              .then(function(users) {
+
+                // 向CircleContent和CircleComment对象添加发布者的详细信息
+                var addPosterInfoToObj = function(obj) {
+                  for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                    if (users[i]._id.toString() === obj.post_user_id.toString()) {
+                      obj.poster = users[i];
+                      break;
+                    }
+                  }
+                };
+
+                var addTargetInfoToComment = function(comment) {
+                  for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                    if (users[i]._id.toString() === comment.target_user_id.toString()) {
+                      comment.target = users[i];
+                      break;
+                    }
+                  }
+                };
+
+                comments.forEach(function(comment) {
+                  addPosterInfoToObj(comment);
+                  addTargetInfoToComment(comment);
+                });
+
+                contents.forEach(function(content) {
+                  addPosterInfoToObj(content);
+
+                  // 将comments添加到对应的contents中
+                  var contentComments = comments.filter(function(comment) {
+                    return comment.target_content_id.toString() === content._id.toString();
+                  });
+                  resData.push({
+                    content: content,
+                    comments: contentComments
+                  });
+                });
+
+                res.send(resData);
+              })
+              .then(null, function(err) {
+                log(err);
+                return res.sendStatus(500);
+              })
+            })
+            .then(null, function(err) {
+              log(err);
+              return res.sendStatus(500);
+            });
           }
         })
         .then(null, function(err) {
@@ -488,45 +556,113 @@ module.exports = function(app) {
       CircleContent.find(conditions)
         .sort('-post_date')
         .exec()
-        .then(function(contents) {
-          if (!contents[0]) {
+        .then(function(contentDocs) {
+          if (contentDocs.length == 0) {
             return res.status(404).send({
-              msg: '未找到该小队同事圈消息'
+              msg: '未找到该活动同事圈消息'
             });
           } else {
-            async.map(contents, function(content, callback) {
-                var result = {};
-                async.parallel([
-                  function(callback) {
-                    User.findById(content.post_user_id, 'photo', function(err, user) {
-                      if (err) {
-                        log(err);
-                        callback(err);
-                      }
-                      callback(null, user)
-                    });
-                  },
-                  function(callback) {
-                    CircleComment.find({
-                      target_content_id: content._id,
-                      status: 'show'
-                    }).sort('-post_date').exec().then(function(comments) {
-                      callback(null, comments);
-                    }).then(null, function(err) {
-                      log(err);
-                      callback(err);
-                    });
-                  }
-                ], function(err, results) {
-                  result.content = content;
-                  result.photo = results[0].photo;
-                  result.comments = results[1];
-                  callback(null, result);
-                });
-              },
-              function(err, results) {
-                return res.status(200).send(results);
+            /**
+             * 响应返回数据，形式为：
+             *  [{
+             *    content: contentDoc,
+             *    comments: [commentDoc]
+             *  }]
+             */
+            var resData = [];
+
+            // 转换为简单对象，以解除mongoose文档的约束，便于修改属性写入响应
+            var docToObject = function(doc) {
+              return doc.toObject();
+            };
+
+            var contents = contentDocs.map(docToObject);
+
+            var contentIdsForQuery = contents.map(function(content) {
+              return content._id;
+            });
+            var userIdsForQuery = []; // 元素为String类型
+
+            // 向用户id数组不重复地添加用户id
+            var pushUserIdToUniqueArray = function(userId, array) {
+              var resultIndex = array.indexOf(userId);
+              if (resultIndex === -1) {
+                array.push(userId.toString());
+              }
+            };
+            contents.forEach(function(content) {
+              pushUserIdToUniqueArray(content.post_user_id, userIdsForQuery);
+            });
+
+            CircleComment.find({
+              target_content_id: {$in: contentIdsForQuery},
+              status: 'show'
+            }).sort('+post_date').exec()
+            .then(function(commentDocs) {
+              var comments = commentDocs.map(docToObject);
+
+              comments.forEach(function(comment) {
+                pushUserIdToUniqueArray(comment.post_user_id, userIdsForQuery);
+                pushUserIdToUniqueArray(comment.target_user_id, userIdsForQuery);
               });
+
+              User.find({
+                _id: {$in: userIdsForQuery}
+              }, {
+                _id: 1,
+                nickname: 1,
+                photo: 1
+              }).exec()
+              .then(function(users) {
+
+                // 向CircleContent和CircleComment对象添加发布者的详细信息
+                var addPosterInfoToObj = function(obj) {
+                  for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                    if (users[i]._id.toString() === obj.post_user_id.toString()) {
+                      obj.poster = users[i];
+                      break;
+                    }
+                  }
+                };
+
+                var addTargetInfoToComment = function(comment) {
+                  for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                    if (users[i]._id.toString() === comment.target_user_id.toString()) {
+                      comment.target = users[i];
+                      break;
+                    }
+                  }
+                };
+
+                comments.forEach(function(comment) {
+                  addPosterInfoToObj(comment);
+                  addTargetInfoToComment(comment);
+                });
+
+                contents.forEach(function(content) {
+                  addPosterInfoToObj(content);
+
+                  // 将comments添加到对应的contents中
+                  var contentComments = comments.filter(function(comment) {
+                    return comment.target_content_id.toString() === content._id.toString();
+                  });
+                  resData.push({
+                    content: content,
+                    comments: contentComments
+                  });
+                });
+
+                res.send(resData);
+              })
+              .then(null, function(err) {
+                log(err);
+                return res.sendStatus(500);
+              });
+            })
+            .then(null, function(err) {
+              log(err);
+              return res.sendStatus(500);
+            });
           }
         })
         .then(null, function(err) {

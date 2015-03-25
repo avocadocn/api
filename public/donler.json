@@ -7128,17 +7128,12 @@
       "title": "ResCircle",
       "required": [
         "CircleContent",
-        "user",
         "comments"
       ],
       "properties": {
         "CircleContent": {
           "type": "CircleContent",
           "description": "消息相关信息"
-        },
-        "user": {
-          "type": "CircleUser",
-          "description": "消息相关用户"
         },
         "comments": {
           "type": "array",
