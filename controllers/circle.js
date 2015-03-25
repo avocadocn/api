@@ -1417,6 +1417,12 @@ function activeCircleContent(req, res, next) {
                 msg: '发表成功',
                 circleContent: circleContent
               });
+              var poster = {
+                _id: req.user._id,
+                nickname: req.user.nickname,
+                photo: req.user.photo
+              };
+              socketClient.pushCircleContent(circleContent.cid, poster);
             }
           });
         })
