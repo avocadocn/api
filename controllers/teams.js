@@ -396,7 +396,7 @@ module.exports = function (app) {
               briefTeam.level = companyGroups[i].level;
             }
             // 判断用户是否加入了该小队
-            if (req.query.hostType=== 'user') {
+            if (role.company=== 'member') {
               briefTeam.hasJoined = companyGroups[i].hasMember(req.query.hostId || req.user._id);
               briefTeam.isLeader = companyGroups[i].isLeader(req.query.hostId || req.user._id);
             }

@@ -5,6 +5,7 @@ var CompetitionMessage = mongoose.model('CompetitionMessage'),
     CompanyGroup = mongoose.model('CompanyGroup'),
     Vote = mongoose.model('Vote');
 var donlerValidator = require('../services/donler_validator.js'),
+    socketClient = require('../services/socketClient'),
     log = require('../services/error_log.js');
 
 module.exports = function (app) {
@@ -15,12 +16,12 @@ module.exports = function (app) {
       //验证两个队是不是一个类型或者一个公司
       var teamsValidator = function(name, value, callback) {
         if(value[0]===value[1]) return callback(false, '挑战小队数据错误'); //自己队不能给自己队发
-        CompanyGroup.find({'_id':{'$in':value}},{'gid':1, 'cid':1},function(err, teams) {
+        CompanyGroup.find({'_id':{'$in':value}},{'gid':1, 'cid':1, 'leader':1},function(err, teams) {
           if(err||teams.length<2) {
             callback(false, '挑战小队数据错误');
           }
           else {
-            req.teams = teams;//给下面保存cid用的= -.
+            req.teams = teams;//给下面保存cid和找队长用的= -.
             if(teams[0].gid===teams[1].gid || teams[0].cid.toString()===teams[1].cid.toString())
               callback(true);
             else
@@ -92,7 +93,11 @@ module.exports = function (app) {
               log(err);
               return res.status(500).send({msg: '保存出错'});
             }
-            return res.status(200).send({msg: '挑战信发送成功'});
+            res.status(200).send({msg: '挑战信发送成功'});
+            //发给对方队长
+            if(req.teams[1].leader.length) {
+              socketClient.pushMessage(req.teams[1].leader[0]._id);
+            }
           });
         }
       });

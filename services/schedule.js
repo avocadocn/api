@@ -216,7 +216,7 @@ var teamPoint = exports.teamPoint =function(){
                     city: city.name
                   }
                   teams.forEach(function (team,index) {
-                    team.score.rank = index+1;
+                    team.score_rank.rank = index+1;
                     if(index<rankLimit){
                       var competitionCount = team.score_rank.win + team.score_rank.tie + team.score_rank.lose;
                       rank.team.push({
