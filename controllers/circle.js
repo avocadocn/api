@@ -889,6 +889,7 @@ module.exports = function(app) {
           }
 
           circleContent.latest_comment_date = circleComment.post_date;
+          // Warning: http://docs.mongodb.org/manual/reference/method/db.collection.save/ #Replace an Existing Document
           circleContent.save(function(err) {
             if (err) {
               console.log(err.stack || 'Save circleContent error.');
@@ -945,7 +946,6 @@ module.exports = function(app) {
               res.status(200).send({
                 msg: '评论删除成功'
               });
-
               // Update comment_users of circle content
               // Reference: http://stackoverflow.com/questions/11184079/how-to-increment-mongodb-document-object-fields-inside-an-arra
               var options = {
@@ -1002,7 +1002,7 @@ module.exports = function(app) {
       CircleContent.find(conditons, 'content photos')
         .exec()
         .then(function(contents) {
-          if (!contents) {
+          if (contents.length == 0) {
             res.status(404).send({
               msg: '无新评论或赞'
             });
