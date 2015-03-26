@@ -869,7 +869,7 @@ paths:
         #   description: logo
         #   required: false
         #   type: file
-        #   in: formData 
+        #   in: formData
         - name: brief
           description: 小队简介
           required: false
@@ -2489,6 +2489,26 @@ paths:
             items:
               $ref: ResCircle
   /circle_contents/{contentId}:
+    get:
+      tags:
+        - circles
+      summary: 获取同事圈内容详情
+      operationId: getCircleContent
+      parameters:
+        - name: contentId
+          description: 消息id
+          required: true
+          type: string
+          in: path
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+          schema:
+            $ref: ResCircle
     delete:
       tags:
         - circles
@@ -3196,7 +3216,7 @@ paths:
               $ref: CompetitionMessage
         default:
           description: error
-          schema: 
+          schema:
             $ref: Error
     post:
       tags:
@@ -3219,7 +3239,7 @@ paths:
           description: error
           schema:
             $ref: Error
-          
+
   /competition_messages/{messageId}:
     get:
       tags:
@@ -4726,7 +4746,7 @@ definitions:
     properties:
       label:
         type: string
-      value: 
+      value:
         type: string
       data:
         type: array
@@ -4741,7 +4761,7 @@ definitions:
     properties:
       label:
         type: string
-      value: 
+      value:
         type: string
       data:
         type: array
@@ -4755,7 +4775,7 @@ definitions:
     properties:
       label:
         type: string
-      value: 
+      value:
         type: string
   ScoreData:
     title: ScoreData
@@ -4925,7 +4945,7 @@ definitions:
         type: string
       kind:
         type: string
-        enum: 
+        enum:
           - comment
           - appreciate
       content:
@@ -4991,7 +5011,7 @@ definitions:
       - CircleContent
       - comments
     properties:
-      CircleContent:
+      content:
         type: CircleContent
         description: 消息相关信息
       comments:
@@ -5337,7 +5357,7 @@ definitions:
       campaign:
         type: string
         description: 活动id
-      content: 
+      content:
         type: string
         description: 挑战词
   RankCity:

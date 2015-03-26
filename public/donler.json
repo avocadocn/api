@@ -3667,6 +3667,36 @@
       }
     },
     "/circle_contents/{contentId}": {
+      "get": {
+        "tags": [
+          "circles"
+        ],
+        "summary": "获取同事圈内容详情",
+        "operationId": "getCircleContent",
+        "parameters": [
+          {
+            "name": "contentId",
+            "description": "消息id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "ResCircle"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "circles"
@@ -7131,7 +7161,7 @@
         "comments"
       ],
       "properties": {
-        "CircleContent": {
+        "content": {
           "type": "CircleContent",
           "description": "消息相关信息"
         },
