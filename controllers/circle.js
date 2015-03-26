@@ -73,7 +73,7 @@ module.exports = function(app) {
         if ((fields['content'] == undefined || !fields['content'][0]) && !files[fieldName]) {
           return res.sendStatus(400);
         }
-        
+
         // req.tid = (fields['tid'] && fields['tid'][0]) ? fields['tid'][0] : [];
         req.campaign_id = (fields['campaign_id'] && fields['campaign_id'][0]) ? fields['campaign_id'][0] : null;
         req.content = (fields['content'] && fields['content'][0]) ? fields['content'][0] : null;
@@ -1040,7 +1040,11 @@ module.exports = function(app) {
               },
               post_date: {
                 $gt: req.query.last_comment_date
-              }
+              },
+              $or: [
+                {kind: {$ne: 'appreciate'}},
+                {status: {$ne: 'delete'}}
+              ]
             })
             .sort('-post_date')
             .exec()
