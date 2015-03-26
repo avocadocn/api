@@ -840,9 +840,10 @@ module.exports = function(app) {
           };
 
           var noticeUserIds = circleContent.comment_users.map(function(commentUser) {
-            return commentUser._id;
+            return commentUser._id.toString();
           });
-          noticeUserIds.push(circleContent.post_user_id);
+          if(noticeUserIds.indexOf(circleContent.post_user_id.toString())==-1)
+            noticeUserIds.push(circleContent.post_user_id.toString());
 
           if (resComment.is_only_to_content) {
             res.send({ circleComment: resComment });
