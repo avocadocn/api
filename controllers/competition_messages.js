@@ -251,8 +251,15 @@ module.exports = function (app) {
         }else {
           if(req.body.action==='accept') {
             chatsBusiness.createChat({
-              chatroomId: req.message.sponsor_team,
+              chatroomId: req.message.opposite_team,
               chatType: 5,
+              competitionMessageId:req.message._id,
+              user: req.user,
+              randomId:  Math.floor(Math.random()*100),
+            });
+            chatsBusiness.createChat({
+              chatroomId: req.message.sponsor_team,
+              chatType: 6,
               competitionMessageId:req.message._id,
               user: req.user,
               randomId:  Math.floor(Math.random()*100),

@@ -26,6 +26,7 @@ exports.createChat = function (param,callback) {
       case 3:
       case 4:
       case 5:
+      case 6:
         chat.chat_type = chatType;
         if(param.competitionMessageId) {
           chat.competition_message = param.competitionMessageId;

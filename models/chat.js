@@ -10,7 +10,7 @@ var Chat = new Schema({
   chatroom_id: Schema.Types.ObjectId,  //聊天室的id,这个主体可以是 一个小队、一个公司
   chat_type:{
     type: Number,
-    enum:[1,2,3,4,5],//1:'normal',2:'recommend_team',3:'send_competition',4:'receive_competition',5:'accept_competition'
+    enum:[1,2,3,4,5,6],//1:'normal',2:'recommend_team',3:'send_competition',4:'receive_competition',5:'accept_competition',6:'accepted_competition'
     default: 1
   },
   recommend_team:{
