@@ -7,7 +7,7 @@ var CompetitionMessage = mongoose.model('CompetitionMessage'),
 var donlerValidator = require('../services/donler_validator.js'),
     socketClient = require('../services/socketClient'),
     log = require('../services/error_log.js');
-
+var perPageNum = 10;
 module.exports = function (app) {
   
   return {
@@ -79,7 +79,8 @@ module.exports = function (app) {
         opposite_cid: req.teams[0]._id.toString() === req.body.sponsor ? req.teams[1].cid:req.teams[0].cid,
         competition_type: req.body.type,
         content: req.body.content,
-        campaign_mold: req.teams[0].group_type
+        campaign_mold: req.teams[0].group_type,
+        opposite_unread: true
       });
       Vote.establish(message, function (err, vote) {
         if (err) {
@@ -146,17 +147,23 @@ module.exports = function (app) {
         next();
       },
       queryAndFormat : function (req, res) {
-        CompetitionMessage.find(req.options)
-        .sort('-create_time')
-        .populate([{'path':'sponsor_team', 'select':{name:1, logo:1}}, {'path':'opposite_team', 'select':{name:1, logo:1}}])
-        .exec()
-        .then(function(messages) {
-          return res.status(200).send({messages: messages});
-        })
-        .then(null,function(err) {
-          log(err);
-          return res.status(500).send({msg: '查询错误'});
-        });
+        var page = req.query.page > 0? req.query.page:1;
+        CompetitionMessage.paginate(req.options, page, perPageNum, function(err, pageCount, results, itemCount) {
+          if(err){
+            log(err);
+            res.status(500).send({msg:err});
+          }
+          else{
+            var unReadStatus = false;
+            // var _results = [];
+            results.forEach(function (result) {
+              var unread = req.user.isTeamLeader(result.sponsor_team._id) && result.sponsor_unread || req.user.isTeamLeader(result.opposite_team._id) && result.opposite_unread;
+              unReadStatus = unReadStatus || unread;
+              result.set('unread',unread,{strict:false});
+            })
+            return res.send({'messages':results,'maxPage':pageCount,unReadStatus:unReadStatus});
+          }
+        },{populate:[{'path':'sponsor_team', 'select':{name:1, logo:1}}, {'path':'opposite_team', 'select':{name:1, logo:1}}],sortBy:{'create_time':-1}});
       }
     },
     //获取某条message
@@ -169,8 +176,24 @@ module.exports = function (app) {
       .populate('vote',{'units':1})
       .exec()
       .then(function(message) {
+        var result = {
+          message: message,
+          sponsorLeader:req.user.isTeamLeader(message.sponsor_team._id),
+          oppositeLeader:req.user.isTeamLeader(message.opposite_team._id)
+        }
+        if(result.sponsorLeader && message.sponsor_unread || result.oppositeLeader && message.opposite_unread) {
+          if(result.sponsorLeader) {
+            message.sponsor_unread = false;
+          }
+          if(result.oppositeLeader) {
+            message.opposite_unread = false;
+          }
+          message.save(function (err) {
+            if(err) log(err);
+          })
+        }
         if(req.user.isTeamMember(message.sponsor_team._id) || req.user.isTeamMember(message.opposite_team._id))
-          return res.status(200).send({message: message,sponsorLeader:req.user.isTeamLeader(message.sponsor_team._id),oppositeLeader:req.user.isTeamLeader(message.opposite_team._id)});
+          return res.status(200).send(result);
         else
           return res.status(403).send({msg:'权限错误'});
       })

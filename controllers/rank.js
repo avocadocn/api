@@ -12,8 +12,8 @@ var log = require('../services/error_log.js'),
     auth = require('../services/auth.js'),
     schedule = require('../services/schedule.js');
 var timeLimit = 7 * 24 * 60 * 60 * 1000;
-var forwardTeamNum = 4;
-var backwardTeamNum = 4;
+var forwardTeamNum = 2;
+var backwardTeamNum = 2;
 var rankTeamNum =5;
 module.exports = function (app) {
   return {

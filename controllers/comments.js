@@ -158,7 +158,7 @@ module.exports = function (app) {
           break;
         case 'competition_message':
           CompetitionMessage.findById(hostId)
-          .populate('sponsor_team','opposite_team')
+          .populate('sponsor_team opposite_team')
           .exec()
             .then(function (competitionMessage) {
               if (!competitionMessage) {
@@ -355,19 +355,29 @@ module.exports = function (app) {
             
           }
           if (req.competitionMessage) {
+            //更新挑战信未读状态
+            
             //socket
             //发给另一个队长
             //先看自己是不是第一个队的队长，如果不是，那肯定是第二个队的= -...
             var sponsor_team = req.competitionMessage.sponsor_team;
             var opposite_team = req.competitionMessage.opposite_team;
-            if(sponsor_team.leader.length && req.user._id.toString() === sponsor_team.leader[0]._id.toString()) {
-              //是第一个队的, 发给第二个
-              if(opposite_team.leader.length) {
-                socketClient.pushMessage(opposite_team.leader[1]._id);
-              }
-            }else if(sponsor_team.leader.length) {
-              socketClient.pushMessage(opposite_team.leader[0]._id);
+            if(req.user.isTeamLeader(sponsor_team._id)) {
+              req.competitionMessage.opposite_unread =true;
+              opposite_team.leader.forEach(function(leader, index){
+                socketClient.pushMessage(leader._id);
+              });
+            }else {
+              req.competitionMessage.sponsor_unread =true;
+              sponsor_team.leader.forEach(function(leader, index){
+                socketClient.pushMessage(leader._id);
+              });
             }
+            req.competitionMessage.save(function (err) {
+              if (err) {
+                log(err);
+              }
+            });
           }
         }
       });
@@ -425,6 +435,7 @@ module.exports = function (app) {
                   hostType: req.query.requestType,
                   hostId: req.query.requestId
                 }, req.query.createDate, req.query.limit, function (err, comments, nextStartDate) {
+
                   setDeleteAuth({
                     host_type: req.query.requestType,
                     host_id: req.query.requestId,
