@@ -280,7 +280,7 @@ module.exports = function(app) {
         .exec()
         .then(function(contentDocs) {
           if (contentDocs.length === 0) {
-            res.status(404).send({
+            res.status(204).send({
               msg: '未找到同事圈消息'
             });
             return
@@ -1487,7 +1487,14 @@ function hasNewCircleContent (req, callback) {
 
 function getNewCommentNumber (req, callback) {
   //与获取comment同,稍后修改
-  callback(null,0);
+  getComments(req, function(err, data) {
+    if(err) {
+      callback(err);
+    }
+    else {
+      callback(null, data.comments ? data.comments.length : 0);
+    }
+  });
 };
 
 
