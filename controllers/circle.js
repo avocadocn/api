@@ -942,7 +942,7 @@ module.exports = function(app) {
         return;
       }
 
-      var docs = {};
+      var docs = {}, data = {};
       CircleContent.findById(req.params.contentId).exec()
       .then(function(circleContent) {
         if (!circleContent) {
@@ -950,75 +950,85 @@ module.exports = function(app) {
           return;
         }
 
-        docs.circleContent = circleContent;
+        data.circleContent = circleContent.toObject();
 
-        return CircleComment.find({
-          target_content_id: circleContent._id,
-          status: 'show'
-        }).sort('+post_date').exec();
-
-      })
-      .then(function(circleComments) {
-        docs.circleComments = circleComments;
-
-        var userIdsForQuery = [];
-        // 向用户id数组不重复地添加用户id
-        var pushUserIdToQueryIds = function(userId) {
-          var resultIndex = userIdsForQuery.indexOf(userId);
-          if (resultIndex === -1) {
-            userIdsForQuery.push(userId.toString());
-          }
-        };
-        pushUserIdToQueryIds(docs.circleContent.post_user_id);
-        circleComments.forEach(function(comment) {
-          pushUserIdToQueryIds(comment.post_user_id);
-          pushUserIdToQueryIds(comment.target_user_id);
-        });
-
-        return User.find({
-          _id: {$in: userIdsForQuery}
-        }, {
+        return Campaign.findById(circleContent.campaign_id, {
           _id: 1,
-          nickname: 1,
-          photo: 1
-        }).exec();
-
-      })
-      .then(function(users) {
-
-        // 向CircleContent和CircleComment对象添加发布者的详细信息
-        var addPosterInfoToObj = function(obj) {
-          for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-            if (users[i]._id.toString() === obj.post_user_id.toString()) {
-              obj.poster = users[i];
-              break;
-            }
+          theme: 1
+        }).exec()
+        .then(function(campaign) {
+          if (campaign && campaign.theme) {
+            data.circleContent.campaignTheme = campaign.theme;
           }
-        };
 
-        var addTargetInfoToComment = function(comment) {
-          for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-            if (users[i]._id.toString() === comment.target_user_id.toString()) {
-              comment.target = users[i];
-              break;
+          return CircleComment.find({
+            target_content_id: circleContent._id,
+            status: 'show'
+          }).sort('+post_date').exec();
+        })
+        .then(function(circleComments) {
+          docs.circleComments = circleComments;
+
+          var userIdsForQuery = [];
+          // 向用户id数组不重复地添加用户id
+          var pushUserIdToQueryIds = function(userId) {
+            var resultIndex = userIdsForQuery.indexOf(userId);
+            if (resultIndex === -1) {
+              userIdsForQuery.push(userId.toString());
             }
-          }
-        };
+          };
+          pushUserIdToQueryIds(data.circleContent.post_user_id);
+          circleComments.forEach(function(comment) {
+            pushUserIdToQueryIds(comment.post_user_id);
+            pushUserIdToQueryIds(comment.target_user_id);
+          });
 
-        var resData = {
-          content: docs.circleContent.toObject(),
-          comments: docs.circleComments.map(function(doc) {
-            return doc.toObject();
-          })
-        };
+          return User.find({
+            _id: {$in: userIdsForQuery}
+          }, {
+            _id: 1,
+            nickname: 1,
+            photo: 1
+          }).exec();
 
-        resData.comments.forEach(function(comment) {
-          addPosterInfoToObj(comment);
-          addTargetInfoToComment(comment);
+        })
+        .then(function(users) {
+
+          // 向CircleContent和CircleComment对象添加发布者的详细信息
+          var addPosterInfoToObj = function(obj) {
+            for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+              if (users[i]._id.toString() === obj.post_user_id.toString()) {
+                obj.poster = users[i];
+                break;
+              }
+            }
+          };
+
+          var addTargetInfoToComment = function(comment) {
+            for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+              if (users[i]._id.toString() === comment.target_user_id.toString()) {
+                comment.target = users[i];
+                break;
+              }
+            }
+          };
+
+          var resData = {
+            content: data.circleContent,
+            comments: docs.circleComments.map(function(doc) {
+              return doc.toObject();
+            })
+          };
+
+          resData.comments.forEach(function(comment) {
+            addPosterInfoToObj(comment);
+            addTargetInfoToComment(comment);
+          });
+          addPosterInfoToObj(resData.content);
+
+          res.send({circle: resData});
+
         });
-        addPosterInfoToObj(resData.content);
-
-        res.send({circle: resData});
 
       })
       .then(null, next);
@@ -1401,8 +1411,8 @@ module.exports = function(app) {
 
 /**
  * 获取是否有新chat
- * @param  {object}   user     
- * @param  {Function} callback function(err, unread) 
+ * @param  {object}   user
+ * @param  {Function} callback function(err, unread)
  *                             unread: boolean
  */
 function hasNewChat (user, callback) {
@@ -1434,8 +1444,8 @@ function hasNewChat (user, callback) {
 
 /**
  * 获取是否有新挑战信信息
- * @param  {object}   user     
- * @param  {Function} callback function(err, unread) 
+ * @param  {object}   user
+ * @param  {Function} callback function(err, unread)
  *                             unread: boolean
  */
 function hasNewDiscover (user, callback) {
@@ -1447,7 +1457,7 @@ function hasNewDiscover (user, callback) {
   };
   CompetitionMessage.findOne({
     '$or': [
-      {'$and':[{'sponsor_team': {'$in': leaderTeamIds}}, {'sponsor_unread':true}]}, 
+      {'$and':[{'sponsor_team': {'$in': leaderTeamIds}}, {'sponsor_unread':true}]},
       {'$and':[{'opposite_team': {'$in': leaderTeamIds}}, {'opposite_unread':true}]}
     ]
   }, function(err, result) {
@@ -1462,7 +1472,7 @@ function hasNewDiscover (user, callback) {
 
 /**
  * 获取是否有新同事圈,需要带上次时间来，如果没带...?
- * @param  {Object}   req 
+ * @param  {Object}   req
  * @param  {Function} callback function(err, content)
  */
 function hasNewCircleContent (req, callback) {
