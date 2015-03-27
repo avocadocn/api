@@ -6,7 +6,8 @@ var CompetitionMessage = mongoose.model('CompetitionMessage'),
     Vote = mongoose.model('Vote');
 var donlerValidator = require('../services/donler_validator.js'),
     socketClient = require('../services/socketClient'),
-    log = require('../services/error_log.js');
+    log = require('../services/error_log.js'),
+    chatsBusiness = require('../business/chats');
 var perPageNum = 10;
 module.exports = function (app) {
   
@@ -94,6 +95,20 @@ module.exports = function (app) {
               log(err);
               return res.status(500).send({msg: '保存出错'});
             }
+            chatsBusiness.createChat({
+              chatroomId: message.sponsor_team,
+              chatType: 3,
+              competitionMessageId:message._id,
+              user: req.user,
+              randomId:  Math.floor(Math.random()*100),
+            });
+            chatsBusiness.createChat({
+              chatroomId: message.opposite_team,
+              chatType: 4,
+              competitionMessageId:message._id,
+              user: req.user,
+              randomId:  Math.floor(Math.random()*100),
+            });
             res.status(200).send({msg: '挑战信发送成功'});
             //发给对方队长
             if(req.teams[1].leader.length) {
@@ -234,6 +249,22 @@ module.exports = function (app) {
           log(err);
           return res.status(500).send({msg:'保存失败'});
         }else {
+          if(req.body.action==='accept') {
+            chatsBusiness.createChat({
+              chatroomId: req.message.opposite_team,
+              chatType: 5,
+              competitionMessageId:req.message._id,
+              user: req.user,
+              randomId:  Math.floor(Math.random()*100),
+            });
+            chatsBusiness.createChat({
+              chatroomId: req.message.sponsor_team,
+              chatType: 6,
+              competitionMessageId:req.message._id,
+              user: req.user,
+              randomId:  Math.floor(Math.random()*100),
+            });
+          }
           return res.status(200).send({msg:'处理成功'});
         }
       })

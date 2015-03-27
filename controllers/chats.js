@@ -12,10 +12,9 @@ var auth = require('../services/auth.js'),
   log = require('../services/error_log.js'),
   socketClient = require('../services/socketClient'),
   uploader = require('../services/uploader.js'),
-  tools = require('../tools/tools.js');
-
+  tools = require('../tools/tools.js'),
+  chatsBusiness = require('../business/chats');
 var shieldTip = "该评论已经被系统屏蔽";
-
 module.exports = function (app) {
 
   return {
@@ -85,71 +84,24 @@ module.exports = function (app) {
       if (!req.photo && !req.body.content) {
         return res.status(422).send({msg: '未填写内容'});
       }
-      var chat = new Chat({
-        chatroom_id: req.params.chatroomId,
+      var param ={
+        chatroomId: req.params.chatroomId,
         content: req.body.content,
-        poster: req.user._id
-      });
-      if (req.photo) {
-        chat.photos = req.photo;
+        chatType: req.body.chatType,
+        photo: req.photo,
+        recommendTeamId:req.body.recommendTeamId,
+        randomId: req.body.randomId  || req.randomId,
+        user: req.user
       }
-      if(req.body.chatType) {
-        var chatType = req.body.chatType;
-        switch(chatType) {
-          case 'recommend_team':
-            chat.chat_type = chatType;
-            if(req.body.recommendTeamId) {
-              chat.recommend_teamid = req.body.recommendTeamId;
-            }
-            break;
-          case 'normal':
-            
-            break;
-        }
-      }
-      chat.save(function (err) {
-        if (err) {
+      chatsBusiness.createChat(param,function (err, chat) {
+        if(err) {
           log(err)
           return res.status(500).send({msg: '聊天保存失败'});
         }
-        else {
-          if (req.photo) chat.photos[0].ori_uri = null; //对外隐藏此属性
+        else{
           res.status(200).send({'chat': chat});
-          //找出相关人员
-          User.find({
-            'cid': req.user.cid,
-            'chatrooms': {'$elemMatch': {'_id': chat.chatroom_id}}
-          }, {'chatrooms': 1}, function (err, users) {
-            if (err) {
-              log(err);
-            }
-            else {
-              //socket推送
-              var userIds = [];
-              var usersLength = users.length;
-              for (var i = 0; i < usersLength; i++) {
-                userIds.push(users[i]._id);
-              }
-              var socketChat = {
-                '_id': chat._id,
-                'chatroom_id': chat.chatroom_id,
-                'poster': {
-                  '_id': chat.poster,
-                  'photo': req.user.photo,
-                  'nickname': req.user.nickname
-                },
-                'create_date': chat.create_date,
-                'content': chat.content,
-                'randomId': req.body.randomId || req.randomId
-              };
-              if(chat.photos) {
-                socketChat.photos = chat.photos;
-              }
-              socketClient.pushChat(chat.chatroom_id, socketChat, userIds);
-            }
-          });
         }
-      });
+      })
     },
 
     getChats: function (req, res, next) {
@@ -197,7 +149,7 @@ module.exports = function (app) {
       })
         .sort('-create_date -_id')
         .limit(pageSize + 1)
-        .populate('poster',{'nickname':1, 'photo':1})
+        .populate([{'path':'poster', 'select':{nickname:1, logo:1, photo:1}},{'path':'competition_message'}])
         .exec()
         .then(function (chats) {
           var resData = {

@@ -840,9 +840,10 @@ module.exports = function(app) {
           };
 
           var noticeUserIds = circleContent.comment_users.map(function(commentUser) {
-            return commentUser._id;
+            return commentUser._id.toString();
           });
-          noticeUserIds.push(circleContent.post_user_id);
+          if(noticeUserIds.indexOf(circleContent.post_user_id.toString())==-1)
+            noticeUserIds.push(circleContent.post_user_id.toString());
 
           if (resComment.is_only_to_content) {
             res.send({ circleComment: resComment });
@@ -898,6 +899,96 @@ module.exports = function(app) {
         }
       });
     },
+
+    getCircleContent: function(req, res, next) {
+      if (req.user.provider === 'company') {
+        res.status(403).send({msg: '公司账号暂无朋友圈功能'});
+        return;
+      }
+
+      var docs = {};
+      CircleContent.findById(req.params.contentId).exec()
+      .then(function(circleContent) {
+        if (!circleContent) {
+          res.status(404).send({msg: '找不到该消息'});// TODO:提示文字需要改善
+          return;
+        }
+
+        docs.circleContent = circleContent;
+
+        return CircleComment.find({
+          target_content_id: circleContent._id,
+          status: 'show'
+        }).sort('+post_date').exec();
+
+      })
+      .then(function(circleComments) {
+        docs.circleComments = circleComments;
+
+        var userIdsForQuery = [];
+        // 向用户id数组不重复地添加用户id
+        var pushUserIdToQueryIds = function(userId) {
+          var resultIndex = userIdsForQuery.indexOf(userId);
+          if (resultIndex === -1) {
+            userIdsForQuery.push(userId.toString());
+          }
+        };
+        pushUserIdToQueryIds(docs.circleContent.post_user_id);
+        circleComments.forEach(function(comment) {
+          pushUserIdToQueryIds(comment.post_user_id);
+          pushUserIdToQueryIds(comment.target_user_id);
+        });
+
+        return User.find({
+          _id: {$in: userIdsForQuery}
+        }, {
+          _id: 1,
+          nickname: 1,
+          photo: 1
+        }).exec();
+
+      })
+      .then(function(users) {
+
+        // 向CircleContent和CircleComment对象添加发布者的详细信息
+        var addPosterInfoToObj = function(obj) {
+          for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+            if (users[i]._id.toString() === obj.post_user_id.toString()) {
+              obj.poster = users[i];
+              break;
+            }
+          }
+        };
+
+        var addTargetInfoToComment = function(comment) {
+          for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+            if (users[i]._id.toString() === comment.target_user_id.toString()) {
+              comment.target = users[i];
+              break;
+            }
+          }
+        };
+
+        var resData = {
+          content: docs.circleContent.toObject(),
+          comments: docs.circleComments.map(function(doc) {
+            return doc.toObject();
+          })
+        };
+
+        resData.comments.forEach(function(comment) {
+          addPosterInfoToObj(comment);
+          addTargetInfoToComment(comment);
+        });
+        addPosterInfoToObj(resData.content);
+
+        res.send({circle: resData});
+
+      })
+      .then(null, next);
+    },
+
+
     /**
      * Delete circle comment
      *
@@ -978,6 +1069,7 @@ module.exports = function(app) {
      * 获取同事圈提醒
      * @param  {Object}
      * @return [comment]
+     * 
      */
     getCircleComments: function(req, res, next) {
       if (req.user.provider === 'company') {
@@ -985,16 +1077,17 @@ module.exports = function(app) {
           msg: '公司账号暂无提醒功能'
         });
       }
-      if (!req.query.latest_content_date || !req.query.last_comment_date) {
+      if (!req.query.last_comment_date) {
         return res.status(400).send({
           msg: '参数错误'
         });
       }
+
       var conditons = {
-        'cid': req.user.cid,
-        'post_date': {
-          '$lte': req.query.latest_content_date
-        },
+        'post_user_id': req.user._id.toString(),
+        // 'post_date': {
+        //   '$lte': req.query.latest_content_date
+        // },
         'latest_comment_date': {
           '$gt': req.query.last_comment_date
         }
