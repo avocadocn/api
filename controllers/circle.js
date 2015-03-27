@@ -280,113 +280,148 @@ module.exports = function(app) {
         .exec()
         .then(function(contentDocs) {
           if (contentDocs.length === 0) {
-            return res.status(404).send({
+            res.status(404).send({
               msg: '未找到同事圈消息'
             });
-          } else {
-            // 修正查询逻辑，减少查询次数
-            // 1. 将contents的id保存到一个数组中，先将各个contents的评论一次查询出来，然后分组放到各个content中
-            // 2. 将contents的post_user_id及comment的post_user_id及target_user_id不重复地保存到一个数组中，然后一次查出所有用户，然后向各个含post_user_id的对象添加用户信息
-            // 仅需要查询两次数据库，相比之前方案的contents总数*3次(即很可能是60次)要好得多
+            return
+          }
 
-            /**
-             * 响应返回数据，形式为：
-             *  [{
-             *    content: contentDoc,
-             *    comments: [commentDoc]
-             *  }]
-             */
-            var resData = [];
+          // 修正查询逻辑，减少查询次数
+          // 1. 将contents的id保存到一个数组中，先将各个contents的评论一次查询出来，然后分组放到各个content中
+          // 2. 将contents的post_user_id及comment的post_user_id及target_user_id不重复地保存到一个数组中，然后一次查出所有用户，然后向各个含post_user_id的对象添加用户信息
+          // 仅需要查询两次数据库，相比之前方案的contents总数*3次(即很可能是60次)要好得多
 
-            // 转换为简单对象，以解除mongoose文档的约束，便于修改属性写入响应
-            var docToObject = function(doc) {
-              return doc.toObject();
-            };
-            var contents = contentDocs.map(docToObject);
+          /**
+           * 响应返回数据，形式为：
+           *  [{
+           *    content: contentDoc,
+           *    comments: [commentDoc]
+           *  }]
+           */
+          var resData = [];
+
+          var queryData = {}; // 数据库查询获得的文档数据
+
+          // 转换为简单对象，以解除mongoose文档的约束，便于修改属性写入响应
+          var docToObject = function(doc) {
+            return doc.toObject();
+          };
+          var contents = contentDocs.map(docToObject);
+
+          // 向数组不重复地添加id
+          var pushIdToUniqueArray = function(id, array) {
+            if (id === undefined || id === null) {
+              return;
+            }
+            var stringId = id.toString();
+            var resultIndex = array.indexOf(stringId);
+            if (resultIndex === -1) {
+              array.push(stringId);
+            }
+          };
+
+          var campaignIds = [];
+          contents.forEach(function(content) {
+            pushIdToUniqueArray(content.campaign_id, campaignIds);
+          });
+
+          // 查询content对应的活动，获取活动数据
+          return Campaign.find({
+            _id: {$in: campaignIds}
+          }, {
+            _id: 1,
+            theme: 1
+          }).exec()
+          .then(function(campaigns) {
+
+            // 设置相应的活动主题
+            contents.forEach(function(content) {
+              for (var i = 0, campaignsLen = campaigns.length; i < campaignsLen; i++) {
+                if (content.campaign_id && campaigns[i].id === content.campaign_id.toString()) {
+                  content.campaignTheme = campaigns[i].theme;
+                  break;
+                }
+              }
+            });
 
             var contentIdsForQuery = contents.map(function(content) {
               return content._id;
             });
-            var userIdsForQuery = []; // 元素为String类型
 
-            // 向用户id数组不重复地添加用户id
-            var pushUserIdToUniqueArray = function(userId, array) {
-              var resultIndex = array.indexOf(userId);
-              if (resultIndex === -1) {
-                array.push(userId.toString());
-              }
-            };
-            contents.forEach(function(content) {
-              pushUserIdToUniqueArray(content.post_user_id, userIdsForQuery);
-            });
-
-            CircleComment.find({
+            return CircleComment.find({
               target_content_id: {$in: contentIdsForQuery},
               status: 'show'
-            }).sort('+post_date').exec()
-            .then(function(commentDocs) {
-              var comments = commentDocs.map(docToObject);
+            }).sort('+post_date').exec();
 
-              comments.forEach(function(comment) {
-                pushUserIdToUniqueArray(comment.post_user_id, userIdsForQuery);
-                pushUserIdToUniqueArray(comment.target_user_id, userIdsForQuery);
+          })
+          .then(function(commentDocs) {
+            var comments = commentDocs.map(docToObject);
+
+            var userIdsForQuery = []; // 元素为String类型
+
+            contents.forEach(function(content) {
+              pushIdToUniqueArray(content.post_user_id, userIdsForQuery);
+            });
+
+            comments.forEach(function(comment) {
+              pushIdToUniqueArray(comment.post_user_id, userIdsForQuery);
+              pushIdToUniqueArray(comment.target_user_id, userIdsForQuery);
+            });
+
+            queryData.comments = comments;
+
+            return User.find({
+              _id: {$in: userIdsForQuery}
+            }, {
+              _id: 1,
+              nickname: 1,
+              photo: 1
+            }).exec();
+
+          })
+          .then(function(users) {
+
+            // 向CircleContent和CircleComment对象添加发布者的详细信息
+            var addPosterInfoToObj = function(obj) {
+              for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                if (users[i]._id.toString() === obj.post_user_id.toString()) {
+                  obj.poster = users[i];
+                  break;
+                }
+              }
+            };
+
+            var addTargetInfoToComment = function(comment) {
+              for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                if (users[i]._id.toString() === comment.target_user_id.toString()) {
+                  comment.target = users[i];
+                  break;
+                }
+              }
+            };
+
+            queryData.comments.forEach(function(comment) {
+              addPosterInfoToObj(comment);
+              addTargetInfoToComment(comment);
+            });
+
+            contents.forEach(function(content) {
+              addPosterInfoToObj(content);
+
+              // 将comments添加到对应的contents中
+              var contentComments = queryData.comments.filter(function(comment) {
+                return comment.target_content_id.toString() === content._id.toString();
               });
+              resData.push({
+                content: content,
+                comments: contentComments
+              });
+            });
 
-              User.find({
-                _id: {$in: userIdsForQuery}
-              }, {
-                _id: 1,
-                nickname: 1,
-                photo: 1
-              }).exec()
-              .then(function(users) {
+            res.send(resData);
 
-                // 向CircleContent和CircleComment对象添加发布者的详细信息
-                var addPosterInfoToObj = function(obj) {
-                  for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-                    if (users[i]._id.toString() === obj.post_user_id.toString()) {
-                      obj.poster = users[i];
-                      break;
-                    }
-                  }
-                };
+          });
 
-                var addTargetInfoToComment = function(comment) {
-                  for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-                    if (users[i]._id.toString() === comment.target_user_id.toString()) {
-                      comment.target = users[i];
-                      break;
-                    }
-                  }
-                };
-
-                comments.forEach(function(comment) {
-                  addPosterInfoToObj(comment);
-                  addTargetInfoToComment(comment);
-                });
-
-                contents.forEach(function(content) {
-                  addPosterInfoToObj(content);
-
-                  // 将comments添加到对应的contents中
-                  var contentComments = comments.filter(function(comment) {
-                    return comment.target_content_id.toString() === content._id.toString();
-                  });
-                  resData.push({
-                    content: content,
-                    comments: contentComments
-                  });
-                });
-
-                res.send(resData);
-
-              })
-              .then(null, next);
-
-            })
-            .then(null, next);
-
-          }
         })
         .then(null, next);
     },
@@ -1498,7 +1533,7 @@ function createCircleContent(req, res, next) {
       var circleContent = new CircleContent({
         cid: req.user.getCid(), // 所属公司id
         tid: tid, // 关联的小队id(可选，不是必要的)
-        campaign_id: req.campaign_id, // 关联的活动id(可选，不是必要的)
+        campaign_id: campaign._id, // 关联的活动id(可选，不是必要的)
         post_user_id: req.user._id, // 发消息的用户的id（头像和昵称再次查询）
         relative_cids: relative_cids, // 参加同事圈消息所属的活动的所有公司id
         status: 'wait'
