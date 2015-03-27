@@ -2572,8 +2572,8 @@
         "tags": [
           "components"
         ],
-        "summary": "获取比分记录",
-        "operationId": "getScoreLogs",
+        "summary": "获取比分",
+        "operationId": "getScore",
         "consumes": [
           "application/json"
         ],
@@ -2592,7 +2592,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "ScoreLog"
+                "$ref": "ScoreComponent"
               }
             }
           },
@@ -2664,6 +2664,44 @@
         "responses": {
           "200": {
             "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/components/ScoreBoard/logs/{componentId}": {
+      "get": {
+        "tags": [
+          "components"
+        ],
+        "summary": "获取比分记录",
+        "operationId": "getScoreLogs",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "componentId",
+            "description": "组件 Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "ScoreLog"
+              }
+            }
           },
           "default": {
             "description": "error",
@@ -6892,6 +6930,67 @@
             "type": "integer",
             "format": "int32"
           }
+        }
+      }
+    },
+    "ScorePlayingTeam": {
+      "title": "ScorePlayingTeams",
+      "required": [
+        "allowManage",
+        "_id",
+        "cid",
+        "logo",
+        "name",
+        "tid",
+        "confirm"
+      ],
+      "properties": {
+        "allowManage": {
+          "type": "boolean"
+        },
+        "_id": {
+          "type": "string"
+        },
+        "cid": {
+          "type": "string"
+        },
+        "logo": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "result": {
+          "type": "string"
+        },
+        "score": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "confirm": {
+          "type": "boolean"
+        },
+        "tid": {
+          "type": "string"
+        }
+      }
+    },
+    "ScoreComponent": {
+      "title": "ScoreComponent",
+      "required": [
+        "playingTeams",
+        "status"
+      ],
+      "properties": {
+        "playingTeams": {
+          "type": "array",
+          "items": {
+            "$ref": "ScorePlayingTeam"
+          }
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },

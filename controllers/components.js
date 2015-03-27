@@ -288,7 +288,38 @@ module.exports = function (app) {
             return res.status(500).send({msg: err });
           });
       },
-
+      getScore: function (req, res) {
+        if(!mongoose.Types.ObjectId.isValid(req.params.componentId)){
+          return res.status(400).send({ msg: '参数错误' });
+        }
+        mongoose.model('ScoreBoard')
+        .findById(req.params.componentId)
+        .exec()
+        .then(function (scoreBoard) {
+          if (!scoreBoard) {
+            return res.status(404).send({msg: '找不到该组件' });
+          } else {
+            var cids =[];
+            scoreBoard.playing_teams.forEach(function(playing_team, index){
+              cids.push(playing_team.cid);
+            });
+            var role = auth.getRole(req.user, {
+              companies: cids
+            });
+            var allow = auth.auth(role, ['getScoreBoardScore']);
+            if(!allow.getScoreBoardScore) {
+              return res.status(403).send({msg: '没有此权限' });
+            }
+            scoreBoard.getData(req.user, function (data) {
+              return res.status(200).send(data);
+            });
+                       
+          }
+        })
+        .then(null, function (err) {
+          return res.status(500).send({msg: err });
+        });
+      },
       getLogs: function (req, res) {
         if(!mongoose.Types.ObjectId.isValid(req.params.componentId)){
           return res.status(400).send({ msg: '参数错误' });

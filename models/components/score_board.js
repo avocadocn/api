@@ -2,7 +2,7 @@
 
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-// var auth = require('../../services/auth');
+var auth = require('../../services/auth');
 var moment = require('moment'),
     mongoosePaginate = require('mongoose-paginate');
 
@@ -55,13 +55,13 @@ var ScoreBoard = new Schema({
 });
 
 // 是否失效，超过7天就设为失效
-ScoreBoard.virtual('effective').get(function () {
-  var days = moment().diff(this.create_date, 'days', true);
-  if (Math.abs(days) > 7 && this.status !== 2) {
-    return false;
-  }
-  return true;
-});
+// ScoreBoard.virtual('effective').get(function () {
+//   var days = moment().diff(this.create_date, 'days', true);
+//   if (Math.abs(days) > 7 && this.status !== 2) {
+//     return false;
+//   }
+//   return true;
+// });
 
 
 ScoreBoard.statics = {
@@ -177,29 +177,34 @@ ScoreBoard.methods = {
    * @param {Function} callback
    */
   getData: function (user, callback) {
-    this.playing_teams.forEach(function (playing_team) {
-      var allow = auth(user, {
-        companies: [playing_team.cid],
-        teams: [playing_team.tid]
-      }, ['setScoreBoardScore']);
-      if (allow.setScoreBoardScore) {
-        playing_team.set('allowManage', true, {strict: false});
-      } else {
-        playing_team.set('allowManage', false, {strict: false});
-      }
-    });
+    try{
+      this.playing_teams.forEach(function (playing_team) {
+        var role = auth.getRole(user, {
+          companies: [playing_team.cid],
+          teams: [playing_team.tid]
+        });
+        var allow = auth.auth(role, ['setScoreBoardScore']);
+        if (allow.setScoreBoardScore) {
+          playing_team.set('allowManage', true, {strict: false});
+        } else {
+          playing_team.set('allowManage', false, {strict: false});
+        }
+      });
+    }catch(e){
+      console.log(e);
+    }
 
-    if (this.effective) {
+    // if (this.effective) {
       callback({
         playingTeams: this.playing_teams,
         status: this.status,
-        effective: true
+        // effective: true
       });
-    } else {
-      callback({
-        effective: false
-      });
-    }
+    // } else {
+    //   callback({
+    //     effective: false
+    //   });
+    // }
   },
 
   /**

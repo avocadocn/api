@@ -122,6 +122,7 @@ exports.formatCampaign = function (campaign, user, callback) {
       '_id': campaign.photo_album._id,
       'name': campaign.photo_album.name
     },
+    'components': campaign.components,
     'campaign_type': campaign.campaign_type,
     'is_start': campaign.start_time <= Date.now(),
     'is_end': campaign.end_time <= Date.now()
