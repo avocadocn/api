@@ -876,35 +876,8 @@ module.exports = function(app) {
             photo: req.user.photo
           };
 
-          var noticeUserIds = circleContent.comment_users.map(function(commentUser) {
-            return commentUser._id.toString();
-          });
-          if(noticeUserIds.indexOf(circleContent.post_user_id.toString())==-1)
-            noticeUserIds.push(circleContent.post_user_id.toString());
-
-          if (resComment.is_only_to_content) {
-            res.send({ circleComment: resComment });
-            socketClient.pushCircleComment(noticeUserIds, resComment);
-          }
-          else {
-            User.findById(resComment.target_user_id, {
-              _id: 1,
-              nickname: 1,
-              photo: 1
-            }).exec()
-            .then(function(user) {
-              if (!user) {
-                next(new Error('Target user not found.'));
-              }
-              else {
-                resComment.target = user;
-                res.send({ circleComment: resComment });
-
-                socketClient.pushCircleComment(noticeUserIds, resComment);
-              }
-            })
-            .then(null, next);
-          }
+          res.send({ circleComment: resComment });
+          socketClient.pushCircleComment([circleContent.post_user_id], resComment);
 
           var hasFindCommentUser = false;
           for (var i = 0, commentUsersLen = circleContent.comment_users.length; i < commentUsersLen; i++) {
