@@ -889,6 +889,7 @@ module.exports = function(app) {
               comment_num: 1,
               appreciated: req.body.kind === 'appreciate'
             });
+
           }
 
           circleContent.latest_comment_date = circleComment.post_date;
@@ -898,6 +899,57 @@ module.exports = function(app) {
               console.log(err.stack || 'Save circleContent error.');
             }
           });
+          // var conditions = {
+          //   '_id': req.params.contentId,
+          //   'comment_users._id': {
+          //     $ne: req.user.id
+          //   }
+          // };
+          // var doc = {
+          //   $set: {
+          //     'latest_comment_date': circleComment.post_date
+          //   },
+          //   $push: {
+          //     'comment_users': {
+          //       _id: req.user._id,
+          //       comment_num: 1,
+          //       appreciated: req.body.kind === 'appreciate'
+          //     }
+          //   }
+          // };
+
+          // CircleContent.update(conditions, doc, function(err, numberAffected) {
+          //   if(err) {
+          //     log(err);
+          //     return res.sendStatus(500);
+          //   }
+          //   console.log(numberAffected);
+          //   if(!numberAffected) {
+
+          //     var conditions = {
+          //       '_id': req.params.contentId,
+          //       'comment_users._id': req.user.id
+          //     };
+
+          //     var doc = {
+          //       $inc: {
+          //         'comment_users.$.comment_num': 1
+          //       },
+          //       $set: {
+          //         'comment_users.$.appreciated': req.body.kind === 'appreciate',
+          //         'latest_comment_date': circleComment.post_date
+          //       }
+          //     };
+
+          //     CircleContent.update(conditions, doc, function(err, numberAffected) {
+          //       if(err) {
+          //         log(err);
+          //         return res.sendStatus(500);
+          //       }
+          //       // console.log('');
+          //     });
+          //   }
+          // });
         }
       });
     },

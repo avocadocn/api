@@ -96,6 +96,7 @@ module.exports = function () {
             .set('x-access-token', userToken)
             .expect(200)
             .end(function(err, res) {
+              console.log(res.body.circleContent);
               circleContentIds.push(res.body.circleContent._id.toString());
               callback();
             })
