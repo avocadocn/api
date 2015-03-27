@@ -1083,89 +1083,56 @@ module.exports = function(app) {
         });
       }
 
-      var conditons = {
-        'post_user_id': req.user._id.toString(),
-        // 'post_date': {
-        //   '$lte': req.query.latest_content_date
-        // },
-        'latest_comment_date': {
-          '$gt': req.query.last_comment_date
+      getComments(req, function(err, data) {
+        if (err) {
+          return res.sendStatus(500);
         }
-      };
-      CircleContent.find(conditons, 'content photos')
-        .exec()
-        .then(function(contents) {
-          if (contents.length == 0) {
-            res.status(404).send({
-              msg: '无新评论或赞'
-            });
-            return;
-          }
-          var content_ids = [];
-          contents.forEach(function(content) {
-            content_ids.push(content._id);
+        if (data.msg) {
+          return res.status(404).send({
+            msg: '无新评论或赞'
           });
-          CircleComment.find({
-              post_user_cid: req.user.cid,
-              target_content_id: {
-                $in: content_ids
-              },
-              post_user_id: {
-                $ne: req.user.id
-              },
-              post_date: {
-                $gt: req.query.last_comment_date
-              },
-              $or: [
-                {kind: {$ne: 'appreciate'}},
-                {status: {$ne: 'delete'}}
-              ]
-            })
-            .sort('-post_date')
-            .exec()
-            .then(function(commentDocs) {
-              var comments = commentDocs.map(function(comment) {
-                return comment.toObject();
-              });
+        }
+        
+        var comments = data.comments.map(function(comment) {
+          return comment.toObject();
+        });
 
-              var userIdsForQuery = [];
-              userIdsForQuery = comments.map(function(comment) {
-                return comment.target_user_id;
-              });
-              userIdsForQuery = userIdsForQuery.concat(comments.map(function(comment) {
-                return comment.post_user_id;
-              }));
+        var userIdsForQuery = [];
+        userIdsForQuery = comments.map(function(comment) {
+          return comment.target_user_id;
+        });
+        userIdsForQuery = userIdsForQuery.concat(comments.map(function(comment) {
+          return comment.post_user_id;
+        }));
 
-              User.find({
-                _id: {$in: userIdsForQuery}
-              }, {
-                _id: 1,
-                nickname: 1,
-                photo: 1
-              }).exec()
-                .then(function(users) {
+        User.find({
+            _id: {
+              $in: userIdsForQuery
+            }
+          }, {
+            _id: 1,
+            nickname: 1,
+            photo: 1
+          }).exec()
+          .then(function(users) {
+            var getUserById = function(id) {
+              for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                if (id.toString() === users[i]._id.toString()) {
+                  return users[i];
+                }
+              }
+            };
 
-                  var getUserById = function(id) {
-                    for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-                      if (id.toString() === users[i]._id.toString()) {
-                        return users[i];
-                      }
-                    }
-                  };
-
-                  comments.forEach(function(comment) {
-                    var circleContentIndex = tools.arrayObjectIndexOf(contents, comment.target_content_id, '_id');
-                    comment.targetContent = contents[circleContentIndex];
-                    comment.poster = getUserById(comment.post_user_id);
-                    comment.target = getUserById(comment.target_user_id);
-                  });
-                  res.send(comments);
-                })
-                .then(null, next);
-            })
-            .then(null, next);
-        })
-        .then(null, next);
+            comments.forEach(function(comment) {
+              var circleContentIndex = tools.arrayObjectIndexOf(data.contents, comment.target_content_id, '_id');
+              comment.targetContent = data.contents[circleContentIndex];
+              comment.poster = getUserById(comment.post_user_id);
+              comment.target = getUserById(comment.target_user_id);
+            });
+            res.send(comments);
+          })
+          .then(null, next);
+      });
     },
     // getCircleComments: function(req, res) {
     //   if (req.user.provider === 'company') {
@@ -1508,4 +1475,72 @@ function activeCircleContent(req, res, next) {
         .then(null, next);
     })
     .then(null, next);
+}
+
+// 获取同事圈提醒
+function getComments(req, callback) {
+  var conditions = {
+    'post_user_id': req.user.id,
+    // 'post_date': {
+    //   '$lte': req.query.latest_content_date
+    // },
+    'latest_comment_date': {
+      '$gt': req.query.last_comment_date
+    }
+  };
+  CircleContent.find(conditions, 'content photos')
+    .exec()
+    .then(function(contents) {
+      if (contents.length == 0) {
+        callback(null, {
+          msg: '无新评论或赞'
+        });
+        return;
+      }
+      var content_ids = [];
+      contents.forEach(function(content) {
+        content_ids.push(content._id);
+      });
+      CircleComment.find({
+          // post_user_cid: req.user.cid,
+          target_content_id: {
+            $in: content_ids
+          },
+          post_user_id: {
+            $ne: req.user.id
+          },
+          post_date: {
+            $gt: req.query.last_comment_date
+          },
+          status: {
+            $ne: 'delete'
+          },
+          // $or: [
+          //   {kind: {$ne: 'appreciate'}},
+          //   {status: {$ne: 'delete'}}
+          // ]
+        })
+        .sort('-post_date')
+        .exec()
+        .then(function(commentDocs) {
+          if (commentDocs.length == 0) {
+            callback(null, {
+              msg: '无新评论或赞'
+            });
+            return;
+          }
+          callback(null, {
+            contents: contents,
+            comments: commentDocs
+          });
+        })
+        .then(null, function(err) {
+          log(err);
+          callback(err);
+        })
+    })
+    .then(null, function(err) {
+      log(err);
+      callback(err);
+    })
 }

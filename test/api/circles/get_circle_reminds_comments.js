@@ -9,7 +9,7 @@ var async = require('async');
 module.exports = function () {
   var data, userToken, userToken1, hrToken;
   var circleContentIds = [];
-  var circleCommentIds = [];
+  var circleComments = [];
   before(function(done) {
     data = dataService.getData();
     async.series([
@@ -33,7 +33,7 @@ module.exports = function () {
               });
           },
           function(callback) {
-            var user = data[1].users[0];
+            var user = data[0].users[1];
             request.post('/users/login')
               .send({
                 email: user.email,
@@ -121,10 +121,10 @@ module.exports = function () {
         async.map(comments, function(comment, callback) {
           request.post('/circle_contents/' + circleContentIds[0] + '/comments')
             .send(comment)
-            .set('x-access-token', userToken)
+            .set('x-access-token', userToken1)
             .expect(200)
             .end(function(err, res) {
-              circleCommentIds.push(res.body.circleComment._id.toString());
+              circleComments.push(res.body.circleComment);
               callback(err, res);
             })
         }, function(err, results) {
@@ -153,8 +153,7 @@ module.exports = function () {
       request.get('/circle_reminds/comments')
         .set('x-access-token', userToken)
         .query({
-          latest_content_date: Date.now(),
-          last_comment_date: Date.now() - 1
+          last_comment_date: circleComments[0].post_date.toString()
         })
         .expect(200)
         .end(function(err, res) {

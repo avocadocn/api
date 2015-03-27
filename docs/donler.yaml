@@ -2606,12 +2606,12 @@ paths:
       consumes:
         - application/json
       parameters:
-        - name: latest_content_date
-          description: 最新消息的发布时间
-          required: false
-          type: string
-          format: date-time
-          in: query
+        # - name: latest_content_date
+        #   description: 最新消息的发布时间
+        #   required: false
+        #   type: string
+        #   format: date-time
+        #   in: query
         - name: last_comment_date
           description: 上一次查询评论的时间
           required: false
