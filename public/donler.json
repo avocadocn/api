@@ -3799,6 +3799,47 @@
         }
       }
     },
+    "/circle_reminds": {
+      "get": {
+        "tags": [
+          "circles"
+        ],
+        "summary": "获取是否有新评论、新朋友圈内容、消息(包括最新消息人的头像)",
+        "operationId": "getReminds",
+        "parameters": [
+          {
+            "name": "last_read_time",
+            "description": "上次查询朋友圈的时间",
+            "required": true,
+            "type": "string",
+            "format": "date-time",
+            "in": "query"
+          },
+          {
+            "name": "last_comment_date",
+            "description": "上次查询朋友评论的时间",
+            "required": true,
+            "type": "string",
+            "format": "date-time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "NewReminds"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/circle_reminds/comments": {
       "get": {
         "tags": [
@@ -7007,45 +7048,26 @@
     "NewReminds": {
       "title": "NewReminds",
       "properties": {
-        "comments": {
+        "newChat": {
           "type": "boolean"
         },
-        "reminds": {
-          "type": "object",
-          "$ref": "Reminds"
+        "newDiscover": {
+          "type": "boolean"
         },
-        "new_content": {
+        "newCircleContent": {
           "type": "object",
-          "$ref": "NewContent"
+          "$ref": "NewCircleContent"
+        },
+        "newCircleComment": {
+          "type": "number"
         }
       }
     },
-    "Reminds": {
-      "title": "Reminds",
-      "required": [
-        "number"
-      ],
+    "NewCircleContent": {
+      "title": "NewCircleContent",
       "properties": {
-        "number": {
-          "type": "number",
-          "description": "消息总数"
-        },
-        "user": {
-          "$ref": "Member"
-        }
-      }
-    },
-    "NewContent": {
-      "title": "NewContent",
-      "required": [
-        "has_new"
-      ],
-      "properties": {
-        "has_new": {
-          "type": "boolean",
-          "description": "是否有新同事圈内容"
-        },
-        "user": {
+        "post_user_id": {
+          "type": "object",
           "$ref": "Member"
         }
       }

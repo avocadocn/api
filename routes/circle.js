@@ -24,5 +24,5 @@ module.exports = function(app, ctrl) {
   // delete //circle_reminds/comments' 删除同事圈提醒
   // app.delete('/circle_reminds/comments', token.needToken, ctrl.deleteRemindComment);
   // get /circle_reminds?has_new=true 获取是否有最新消息  (红点)
-  // app.get('/circle_reminds', token.needToken, ctrl.getReminds);
+  app.get('/circle_reminds', token.needToken, ctrl.getReminds);
 };

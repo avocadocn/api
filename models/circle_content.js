@@ -41,7 +41,8 @@ var CircleContent = new Schema({
   // 发消息的用户的id（头像和昵称再次查询）
   post_user_id: {
     type: Schema.Types.ObjectId,
-    required: true
+    required: true,
+    ref: 'User'
   },
 
   post_date: {
