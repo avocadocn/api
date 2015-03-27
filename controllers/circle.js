@@ -9,12 +9,14 @@ var CircleContent = mongoose.model('CircleContent'),
   File = mongoose.model('File'),
   User = mongoose.model('User'),
   Campaign = mongoose.model('Campaign'),
-  async = require('async');
+  Chat = mongoose.model('Chat'),
+  CompetitionMessage = mongoose.model('CompetitionMessage');
 var auth = require('../services/auth.js'),
   log = require('../services/error_log.js'),
   socketClient = require('../services/socketClient'),
   uploader = require('../services/uploader.js'),
-  tools = require('../tools/tools.js');
+  tools = require('../tools/tools.js'),
+  async = require('async');
 
 
 
@@ -1238,123 +1240,186 @@ module.exports = function(app) {
 
     /**
      * 员工用户获取是否有新评论、新朋友圈内容&消息(包括最新消息人的头像)
-     * @param  {Object} req:{query:{has_new:string}}
+     * @param  {Object} req:{
+     *           query:{
+     *             last_read_time: Date,
+     *             last_comment_date: Date
+     *           }
+     *         }
      * @return {
-     *           comments:boolean, (2015/3/5 注释by M)
-     *           reminds:{number:int, user:{photo:uri}},
-     *           new_content:{has_new:boolean, user:{photo:uri}}
+     *           newChat : boolean //是否有新讨论(聊天)
+     *           newDisover : boolean //是否有新挑战信或挑战信评论
+     *           newCircleContent : object //是否有新同事圈,有的话带上最新那个人的头像
+     *           newCircleComment : number //是否有同事圈评论
      *         }
      */
-    // getReminds: function(req, res) {
-    //   if (req.query.has_new !== 'true') {
-    //     return res.status(422).send({msg:'参数错误'});
-    //   }
-    //   if (req.user.provider === 'company') {
-    //     return res.status(403).send({
-    //       msg: '公司账号暂无提醒功能'
-    //     });
-    //   }
-    //   var reminds = {number: req.user.new_comment_num};
-    //   if(reminds.number) {
-    //     reminds.user = { photo: req.user.new_comment_user.photo };
-    //   }
-    //   // var comments = false;
-    //   // var length = req.user.commentCampaigns.length;
-    //   // for (var i = 0; i < length; i++) {
-    //   //   if (req.user.commentCampaigns[i].unread > 0) {
-    //   //     comments = true;
-    //   //     break;
-    //   //   }
-    //   // }
-    //   // if (!comments) {
-    //   //   var length = req.user.unjoinedCommentCampaigns.length;
-    //   //   for (var i = 0; i < length; i++) {
-    //   //     if (req.user.unjoinedCommentCampaigns[i].unread > 0) {
-    //   //       comments = true;
-    //   //       break;
-    //   //     }
-    //   //   }
-    //   // }
-    //   var new_content = {has_new:req.user.has_new_content};//是否有新的同事圈内容
-    //   if(new_content.has_new) {
-    //     CircleContent.find({'cid':req.user.cid, 'status':'show'},{'post_user_id':1})
-    //     .sort('-post_date')
-    //     .limit(1)
-    //     .exec()
-    //     .then(function(contents){
-    //       User.findOne({'_id':contents[0].post_user_id}, {'photo':1}, function (err, user) {
-    //         if(err) {
-    //           log(err);
-    //         }else{
-    //           new_content.user = {photo: user.photo};
-    //         }
-    //         return res.status(200).send({
-    //           // comments: comments,
-    //           reminds: reminds,
-    //           new_content: new_content
-    //         });
-    //       });
-    //     })
-    //     .then(null, function (err) {
-    //       log(err);
-    //       return res.status(500).send({
-    //         // comments: comments,
-    //         reminds: reminds,
-    //         new_content: new_content
-    //       });
-    //     });
-    //   }else {
-    //     return res.status(200).send({
-    //       // comments: comments,
-    //       reminds: reminds,
-    //       new_content: new_content
-    //     });
-    //   }
-    // },
+    getReminds: function(req, res, next) {
+      if (!req.query.last_read_time || !req.query.last_comment_date) {
+        return res.status(422).send({msg:'参数错误'});
+      }
+      if (req.user.provider === 'company') {
+        return res.status(403).send({
+          msg: '公司账号暂无提醒功能'
+        });
+      }
+      //获取四个参数：
+      async.parallel({
+        newChat: function(callback) {
+          hasNewChat(req.user, callback);
+        },
+        newDiscover: function(callback) {
+          hasNewDiscover(req.user, callback);
+        },
+        newCircleContent: function(callback) {
+          hasNewCircleContent(req, callback);
+        },
+        newCircleComment: function(callback) {
+          getNewCommentNumber(req, callback);
+        }
+      }, function(err, results) {
+        if(err) {
+          next(err);
+        }
+        else {
+          return res.status(200).send(results);
+        }
+      })
+
+    },
     /**
      * 删除消息列表
      * @param  {[type]} req [description]
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
-    // deleteRemindComment: function(req, res) {
-    //   if (req.user.provider === 'company') {
-    //     return res.status(403).send({
-    //       msg: '公司账号暂无提醒功能'
-    //     });
-    //   }
+    /**
+      // deleteRemindComment: function(req, res) {
+      //   if (req.user.provider === 'company') {
+      //     return res.status(403).send({
+      //       msg: '公司账号暂无提醒功能'
+      //     });
+      //   }
 
-    //   var options = {
-    //     'relative_user._id': req.user._id,
-    //     'relative_user.list_status': 'show'
-    //   };
+      //   var options = {
+      //     'relative_user._id': req.user._id,
+      //     'relative_user.list_status': 'show'
+      //   };
 
-    //   if (req.query.commentId) {
-    //     options._id = req.query.commentId;
-    //   }
+      //   if (req.query.commentId) {
+      //     options._id = req.query.commentId;
+      //   }
 
-    //   CircleComment.update(options, {
-    //     $set: {
-    //       'relative_user.$.list_status': 'delete'
-    //     }
-    //   }, function(err, num) {
-    //     if (err) {
-    //       log(err);
-    //       return res.sendStatus(500);
-    //     }
-    //     if (num) {
-    //       return res.status(200).send({
-    //         msg: '消息列表删除成功'
-    //       });
+      //   CircleComment.update(options, {
+      //     $set: {
+      //       'relative_user.$.list_status': 'delete'
+      //     }
+      //   }, function(err, num) {
+      //     if (err) {
+      //       log(err);
+      //       return res.sendStatus(500);
+      //     }
+      //     if (num) {
+      //       return res.status(200).send({
+      //         msg: '消息列表删除成功'
+      //       });
 
-    //     }
-    //     return res.status(404).send({
-    //       msg: '未找到该消息'
-    //     });
-    //   });
-    // }
+      //     }
+      //     return res.status(404).send({
+      //       msg: '未找到该消息'
+      //     });
+      //   });
+      // }
+    */
   };
 };
+
+/**
+ * 获取是否有新chat
+ * @param  {object}   user     
+ * @param  {Function} callback function(err, unread) 
+ *                             unread: boolean
+ */
+function hasNewChat (user, callback) {
+  async.map(user.chatrooms, function(chatroom, mapCallback) {
+    Chat.findOne({chatroom_id: chatroom._id, create_date: {'$gt':chatroom.read_time}},{'_id':1},function(err, chat) {
+      if(err) {
+        mapCallback(err);
+      }
+      else {
+        mapCallback(null, {_id: chatroom._id, unread: chat});
+      }
+    });
+  }, function(err, results) {
+    if(err) {
+      callback(err);
+    }
+    else {
+      var chatUnread = false;
+      for (var i = results.length - 1; i >= 0; i--) {
+        if(results[i].unread) {
+          chatUnread = true;
+          break;
+        }
+      };
+      callback(null, chatUnread);
+    }
+  });
+};
+
+/**
+ * 获取是否有新挑战信信息
+ * @param  {object}   user     
+ * @param  {Function} callback function(err, unread) 
+ *                             unread: boolean
+ */
+function hasNewDiscover (user, callback) {
+  var leaderTeamIds = [];
+  for (var i = user.team.length - 1; i >= 0; i--) {
+    if(user.team[i].leader === true) {
+      leaderTeamIds.push(user.team[i]._id);
+    }
+  };
+  CompetitionMessage.findOne({
+    '$or': [
+      {'$and':[{'sponsor_team': {'$in': leaderTeamIds}}, {'sponsor_unread':true}]}, 
+      {'$and':[{'opposite_team': {'$in': leaderTeamIds}}, {'opposite_unread':true}]}
+    ]
+  }, function(err, result) {
+    if(err) {
+      callback(err);
+    }
+    else {
+      callback(null, result ? true: false);
+    }
+  });
+};
+
+/**
+ * 获取是否有新同事圈,需要带上次时间来，如果没带...?
+ * @param  {Object}   req 
+ * @param  {Function} callback function(err, content)
+ */
+function hasNewCircleContent (req, callback) {
+  CircleContent.findOne(
+    {'cid':req.user.cid, 'status':'show', 'post_date':{'$gt':req.query.last_read_time}},
+    {'post_user_id':1}
+  )
+  .sort('-post_date')
+  .populate('post_user_id','photo')
+  .exec()
+  .then(function(content) {
+    callback(null, content);
+  })
+  .then(null, function(err) {
+    callback(err);
+  });
+};
+
+function getNewCommentNumber (req, callback) {
+  //与获取comment同,稍后修改
+  callback(null,0);
+};
+
 
 // 处理只能一次请求只能传一张图片时发同事圈的请求
 function singleUpload(req, res, next) {
