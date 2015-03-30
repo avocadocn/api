@@ -829,7 +829,9 @@ module.exports = function(app) {
       }
 
       if (req.body.target_user_id === req.user.id) {
-        res.status(400).send({msg: '不可以回复自己的评论'});
+        res.status(400).send({
+          msg: '不可以回复自己的评论'
+        });
         return;
       }
 
@@ -878,6 +880,46 @@ module.exports = function(app) {
 
           res.send({ circleComment: resComment });
           socketClient.pushCircleComment([circleContent.post_user_id], resComment);
+          
+          // var noticeUserIds = circleContent.comment_users.map(function(commentUser) {
+          //     return commentUser._id.toString();
+          // });
+          // Send reminds to user (comment_num > 0) 
+          // var noticeUserIds = [];
+          // circleContent.comment_users.forEach(function(commentUser) {
+          //   if(commentUser.comment_num > 0) {
+          //     noticeUserIds.push(commentUser._id.toString());
+          //   }
+          // });
+
+          // if (noticeUserIds.indexOf(circleContent.post_user_id.toString()) == -1)
+          //   noticeUserIds.push(circleContent.post_user_id.toString());
+
+          // if (resComment.is_only_to_content) {
+          //   res.send({
+          //     circleComment: resComment
+          //   });
+          //   socketClient.pushCircleComment(noticeUserIds, resComment);
+          // } else {
+          //   User.findById(resComment.target_user_id, {
+          //       _id: 1,
+          //       nickname: 1,
+          //       photo: 1
+          //     }).exec()
+          //     .then(function(user) {
+          //       if (!user) {
+          //         next(new Error('Target user not found.'));
+          //       } else {
+          //         resComment.target = user;
+          //         res.send({
+          //           circleComment: resComment
+          //         });
+
+          //         socketClient.pushCircleComment(noticeUserIds, resComment);
+          //       }
+          //     })
+          //     .then(null, next);
+          // }
 
           var hasFindCommentUser = false;
           for (var i = 0, commentUsersLen = circleContent.comment_users.length; i < commentUsersLen; i++) {
@@ -902,62 +944,115 @@ module.exports = function(app) {
 
           circleContent.latest_comment_date = circleComment.post_date;
           // Warning: http://docs.mongodb.org/manual/reference/method/db.collection.save/ #Replace an Existing Document
+          // Don't suggest the save function to update MongoDB. And concurrent http requests maybe cause data disorder.
+          // For Example:
+          // A -> get data D1 
+          //                              B -> get Data D1
+          // A -> modify D1.a and D1.b
+          //                              B -> modify D1.c
+          // A -> save D1                 
+          //                              B -> save D1
+          // Imagine the D1 data status, you will doubt the save validity. Save function will induce entire collection changes.
+          // So I advice to use update to reduce the scope of update function.
           circleContent.save(function(err) {
             if (err) {
               console.log(err.stack || 'Save circleContent error.');
             }
           });
-          // var conditions = {
-          //   '_id': req.params.contentId,
-          //   'comment_users._id': {
-          //     $ne: req.user.id
+          /**
+           * These codes avoid the faults because of the concurrent http requests. And update function reduce the scope.
+           * If the user who sends comment is already in the comment_users, only update the comment_num, appreciated and 
+           * latest_comment_date. Otherwise, using update function to add this user info to commment_users, then through the 
+           * numberAffected, we can decide whether using update function. Update the user info again when the numberAffected
+           * is zero.
+           */
+          // var updateCommentUser = false;
+          // for (var i = 0, commentUsersLen = circleContent.comment_users.length; i < commentUsersLen; i++) {
+          //   var commentUser = circleContent.comment_users[i];
+          //   if (req.user.id === commentUser._id.toString()) {
+          //     updateCommentUser = true;
+          //     break;
           //   }
-          // };
-          // var doc = {
-          //   $set: {
-          //     'latest_comment_date': circleComment.post_date
-          //   },
-          //   $push: {
-          //     'comment_users': {
-          //       _id: req.user._id,
-          //       comment_num: 1,
-          //       appreciated: req.body.kind === 'appreciate'
+          // }
+
+          // async.series([
+          //     function(callback) {
+
+          //       if (updateCommentUser) {
+          //         callback(null, {
+          //           msg: 'comment user exists'
+          //         });
+          //       }
+
+          //       var conditions = {
+          //         '_id': req.params.contentId,
+          //         'comment_users._id': {
+          //           $ne: req.user.id
+          //         }
+          //       };
+
+          //       var doc = {
+          //         $set: {
+          //           'latest_comment_date': circleComment.post_date
+          //         },
+          //         $push: {
+          //           'comment_users': {
+          //             _id: req.user._id,
+          //             comment_num: 1,
+          //             appreciated: req.body.kind === 'appreciate'
+          //           }
+          //         }
+          //       };
+
+          //       CircleContent.update(conditions, doc, function(err, numberAffected) {
+          //         if (err) {
+          //           log(err);
+          //           callback(err);
+          //         }
+          //         console.log(numberAffected);
+          //         if (!numberAffected) {
+          //           callback(null, {
+          //             msg: 'comment user exists'
+          //           });
+          //         }
+          //         updateCommentUser = false;
+          //         callback(null, {
+          //           msg: 'push completed'
+          //         });
+          //       });
+          //     },
+          //     function(callback) {
+          //       if (updateCommentUser) {
+          //         var conditions = {
+          //           '_id': req.params.contentId,
+          //           'comment_users._id': req.user.id
+          //         };
+
+          //         var doc = {
+          //           $inc: {
+          //             'comment_users.$.comment_num': 1
+          //           },
+          //           $set: {
+          //             'comment_users.$.appreciated': req.body.kind === 'appreciate',
+          //             'latest_comment_date': circleComment.post_date
+          //           }
+          //         };
+
+          //         CircleContent.update(conditions, doc, function(err, numberAffected) {
+          //           if (err) {
+          //             log(err);
+          //             callback(err);
+          //           }
+          //         });
+          //       }
+          //       callback(null, {
+          //         msg: 'update completed'
+          //       });
           //     }
-          //   }
-          // };
-
-          // CircleContent.update(conditions, doc, function(err, numberAffected) {
-          //   if(err) {
-          //     log(err);
-          //     return res.sendStatus(500);
-          //   }
-          //   console.log(numberAffected);
-          //   if(!numberAffected) {
-
-          //     var conditions = {
-          //       '_id': req.params.contentId,
-          //       'comment_users._id': req.user.id
-          //     };
-
-          //     var doc = {
-          //       $inc: {
-          //         'comment_users.$.comment_num': 1
-          //       },
-          //       $set: {
-          //         'comment_users.$.appreciated': req.body.kind === 'appreciate',
-          //         'latest_comment_date': circleComment.post_date
-          //       }
-          //     };
-
-          //     CircleContent.update(conditions, doc, function(err, numberAffected) {
-          //       if(err) {
-          //         log(err);
-          //         return res.sendStatus(500);
-          //       }
-          //       // console.log('');
-          //     });
-          //   }
-          // });
+          //   ],
+          //   function(err, results) {
+          //     //
+          //   });
         }
       });
     },
