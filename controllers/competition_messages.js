@@ -111,8 +111,15 @@ module.exports = function (app) {
             });
             res.status(200).send({msg: '挑战信发送成功'});
             //发给对方队长
-            if(req.teams[1].leader.length) {
-              socketClient.pushMessage(req.teams[1].leader[0]._id);
+            if(req.teams[0].leader.id === req.user.id) {
+              if(req.teams[1].leader.length>0) {
+                socketClient.pushMessage(req.teams[1].leader[0]._id);
+              }
+            }
+            else {
+              if(req.teams[0].leader.length>0) {
+                socketClient.pushMessage(req.teams[0].leader[0]._id);
+              }
             }
           });
         }
