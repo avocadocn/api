@@ -93,7 +93,7 @@ Comment.statics = {
       .sort('create_date')
       .exec()
       .then(function (comments) {
-        if (comments.length === pageSize + 1) {
+        if (comments.length!==0 && comments.length === pageSize + 1) {
           var nextComment = comments.pop();
           callback(null, comments, nextComment.create_date);
         } else {
