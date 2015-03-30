@@ -99,15 +99,15 @@ module.exports = function (app) {
               chatroomId: message.sponsor_team,
               chatType: 3,
               competitionMessageId:message._id,
-              user: req.user,
-              randomId:  Math.floor(Math.random()*100),
+              randomId: Math.floor(Math.random()*100),
+              posterTeam: req.teams[0]
             });
             chatsBusiness.createChat({
               chatroomId: message.opposite_team,
               chatType: 4,
               competitionMessageId:message._id,
-              user: req.user,
               randomId:  Math.floor(Math.random()*100),
+              posterTeam: req.teams[1]
             });
             res.status(200).send({msg: '挑战信发送成功'});
             //发给对方队长
@@ -226,8 +226,12 @@ module.exports = function (app) {
     },
     //验证他能否接受/拒绝挑战
     dealValidate: function (req, res ,next) {
-      CompetitionMessage.findOne({_id:req.params.messageId}, function(err, message) {
-        if(err||!message) {
+      CompetitionMessage
+      .findOne({_id:req.params.messageId})
+      .populate([{'path':'sponsor_team', 'select':{name:1, logo:1}}, {'path':'opposite_team', 'select':{name:1, logo:1}}])
+      .exec()
+      .then(function(message) {
+        if(!message) {
           return res.status(500).send({msg: '查找失败'});
         }
         else {
@@ -240,7 +244,11 @@ module.exports = function (app) {
           else
             return res.status(403).send({msg: '权限错误'});
         }
-      });
+      })
+      .then(null,function(err) {
+        log(err);
+        return res.status(500).send({msg: '查询错误'});
+      });;
     },
     //接受/拒绝挑战
     dealCompetition: function (req, res) {
@@ -258,18 +266,18 @@ module.exports = function (app) {
         }else {
           if(req.body.action==='accept') {
             chatsBusiness.createChat({
-              chatroomId: req.message.opposite_team,
+              chatroomId: req.message.opposite_team._id,
               chatType: 5,
               competitionMessageId:req.message._id,
-              user: req.user,
               randomId:  Math.floor(Math.random()*100),
+              posterTeam: req.message.opposite_team
             });
             chatsBusiness.createChat({
-              chatroomId: req.message.sponsor_team,
+              chatroomId: req.message.sponsor_team._id,
               chatType: 6,
               competitionMessageId:req.message._id,
-              user: req.user,
               randomId:  Math.floor(Math.random()*100),
+              posterTeam: req.message.sponsor_team
             });
           }
           return res.status(200).send({msg:'处理成功'});

@@ -149,7 +149,8 @@ module.exports = function (app) {
       })
         .sort('-create_date -_id')
         .limit(pageSize + 1)
-        .populate([{'path':'poster', 'select':{nickname:1, logo:1, photo:1}},{'path':'competition_message'}])
+        // .populate([{'path':'poster', 'select':{nickname:1, photo:1}},{'path':'competition_message'}])
+        .populate([{'path':'poster', 'select':{nickname:1, photo:1}},{'path':'poster_team', 'select':{name:1, logo:1}}])
         .exec()
         .then(function (chats) {
           var resData = {
@@ -293,6 +294,7 @@ module.exports = function (app) {
               content: '$content',
               create_date: '$create_date',
               poster: '$poster',
+              poster_team: '$poster_team',
               photos: '$photos'
             }
           }
@@ -303,6 +305,7 @@ module.exports = function (app) {
           //---为了排序写两步
           //先把results里有的放到列表里
           var posterIdList = [];
+          var posterTeamIdList =[];
           var resultChatroomList = [];
           var resultsLength = results.length;
           for (var i=0; i<results.length; i++) {
@@ -311,7 +314,8 @@ module.exports = function (app) {
               var chatroom = chatroomList[index];
               chatroom.latestChat = results[i].latestChat;
               resultChatroomList.push(chatroom);
-              posterIdList.push(chatroom.latestChat.poster);
+              chatroom.latestChat.poster && posterIdList.push(chatroom.latestChat.poster);
+              chatroom.latestChat.poster_team && posterTeamIdList.push(chatroom.latestChat.poster_team);
             }
           }
           //再把results里没有的放进去
@@ -322,15 +326,31 @@ module.exports = function (app) {
               resultChatroomList.push(chatroomList[i]);
             }
           }
-
-          // 查询poster
-          queryPosters(posterIdList, resultChatroomList);
+          async.parallel([
+            function(callback){
+              // 查询poster
+              queryPosters(posterIdList, resultChatroomList,callback);
+            },
+            function(callback){
+              // 查询posterTeam
+              queryPosterTeams(posterTeamIdList, resultChatroomList,callback);
+            }
+          ],
+          function(err, results){
+            if(err){
+              next(err)
+            }
+            else{
+              res.send({chatroomList:resultChatroomList})
+            }
+          });
+          
         })
         .then(null, function (err) {
           next(err);
         });
 
-      function queryPosters(posterIdList, chatroomList) {
+      function queryPosters(posterIdList, chatroomList, callback) {
         User.find({
           _id: {$in: posterIdList}
         }, {
@@ -344,19 +364,48 @@ module.exports = function (app) {
             // 填充chatroomList的poster，原先为id，现将其替换为含用户昵称头像的对象
             chatroomList.forEach(function (chatroom) {
               for (var i = 0; i < users.length; i++) {
-                if (chatroom.latestChat && chatroom.latestChat.poster.toString() === users[i]._id.toString()) {
+                if (chatroom.latestChat && chatroom.latestChat.poster && chatroom.latestChat.poster.toString() === users[i]._id.toString()) {
                   chatroom.latestChat.poster = users[i];
                   break;
                 }
               }
             });
-            res.send({chatroomList: chatroomList});
+            callback(null);
           })
           .then(null, function (err) {
-            next(err);
+            callback(err);
           });
       }
-
+      function queryPosterTeams(posterTeamIdList, chatroomList, callback) {
+        CompanyGroup.find({
+          _id: {$in: posterTeamIdList}
+        }, {
+          _id: 1,
+          cid: 1,
+          name: 1,
+          logo: 1
+        })
+          .exec()
+          .then(function (teams) {
+            // 填充chatroomList的poster，原先为id，现将其替换为含用户昵称头像的对象
+            chatroomList.forEach(function (chatroom) {
+              for (var i = 0; i < teams.length; i++) {
+                if (chatroom.latestChat && chatroom.latestChat.poster_team && chatroom.latestChat.poster_team.toString() === teams[i]._id.toString()) {
+                  chatroom.latestChat.poster = {
+                    _id: teams[i]._id,
+                    name: teams[i].name,
+                    logo: teams[i].logo
+                  };
+                  break;
+                }
+              }
+            });
+            callback(null);
+          })
+          .then(null, function (err) {
+            callback(err);
+          });
+      }
     }
   };
 

@@ -9,7 +9,7 @@ exports.createChat = function (param,callback) {
   var chat = new Chat({
     chatroom_id: param.chatroomId,
     content: param.content,
-    poster: param.user._id
+    poster: param.user? param.user._id: undefined
   });
   if (param.photo) {
     chat.photos = param.photo;
@@ -31,6 +31,8 @@ exports.createChat = function (param,callback) {
         if(param.competitionMessageId) {
           chat.competition_message = param.competitionMessageId;
         }
+        //挑战提醒类型的发送方为小队
+        chat.poster_team = param.posterTeam._id;
         break;
       default:
         chat.chat_type = 1;
@@ -48,7 +50,7 @@ exports.createChat = function (param,callback) {
       callback && callback(null,chat);
       //找出相关人员
       User.find({
-        'cid': param.user.cid,
+        // 'cid': param.user.cid,
         'chatrooms': {'$elemMatch': {'_id': chat.chatroom_id}}
       }, {'chatrooms': 1}, function (err, users) {
         if (err) {
@@ -64,15 +66,24 @@ exports.createChat = function (param,callback) {
           var socketChat = {
             '_id': chat._id,
             'chatroom_id': chat.chatroom_id,
-            'poster': {
-              '_id': chat.poster,
-              'photo': param.user.photo,
-              'nickname': param.user.nickname
-            },
             'create_date': chat.create_date,
             'content': chat.content,
             'randomId': param.randomId
           };
+          if(param.user) {
+            socketChat.poster = {
+              '_id': chat.poster,
+              'photo': param.user.photo,
+              'nickname': param.user.nickname
+            }
+          }
+          else if(param.posterTeam) {
+            socketChat.poster = {
+              '_id': param.posterTeam._id,
+              'photo': param.posterTeam.logo,
+              'nickname': param.posterTeam.name
+            }
+          }
           if(chat.photos) {
             socketChat.photos = chat.photos;
           }

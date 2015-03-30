@@ -31,6 +31,10 @@ var Chat = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User'
   },
+  poster_team:{
+    type: Schema.Types.ObjectId,
+    ref: 'CompanyGroup'
+  },
   status:{
     type: String,
     enum:['active','delete','shield'],
