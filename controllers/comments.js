@@ -335,6 +335,22 @@ module.exports = function (app) {
         var content = xss(req.body.content);
         comment.content = content;
       }
+      if(req.competitionMessage) {
+        var teamIndex;
+        if(req.user.isTeamLeader(req.competitionMessage.sponsor_team._id)) {
+          teamIndex ='sponsor_team';
+        }else {
+          teamIndex ='opposite_team';
+        }
+        var nowTeam =req.competitionMessage[teamIndex]
+        var posterTeam = {
+          '_id': nowTeam._id,
+          'cid': nowTeam.cid,
+          'name': nowTeam.name,
+          'logo': nowTeam.logo
+        };
+        comment.poster_team = posterTeam;
+      }
       comment.save(function (err) {
         if (err) {
           //'COMMENT_PUSH_ERROR'
@@ -435,7 +451,8 @@ module.exports = function (app) {
                   hostType: req.query.requestType,
                   hostId: req.query.requestId
                 }, req.query.createDate, req.query.limit, function (err, comments, nextStartDate) {
-
+                  if(req.query.requestType=='competition_message')
+                    return res.status(200).send({'comments': comments, nextStartDate: nextStartDate});
                   setDeleteAuth({
                     host_type: req.query.requestType,
                     host_id: req.query.requestId,

@@ -21,6 +21,13 @@ var Comment = new Schema({
     realname:String,
     photo:String
   },
+  //挑战日志的评论以小队发送，所以有此属性
+  poster_team:{
+    _id:Schema.Types.ObjectId,
+    cid:Schema.Types.ObjectId,
+    name:String,
+    logo:String
+  },
   reply_to: {
     _id: Schema.Types.ObjectId,
     nickname: String
