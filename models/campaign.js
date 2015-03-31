@@ -153,6 +153,11 @@ var Campaign = new Schema({
   competition_message: {
     type: Schema.Types.ObjectId,
     ref: 'CompetitionMessage'
+  },
+  // 精彩瞬间数目
+  circle_content_sum: {
+    type: Number,
+    default: 0
   }
 });
 

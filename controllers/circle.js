@@ -59,7 +59,6 @@ module.exports = function(app) {
           msg: '公司账号暂无同事圈功能'
         });
       }
-
       var fieldName = 'photo';
       var form = new multiparty.Form({
         uploadDir: uploader.tempDir
@@ -208,6 +207,17 @@ module.exports = function(app) {
           res.status(200).send({
             // 'msg': '同事圈消息发送成功',
             'circleContent': circleContent // this field is used for test
+          });
+          Campaign.update({
+            _id: circleContent.campaign_id
+          }, {
+            $inc: {
+              circle_content_sum: 1
+            }
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
           });
           //socket
           var poster = {
@@ -761,7 +771,7 @@ module.exports = function(app) {
 
       CircleContent.findByIdAndUpdate(req.params.contentId, {
         status: 'delete'
-      }, function(err, contents) {
+      }, function(err, circleContent) {
         if (err) {
           log(err);
           return res.sendStatus(500);
@@ -785,6 +795,22 @@ module.exports = function(app) {
               return res.sendStatus(500);
             }
           });
+
+          Campaign.update({
+            '_id': circleContent.campaign_id,
+            'circle_content_sum': {
+              $gt: 0
+            }
+          }, {
+            $inc: {
+              'circle_content_sum': -1
+            }
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
+          });
+
         }
       });
     },
@@ -880,11 +906,11 @@ module.exports = function(app) {
 
           res.send({ circleComment: resComment });
           socketClient.pushCircleComment([circleContent.post_user_id], resComment);
-          
+
           // var noticeUserIds = circleContent.comment_users.map(function(commentUser) {
           //     return commentUser._id.toString();
           // });
-          // Send reminds to user (comment_num > 0) 
+          // Send reminds to user whose comment_num is larger than 0
           // var noticeUserIds = [];
           // circleContent.comment_users.forEach(function(commentUser) {
           //   if(commentUser.comment_num > 0) {
@@ -1625,6 +1651,7 @@ function createCircleContent(req, res, next) {
         teams: campaign.tid,
         users: campaign.relativeMemberIds
       });
+
       var taskName = campaign.campaign_type == 1 ? 'publishCompanyCircle' : 'publishTeamCircle';
       var allow = auth.auth(role, [taskName]);
       if (!allow[taskName]) {
@@ -1656,6 +1683,7 @@ function createCircleContent(req, res, next) {
             msg: '创建成功，等待文件上传',
             id: circleContent.id
           });
+
         }
       });
 
@@ -1667,39 +1695,55 @@ function createCircleContent(req, res, next) {
 // 激活
 function activeCircleContent(req, res, next) {
   CircleContent.findById(req.body.circleContentId).exec()
-    .then(function (circleContent) {
+    .then(function(circleContent) {
       if (!circleContent) {
-        res.status(403).send({msg: '您没有权限'});
+        res.status(403).send({
+          msg: '您没有权限'
+        });
         return;
       }
 
       // 查找circleContent对应的文件
       File.find({
-        'owner.kind': 'CircleContent',
-        'owner._id': circleContent._id
-      }, {
-        _id: 0,
-        uri: 1,
-        width: 1,
-        height: 1
-      }).exec()
-        .then(function (files) {
+          'owner.kind': 'CircleContent',
+          'owner._id': circleContent._id
+        }, {
+          _id: 0,
+          uri: 1,
+          width: 1,
+          height: 1
+        }).exec()
+        .then(function(files) {
           if (files.length === 0 && (!circleContent.content || circleContent.content === '')) {
-            res.send({msg: '发表失败，不允许既无文本内容又没有图片'});
+            res.send({
+              msg: '发表失败，不允许既无文本内容又没有图片'
+            });
             // TODO: 可以考虑将此CircleContent从数据库中删除，或是定期清除
             return;
           }
           circleContent.photos = files;
           circleContent.status = 'show';
-          circleContent.save(function (err) {
+          circleContent.save(function(err) {
             if (err) {
               next(err);
-            }
-            else {
+            } else {
               res.send({
                 msg: '发表成功',
                 circleContent: circleContent
               });
+              // 更新活动精彩瞬间数目
+              Campaign.update({
+                _id: circleContent.campaign_id
+              }, {
+                $inc: {
+                  circle_content_sum: 1
+                }
+              }, function(err, numberAffected) {
+                if(err) {
+                  log(err);
+                }
+              });
+
               var poster = {
                 _id: req.user._id,
                 nickname: req.user.nickname,

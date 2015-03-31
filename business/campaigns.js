@@ -125,7 +125,8 @@ exports.formatCampaign = function (campaign, user, callback) {
     'components': campaign.components,
     'campaign_type': campaign.campaign_type,
     'is_start': campaign.start_time <= Date.now(),
-    'is_end': campaign.end_time <= Date.now()
+    'is_end': campaign.end_time <= Date.now(),
+    'circle_content_sum': campaign.circle_content_sum
   };
   var _formatTime = formatTime(campaign.start_time, campaign.end_time);
   resCampaign.start_flag = _formatTime.start_flag;
