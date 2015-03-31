@@ -45,6 +45,9 @@ var CircleContent = new Schema({
     ref: 'User'
   },
 
+  // 发消息用户所属小队id，若为空，则该消息属于公司活动
+  post_user_tid: Schema.Types.ObjectId,
+
   post_date: {
     type: Date,
     default: Date.now,

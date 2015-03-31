@@ -9,6 +9,8 @@ var CircleContent = mongoose.model('CircleContent'),
   File = mongoose.model('File'),
   User = mongoose.model('User'),
   Campaign = mongoose.model('Campaign'),
+  Company = mongoose.model('Company'),
+  CompanyGroup = mongoose.model('CompanyGroup'),
   Chat = mongoose.model('Chat'),
   CompetitionMessage = mongoose.model('CompetitionMessage');
 var auth = require('../services/auth.js'),
@@ -110,6 +112,21 @@ module.exports = function(app) {
             req.tid = campaign.campaign_type == 1 ? [] : campaign.tid;
             req.relative_cids = campaign.cid;
 
+            var post_user_tid = null;
+            var campaign_unit = campaign.campaign_unit;
+            var findUserTeam = false;
+            for (var i = 0; i < campaign_unit.length && !findUserTeam; i++) {
+              var members = campaign_unit[i].member;
+              for (var j = 0; j < members.length; j++) {
+                if (members[j]._id.toString() == req.user.id) {
+                  post_user_tid = campaign_unit[i].team._id.toString();
+                  findUserTeam = true;
+                  break;
+                }
+              }
+            }
+            req.post_user_tid = post_user_tid;
+
             if (files[fieldName]) {
               req.imgFiles = files[fieldName];
             }
@@ -196,6 +213,8 @@ module.exports = function(app) {
 
         post_user_id: req.user._id, // 发消息的用户的id（头像和昵称再次查询）
 
+        post_user_tid: req.post_user_tid,
+
         relative_cids: req.relative_cids // 参加同事圈消息所属的活动的所有公司id
       });
 
@@ -266,6 +285,7 @@ module.exports = function(app) {
           msg: '参数错误'
         });
       }
+
       var conditions = {
         'cid': req.user.cid,
         'status': 'show'
@@ -453,8 +473,8 @@ module.exports = function(app) {
         'relative_cids': req.user.getCid(), // 该活动必须属于该用户所属公司
         'status': 'show'
       };
-
-      CircleContent.find(conditions)
+      
+      CircleContent.find(conditions, null, {limit: req.query.limit || 20})
         .sort('-post_date')
         .exec()
         .then(function(contentDocs) {
@@ -577,30 +597,34 @@ module.exports = function(app) {
      * @param  {[type]} res [description]
      * @return (Reference getCampaignCircle)
      */
-    getTeamCircle: function(req, res) {
+    getPersonalCircle: function(req, res) {
       if (req.user.provider === 'company') {
         return res.status(403).send({
           msg: '公司账号暂无同事圈功能'
         });
       }
-      var isTeamMember = false;
-      for(var i = 0; i < req.user.team.length; i++) {
-        if(req.user.team[i]._id.toString() == req.params.teamId) {
-          isTeamMember = true;
-        }
-      }
-      if (!isTeamMember) {
-        return res.status(403).send({
-          msg: '权限错误'
-        });
-      }
-      // TODO: think conditions twice. For example: set limit conditions; judge the team users
+
       var conditions = {
-        'tid': req.params.teamId,
+        'post_user_id': req.user.id,
         'status': 'show'
       };
 
-      CircleContent.find(conditions)
+      var options = {};
+      if (req.query.last_content_date) { //如果带此属性来，则查找比它更早的limit条
+        conditions.post_date = {
+          '$lt': req.query.last_content_date
+        };
+      }
+
+      if (req.query.latest_content_date) { //如果带此属性来，则查找比它新的消息
+        conditions.post_date = {
+          '$gt': req.query.latest_content_date
+        };
+      } else {
+        options.limit = req.query.limit || 20;
+      }
+
+      CircleContent.find(conditions, null, options)
         .sort('-post_date')
         .exec()
         .then(function(contentDocs) {
@@ -629,7 +653,7 @@ module.exports = function(app) {
               return content._id;
             });
             var userIdsForQuery = []; // 元素为String类型
-
+            var teamIdsForQuery = []; // 
             // 向用户id数组不重复地添加用户id
             var pushUserIdToUniqueArray = function(userId, array) {
               var resultIndex = array.indexOf(userId);
@@ -637,79 +661,145 @@ module.exports = function(app) {
                 array.push(userId.toString());
               }
             };
+
+            var pushTeamIdToUniqueArray = function(teamId, array) {
+              if (teamId) {
+                var resultIndex = array.indexOf(teamId);
+                if (resultIndex === -1) {
+                  array.push(teamId.toString());
+                }
+              }
+            }
             contents.forEach(function(content) {
               pushUserIdToUniqueArray(content.post_user_id, userIdsForQuery);
+              pushTeamIdToUniqueArray(content.post_user_tid, teamIdsForQuery);
             });
 
-            CircleComment.find({
-              target_content_id: {$in: contentIdsForQuery},
-              status: 'show'
-            }).sort('+post_date').exec()
-            .then(function(commentDocs) {
-              var comments = commentDocs.map(docToObject);
-
-              comments.forEach(function(comment) {
-                pushUserIdToUniqueArray(comment.post_user_id, userIdsForQuery);
-                pushUserIdToUniqueArray(comment.target_user_id, userIdsForQuery);
-              });
-
-              User.find({
-                _id: {$in: userIdsForQuery}
-              }, {
-                _id: 1,
-                nickname: 1,
-                photo: 1
-              }).exec()
-              .then(function(users) {
-
-                // 向CircleContent和CircleComment对象添加发布者的详细信息
-                var addPosterInfoToObj = function(obj) {
-                  for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-                    if (users[i]._id.toString() === obj.post_user_id.toString()) {
-                      obj.poster = users[i];
-                      break;
+            async.parallel([
+                function(callback) {
+                  Company.findById(req.user.cid, 'info.name info.log', function(err, companyDoc) {
+                    if (err) {
+                      log(err);
                     }
+                    callback(err, companyDoc);
+                  });
+                },
+                function(callback) {
+                  if (teamIdsForQuery.length) {
+                    CompanyGroup.find({
+                      _id: {
+                        $in: teamIdsForQuery
+                      }
+                    }, 'name logo', function(err, teamDocs) {
+                      if (err) {
+                        log(err);
+                      }
+                      callback(err, teamDocs);
+                    })
+                  } else {
+                    callback(null, []);
                   }
-                };
+                },
+                function(callback) {
+                  CircleComment.find({
+                      target_content_id: {
+                        $in: contentIdsForQuery
+                      },
+                      status: 'show'
+                    }).sort('+post_date').exec()
+                    .then(function(commentDocs) {
+                      var comments = commentDocs.map(docToObject);
 
-                var addTargetInfoToComment = function(comment) {
-                  for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-                    if (users[i]._id.toString() === comment.target_user_id.toString()) {
-                      comment.target = users[i];
-                      break;
+                      comments.forEach(function(comment) {
+                        pushUserIdToUniqueArray(comment.post_user_id, userIdsForQuery);
+                        pushUserIdToUniqueArray(comment.target_user_id, userIdsForQuery);
+                      });
+
+                      User.find({
+                          _id: {
+                            $in: userIdsForQuery
+                          }
+                        }, {
+                          _id: 1,
+                          nickname: 1,
+                          photo: 1
+                        }).exec()
+                        .then(function(users) {
+
+                          // 向CircleContent和CircleComment对象添加发布者的详细信息
+                          var addPosterInfoToObj = function(obj) {
+                            for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                              if (users[i]._id.toString() === obj.post_user_id.toString()) {
+                                obj.poster = users[i];
+                                break;
+                              }
+                            }
+                          };
+
+                          var addTargetInfoToComment = function(comment) {
+                            for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                              if (users[i]._id.toString() === comment.target_user_id.toString()) {
+                                comment.target = users[i];
+                                break;
+                              }
+                            }
+                          };
+
+                          comments.forEach(function(comment) {
+                            addPosterInfoToObj(comment);
+                            addTargetInfoToComment(comment);
+                          });
+                          callback(null, comments);
+                        })
+                        .then(null, function(err) {
+                          log(err);
+                          callback(err);
+                        });
+                    })
+                    .then(null, function(err) {
+                      callback(err);
+                    })
+                }
+              ],
+              // optional callback
+              function(err, results) {
+                if (err) {
+                  log(err);
+                  return res.sendStatus(500);
+                } else {
+                  var addTeamInfoToObj = function(obj) {
+                    if (obj.post_user_tid) {
+                      var teams = results[1];
+                      for (var i = 0, teamsLen = teams.length; i < teamsLen; i++) {
+                        if (teams[i]._id.toString() === obj.post_user_tid.toString()) {
+                          obj.teamInfo = teams[i];
+                          break;
+                        }
+                      }
+                    } else {
+                      obj.teamInfo = null;
                     }
-                  }
-                };
+                  };
+                  var addCompanyInfoToObj = function(obj) {
+                    obj.companyInfo = results[0];
+                  };
+                  var comments = results[2];
+                  contents.forEach(function(content) {
+                    addTeamInfoToObj(content);
+                    addCompanyInfoToObj(content);
+                    // 将comments添加到对应的contents中
+                    var contentComments = comments.filter(function(comment) {
+                      return comment.target_content_id.toString() === content._id.toString();
+                    });
 
-                comments.forEach(function(comment) {
-                  addPosterInfoToObj(comment);
-                  addTargetInfoToComment(comment);
-                });
-
-                contents.forEach(function(content) {
-                  addPosterInfoToObj(content);
-
-                  // 将comments添加到对应的contents中
-                  var contentComments = comments.filter(function(comment) {
-                    return comment.target_content_id.toString() === content._id.toString();
+                    resData.push({
+                      content: content,
+                      comments: contentComments
+                    });
                   });
-                  resData.push({
-                    content: content,
-                    comments: contentComments
-                  });
-                });
-
-                res.send(resData);
-              })
-              .then(null, function(err) {
-                log(err);
-                return res.sendStatus(500);
+                  res.send(resData);
+                }
               });
-            })
-            .then(null, function(err) {
-              log(err);
-              return res.sendStatus(500);
-            });
           }
         })
         .then(null, function(err) {
@@ -1634,15 +1724,19 @@ function createCircleContent(req, res, next) {
 
   // filter
   if (!req.body.campaign_id) {
-    res.status(400).send({msg: '参数不足'});
+    res.status(400).send({
+      msg: '参数不足'
+    });
     return;
   }
 
   // auth
   Campaign.findById(req.body.campaign_id).exec()
-    .then(function (campaign) {
+    .then(function(campaign) {
       if (!campaign) {
-        res.status(403).send({msg: '您没有权限'});
+        res.status(403).send({
+          msg: '您没有权限'
+        });
         return;
       }
 
@@ -1655,30 +1749,46 @@ function createCircleContent(req, res, next) {
       var taskName = campaign.campaign_type == 1 ? 'publishCompanyCircle' : 'publishTeamCircle';
       var allow = auth.auth(role, [taskName]);
       if (!allow[taskName]) {
-        res.status(403).send({msg: '您没有权限'});
+        res.status(403).send({
+          msg: '您没有权限'
+        });
         return;
       }
 
       var tid = campaign.campaign_type == 1 ? [] : campaign.tid;
       var relative_cids = campaign.cid;
-
+      // 发消息用户所属小队id， 若为null, 则该消息为公司活动消息
+      var post_user_tid = null; 
+      var campaign_unit = campaign.campaign_unit;
+      var findUserTeam = false;
+      for (var i = 0; i < campaign_unit.length && !findUserTeam; i++) {
+        var members = campaign_unit[i].member;
+        for (var j = 0; j < members.length; j++) {
+          if (members[j]._id.toString() == req.user.id) {
+            post_user_tid = campaign_unit[i].team._id.toString();
+            findUserTeam = true;
+            break;
+          }
+        }
+      }
+      // console.log(post_user_tid);
       // create
       var circleContent = new CircleContent({
         cid: req.user.getCid(), // 所属公司id
         tid: tid, // 关联的小队id(可选，不是必要的)
         campaign_id: campaign._id, // 关联的活动id(可选，不是必要的)
         post_user_id: req.user._id, // 发消息的用户的id（头像和昵称再次查询）
+        post_user_tid: post_user_tid, // 发消息用户所属小队id
         relative_cids: relative_cids, // 参加同事圈消息所属的活动的所有公司id
         status: 'wait'
       });
       if (req.body.content) {
         circleContent.content = req.body.content;
       }
-      circleContent.save(function (err) {
+      circleContent.save(function(err) {
         if (err) {
           next(err);
-        }
-        else {
+        } else {
           res.send({
             msg: '创建成功，等待文件上传',
             id: circleContent.id

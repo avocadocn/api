@@ -3669,20 +3669,36 @@
         }
       }
     },
-    "/circle/team/{teamId}": {
+    "/circle/personal": {
       "get": {
         "tags": [
           "circles"
         ],
-        "summary": "获取小队同事圈内容",
+        "summary": "获取个人同事圈内容",
         "operationId": "getCampaignCircle",
         "parameters": [
           {
-            "name": "teamId",
-            "description": "小队id",
-            "required": true,
+            "name": "latest_content_date",
+            "description": "最新一个消息发布时间",
+            "required": false,
             "type": "string",
-            "in": "path"
+            "format": "date-time",
+            "in": "query"
+          },
+          {
+            "name": "last_content_date",
+            "description": "最后一个消息发布时间",
+            "required": false,
+            "type": "string",
+            "format": "date-time",
+            "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "数量限制",
+            "required": false,
+            "type": "number",
+            "in": "query"
           }
         ],
         "responses": {

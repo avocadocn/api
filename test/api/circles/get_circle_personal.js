@@ -8,7 +8,7 @@ var async = require('async');
 
 module.exports = function() {
   var data, userToken, userToken1, hrToken;
-  var circleContentIds = [];
+  var circleContents = [];
   var circleCommentIds = [];
 
   before(function(done) {
@@ -97,7 +97,7 @@ module.exports = function() {
             .expect(200)
             .end(function(err, res) {
               if(err) console.log(err);
-              circleContentIds.push(res.body.circleContent._id.toString());
+              circleContents.push(res.body.circleContent);
               callback();
             })
           
@@ -120,7 +120,7 @@ module.exports = function() {
           });
         }
         async.map(comments, function(comment, callback) {
-          request.post('/circle_contents/' + circleContentIds[0] + '/comments')
+          request.post('/circle_contents/' + circleContents[0]._id.toString() + '/comments')
             .send(comment)
             .set('x-access-token', userToken)
             .expect(200)
@@ -139,10 +139,10 @@ module.exports = function() {
     });
   })
 
-  describe('get /circle/team/:teamId', function() {
+  describe('get /circle/personal', function() {
     describe('本公司成员', function() {
-      it('用户应能获取所参加小队同事圈', function(done) {
-        request.get('/circle/team/' + data[2].teams[0].model._id.toString())
+      it('用户应能不带参数获取同事圈', function(done) {
+        request.get('/circle/personal')
           .set('x-access-token', userToken)
           .expect(200)
           .end(function(err, res) {
@@ -150,11 +150,26 @@ module.exports = function() {
             done();
           })
       });
-
-      it('用户应不能获取未参加小队同事圈', function(done) {
-        request.get('/circle/team/' + data[2].teams[0].model._id.toString())
-          .set('x-access-token', userToken1)
-          .expect(403)
+      it('用户应能刷新同事圈', function(done) {
+        request.get('/circle/personal')
+          .query({
+            latest_content_date: circleContents[0].post_date.toString(),
+          })
+          .set('x-access-token', userToken)
+          .expect(200)
+          .end(function(err, res) {
+            if (err) return done(err);
+            done();
+          })
+      });
+      it('用户应能获取下一页同事圈', function(done) {
+        request.get('/circle/personal')
+          .query({
+            last_content_date: Date.now(),
+            limit: 20
+          })
+          .set('x-access-token', userToken)
+          .expect(200)
           .end(function(err, res) {
             if (err) return done(err);
             done();
@@ -162,8 +177,8 @@ module.exports = function() {
       });
     });
     describe('hr', function() {
-      it('hr应不能获取小队同事圈', function(done) {
-        request.get('/circle/team/' + data[2].teams[0].model._id.toString())
+      it('hr应不能获取公司同事圈', function(done) {
+        request.get('/circle/personal')
           .set('x-access-token', hrToken)
           .expect(403)
           .end(function(err, res) {
