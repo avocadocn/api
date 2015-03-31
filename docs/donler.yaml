@@ -3961,6 +3961,9 @@ definitions:
       member_max:
         description: 报名人数上限
         type: integer
+      circle_content_sum:
+        description: 精彩瞬间数目
+        type: integer
       tags:
         description: 标签
         type: array
