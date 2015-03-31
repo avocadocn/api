@@ -390,16 +390,16 @@ var getCampaignListHandle = function (req, res) {
       if(req.query.select_type =='0'){
         async.series([
           function(callback){
-            searchCampaign('1', option, sort, limit, requestId, team_ids, populate, callback);
+            searchCampaign('1', option, 'start_time', limit, requestId, team_ids, populate, callback);
           },//即将开始的活动
           function(callback){
-            searchCampaign('2', option, sort, limit, requestId, team_ids, populate, callback);
+            searchCampaign('2', option, 'end_time', limit, requestId, team_ids, populate, callback);
           },//正在进行的活动
           function(callback){
-            searchCampaign('4', option, sort, limit, requestId, team_ids, populate, callback);
+            searchCampaign('4', option, '-create_time', limit, requestId, team_ids, populate, callback);
           },//新活动（未参加）
           function(callback){
-            searchCampaign('5', option, sort, limit, requestId, team_ids, populate, callback);
+            searchCampaign('5', option, '-create_time', limit, requestId, team_ids, populate, callback);
           }//未确认的挑战
         ],function(err, values){
           if(err){

@@ -216,58 +216,37 @@ var formatTime = exports.formatTime = function (start_time, end_time) {
     // 活动已开始
     if (during >= 0) {
       start_flag = 1;
-      remind_text = '距离活动结束还有';
+      remind_text = '距离结束';
       var temp_end_time = new Date(end_time);
       var during = moment.duration(moment(now).diff(temp_end_time));
-      var years = Math.abs(during.years());
-      var months = Math.abs(during.months());
-      var days = Math.floor(Math.abs(during.asDays()));
-      var hours = Math.abs(during.hours());
-      var minutes = Math.abs(during.minutes());
-      var seconds = Math.abs(during.seconds());
-      temp_end_time.setHours(hours);
-      temp_end_time.setMinutes(minutes);
-      temp_end_time.setSeconds(seconds);
-      if (days >= 1) {
-        time_text = days + '天';
-      }
-      else if (hours >= 1) {
-
-        time_text = hours + '时';
-      }
-      else if (minutes >= 1) {
-        time_text = minutes + '分';
-      }
-      else {
-        time_text = seconds + '秒';
-      }
     } else {
       // 活动未开始
-      var years = Math.abs(during.years());
-      var months = Math.abs(during.months());
-      var days = Math.floor(Math.abs(during.asDays()));
-      var hours = Math.abs(during.hours());
-      var minutes = Math.abs(during.minutes());
-      var seconds = Math.abs(during.seconds());
-
-      temp_start_time.setHours(hours);
-      temp_start_time.setMinutes(minutes);
-      temp_start_time.setSeconds(seconds);
       start_flag = 0;
-      remind_text = '距离活动开始还有';
-      if (days >= 1) {
-        time_text = days + '天';
-      }
-      else if (hours >= 1) {
-        time_text = hours + '时';
-      }
-      else if (minutes >= 1) {
-        time_text = minutes + '分';
-      }
-      else {
-        time_text = seconds + '秒';
-      }
-
+      remind_text = '距离开始';
+    }
+    var years = Math.abs(during.years());
+    var months = Math.abs(during.months());
+    var days = Math.floor(Math.abs(during.asDays()));
+    var hours = Math.abs(during.hours());
+    var minutes = Math.abs(during.minutes());
+    var seconds = Math.abs(during.seconds());
+    if (years >= 1) {
+      time_text = years + '年';
+    }
+    else if (months >= 1) {
+      time_text = months + '月';
+    }
+    else if (days >= 1) {
+      time_text = days + '天';
+    }
+    else if (hours >= 1) {
+      time_text = hours + '时';
+    }
+    else if (minutes >= 1) {
+      time_text = minutes + '分';
+    }
+    else {
+      time_text = seconds + '秒';
     }
   }
   return {
