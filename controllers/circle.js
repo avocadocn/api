@@ -677,7 +677,7 @@ module.exports = function(app) {
 
             async.parallel([
                 function(callback) {
-                  Company.findById(req.user.cid, 'info.name info.log', function(err, companyDoc) {
+                  Company.findById(req.user.cid, 'info.name info.logo', function(err, companyDoc) {
                     if (err) {
                       log(err);
                     }
