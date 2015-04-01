@@ -597,7 +597,7 @@ module.exports = function(app) {
      * @param  {[type]} res [description]
      * @return (Reference getCampaignCircle)
      */
-     getUserCircle: function(req, res) {
+    getUserCircle: function(req, res) {
       if (req.user.provider === 'company') {
         return res.status(403).send({
           msg: '公司账号暂无同事圈功能'
@@ -654,25 +654,39 @@ module.exports = function(app) {
             });
             var userIdsForQuery = []; // 元素为String类型
             var teamIdsForQuery = []; //
+            var campaignIdsForQuery = [];
             // 向用户id数组不重复地添加用户id
-            var pushUserIdToUniqueArray = function(userId, array) {
-              var resultIndex = array.indexOf(userId);
+            // var pushUserIdToUniqueArray = function(userId, array) {
+            //   var resultIndex = array.indexOf(userId);
+            //   if (resultIndex === -1) {
+            //     array.push(userId.toString());
+            //   }
+            // };
+
+            // var pushTeamIdToUniqueArray = function(teamId, array) {
+            //   if (teamId) {
+            //     var resultIndex = array.indexOf(teamId);
+            //     if (resultIndex === -1) {
+            //       array.push(teamId.toString());
+            //     }
+            //   }
+            // }
+
+            var pushIdToUniqueArray = function(id, array) {
+              if (id === undefined || id === null) {
+                return;
+              }
+              var stringId = id.toString();
+              var resultIndex = array.indexOf(stringId);
               if (resultIndex === -1) {
-                array.push(userId.toString());
+                array.push(stringId);
               }
             };
 
-            var pushTeamIdToUniqueArray = function(teamId, array) {
-              if (teamId) {
-                var resultIndex = array.indexOf(teamId);
-                if (resultIndex === -1) {
-                  array.push(teamId.toString());
-                }
-              }
-            }
             contents.forEach(function(content) {
-              pushUserIdToUniqueArray(content.post_user_id, userIdsForQuery);
-              pushTeamIdToUniqueArray(content.post_user_tid, teamIdsForQuery);
+              pushIdToUniqueArray(content.post_user_id, userIdsForQuery);
+              pushIdToUniqueArray(content.post_user_tid, teamIdsForQuery);
+              pushIdToUniqueArray(content.campaign_id, campaignIdsForQuery);
             });
 
             async.parallel([
@@ -711,8 +725,8 @@ module.exports = function(app) {
                       var comments = commentDocs.map(docToObject);
 
                       comments.forEach(function(comment) {
-                        pushUserIdToUniqueArray(comment.post_user_id, userIdsForQuery);
-                        pushUserIdToUniqueArray(comment.target_user_id, userIdsForQuery);
+                        pushIdToUniqueArray(comment.post_user_id, userIdsForQuery);
+                        pushIdToUniqueArray(comment.target_user_id, userIdsForQuery);
                       });
 
                       User.find({
@@ -759,6 +773,23 @@ module.exports = function(app) {
                     .then(null, function(err) {
                       callback(err);
                     })
+                },
+                function(callback) {
+                  Campaign.find({
+                    _id: {
+                      $in: campaignIdsForQuery
+                    }
+                  }, {
+                    _id: 1,
+                    theme: 1
+                  }, function(err, campaignDocs) {
+                    if (err) {
+                      log(err);
+                      callback(err);
+                    } else {
+                      callback(null, campaignDocs);
+                    }
+                  });
                 }
               ],
               // optional callback
@@ -768,25 +799,34 @@ module.exports = function(app) {
                   return res.sendStatus(500);
                 } else {
                   var addTeamInfoToObj = function(obj) {
-                    if (obj.post_user_tid) {
-                      var teams = results[1];
-                      for (var i = 0, teamsLen = teams.length; i < teamsLen; i++) {
-                        if (teams[i]._id.toString() === obj.post_user_tid.toString()) {
-                          obj.teamInfo = teams[i];
-                          break;
-                        }
+                    var teams = results[1];
+                    for (var i = 0, teamsLen = teams.length; i < teamsLen; i++) {
+                      if (obj.post_user_tid && teams[i]._id.toString() === obj.post_user_tid.toString()) {
+                        obj.teamInfo = teams[i];
+                        break;
                       }
-                    } else {
-                      obj.teamInfo = null;
                     }
                   };
+
                   var addCompanyInfoToObj = function(obj) {
                     obj.companyInfo = results[0];
                   };
+
+                  var addCampaignInfoToObj = function(obj) {
+                    var campaigns = results[3];
+                    for (var i = 0, campaignsLen = campaigns.length; i < campaignsLen; i++) {
+                      if (obj.campaign_id && campaigns[i].id === obj.campaign_id.toString()) {
+                        obj.campaignTheme = campaigns[i].theme;
+                        break;
+                      }
+                    }
+                  };
+
                   var comments = results[2];
                   contents.forEach(function(content) {
                     addTeamInfoToObj(content);
                     addCompanyInfoToObj(content);
+                    addCampaignInfoToObj(content);
                     // 将comments添加到对应的contents中
                     var contentComments = comments.filter(function(comment) {
                       return comment.target_content_id.toString() === content._id.toString();
