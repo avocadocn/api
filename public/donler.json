@@ -498,48 +498,6 @@
         }
       }
     },
-    "/users/invite": {
-      "get": {
-        "tags": [
-          "users"
-        ],
-        "summary": "通过邀请链接进入激活流程",
-        "parameters": [
-          {
-            "name": "key",
-            "description": "邀请码",
-            "required": true,
-            "type": "string",
-            "in": "query"
-          },
-          {
-            "name": "cid",
-            "description": "公司id",
-            "required": true,
-            "type": "string",
-            "in": "query"
-          },
-          {
-            "name": "uid",
-            "description": "用户id",
-            "required": true,
-            "type": "string",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
     "/users/{userId}/photos": {
       "get": {
         "tags": [

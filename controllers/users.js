@@ -939,66 +939,6 @@ module.exports = function (app) {
           log(err);
           res.sendStatus(500);
         });
-    },
-    /**
-     * 通过邀请链接或是邀请信的链接进入激活流程
-     */
-    invite: function(req, res) {
-      var key = decodeURIComponent(req.query.key);
-      var cid = req.query.cid;
-      var uid = req.query.uid;
-      if (key == undefined || cid == undefined || uid == undefined) {
-        return res.status(400).send({
-          msg: '参数错误'
-        });
-      } else {
-        Company
-          .findOne({
-            '_id': cid
-          })
-          .exec()
-          .then(function(company) {
-            if (!company) {
-              return res.status(404).send({
-                msg: '该公司不存在'
-              });
-            }
-            if (key === company.invite_key) {
-              User.findById(uid, 'cid')
-                .exec()
-                .then(function(user) {
-                  if (!user) {
-                    return res.status(404).send({
-                      msg: '该uid不存在'
-                    });
-                  } else {
-                    if (user.cid.toString() === company._id.toString()) {
-                      res.status(200).send({
-                        'inviteKey': company.invite_key,
-                        'uid': uid
-                      });
-                    } else {
-                      res.status(400).send({
-                        msg: 'cid与uid不匹配'
-                      });
-                    }
-                  }
-                })
-                .then(null, function(err) {
-                  console.log(err);
-                  return res.sendStatus(500);
-                })
-            } else {
-              res.status(400).send({
-                msg: 'key错误'
-              });
-            }
-          })
-          .then(null, function(err) {
-            log(err);
-            res.sendStatus(500);
-          });
-      }
     }
   };
 };
