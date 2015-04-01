@@ -473,7 +473,7 @@ module.exports = function(app) {
         'relative_cids': req.user.getCid(), // 该活动必须属于该用户所属公司
         'status': 'show'
       };
-      
+
       CircleContent.find(conditions, null, {limit: req.query.limit || 20})
         .sort('-post_date')
         .exec()
@@ -597,7 +597,7 @@ module.exports = function(app) {
      * @param  {[type]} res [description]
      * @return (Reference getCampaignCircle)
      */
-    getPersonalCircle: function(req, res) {
+     getUserCircle: function(req, res) {
       if (req.user.provider === 'company') {
         return res.status(403).send({
           msg: '公司账号暂无同事圈功能'
@@ -605,7 +605,7 @@ module.exports = function(app) {
       }
 
       var conditions = {
-        'post_user_id': req.user.id,
+        'post_user_id': req.params.userId,
         'status': 'show'
       };
 
@@ -653,7 +653,7 @@ module.exports = function(app) {
               return content._id;
             });
             var userIdsForQuery = []; // 元素为String类型
-            var teamIdsForQuery = []; // 
+            var teamIdsForQuery = []; //
             // 向用户id数组不重复地添加用户id
             var pushUserIdToUniqueArray = function(userId, array) {
               var resultIndex = array.indexOf(userId);
@@ -1062,11 +1062,11 @@ module.exports = function(app) {
           // Warning: http://docs.mongodb.org/manual/reference/method/db.collection.save/ #Replace an Existing Document
           // Don't suggest the save function to update MongoDB. And concurrent http requests maybe cause data disorder.
           // For Example:
-          // A -> get data D1 
+          // A -> get data D1
           //                              B -> get Data D1
           // A -> modify D1.a and D1.b
           //                              B -> modify D1.c
-          // A -> save D1                 
+          // A -> save D1
           //                              B -> save D1
           // Imagine the D1 data status, you will doubt the save validity. Save function will induce entire collection changes.
           // So I advice to use update to reduce the scope of update function.
@@ -1077,8 +1077,8 @@ module.exports = function(app) {
           });
           /**
            * These codes avoid the faults because of the concurrent http requests. And update function reduce the scope.
-           * If the user who sends comment is already in the comment_users, only update the comment_num, appreciated and 
-           * latest_comment_date. Otherwise, using update function to add this user info to commment_users, then through the 
+           * If the user who sends comment is already in the comment_users, only update the comment_num, appreciated and
+           * latest_comment_date. Otherwise, using update function to add this user info to commment_users, then through the
            * numberAffected, we can decide whether using update function. Update the user info again when the numberAffected
            * is zero.
            */
@@ -1352,7 +1352,7 @@ module.exports = function(app) {
      * 获取同事圈提醒
      * @param  {Object}
      * @return [comment]
-     * 
+     *
      */
     getCircleComments: function(req, res, next) {
       if (req.user.provider === 'company') {
@@ -1375,7 +1375,7 @@ module.exports = function(app) {
             msg: '无新评论或赞'
           });
         }
-        
+
         var comments = data.comments.map(function(comment) {
           return comment.toObject();
         });
@@ -1758,7 +1758,7 @@ function createCircleContent(req, res, next) {
       var tid = campaign.campaign_type == 1 ? [] : campaign.tid;
       var relative_cids = campaign.cid;
       // 发消息用户所属小队id， 若为null, 则该消息为公司活动消息
-      var post_user_tid = null; 
+      var post_user_tid = null;
       var campaign_unit = campaign.campaign_unit;
       var findUserTeam = false;
       for (var i = 0; i < campaign_unit.length && !findUserTeam; i++) {

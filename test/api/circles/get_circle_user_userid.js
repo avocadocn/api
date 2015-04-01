@@ -100,7 +100,7 @@ module.exports = function() {
               circleContents.push(res.body.circleContent);
               callback();
             })
-          
+
         }, function(err, results) {
           if (err) {
             callback(err);
@@ -139,10 +139,10 @@ module.exports = function() {
     });
   })
 
-  describe('get /circle/personal', function() {
+  describe('get /circle/user/:userId', function() {
     describe('本公司成员', function() {
       it('用户应能不带参数获取同事圈', function(done) {
-        request.get('/circle/personal')
+        request.get('/circle/user/' + data[2].users[0].id)
           .set('x-access-token', userToken)
           .expect(200)
           .end(function(err, res) {
@@ -151,7 +151,7 @@ module.exports = function() {
           })
       });
       it('用户应能刷新同事圈', function(done) {
-        request.get('/circle/personal')
+        request.get('/circle/user/' + data[2].users[0].id)
           .query({
             latest_content_date: circleContents[0].post_date.toString(),
           })
@@ -163,7 +163,7 @@ module.exports = function() {
           })
       });
       it('用户应能获取下一页同事圈', function(done) {
-        request.get('/circle/personal')
+        request.get('/circle/user/' + data[2].users[0].id)
           .query({
             last_content_date: Date.now(),
             limit: 20
@@ -178,7 +178,7 @@ module.exports = function() {
     });
     describe('hr', function() {
       it('hr应不能获取公司同事圈', function(done) {
-        request.get('/circle/personal')
+        request.get('/circle/user/' + data[2].users[0].id)
           .set('x-access-token', hrToken)
           .expect(403)
           .end(function(err, res) {

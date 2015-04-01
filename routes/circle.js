@@ -18,7 +18,7 @@ module.exports = function(app, ctrl) {
   // get /circle/campaign/:campaignId 获取活动消息及评论
   app.get('/circle/campaign/:campaignId', token.needToken, ctrl.getCampaignCircle);
   // get /circle/team/:teamId 获取个人小队消息及评论
-  app.get('/circle/personal', token.needToken, ctrl.getPersonalCircle);
+  app.get('/circle/user/:userId', token.needToken, ctrl.getUserCircle);
   // get /circle_reminds/comments 获取同事圈提醒(被赞、被评论、赞过或评论过的消息有更新)
   app.get('/circle_reminds/comments', token.needToken, ctrl.getCircleComments);
   // delete //circle_reminds/comments' 删除同事圈提醒

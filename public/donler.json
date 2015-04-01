@@ -3669,7 +3669,7 @@
         }
       }
     },
-    "/circle/personal": {
+    "/circle/user/{userId}": {
       "get": {
         "tags": [
           "circles"
@@ -3677,6 +3677,13 @@
         "summary": "获取个人同事圈内容",
         "operationId": "getCampaignCircle",
         "parameters": [
+          {
+            "name": "userId",
+            "description": "用户id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
           {
             "name": "latest_content_date",
             "description": "最新一个消息发布时间",
