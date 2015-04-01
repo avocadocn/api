@@ -397,10 +397,10 @@ var getCampaignListHandle = function (req, res) {
           },//正在进行的活动
           function(callback){
             searchCampaign('4', option, '-create_time', limit, requestId, team_ids, populate, callback);
-          },//新活动（未参加）
-          function(callback){
-            searchCampaign('5', option, '-create_time', limit, requestId, team_ids, populate, callback);
-          }//未确认的挑战
+          }//新活动（未参加）
+          // function(callback){
+          //   searchCampaign('5', option, '-create_time', limit, requestId, team_ids, populate, callback);
+          // }//未确认的挑战
         ],function(err, values){
           if(err){
             log(err);
