@@ -219,6 +219,9 @@ var UserSchema = new Schema({
   
   // reminds_clear_date: Date,
   // list_clear_date: Date // 上次清空提醒列表的时间
+  
+  // 邀请人id
+  invite_person: Schema.Types.ObjectId
 });
 
 /**
