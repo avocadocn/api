@@ -239,18 +239,8 @@ module.exports = function (app) {
       .populate('vote',{'units':1})
       .exec()
       .then(function(message) {
-        var status = formatCompetitionStatus(message);
-        message.status = status.status;
-        if(status.change) {
-          message.save(function (err) {
-            if(err){
-              log(err)
-            }
-          })
-        }
-        message.set('status_text',status.statusText,{strict:false});
         var result = {
-          message: message,
+          // message: message,
           sponsorLeader:req.user.isTeamLeader(message.sponsor_team._id),
           oppositeLeader:req.user.isTeamLeader(message.opposite_team._id),
           sponsor: req.user.isTeamMember(message.sponsor_team._id),
@@ -267,6 +257,18 @@ module.exports = function (app) {
             if(err) log(err);
           })
         }
+        var status = formatCompetitionStatus(message);
+        if(status.change) {
+          message.status = status.status;
+          message.save(function (err) {
+            if(err){
+              log(err)
+            }
+          })
+        }
+        var messagObject = message.toObject();
+        messagObject.status_text =status.statusText;
+        result.message = messagObject;
         if(result.sponsor || result.opposite)
           return res.status(200).send(result);
         else
