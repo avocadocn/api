@@ -61,19 +61,21 @@ module.exports = function (app) {
                 } else {
                   var formatTeams = [];
                   teams.forEach(function (team ) {
-                    formatTeams.push({
-                      "_id":team._id,
-                      "cid":team.cid,
-                      "name":team.name,
-                      "logo":team.logo,
-                      "rank":team.score_rank.rank,
-                      "member_num":team.member.length,
-                      "lose":team.score_rank.lose,
-                      "tie":team.score_rank.tie,
-                      "win":team.score_rank.win,
-                      "score":team.score_rank.score,
-                      "activity_score":team.score.total
-                    });
+                    if(team.score_rank && team.score_rank.rank) {
+                      formatTeams.push({
+                        "_id":team._id,
+                        "cid":team.cid,
+                        "name":team.name,
+                        "logo":team.logo,
+                        "rank":team.score_rank.rank,
+                        "member_num":team.member.length,
+                        "lose":team.score_rank.lose,
+                        "tie":team.score_rank.tie,
+                        "win":team.score_rank.win,
+                        "score":team.score_rank.score,
+                        "activity_score":team.score.total
+                      });
+                    }
                   });
                   res.send({rank:rank[0],team:formatTeams});
                 }
@@ -114,7 +116,7 @@ module.exports = function (app) {
           '$gte' : team.score_rank.rank - forwardTeamNum
         }
       }
-      CompanyGroup.find(option,{score: 1,score_rank: 1,name: 1,logo: 1})
+      CompanyGroup.find(option,{score: 1,score_rank: 1,name: 1,logo: 1, cname:1})
       .sort('score_rank.rank')
       .limit(rankTeamNum)
       .exec()
