@@ -3669,6 +3669,64 @@
         }
       }
     },
+    "/circle/team/{teamId}": {
+      "get": {
+        "tags": [
+          "circles"
+        ],
+        "summary": "获取小队同事圈内容",
+        "operationId": "getCampaignCircle",
+        "parameters": [
+          {
+            "name": "teamId",
+            "description": "小队id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "latest_content_date",
+            "description": "最新一个消息发布时间",
+            "required": false,
+            "type": "string",
+            "format": "date-time",
+            "in": "query"
+          },
+          {
+            "name": "last_content_date",
+            "description": "最后一个消息发布时间",
+            "required": false,
+            "type": "string",
+            "format": "date-time",
+            "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "数量限制",
+            "required": false,
+            "type": "number",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "ResCircle"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/circle/user/{userId}": {
       "get": {
         "tags": [
