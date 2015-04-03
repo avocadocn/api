@@ -34,7 +34,7 @@ var CompetitionMessage = new Schema({
   status: {
     type: String,
     //分别为：已发送请求(未被处理),接受未发活动,被拒绝,已生成挑战
-    enum: ['sent', 'accepted', 'rejected', 'competing'],
+    enum: ['sent', 'accepted', 'rejected', 'competing','deal_timeout','competion_timeout'],
     default: 'sent'
   },
   campaign: {       //发成功后的campaign的_id

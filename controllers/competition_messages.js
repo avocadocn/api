@@ -1,14 +1,55 @@
 'use strict';
 
 var mongoose = require('mongoose');
+
 var CompetitionMessage = mongoose.model('CompetitionMessage'),
     CompanyGroup = mongoose.model('CompanyGroup'),
     Vote = mongoose.model('Vote');
+var moment = require('moment');
 var donlerValidator = require('../services/donler_validator.js'),
     socketClient = require('../services/socketClient'),
     log = require('../services/error_log.js'),
     chatsBusiness = require('../business/chats');
 var perPageNum = 10;
+var dealCompetitionTime = 7;//7天
+var sponsorCompetitionTime = 7;//7天
+var formatCompetitionStatus = function (message) {
+  moment.locale('zh-cn');
+  var status={
+    status: message.status,
+    statusText: ''
+  };
+  switch(message.status) {
+    case 'sent':
+      var limitTime = moment(message.create_time);
+      limitTime = limitTime.add(dealCompetitionTime, 'day');
+      var now = moment();
+      var diff = limitTime.diff(now);
+      if(diff>0){
+        status.statusText =moment.duration(diff).humanize();
+      }
+      else{
+        status.status = 'deal_timeout';
+        status.change = true;
+      }
+      break;
+    case 'accepted':
+      var limitTime = moment(message.deal_time);
+      limitTime = limitTime.add(sponsorCompetitionTime, 'day');
+      var now = moment();
+      var diff = limitTime.diff(now);
+      if(diff>0){
+        status.statusText =moment.duration(diff).humanize();
+      }
+      else{
+        status.status = 'competion_timeout';
+        status.change = true;
+      }
+      break;
+    default:
+  }
+  return status;
+}
 module.exports = function (app) {
   
   return {
@@ -198,10 +239,22 @@ module.exports = function (app) {
       .populate('vote',{'units':1})
       .exec()
       .then(function(message) {
+        var status = formatCompetitionStatus(message);
+        message.status = status.status;
+        if(status.change) {
+          message.save(function (err) {
+            if(err){
+              log(err)
+            }
+          })
+        }
+        message.set('status_text',status.statusText,{strict:false});
         var result = {
           message: message,
           sponsorLeader:req.user.isTeamLeader(message.sponsor_team._id),
-          oppositeLeader:req.user.isTeamLeader(message.opposite_team._id)
+          oppositeLeader:req.user.isTeamLeader(message.opposite_team._id),
+          sponsor: req.user.isTeamMember(message.sponsor_team._id),
+          opposite: req.user.isTeamMember(message.opposite_team._id)
         }
         if(result.sponsorLeader && message.sponsor_unread || result.oppositeLeader && message.opposite_unread) {
           if(result.sponsorLeader) {
@@ -214,7 +267,7 @@ module.exports = function (app) {
             if(err) log(err);
           })
         }
-        if(req.user.isTeamMember(message.sponsor_team._id) || req.user.isTeamMember(message.opposite_team._id))
+        if(result.sponsor || result.opposite)
           return res.status(200).send(result);
         else
           return res.status(403).send({msg:'权限错误'});
