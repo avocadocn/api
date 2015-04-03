@@ -15,6 +15,7 @@ module.exports = function(app, ctrl) {
   app.delete('/circle_comments/:commentId', token.needToken, ctrl.deleteCircleComment);
   // get /circle/company 获取公司消息及评论
   app.get('/circle/company', token.needToken, ctrl.getCompanyCircle);
+  app.get('/circle/team/:teamId', token.needToken, ctrl.getTeamCircle);
   // get /circle/campaign/:campaignId 获取活动消息及评论
   app.get('/circle/campaign/:campaignId', token.needToken, ctrl.getCampaignCircle);
   // get /circle/team/:teamId 获取个人小队消息及评论

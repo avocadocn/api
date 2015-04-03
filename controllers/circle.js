@@ -313,143 +313,16 @@ module.exports = function(app) {
             res.status(204).send({
               msg: '未找到同事圈消息'
             });
-            return
+            return;
           }
 
-          // 修正查询逻辑，减少查询次数
-          // 1. 将contents的id保存到一个数组中，先将各个contents的评论一次查询出来，然后分组放到各个content中
-          // 2. 将contents的post_user_id及comment的post_user_id及target_user_id不重复地保存到一个数组中，然后一次查出所有用户，然后向各个含post_user_id的对象添加用户信息
-          // 仅需要查询两次数据库，相比之前方案的contents总数*3次(即很可能是60次)要好得多
-
-          /**
-           * 响应返回数据，形式为：
-           *  [{
-           *    content: contentDoc,
-           *    comments: [commentDoc]
-           *  }]
-           */
-          var resData = [];
-
-          var queryData = {}; // 数据库查询获得的文档数据
-
-          // 转换为简单对象，以解除mongoose文档的约束，便于修改属性写入响应
-          var docToObject = function(doc) {
-            return doc.toObject();
-          };
-          var contents = contentDocs.map(docToObject);
-
-          // 向数组不重复地添加id
-          var pushIdToUniqueArray = function(id, array) {
-            if (id === undefined || id === null) {
-              return;
+          addInfoToCircleContent(contentDocs, function(err, resContents) {
+            if (err) {
+              next(err);
             }
-            var stringId = id.toString();
-            var resultIndex = array.indexOf(stringId);
-            if (resultIndex === -1) {
-              array.push(stringId);
+            else {
+              res.send(resContents);
             }
-          };
-
-          var campaignIds = [];
-          contents.forEach(function(content) {
-            pushIdToUniqueArray(content.campaign_id, campaignIds);
-          });
-
-          // 查询content对应的活动，获取活动数据
-          return Campaign.find({
-            _id: {$in: campaignIds}
-          }, {
-            _id: 1,
-            theme: 1
-          }).exec()
-          .then(function(campaigns) {
-
-            // 设置相应的活动主题
-            contents.forEach(function(content) {
-              for (var i = 0, campaignsLen = campaigns.length; i < campaignsLen; i++) {
-                if (content.campaign_id && campaigns[i].id === content.campaign_id.toString()) {
-                  content.campaignTheme = campaigns[i].theme;
-                  break;
-                }
-              }
-            });
-
-            var contentIdsForQuery = contents.map(function(content) {
-              return content._id;
-            });
-
-            return CircleComment.find({
-              target_content_id: {$in: contentIdsForQuery},
-              status: 'show'
-            }).sort('+post_date').exec();
-
-          })
-          .then(function(commentDocs) {
-            var comments = commentDocs.map(docToObject);
-
-            var userIdsForQuery = []; // 元素为String类型
-
-            contents.forEach(function(content) {
-              pushIdToUniqueArray(content.post_user_id, userIdsForQuery);
-            });
-
-            comments.forEach(function(comment) {
-              pushIdToUniqueArray(comment.post_user_id, userIdsForQuery);
-              pushIdToUniqueArray(comment.target_user_id, userIdsForQuery);
-            });
-
-            queryData.comments = comments;
-
-            return User.find({
-              _id: {$in: userIdsForQuery}
-            }, {
-              _id: 1,
-              nickname: 1,
-              photo: 1
-            }).exec();
-
-          })
-          .then(function(users) {
-
-            // 向CircleContent和CircleComment对象添加发布者的详细信息
-            var addPosterInfoToObj = function(obj) {
-              for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-                if (users[i]._id.toString() === obj.post_user_id.toString()) {
-                  obj.poster = users[i];
-                  break;
-                }
-              }
-            };
-
-            var addTargetInfoToComment = function(comment) {
-              for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-                if (users[i]._id.toString() === comment.target_user_id.toString()) {
-                  comment.target = users[i];
-                  break;
-                }
-              }
-            };
-
-            queryData.comments.forEach(function(comment) {
-              addPosterInfoToObj(comment);
-              addTargetInfoToComment(comment);
-            });
-
-            contents.forEach(function(content) {
-              addPosterInfoToObj(content);
-
-              // 将comments添加到对应的contents中
-              var contentComments = queryData.comments.filter(function(comment) {
-                return comment.target_content_id.toString() === content._id.toString();
-              });
-              resData.push({
-                content: content,
-                comments: contentComments
-              });
-            });
-
-            res.send(resData);
-
           });
 
         })
@@ -591,6 +464,60 @@ module.exports = function(app) {
           return res.sendStatus(500);
         });
     },
+
+    getTeamCircle: function(req, res, next) {
+      if (req.user.provider === 'company') {
+        res.status(403).send({
+          msg: '公司账号暂无同事圈功能'
+        });
+        return;
+      }
+
+      var conditions = {
+        'tid': req.params.teamId,
+        'status': 'show'
+      };
+
+      var options = {};
+      if (req.query.last_content_date) { //如果带此属性来，则查找比它更早的limit条
+        conditions.post_date = {
+          '$lt': req.query.last_content_date
+        };
+      }
+
+      if (req.query.latest_content_date) { //如果带此属性来，则查找比它新的消息
+        conditions.post_date = {
+          '$gt': req.query.latest_content_date
+        };
+      } else {
+        options.limit = req.query.limit || 20;
+      }
+
+      CircleContent.find(conditions, null, options)
+        .sort('-post_date')
+        .exec()
+        .then(function(contentDocs) {
+          if (contentDocs.length === 0) {
+            res.status(404).send({
+              msg: '未找到该小队的精彩瞬间数据'
+            });
+            return;
+          }
+
+          addInfoToCircleContent(contentDocs, function(err, resContents) {
+            if (err) {
+              next(err);
+            }
+            else {
+              res.send(resContents);
+            }
+          });
+
+        })
+        .then(null, next);
+
+    },
+
     /**
      * get the team circle for user
      * @param  {[type]} req [description]
@@ -630,7 +557,7 @@ module.exports = function(app) {
         .then(function(contentDocs) {
           if (contentDocs.length == 0) {
             return res.status(404).send({
-              msg: '未找到该活动同事圈消息'
+              msg: '未找到该用户的精彩瞬间数据'
             });
           } else {
             /**
@@ -1974,4 +1901,142 @@ function getComments(req, callback) {
       log(err);
       callback(err);
     })
+}
+
+/**
+ * 添加发表者、评论发表者及目标、对应活动的信息
+ * @param {Array} contentDocs
+ * @param {Function} callback function(err, resContents) {}
+ */
+function addInfoToCircleContent(contentDocs, callback) {
+  /**
+   * 响应返回数据，形式为：
+   *  [{
+   *    content: contentDoc,
+   *    comments: [commentDoc]
+   *  }]
+   */
+  var resData = [];
+
+  var queryData = {}; // 数据库查询获得的文档数据
+
+  // 转换为简单对象，以解除mongoose文档的约束，便于修改属性写入响应
+  var docToObject = function(doc) {
+    return doc.toObject();
+  };
+  var contents = contentDocs.map(docToObject);
+
+  // 向数组不重复地添加id
+  var pushIdToUniqueArray = function(id, array) {
+    if (id === undefined || id === null) {
+      return;
+    }
+    var stringId = id.toString();
+    var resultIndex = array.indexOf(stringId);
+    if (resultIndex === -1) {
+      array.push(stringId);
+    }
+  };
+
+  var campaignIds = [];
+  contents.forEach(function(content) {
+    pushIdToUniqueArray(content.campaign_id, campaignIds);
+  });
+
+  // 查询content对应的活动，获取活动数据
+  Campaign.find({
+    _id: {$in: campaignIds}
+  }, {
+    _id: 1,
+    theme: 1
+  }).exec()
+  .then(function(campaigns) {
+
+    // 设置相应的活动主题
+    contents.forEach(function(content) {
+      for (var i = 0, campaignsLen = campaigns.length; i < campaignsLen; i++) {
+        if (content.campaign_id && campaigns[i].id === content.campaign_id.toString()) {
+          content.campaignTheme = campaigns[i].theme;
+          break;
+        }
+      }
+    });
+
+    var contentIdsForQuery = contents.map(function(content) {
+      return content._id;
+    });
+
+    return CircleComment.find({
+      target_content_id: {$in: contentIdsForQuery},
+      status: 'show'
+    }).sort('+post_date').exec();
+
+  })
+  .then(function(commentDocs) {
+    var comments = commentDocs.map(docToObject);
+
+    var userIdsForQuery = []; // 元素为String类型
+
+    contents.forEach(function(content) {
+      pushIdToUniqueArray(content.post_user_id, userIdsForQuery);
+    });
+
+    comments.forEach(function(comment) {
+      pushIdToUniqueArray(comment.post_user_id, userIdsForQuery);
+      pushIdToUniqueArray(comment.target_user_id, userIdsForQuery);
+    });
+
+    queryData.comments = comments;
+
+    return User.find({
+      _id: {$in: userIdsForQuery}
+    }, {
+      _id: 1,
+      nickname: 1,
+      photo: 1
+    }).exec();
+
+  })
+  .then(function(users) {
+
+    // 向CircleContent和CircleComment对象添加发布者的详细信息
+    var addPosterInfoToObj = function(obj) {
+      for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+        if (users[i]._id.toString() === obj.post_user_id.toString()) {
+          obj.poster = users[i];
+          break;
+        }
+      }
+    };
+
+    var addTargetInfoToComment = function(comment) {
+      for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+        if (users[i]._id.toString() === comment.target_user_id.toString()) {
+          comment.target = users[i];
+          break;
+        }
+      }
+    };
+
+    queryData.comments.forEach(function(comment) {
+      addPosterInfoToObj(comment);
+      addTargetInfoToComment(comment);
+    });
+
+    contents.forEach(function(content) {
+      addPosterInfoToObj(content);
+
+      // 将comments添加到对应的contents中
+      var contentComments = queryData.comments.filter(function(comment) {
+        return comment.target_content_id.toString() === content._id.toString();
+      });
+      resData.push({
+        content: content,
+        comments: contentComments
+      });
+    });
+
+    callback(null, resData);
+  })
+  .then(null, callback);
 }
