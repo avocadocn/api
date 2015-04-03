@@ -40,7 +40,7 @@ module.exports = function (app) {
           var option = {
             'city.province': unescape(req.query.province),
             'city.city':unescape(req.query.city),
-            'rank_type':req.query.rankType,
+            // 'rank_type':req.query.rankType,
             // 'create_date':{$gte:new Date(Date.now()-timeLimit)},
             'group_type._id':req.query.gid
           }
@@ -48,36 +48,43 @@ module.exports = function (app) {
           .sort('-create_date')
           .limit(1)
           .exec()
-          .then(function (rank) {
-            if (!rank) {
+          .then(function (ranks) {
+            if (!ranks) {
               res.status(400).send({ msg: '没有找到对应的榜单' });
             } else {
               var cid = req.user.cid || req.user._id;
-              CompanyGroup.find({active:true, cid: cid ,gid:req.query.gid},{cid: 1,name:1,logo:1,gid: 1,member:1,score:1,score_rank:1})
+              var rank = ranks[0].toObject();
+              rank.team.forEach(function(team) {
+                var totalCompNum = team.lose + team.tie + team.win ;
+                var odds_percent = team.win ? Math.floor(team.win/totalCompNum*100) :0;
+                console.log(odds_percent);
+                team.odds_percent = odds_percent;
+              });
+              CompanyGroup.find({active:true, cid: cid ,gid:req.query.gid},{cid: 1,name:1,logo:1,gid: 1,score:1,score_rank:1})
               .exec()
               .then(function (teams) {
                 if (!teams) {
-                  res.send({rank:rank[0]});
+                  res.send({rank:rank});
                 } else {
                   var formatTeams = [];
                   teams.forEach(function (team ) {
                     if(team.score_rank && team.score_rank.rank) {
+                      var totalCompNum = team.score_rank.lose + team.score_rank.tie + team.score_rank.win ;
+                      var odds_percent = team.score_rank.win ? Math.floor(team.score_rank.win/totalCompNum*100) :0;
+                      console.log(odds_percent);
                       formatTeams.push({
                         "_id":team._id,
                         "cid":team.cid,
                         "name":team.name,
                         "logo":team.logo,
                         "rank":team.score_rank.rank,
-                        "member_num":team.member.length,
-                        "lose":team.score_rank.lose,
-                        "tie":team.score_rank.tie,
-                        "win":team.score_rank.win,
-                        "score":team.score_rank.score,
-                        "activity_score":team.score.total
+                        "odds_percent": odds_percent, 
+                        "score":team.score_rank.score,//战绩积分
+                        "activity_score":team.score.total //活跃度积分
                       });
                     }
                   });
-                  res.send({rank:rank[0],team:formatTeams});
+                  res.send({rank:rank,team:formatTeams});
                 }
               })
               .then(null, function (err) {
