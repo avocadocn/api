@@ -1129,9 +1129,27 @@ module.exports = function (app) {
           res.status(500).send({msg:err});
         }
         else{
-          return res.send({'teams':results,'maxPage':pageCount});
+          var formatTeams = [];
+          results.forEach(function (team ) {
+            if(team.score_rank && team.score_rank.rank) {
+              var totalCompNum = team.score_rank.lose + team.score_rank.tie + team.score_rank.win ;
+              var odds_percent = team.score_rank.win ? Math.floor(team.score_rank.win/totalCompNum*100) :0;
+              formatTeams.push({
+                "_id":team._id,
+                "cid":team.cid,
+                "cname":team.name,
+                "name":team.cname,
+                "logo":team.logo,
+                "rank":team.score_rank.rank,
+                "odds_percent": odds_percent, 
+                "score":team.score_rank.score,//战绩积分
+                "activity_score":team.score.total //活跃度积分
+              });
+            }
+          });
+          return res.send({'teams':formatTeams,'maxPage':pageCount});
         }
-      },{columns:{'logo':1,'name':1,'cname':1,'score_rank':1}, sortBy:{'score_rank.score':-1,'score.total':-1}});
+      },{columns:{'logo':1,'name':1,'cname':1,'score_rank':1,'score.total':1}, sortBy:{'score_rank.score':-1,'score.total':-1}});
     }
   };
 };

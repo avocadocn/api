@@ -71,7 +71,6 @@ module.exports = function (app) {
                     if(team.score_rank && team.score_rank.rank) {
                       var totalCompNum = team.score_rank.lose + team.score_rank.tie + team.score_rank.win ;
                       var odds_percent = team.score_rank.win ? Math.floor(team.score_rank.win/totalCompNum*100) :0;
-                      console.log(odds_percent);
                       formatTeams.push({
                         "_id":team._id,
                         "cid":team.cid,
