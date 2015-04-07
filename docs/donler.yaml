@@ -4575,25 +4575,15 @@ definitions:
   HomeCourt:
     title: HomeCourt
     required:
-      - loc
+      - coordinates
       - name
     properties:
-      loc:
+      coordinates:
         description: 坐标信息
-        $ref: HomeCourtLoc
+        type: array
       name:
         type: string
         description: 主场名
-  HomeCourtLoc:
-    title: HomeCourtLoc
-    required:
-      - coordinates
-    properties:
-      coordinates:
-        type: array
-        description: 坐标
-        items:
-          type: object
   FamilyPhoto:
     title: FamilyPhoto
     required:

@@ -21,10 +21,10 @@ module.exports = function () {
       var hour = 60 * minutes;
       var day = 24 * hour;
       testFormatTime(now - day * 20, now - day * 10,  { remind_text: '活动已结束', start_flag: -1, time_text: '' });
-      testFormatTime(now - day * 20, now + day,  { remind_text: '距离活动结束还有', start_flag: 1, time_text: '23时' });
-      testFormatTime(now + day * 20, now + day *30, { remind_text: '距离活动开始还有', start_flag: 0, time_text: '19天' });
-      testFormatTime(now + hour * 20, now + day, { remind_text: '距离活动开始还有', start_flag: 0, time_text: '19时' });
-      testFormatTime(now + minutes * 20, now + day, { remind_text: '距离活动开始还有', start_flag: 0, time_text: '19分' });
+      testFormatTime(now - day * 20, now + day,  { remind_text: '距离结束', start_flag: 1, time_text: '23时' });
+      testFormatTime(now + day * 20, now + day *30, { remind_text: '距离开始', start_flag: 0, time_text: '19天' });
+      testFormatTime(now + hour * 20, now + day, { remind_text: '距离开始', start_flag: 0, time_text: '19时' });
+      testFormatTime(now + minutes * 20, now + day, { remind_text: '距离开始', start_flag: 0, time_text: '19分' });
     });
     describe('formatRestTime', function () {
 

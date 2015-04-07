@@ -53,8 +53,8 @@ module.exports = function () {
         .expect(200)
         .end(function (err, res) {
           if(err) return done(err);
-          res.body.chatRoomList.should.be.ok;
-          var index = tools.arrayObjectIndexOf(res.body.chatRoomList, data[0].model.id, '_id');
+          res.body.chatroomList.should.be.ok;
+          var index = tools.arrayObjectIndexOf(res.body.chatroomList, data[0].model.id, '_id');
           index.should.be.above(-1);
           done();
         });
@@ -66,8 +66,8 @@ module.exports = function () {
         .expect(200)
         .end(function (err, res) {
           if(err) return done(err);
-          res.body.chatRoomList.should.be.ok;
-          var index = tools.arrayObjectIndexOf(res.body.chatRoomList, data[0].model.id, '_id');
+          res.body.chatroomList.should.be.ok;
+          var index = tools.arrayObjectIndexOf(res.body.chatroomList, data[0].model.id, '_id');
           index.should.equal(-1);
           done();
         });
