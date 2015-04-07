@@ -220,9 +220,12 @@ module.exports = function (app) {
             var unReadStatus = false;
             // var _results = [];
             results.forEach(function (result) {
-              var unread = req.user.isTeamLeader(result.sponsor_team._id) && result.sponsor_unread || req.user.isTeamLeader(result.opposite_team._id) && result.opposite_unread;
+              var isSponsorLeader = req.user.isTeamLeader(result.sponsor_team._id);
+              var isOppsiteLeader =req.user.isTeamLeader(result.opposite_team._id);
+              var unread =  isSponsorLeader && result.sponsor_unread || isOppsiteLeader && result.opposite_unread;
               unReadStatus = unReadStatus || unread;
               result.set('unread',unread,{strict:false});
+              result.set('isSponsor',!isOppsiteLeader && req.user.isTeamMember(result.sponsor_team._id),{strict:false});
             })
             return res.send({'messages':results,'maxPage':pageCount,unReadStatus:unReadStatus});
           }
