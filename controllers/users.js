@@ -409,7 +409,7 @@ module.exports = function (app) {
       }else{
         // 用户取来通讯录用及获取公司成员用
         // 获取常用的几个属性，尽管前端可能只需要其中的一部分
-        outputOptions = {'email':1, 'nickname':1, 'photo': 1};
+        outputOptions = {'email':1, 'nickname':1, 'photo': 1, 'realname': 1};
       }
       var pageNum = 10;
       var limitNum=0,
