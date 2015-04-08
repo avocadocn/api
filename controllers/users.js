@@ -406,8 +406,10 @@ module.exports = function (app) {
       }
       else if(req.user.cid.toString() !== req.params.companyId){
         return res.sendStatus(403);
-      }else{//用户取来通讯录用
-        outputOptions = {'email':1,'nickname':1};
+      }else{
+        // 用户取来通讯录用及获取公司成员用
+        // 获取常用的几个属性，尽管前端可能只需要其中的一部分
+        outputOptions = {'email':1, 'nickname':1, 'photo': 1};
       }
       var pageNum = 10;
       var limitNum=0,
