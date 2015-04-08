@@ -218,9 +218,16 @@ module.exports = function (app) {
         homeCourts: team.home_court,
         cid: team.cid,
         familyPhotos: familyPhotos,
-        score: team.score,
         officialTeam: team.poster.role=='Personal' ? false : true
       };
+      if(team.score_rank && team.score_rank.rank) {
+        var totalCompNum = team.score_rank.lose + team.score_rank.tie + team.score_rank.win ;
+        var odds_percent = team.score_rank.win ? Math.floor(team.score_rank.win/totalCompNum*100) :0;
+        briefTeam.rank =team.score_rank.rank;
+        briefTeam.odds_percent =odds_percent;
+        briefTeam.score =team.score_rank.score;//战绩积分
+        briefTeam.activity_score=team.score.total; //活跃度积分
+      }
       if(team.poster.role=='Personal') {
         briefTeam.poster = {
           _id:team.poster._id._id,
