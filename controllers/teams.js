@@ -1139,8 +1139,8 @@ module.exports = function (app) {
               formatTeams.push({
                 "_id":team._id,
                 "cid":team.cid,
-                "cname":team.name,
-                "name":team.cname,
+                "name":team.name,
+                "cname":team.cname,
                 "logo":team.logo,
                 "rank":team.score_rank.rank,
                 "odds_percent": odds_percent, 
