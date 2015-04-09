@@ -6,8 +6,8 @@ var app = require('../../../config/express.js'),
 var dataService = require('../../create_data');
 
 module.exports = function() {
-  describe('get /components/ScoreBoard/:componentId', function() {
-    describe('用户获取比分', function() {
+  describe('get /components/ScoreBoard/logs/:componentId', function() {
+    describe('用户获取比分记录', function() {
       var accessToken;
       var data;
       before(function (done) {
@@ -27,22 +27,22 @@ module.exports = function() {
           });
 
       });
-      it('应该成功获取比分', function(done) {
+      it('应该成功获取比分记录', function(done) {
         var campaign = data[2].teams[1].campaigns[0];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
-        request.get('/components/ScoreBoard/' + scoreBoardId)
+        request.get('/components/ScoreBoard/logs/' + scoreBoardId)
           .set('x-access-token', accessToken)
           .expect(200)
           .end(function(err, res) {
             if (err) return done(err);
-            res.body.should.be.instanceof(Object);
+            res.body.should.be.instanceof(Array).and.have.lengthOf(0);
             done();
           });
       });
-      it('获取没有权限的比分应该返回403', function(done) {
+      it('获取没有权限的比分记录应该返回403', function(done) {
         var campaign = data[1].teams[1].campaigns[0];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
-        request.get('/components/ScoreBoard/' + scoreBoardId)
+        request.get('/components/ScoreBoard/logs/' + scoreBoardId)
           .set('x-access-token', accessToken)
           .expect(403)
           .end(function(err, res) {
@@ -51,8 +51,8 @@ module.exports = function() {
             done();
           });
       });
-      it('获取不正确id的比分应该返回403', function(done) {
-        request.get('/components/ScoreBoard/111')
+      it('获取不正确id的比分记录应该返回403', function(done) {
+        request.get('/components/ScoreBoard/logs/111')
           .set('x-access-token', accessToken)
           .expect(400)
           .end(function(err, res) {
@@ -62,7 +62,7 @@ module.exports = function() {
           });
       });
     });
-    describe('hr获取比分', function() {
+    describe('hr获取比分记录', function() {
       var hrAccessToken;
       var data;
       before(function (done) {
@@ -82,22 +82,22 @@ module.exports = function() {
           });
 
       });
-      it('应该成功获取比分', function(done) {
+      it('应该成功获取比分记录', function(done) {
         var campaign = data[2].teams[1].campaigns[0];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
-        request.get('/components/ScoreBoard/' + scoreBoardId)
+        request.get('/components/ScoreBoard/logs/' + scoreBoardId)
           .set('x-access-token', hrAccessToken)
           .expect(200)
           .end(function(err, res) {
             if (err) return done(err);
-            res.body.should.be.instanceof(Object);
+            res.body.should.be.instanceof(Array).and.have.lengthOf(0);
             done();
           });
       });
-      it('获取没有权限的比分应该返回403', function(done) {
+      it('获取没有权限的比分记录应该返回403', function(done) {
         var campaign = data[1].teams[1].campaigns[0];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
-        request.get('/components/ScoreBoard/' + scoreBoardId)
+        request.get('/components/ScoreBoard/logs/' + scoreBoardId)
           .set('x-access-token', hrAccessToken)
           .expect(403)
           .end(function(err, res) {
@@ -106,8 +106,8 @@ module.exports = function() {
             done();
           });
       });
-      it('获取不正确id的比分应该返回403', function(done) {
-        request.get('/components/ScoreBoard/111')
+      it('获取不正确id的比分记录应该返回403', function(done) {
+        request.get('/components/ScoreBoard/logs/111')
           .set('x-access-token', hrAccessToken)
           .expect(400)
           .end(function(err, res) {

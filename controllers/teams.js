@@ -1126,6 +1126,8 @@ module.exports = function (app) {
           options['home_court.loc'] = {'$nearSphere':[longitude,latitude]};
           break;
         case 'search':
+          if(req.query.key=='')
+            return res.status(400).send({msg:'搜索内容不能为空！'});
           var regx = new RegExp(req.query.key);
           options['$or'] =[{'_id':{'$in':req.tids}},{'name':regx}];
           break;
@@ -1135,6 +1137,7 @@ module.exports = function (app) {
       CompanyGroup.paginate(options, page, perPageNum, function(err, pageCount, results, itemCount) {
         if(err){
           log(err);
+          console.log(err);
           res.status(500).send({msg:err});
         }
         else{
