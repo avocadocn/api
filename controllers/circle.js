@@ -405,7 +405,8 @@ module.exports = function(app) {
               }, {
                 _id: 1,
                 nickname: 1,
-                photo: 1
+                photo: 1,
+                cid: 1
               }).exec()
               .then(function(users) {
 
@@ -2003,7 +2004,8 @@ function addInfoToCircleContent(contentDocs, callback) {
     }, {
       _id: 1,
       nickname: 1,
-      photo: 1
+      photo: 1,
+      cid: 1
     }).exec();
 
   })
