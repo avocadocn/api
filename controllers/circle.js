@@ -969,7 +969,8 @@ module.exports = function(app) {
           resComment.poster = {
             _id: req.user._id,
             nickname: req.user.nickname,
-            photo: req.user.photo
+            photo: req.user.photo,
+            cid: req.user.cid
           };
 
           // res.send({ circleComment: resComment });
@@ -998,7 +999,8 @@ module.exports = function(app) {
             User.findById(resComment.target_user_id, {
                 _id: 1,
                 nickname: 1,
-                photo: 1
+                photo: 1,
+                cid: 1
               }).exec()
               .then(function(user) {
                 if (!user) {
