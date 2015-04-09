@@ -1246,17 +1246,31 @@ module.exports = function (app) {
       var page = req.query.page > 0? req.query.page:1;
       if(req.user.isTeamMember(fromTeamId) || req.user.isTeamMember(targetTeamId)) {
         var options = {
-          'playing_teams.tid':  { $all:[ fromTeamId, targetTeamId ]}
+          'tid':  { $all:[ fromTeamId, targetTeamId ]},
+          'end_time': {$lt: Date.now()}
         };
-        ScoreBoard.paginate(options, page, perPageNum, function(err, pageCount, results, itemCount) {
+        Campaign.paginate(options, page, perPageNum, function(err, pageCount, results, itemCount) {
           if(err){
             log(err);
             res.status(500).send({msg:err});
           }
           else{
-            return res.send({'competitions':results,'maxPage':pageCount});
+            var competitions = [];
+            for (var i = results.length - 1; i >= 0; i--) {
+              var competition = {
+                '_id' : results[i]._id,
+                'theme' : results[i].theme,
+                'members_count' : results[i].members.length,
+                'location' : {name : results[i].location.name},
+                'start_time' : results[i].start_time,
+                'campaign_unit' : results[i].campaign_unit,
+                'campaign_type' : results[i].campaign_type
+              };
+              competitions.push(competition);
+            };
+            return res.send({'competitions':competitions,'maxPage':pageCount});
           }
-        },{columns:{'playing_teams':1,'status':1,'create_date':1}, sortBy:{'create_date':-1}});
+        },{columns:{'campaign_unit':1,'theme':1,'start_time':1, 'location':1, 'campaign_type':1}, sortBy:{'start_time':-1}});
       }
       else{
         res.status(403).send({msg:'您没有权限获取该信息！'});
@@ -1265,22 +1279,36 @@ module.exports = function (app) {
     getCompetitionOfCompanyWithTeam: function  (req, res) {
       var targetTeam = req.companyGroup;
       var cid = req.user.cid || req.user._id;
-      console.log(targetTeam.cid ,cid);
       if(targetTeam.cid.toString() ===cid.toString())
         return res.status(400).send({msg:'不能获取本公司的小队与公司间的比赛'});
       var page = req.query.page > 0? req.query.page:1;
       var options = {
-        'owner.companies': { $all:[ cid, targetTeam.cid ]}
+        'cid': { $all:[ cid, targetTeam.cid ]},
+        'tid': targetTeam._id,
+        'end_time': {$lt: Date.now()}
       };
-      ScoreBoard.paginate(options, page, perPageNum, function(err, pageCount, results, itemCount) {
+      Campaign.paginate(options, page, perPageNum, function(err, pageCount, results, itemCount) {
         if(err){
           log(err);
           res.status(500).send({msg:err});
         }
         else{
-          return res.send({'competitions':results,'maxPage':pageCount});
+          var competitions = [];
+          for (var i = results.length - 1; i >= 0; i--) {
+            var competition = {
+              '_id' : results[i]._id,
+              'theme' : results[i].theme,
+              'members_count' : results[i].members.length,
+              'location' : {name : results[i].location.name},
+              'start_time' : results[i].start_time,
+              'campaign_unit' : results[i].campaign_unit,
+              'campaign_type' : results[i].campaign_type
+            };
+            competitions.push(competition);
+          }
+          return res.send({'competitions':competitions,'maxPage':pageCount});
         }
-      },{columns:{'playing_teams':1,'status':1,'create_date':1}, sortBy:{'create_date':-1}});
+      },{columns:{'campaign_unit':1,'theme':1,'start_time':1, 'location':1, 'campaign_type':1}, sortBy:{'start_time':-1}});
     },
     // todo
     getCampaigns: {
