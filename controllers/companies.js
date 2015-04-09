@@ -362,7 +362,7 @@ module.exports = function (app) {
       if (!req.params.companyId) {
         return res.status(400).send({ msg: '缺少companyId' });
       }
-
+      
       Company.findById(req.params.companyId).exec()
         .then(function (company) {
           if (!company) {
@@ -714,7 +714,8 @@ module.exports = function (app) {
             brief: companyGroups[i].brief,
             score: companyGroups[i].score,
             count: companyGroups[i].count,
-            memberCount: companyGroups[i].member.length
+            memberCount: companyGroups[i].member.length,
+            leader: companyGroups[i].leader
           };
           if(req.query.target=='department'){
             briefTeam.did = companyGroups[i].department;
