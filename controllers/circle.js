@@ -560,213 +560,223 @@ module.exports = function(app) {
               msg: '未找到该用户的精彩瞬间数据'
             });
           } else {
-            /**
-             * 响应返回数据，形式为：
-             *  [{
-             *    content: contentDoc,
-             *    comments: [commentDoc]
-             *  }]
-             */
-            var resData = [];
-
-            // 转换为简单对象，以解除mongoose文档的约束，便于修改属性写入响应
-            var docToObject = function(doc) {
-              return doc.toObject();
-            };
-
-            var contents = contentDocs.map(docToObject);
-
-            var contentIdsForQuery = contents.map(function(content) {
-              return content._id;
+            addInfoToCircleContent(contentDocs, function(err, resContents) {
+              if (err) {
+                next(err);
+              }
+              else {
+                res.send(resContents);
+              }
             });
-            var userIdsForQuery = []; // 元素为String类型
-            var teamIdsForQuery = []; //
-            var campaignIdsForQuery = [];
-            // 向用户id数组不重复地添加用户id
-            // var pushUserIdToUniqueArray = function(userId, array) {
-            //   var resultIndex = array.indexOf(userId);
+            //- 注：之前让个人的精彩瞬间显示活动对应的小队和公司信息，现在不需要，暂且注释，待需求稳定后移除注释代码
+
+            // /**
+            //  * 响应返回数据，形式为：
+            //  *  [{
+            //  *    content: contentDoc,
+            //  *    comments: [commentDoc]
+            //  *  }]
+            //  */
+            // var resData = [];
+
+            // // 转换为简单对象，以解除mongoose文档的约束，便于修改属性写入响应
+            // var docToObject = function(doc) {
+            //   return doc.toObject();
+            // };
+
+            // var contents = contentDocs.map(docToObject);
+
+            // var contentIdsForQuery = contents.map(function(content) {
+            //   return content._id;
+            // });
+            // var userIdsForQuery = []; // 元素为String类型
+            // var teamIdsForQuery = []; //
+            // var campaignIdsForQuery = [];
+            // // 向用户id数组不重复地添加用户id
+            // // var pushUserIdToUniqueArray = function(userId, array) {
+            // //   var resultIndex = array.indexOf(userId);
+            // //   if (resultIndex === -1) {
+            // //     array.push(userId.toString());
+            // //   }
+            // // };
+
+            // // var pushTeamIdToUniqueArray = function(teamId, array) {
+            // //   if (teamId) {
+            // //     var resultIndex = array.indexOf(teamId);
+            // //     if (resultIndex === -1) {
+            // //       array.push(teamId.toString());
+            // //     }
+            // //   }
+            // // }
+
+            // var pushIdToUniqueArray = function(id, array) {
+            //   if (id === undefined || id === null) {
+            //     return;
+            //   }
+            //   var stringId = id.toString();
+            //   var resultIndex = array.indexOf(stringId);
             //   if (resultIndex === -1) {
-            //     array.push(userId.toString());
+            //     array.push(stringId);
             //   }
             // };
 
-            // var pushTeamIdToUniqueArray = function(teamId, array) {
-            //   if (teamId) {
-            //     var resultIndex = array.indexOf(teamId);
-            //     if (resultIndex === -1) {
-            //       array.push(teamId.toString());
+            // contents.forEach(function(content) {
+            //   pushIdToUniqueArray(content.post_user_id, userIdsForQuery);
+            //   pushIdToUniqueArray(content.post_user_tid, teamIdsForQuery);
+            //   pushIdToUniqueArray(content.campaign_id, campaignIdsForQuery);
+            // });
+
+            // async.parallel([
+            //     function(callback) {
+            //       Company.findById(req.user.cid, 'info.name info.logo', function(err, companyDoc) {
+            //         if (err) {
+            //           log(err);
+            //         }
+            //         callback(err, companyDoc);
+            //       });
+            //     },
+            //     function(callback) {
+            //       if (teamIdsForQuery.length) {
+            //         CompanyGroup.find({
+            //           _id: {
+            //             $in: teamIdsForQuery
+            //           }
+            //         }, 'name logo', function(err, teamDocs) {
+            //           if (err) {
+            //             log(err);
+            //           }
+            //           callback(err, teamDocs);
+            //         })
+            //       } else {
+            //         callback(null, []);
+            //       }
+            //     },
+            //     function(callback) {
+            //       CircleComment.find({
+            //           target_content_id: {
+            //             $in: contentIdsForQuery
+            //           },
+            //           status: 'show'
+            //         }).sort('+post_date').exec()
+            //         .then(function(commentDocs) {
+            //           var comments = commentDocs.map(docToObject);
+
+            //           comments.forEach(function(comment) {
+            //             pushIdToUniqueArray(comment.post_user_id, userIdsForQuery);
+            //             pushIdToUniqueArray(comment.target_user_id, userIdsForQuery);
+            //           });
+
+            //           User.find({
+            //               _id: {
+            //                 $in: userIdsForQuery
+            //               }
+            //             }, {
+            //               _id: 1,
+            //               nickname: 1,
+            //               photo: 1
+            //             }).exec()
+            //             .then(function(users) {
+
+            //               // 向CircleContent和CircleComment对象添加发布者的详细信息
+            //               var addPosterInfoToObj = function(obj) {
+            //                 for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+            //                   if (users[i]._id.toString() === obj.post_user_id.toString()) {
+            //                     obj.poster = users[i];
+            //                     break;
+            //                   }
+            //                 }
+            //               };
+
+            //               var addTargetInfoToComment = function(comment) {
+            //                 for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+            //                   if (users[i]._id.toString() === comment.target_user_id.toString()) {
+            //                     comment.target = users[i];
+            //                     break;
+            //                   }
+            //                 }
+            //               };
+
+            //               comments.forEach(function(comment) {
+            //                 addPosterInfoToObj(comment);
+            //                 addTargetInfoToComment(comment);
+            //               });
+            //               callback(null, comments);
+            //             })
+            //             .then(null, function(err) {
+            //               log(err);
+            //               callback(err);
+            //             });
+            //         })
+            //         .then(null, function(err) {
+            //           callback(err);
+            //         })
+            //     },
+            //     function(callback) {
+            //       Campaign.find({
+            //         _id: {
+            //           $in: campaignIdsForQuery
+            //         }
+            //       }, {
+            //         _id: 1,
+            //         theme: 1
+            //       }, function(err, campaignDocs) {
+            //         if (err) {
+            //           log(err);
+            //           callback(err);
+            //         } else {
+            //           callback(null, campaignDocs);
+            //         }
+            //       });
             //     }
-            //   }
-            // }
+            //   ],
+            //   // optional callback
+            //   function(err, results) {
+            //     if (err) {
+            //       log(err);
+            //       return res.sendStatus(500);
+            //     } else {
+            //       var addTeamInfoToObj = function(obj) {
+            //         var teams = results[1];
+            //         for (var i = 0, teamsLen = teams.length; i < teamsLen; i++) {
+            //           if (obj.post_user_tid && teams[i]._id.toString() === obj.post_user_tid.toString()) {
+            //             obj.teamInfo = teams[i];
+            //             break;
+            //           }
+            //         }
+            //       };
 
-            var pushIdToUniqueArray = function(id, array) {
-              if (id === undefined || id === null) {
-                return;
-              }
-              var stringId = id.toString();
-              var resultIndex = array.indexOf(stringId);
-              if (resultIndex === -1) {
-                array.push(stringId);
-              }
-            };
+            //       var addCompanyInfoToObj = function(obj) {
+            //         obj.companyInfo = results[0];
+            //       };
 
-            contents.forEach(function(content) {
-              pushIdToUniqueArray(content.post_user_id, userIdsForQuery);
-              pushIdToUniqueArray(content.post_user_tid, teamIdsForQuery);
-              pushIdToUniqueArray(content.campaign_id, campaignIdsForQuery);
-            });
+            //       var addCampaignInfoToObj = function(obj) {
+            //         var campaigns = results[3];
+            //         for (var i = 0, campaignsLen = campaigns.length; i < campaignsLen; i++) {
+            //           if (obj.campaign_id && campaigns[i].id === obj.campaign_id.toString()) {
+            //             obj.campaignTheme = campaigns[i].theme;
+            //             break;
+            //           }
+            //         }
+            //       };
 
-            async.parallel([
-                function(callback) {
-                  Company.findById(req.user.cid, 'info.name info.logo', function(err, companyDoc) {
-                    if (err) {
-                      log(err);
-                    }
-                    callback(err, companyDoc);
-                  });
-                },
-                function(callback) {
-                  if (teamIdsForQuery.length) {
-                    CompanyGroup.find({
-                      _id: {
-                        $in: teamIdsForQuery
-                      }
-                    }, 'name logo', function(err, teamDocs) {
-                      if (err) {
-                        log(err);
-                      }
-                      callback(err, teamDocs);
-                    })
-                  } else {
-                    callback(null, []);
-                  }
-                },
-                function(callback) {
-                  CircleComment.find({
-                      target_content_id: {
-                        $in: contentIdsForQuery
-                      },
-                      status: 'show'
-                    }).sort('+post_date').exec()
-                    .then(function(commentDocs) {
-                      var comments = commentDocs.map(docToObject);
+            //       var comments = results[2];
+            //       contents.forEach(function(content) {
+            //         addTeamInfoToObj(content);
+            //         addCompanyInfoToObj(content);
+            //         addCampaignInfoToObj(content);
+            //         // 将comments添加到对应的contents中
+            //         var contentComments = comments.filter(function(comment) {
+            //           return comment.target_content_id.toString() === content._id.toString();
+            //         });
 
-                      comments.forEach(function(comment) {
-                        pushIdToUniqueArray(comment.post_user_id, userIdsForQuery);
-                        pushIdToUniqueArray(comment.target_user_id, userIdsForQuery);
-                      });
-
-                      User.find({
-                          _id: {
-                            $in: userIdsForQuery
-                          }
-                        }, {
-                          _id: 1,
-                          nickname: 1,
-                          photo: 1
-                        }).exec()
-                        .then(function(users) {
-
-                          // 向CircleContent和CircleComment对象添加发布者的详细信息
-                          var addPosterInfoToObj = function(obj) {
-                            for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-                              if (users[i]._id.toString() === obj.post_user_id.toString()) {
-                                obj.poster = users[i];
-                                break;
-                              }
-                            }
-                          };
-
-                          var addTargetInfoToComment = function(comment) {
-                            for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-                              if (users[i]._id.toString() === comment.target_user_id.toString()) {
-                                comment.target = users[i];
-                                break;
-                              }
-                            }
-                          };
-
-                          comments.forEach(function(comment) {
-                            addPosterInfoToObj(comment);
-                            addTargetInfoToComment(comment);
-                          });
-                          callback(null, comments);
-                        })
-                        .then(null, function(err) {
-                          log(err);
-                          callback(err);
-                        });
-                    })
-                    .then(null, function(err) {
-                      callback(err);
-                    })
-                },
-                function(callback) {
-                  Campaign.find({
-                    _id: {
-                      $in: campaignIdsForQuery
-                    }
-                  }, {
-                    _id: 1,
-                    theme: 1
-                  }, function(err, campaignDocs) {
-                    if (err) {
-                      log(err);
-                      callback(err);
-                    } else {
-                      callback(null, campaignDocs);
-                    }
-                  });
-                }
-              ],
-              // optional callback
-              function(err, results) {
-                if (err) {
-                  log(err);
-                  return res.sendStatus(500);
-                } else {
-                  var addTeamInfoToObj = function(obj) {
-                    var teams = results[1];
-                    for (var i = 0, teamsLen = teams.length; i < teamsLen; i++) {
-                      if (obj.post_user_tid && teams[i]._id.toString() === obj.post_user_tid.toString()) {
-                        obj.teamInfo = teams[i];
-                        break;
-                      }
-                    }
-                  };
-
-                  var addCompanyInfoToObj = function(obj) {
-                    obj.companyInfo = results[0];
-                  };
-
-                  var addCampaignInfoToObj = function(obj) {
-                    var campaigns = results[3];
-                    for (var i = 0, campaignsLen = campaigns.length; i < campaignsLen; i++) {
-                      if (obj.campaign_id && campaigns[i].id === obj.campaign_id.toString()) {
-                        obj.campaignTheme = campaigns[i].theme;
-                        break;
-                      }
-                    }
-                  };
-
-                  var comments = results[2];
-                  contents.forEach(function(content) {
-                    addTeamInfoToObj(content);
-                    addCompanyInfoToObj(content);
-                    addCampaignInfoToObj(content);
-                    // 将comments添加到对应的contents中
-                    var contentComments = comments.filter(function(comment) {
-                      return comment.target_content_id.toString() === content._id.toString();
-                    });
-
-                    resData.push({
-                      content: content,
-                      comments: contentComments
-                    });
-                  });
-                  res.send(resData);
-                }
-              });
+            //         resData.push({
+            //           content: content,
+            //           comments: contentComments
+            //         });
+            //       });
+            //       res.send(resData);
+            //     }
+            //   });
           }
         })
         .then(null, function(err) {
