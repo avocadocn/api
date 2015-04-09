@@ -362,7 +362,7 @@ module.exports = function (app) {
       if (!req.params.companyId) {
         return res.status(400).send({ msg: '缺少companyId' });
       }
-      
+
       Company.findById(req.params.companyId).exec()
         .then(function (company) {
           if (!company) {
@@ -407,7 +407,8 @@ module.exports = function (app) {
                 memberNumber: company.info.membernumber,
                 companyInviteCodes: company.register_invite_code,
                 staffInviteCode: company.invite_key,
-                inviteUrl: inviteUrl
+                inviteUrl: inviteUrl,
+                intro: company.info.brief
               });
               break;
             case 'member':
