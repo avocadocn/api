@@ -408,7 +408,8 @@ module.exports = function (app) {
                 companyInviteCodes: company.register_invite_code,
                 staffInviteCode: company.invite_key,
                 inviteUrl: inviteUrl,
-                intro: company.info.brief
+                intro: company.info.brief,
+                cover: company.info.cover
               });
               break;
             case 'member':
@@ -560,6 +561,33 @@ module.exports = function (app) {
           } else {
             res.sendStatus(500);
           }
+        }
+      });
+    },
+    updateCompanyCover: function(req, res) {
+      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
+        return res.status(400).send({
+          msg: '请求数据错误'
+        });
+      }
+      uploader.uploadImg(req, {
+        fieldName: 'cover',
+        targetDir: '/public/img/company/cover',
+        success: function(url, oriName) {
+          var companyCoverUrl = path.join('/img/company/logo', url);
+          Company.findByIdAndUpdate(req.company.id, {
+            'info.cover': companyCoverUrl
+          }, function(err) {
+            if(err) {
+              res.sendStatus(500);
+            } else {
+              res.sendStatus(200);
+            }
+          });
+        },
+        error: function(err) {
+          console.log(err);
+          res.sendStatus(500);
         }
       });
     },

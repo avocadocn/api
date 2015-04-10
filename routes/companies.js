@@ -9,7 +9,8 @@ module.exports = function (app, ctrl) {
 
   app.get('/companies/:companyId', token.needToken, ctrl.getCompany);
   app.put('/companies/:companyId', token.needToken, ctrl.getCompanyById, ctrl.updateCompanyValidate, ctrl.updateCompanyLogo, ctrl.updateCompany);
-
+  app.put('/companies/:companyId/companyCover', token.needToken, ctrl.getCompanyById, ctrl.updateCompanyCover);
+  
   app.post('/companies/validate', ctrl.companyInfoValidate);
   app.post('/companies/forgetPassword', ctrl.forgetPassword);
   app.get('/companies/:companyId/undisposed', token.needToken, ctrl.getCompanyUndisposed);

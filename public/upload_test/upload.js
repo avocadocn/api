@@ -212,4 +212,29 @@
 
   })();
 
+  (function () {
+
+    var CompanyCoverPhotoTestEle = $('#CompanyCoverPhotoTest');
+    var submit = CompanyCoverPhotoTestEle.find('.js_submit');
+    var companyId = CompanyCoverPhotoTestEle.find('.js_companyId');
+    submit.click(function () {
+      var fd = new FormData($('#CompanyCoverPhotoForm')[0]);
+      $.ajax({
+        url: baseUrl + '/companies/' + companyId + '/companyCover',
+        type: 'PUT',
+        data: fd,
+        processData: false,
+        contentType: false,
+        headers: getCommonHeaders(),
+        success: function (data, status) {
+          alert('success');
+          console.log(data, status);
+        },
+        error: function (data, status) {
+          console.log(data, status);
+        }
+      });
+    });
+
+  })();
 })(jQuery);
