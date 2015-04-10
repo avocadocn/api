@@ -463,9 +463,9 @@ module.exports = function (app) {
         var homecourts = req.body.homeCourts || [];
         for(var i=homecourts.length-1; i>=0; i--) {
           var homecourt = homecourts[i];
-          homecourts[i].loc.coordinates = homecourts[i].coordinates;
+          homecourts[i].loc = {coordinates: homecourts[i].coordinates || homecourts[i].loc.coordinates}; // 可能未修改。。。格式仍与原来同。
           homecourts[i].coordinates = null;
-          if (!homecourt.name || !homecourt.loc || !homecourt.loc.coordinates || homecourt.loc.coordinates.length === 0) {
+          if (!homecourts[i].name || !homecourts[i].loc || !homecourts[i].loc.coordinates || homecourts[i].loc.coordinates.length === 0) {
             homecourts.splice(i,1);
           }
         }
