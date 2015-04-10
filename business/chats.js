@@ -16,28 +16,20 @@ exports.createChat = function (param,callback) {
   }
   if(param.chatType) {
     var chatType = param.chatType;
-    switch(chatType) {
-      case 2:
-        chat.chat_type = chatType;
-        if(param.recommendTeamId) {
-          chat.recommend_team = param.recommendTeamId;
-        }
-        break;
-      case 3:
-      case 4:
-      case 5:
-      case 6:
-        chat.chat_type = chatType;
-        if(param.competitionMessageId) {
-          chat.competition_message = param.competitionMessageId;
-        }
-        //挑战提醒类型的发送方为小队
-        chat.poster_team = param.posterTeam._id;
-        break;
-      default:
-        chat.chat_type = 1;
-        break;
+    chat.chat_type = chatType ;
+    if(chatType>2) {
+      if(param.competitionMessageId) {
+        chat.competition_message = param.competitionMessageId;
+      }
+      //挑战提醒类型的发送方为小队
+      chat.poster_team = param.posterTeam._id;
     }
+  }
+  if(param.competition_type) {
+    chat.competition_type = param.competition_type;
+  }
+  if(param.opponent_team) {
+    chat.opponent_team = param.opponent_team._id;
   }
   chat.save(function (err) {
     if (err) {
@@ -69,7 +61,8 @@ exports.createChat = function (param,callback) {
             'create_date': chat.create_date,
             'content': chat.content,
             'randomId': param.randomId,
-            'chat_type': chat.chat_type
+            'chat_type': chat.chat_type,
+            'comptition_type': chat.comptition_type
           };
           if(param.user) {
             socketChat.poster = {
@@ -87,6 +80,14 @@ exports.createChat = function (param,callback) {
           }
           if(chat.photos) {
             socketChat.photos = chat.photos;
+          }
+          if(chat.opponent_team) {
+            socketChat.opponent_team = {
+              '_id' : param.opponent_team._id,
+              'logo' : param.opponent_team.logo,
+              'name' : param.opponent_team.name,
+              'cname' : param.opponent_team.cname
+            }
           }
           socketClient.pushChat(chat.chatroom_id, socketChat, userIds);
         }

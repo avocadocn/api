@@ -13,7 +13,8 @@ var Chat = new Schema({
     enum:[1,2,3,4,5,6],//1:'normal',2:'recommend_team',3:'send_competition',4:'receive_competition',5:'accept_competition',6:'accepted_competition'
     default: 1
   },
-  recommend_team:{
+  competition_type: Number,     //类型，1为挑战，2为联谊 与competition_message相同
+  opponent_team:{ //对方小队->推荐小队、挑战相关的小队.
     type: Schema.Types.ObjectId,
     ref: 'CompanyGroup'
   },

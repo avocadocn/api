@@ -114,14 +114,16 @@ module.exports = function (app) {
     },
     //创建新挑战信
     createMessage : function (req, res) {
+      var sponsor = req.teams[0]._id.toString() === req.body.sponsor ? req.teams[0]:req.teams[1];
+      var opposite = req.teams[0]._id.toString() === req.body.sponsor ? req.teams[1]:req.teams[0];
       var message = new CompetitionMessage({
         sponsor_team: req.body.sponsor,
-        sponsor_cid: req.teams[0]._id.toString() === req.body.sponsor ? req.teams[0].cid:req.teams[1].cid,
+        sponsor_cid: sponsor.cid,
         opposite_team: req.body.opposite,
-        opposite_cid: req.teams[0]._id.toString() === req.body.sponsor ? req.teams[1].cid:req.teams[0].cid,
+        opposite_cid: opposite.cid,
         competition_type: req.body.type,
         content: req.body.content,
-        campaign_mold: req.teams[0].group_type,
+        campaign_mold: sponsor.group_type,
         opposite_unread: true
       });
       Vote.establish(message, function (err, vote) {
@@ -141,14 +143,18 @@ module.exports = function (app) {
               chatType: 3,
               competitionMessageId:message._id,
               randomId: Math.floor(Math.random()*100),
-              posterTeam: req.teams[0]
+              posterTeam: sponsor,
+              competition_type: message.competition_type,
+              opponent_team: opposite,
             });
             chatsBusiness.createChat({
               chatroomId: message.opposite_team,
               chatType: 4,
               competitionMessageId:message._id,
               randomId:  Math.floor(Math.random()*100),
-              posterTeam: req.teams[1]
+              posterTeam: opposite,
+              competition_type: message.competition_type,
+              opponent_team: sponsor
             });
             res.status(200).send({msg: '挑战信发送成功'});
             //发给对方队长
@@ -327,15 +333,17 @@ module.exports = function (app) {
               chatroomId: req.message.opposite_team._id,
               chatType: 5,
               competitionMessageId:req.message._id,
-              randomId:  Math.floor(Math.random()*100),
-              posterTeam: req.message.opposite_team
+              posterTeam: req.message.opposite_team,
+              competition_type: req.message.competition_type,
+              opponent_team: req.message.sponsor_team
             });
             chatsBusiness.createChat({
               chatroomId: req.message.sponsor_team._id,
               chatType: 6,
               competitionMessageId:req.message._id,
-              randomId:  Math.floor(Math.random()*100),
-              posterTeam: req.message.sponsor_team
+              posterTeam: req.message.sponsor_team,
+              competition_type: req.message.competition_type,
+              opponent_team: req.message.opposite_team
             });
           }
           return res.status(200).send({msg:'处理成功'});

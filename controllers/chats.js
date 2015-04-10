@@ -80,19 +80,34 @@ module.exports = function (app) {
       });
 
     },
+    searchRecommandTeam: function(req, res, next) {
+      if(req.body.recommendTeamId) {
+        CompanyGroup.findById(req.body.recommendTeamId, function(err, recommandTeam) {
+          if(err) {
+            log(err);
+            return res.status(500).send({msg: '聊天保存失败'});
+          } else {
+            req.recommandTeam = recommandTeam;
+          }
+        });
+      }else {
+        next();
+      }
+    },
+    //发聊天+推荐小队
     createChat: function (req, res) {
       if (!req.photo && !req.body.content) {
         return res.status(422).send({msg: '未填写内容'});
       }
-      var param ={
+      var param = {
         chatroomId: req.params.chatroomId,
         content: req.body.content,
         chatType: req.body.chatType,
         photo: req.photo,
-        recommendTeamId:req.body.recommendTeamId,
+        opponent_team: req.recommandTeam,
         randomId: req.body.randomId  || req.randomId,
         user: req.user
-      }
+      };
       chatsBusiness.createChat(param,function (err, chat) {
         if(err) {
           log(err)
@@ -150,7 +165,11 @@ module.exports = function (app) {
         .sort('-create_date -_id')
         .limit(pageSize + 1)
         // .populate([{'path':'poster', 'select':{nickname:1, photo:1}},{'path':'competition_message'}])
-        .populate([{'path':'poster', 'select':{nickname:1, photo:1}},{'path':'poster_team', 'select':{name:1, logo:1}}])
+        .populate([
+          {'path':'poster', 'select':{nickname:1, photo:1}},
+          {'path':'poster_team', 'select':{name:1, logo:1}},
+          {'path': 'opponent_team', 'select':{name:1, logo:1, cname:1}}
+        ])
         .exec()
         .then(function (chats) {
           var resData = {
