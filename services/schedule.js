@@ -110,8 +110,7 @@ var teamRank = exports.teamRank =function(){
             groups.forEach(function(group){
               //虚拟组不计算
               if(group._id!="0"){
-                CompanyGroup.find({'city.province':region.name,'city.city': city.name,gid:group._id}).sort('-score_rank.score -score.total -score.win_percent -score.campaign -score.member').exec(function (err,teams) {
-                
+                CompanyGroup.find({'active':true,'city.province':region.name,'city.city': city.name,gid:group._id}).sort('-score_rank.score -score.total -score.win_percent -score.campaign -score.member').exec(function (err,teams) {
                   var rank = new Rank();
                   rank.group_type ={
                     _id:group._id,
