@@ -426,7 +426,8 @@ module.exports = function (app) {
                 address: company.info.address,
                 email: company.info.email,
                 memberNumber: company.info.membernumber,
-                staffInviteCode: company.invite_key
+                staffInviteCode: company.invite_key,
+                intro: company.info.brief
               });
               break;
             default:
@@ -440,7 +441,8 @@ module.exports = function (app) {
                 district: company.info.city.district,
                 address: company.info.address,
                 email: company.info.email,
-                memberNumber: company.info.membernumber
+                memberNumber: company.info.membernumber,
+                intro: company.info.brief
               });
               break;
           }
@@ -852,6 +854,31 @@ module.exports = function (app) {
           }, function (err, results) {
             mapCallback(err, results);
           });
+          // Campaign.aggregate()
+          //   .match({
+          //     active: true,
+          //     cid: req.user.getCid(),
+          //     start_time: query.start_time
+          //   })
+          //   .unwind('campaign_unit')
+          //   .match({
+          //     'campaign_unit.company': req.user.getCid(),
+          //   })
+          //   .group({
+          //     _id:$_id,
+          //     members: { $addToSet: "$campaign_unit.member" }
+          //   })
+          //   .project({
+          //     count: { $sum: 1 },
+          //     memberCount: { $sum: { $size: "$members" } }
+          //   })
+          //   .exec()
+          //   .then(function (result) {
+          //     mapCallback(null, result);
+          //   })
+          //   .then(null, function (err) {
+          //     mapCallback(err);
+          //   });
 
         }, function (err, results) {
           if (err) {
@@ -860,8 +887,8 @@ module.exports = function (app) {
             // 将结果转换为两个数组
             var campaignCounts = [], memberCounts = [];
             results.forEach(function (result) {
-              campaignCounts.push(result.campaigns[0] ? result.campaigns[0].count : 0);
-              memberCounts.push(result.members[0] ? result.members[0].count : 0);
+              campaignCounts.push(result.count);
+              memberCounts.push(result.memberCount);
             });
             res.send({
               chartsData: {

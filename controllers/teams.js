@@ -871,7 +871,7 @@ module.exports = function (app) {
       });
       var resourceAllow = auth.auth(resourceRole, ['quitTeam'])
       if(!resourceAllow.quitTeam){
-        return res.status(400).send({msg: '未参加此小队'});
+        return res.status(403).send({msg: resourceRole.team==='leader'?'队长无退出小队，请与hr联系':'您没有参加该小队'});
       }
       //对team操作
       var memberIndex = tools.arrayObjectIndexOf(team.member,user._id,'_id');

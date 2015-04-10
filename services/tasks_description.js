@@ -115,7 +115,7 @@ var registeredTasks = {
     }
   },
   quitTeam: {
-    team: ['leader', 'member']
+    team: ['member']
   },
   closeTeam: {
     company: ['hr']

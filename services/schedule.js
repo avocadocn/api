@@ -15,184 +15,90 @@ var tieScore = 1;
 var loseScore = 0;
 var rankLimit = 10;
 //统计所有小组的活动数、人员参与数、评论数、照片从而得出分数
-var teamPoint = exports.teamPoint =function(){
+var teamPoint = function(){
+  var now = new Date();
+  var timeLimit = new Date();
+  timeLimit.setDate(now.getDate()-30);
+  CompanyGroup.find({'active':true}).populate('photo_album_list').exec(function(err,teams){
+    if(err){
+      console.log(err);
+    }
+    else{
+      teams.forEach(function(value){
+        var campaignNum=0;
+        var participatorNum=0;
+        var commentNum = 0;
+        var photoNum = 0;
+        var memberNum = 0;
+        memberNum = value.member.length;
+        //统计小队照片总数
+        for(var i = 0; i < value.photo_album_list.length; i ++){
+          photoNum += value.photo_album_list[i].photo_count;
+        }
+        //使用聚合无法直接算出member，所以暂时放弃
+          // Campaign
+          //   .aggregate()
+          //   .match({'active':true,'tid':value._id,'end_time':{'$lte':now}})
+          //   .project()
+          //   .group({
+          //     _id: {
+          //       active: '$active'
+          //     },
+          //     campaignNum: {'$sum':1},
+          //     participatorNum: {'$sum':{"$size":"$members"}},
+          //     commentNum: {'$sum': "$comment_sum"}
+          //   })
+          //   .exec()
+          //   .then(function (results) {
+          //     value.score = {
+          //       'campaign' : results[0].campaignNum,
+          //       'album' : photoNum,
+          //       'comment' : results[0].commentNum,
+          //       'participator' : results[0].participatorNum,
+          //       'member' : memberNum,
+          //       'total' : results[0].campaignNum * 10 + parseInt(photoNum/5) + parseInt(results[0].commentNum / 20) + results[0].participatorNum + memberNum * 10
+          //     }
+          //     console.log(results)
+          //     console.log(value.score)
+          //     value.save(function(err){
+          //       if(err){
+          //         console.log('TEAM_POINT_FAILED!',err);
+          //       }
+          //     });
+          //   })
+          //   .then(null, function (err) {
+          //     console.log(err);
+          //   });
+
+        //TODO:将所有的已经结束的该小队活动进行统计，效率较低
+        Campaign.find({'active':true,'tid':value._id,'end_time':{'$lte':now}}).exec(function(err,campaigns){
+          campaigns.forEach(function(campaign){
+            campaignNum++;
+            participatorNum+=campaign.members.length;
+            commentNum += campaign.comment_sum;
+          });
+          value.count.total_campaign = campaignNum;
+          value.score = {
+            'campaign' : campaignNum *10,
+            'album' : parseInt(photoNum/5),
+            'comment' : parseInt(commentNum / 20),
+            'participator' : participatorNum,
+            'member' : memberNum * 10,
+            'total' : campaignNum * 10 + parseInt(photoNum/5) + parseInt(commentNum / 20) + participatorNum + memberNum * 10
+          }
+          value.save(function(err){
+            if(err){
+              console.log('TEAM_POINT_FAILED!',err);
+            }
+          });
+        });
+      });
+    }
+  });
+}
+//根据小组积分算排名
+var teamRank = exports.teamRank =function(){
   var now = new Date()
-  // CompanyGroup.find({'active':true}).populate('photo_album_list').exec(function(err,teams){
-  //   if(err){
-  //     console.log(err);
-  //   }
-  //   else{
-  //     async.each(teams,function(value, mapCallback){
-  //       var campaignNum=0;
-  //       var participatorNum=0;
-  //       var commentNum = 0;
-  //       var photoNum = 0;
-  //       var memberNum = 0;
-  //       var score=0;
-  //       memberNum = value.member.length;
-  //       //统计小队照片总数
-  //       for(var i = 0; i < value.photo_album_list.length; i ++){
-  //         photoNum += value.photo_album_list[i].photo_count;
-  //       }
-  //       //使用聚合无法直接算出member，所以暂时放弃
-  //         // Campaign
-  //         //   .aggregate()
-  //         //   .match({'active':true,'tid':value._id,'end_time':{'$lte':now}})
-  //         //   .project()
-  //         //   .group({
-  //         //     _id: {
-  //         //       active: '$active'
-  //         //     },
-  //         //     campaignNum: {'$sum':1},
-  //         //     participatorNum: {'$sum':{"$size":"$members"}},
-  //         //     commentNum: {'$sum': "$comment_sum"}
-  //         //   })
-  //         //   .exec()
-  //         //   .then(function (results) {
-  //         //     value.score = {
-  //         //       'campaign' : results[0].campaignNum,
-  //         //       'album' : photoNum,
-  //         //       'comment' : results[0].commentNum,
-  //         //       'participator' : results[0].participatorNum,
-  //         //       'member' : memberNum,
-  //         //       'total' : results[0].campaignNum * 10 + parseInt(photoNum/5) + parseInt(results[0].commentNum / 20) + results[0].participatorNum + memberNum * 10
-  //         //     }
-  //         //     console.log(results)
-  //         //     console.log(value.score)
-  //         //     value.save(function(err){
-  //         //       if(err){
-  //         //         console.log('TEAM_POINT_FAILED!',err);
-  //         //       }
-  //         //     });
-  //         //   })
-  //         //   .then(null, function (err) {
-  //         //     console.log(err);
-  //         //   });
-  //         async.parallel([
-  //             function(callback){
-  //               //TODO:将所有的已经结束的该小队活动进行统计，效率较低
-  //               Campaign.find({'active':true,'tid':value._id,'end_time':{'$lte':now}}).exec(function(err,campaigns){
-  //                 if (err) {
-  //                   return callback(err);
-  //                 }
-  //                 campaigns.forEach(function(campaign){
-  //                   campaignNum++;
-  //                   participatorNum+=campaign.members.length;
-  //                   commentNum += campaign.comment_sum;
-  //                 });
-  //                 value.count.total_campaign = campaignNum;
-  //                 value.score = {
-  //                   'campaign' : campaignNum *10,
-  //                   'album' : parseInt(photoNum/5),
-  //                   'comment' : parseInt(commentNum / 20),
-  //                   'participator' : participatorNum,
-  //                   'member' : memberNum * 10,
-  //                   'total' : campaignNum * 10 + parseInt(photoNum/5) + parseInt(commentNum / 20) + participatorNum + memberNum * 10
-  //                 }
-  //                 callback(null, 'activity');
-  //               });
-  //             },
-  //             function(callback){
-  //               ScoreBoard.find({'status':2,'owner.teams':value._id}).exec(function(err,scoreBoards){
-  //                 if (err) {
-  //                   return callback(err);
-  //                 }
-  //                 scoreBoards.forEach(function(scoreBoard){
-  //                   var _index = 0;
-  //                   if(scoreBoard.playing_teams[0].tid.toString()!==value._id.toString()){
-  //                     _index =1;
-  //                   } 
-  //                   switch(scoreBoard.playing_teams[_index].result) {
-  //                     case 1:
-  //                       score+=winScore;
-  //                       break;
-  //                     case 0:
-  //                       score+=tieScore;
-  //                       break;
-  //                     case -1:
-  //                       score+=loseScore;
-  //                       break;
-  //                   }
-  //                 });
-  //                 value.score_rank.score = score;
-  //                 callback(null, 'score');
-  //               });
-  //             }
-  //         ],
-  //         // optional callback
-  //         mapCallback);
-  //     },function (err, results) {
-  //       async.series([
-  //         function(callback){
-  //           teams.sort(function(first, last){
-  //             return first.score.total<last.score.total;
-  //           });
-  //           var activityRank = new Rank();
-  //           activityRank.rank_type = 'activity';
-  //           console.log('activity');
-  //           teams.forEach(function (team,index) {
-  //             team.score.rank = index+1;
-  //             console.log(team.name,team.score.total);
-  //             if(index<10){
-  //               activityRank.team.push({
-  //                 _id: team._id,
-  //                 cid: team.cid,
-  //                 name: team.name,
-  //                 logo: team.logo,
-  //                 score: team.score.total,
-  //                 rank: index+1
-  //               })
-  //             }
-  //           });
-  //           activityRank.save(function (err) {
-  //             if(err){
-  //               console.log(err);
-  //             }
-  //           });
-  //           callback(null);
-  //         },
-  //         function(callback){
-  //           teams.sort(function(first, last){
-  //             console.log(first.score_rank.score,last.score_rank.score);
-  //             return first.score_rank.score<last.score_rank.score;
-  //           });
-  //           var scoreRank = new Rank();
-  //           scoreRank.rank_type = 'score';
-  //           console.log('score');
-  //           teams.forEach(function (team,index) {
-  //             team.score_rank.rank = index+1;
-  //             if(index<10){
-  //               scoreRank.team.push({
-  //                 _id: team._id,
-  //                 cid: team.cid,
-  //                 name: team.name,
-  //                 logo: team.logo,
-  //                 score: team.score_rank.score,
-  //                 rank: index+1
-  //               })
-  //             }
-  //           });
-  //           scoreRank.save(function (err) {
-  //             if(err){
-  //               console.log(err);
-  //             }
-  //           });
-  //           callback(null);
-  //         }
-  //       ],
-  //       // optional callback
-  //       function(err, results){
-  //         teams.forEach(function(team,index) {
-  //           team.save(function (err) {
-  //             if(err){
-  //               console.log(err);
-  //             }
-  //           })
-  //         });
-  //       });
-  //     });
-  //   }
-  // });
   async.waterfall([
     function(callback) {
       Group.find({active:true}).exec(callback);
@@ -262,7 +168,103 @@ var teamPoint = exports.teamPoint =function(){
   });
   
 }
-
+var countCampaign = function (startTime,endTime,type,newWeek){
+  CompanyGroup.find({'active':true},function(err,teams){
+    if(err){
+      console.log(err);
+    }
+    else{
+      teams.forEach(function(value){
+        var campaignNum=0;
+        var memberNum=0;
+        Campaign.find({'active':true,'tid':value._id,'end_time':{'$lte':endTime,'$gt':startTime}},function(err,campaigns){
+          campaigns.forEach(function(campaign){
+            campaignNum++;
+            memberNum+=campaign.members.length;
+          });
+          switch(type){
+            case 'currentWeek':
+            value.count.current_week_campaign = campaignNum;
+            value.count.current_week_member = memberNum;
+            break;
+            case 'lastWeek':
+            value.count.last_week_campaign = campaignNum;
+            value.count.last_week_member = memberNum;
+            break;
+            case 'lastMonth':
+            value.count.last_month_campaign = campaignNum;
+            value.count.last_month_member = memberNum;
+            break;
+            default:
+            break;
+          }
+          value.save(function(err){
+            if(err){
+              console.log(err);
+            }
+          });
+        });
+      });
+    }
+  });
+};
+var currentWeekCampaignCount = function(){
+  var _nowTime=new Date();
+  var startTime=new Date();
+  startTime.setDate(_nowTime.getDate()-_nowTime.getDay());
+  startTime.setHours(24);
+  startTime.setMinutes(0);
+  startTime.setSeconds(0);
+  startTime.setMilliseconds(0);
+  countCampaign(startTime,_nowTime,'currentWeek',_nowTime.getDay() === 0);
+}
+var lastWeekCampaignCount =  function(){
+  var _nowTime=new Date();
+  var startTime=new Date();
+  startTime.setDate(_nowTime.getDate()-_nowTime.getDay()-7);
+  startTime.setHours(24);
+  startTime.setMinutes(0);
+  startTime.setSeconds(0);
+  startTime.setMilliseconds(0);
+  var endTime=new Date();
+  endTime.setDate(_nowTime.getDate()-_nowTime.getDay());
+  endTime.setHours(24);
+  endTime.setMinutes(0);
+  endTime.setSeconds(0);
+  endTime.setMilliseconds(0);
+  countCampaign(startTime,endTime,'lastWeek');
+}
+var lastMonthCampaignCount =  function(){
+  var _nowTime=new Date();
+  var startTime=new Date();
+  startTime.setMonth(_nowTime.getMonth()-1);
+  startTime.setDate(1);
+  startTime.setHours(0);
+  startTime.setMinutes(0);
+  startTime.setSeconds(0);
+  startTime.setMilliseconds(0);
+  var endTime=new Date();
+  endTime.setDate(1);
+  endTime.setHours(0);
+  endTime.setMinutes(0);
+  endTime.setSeconds(0);
+  endTime.setMilliseconds(0);
+  countCampaign(startTime,endTime,'lastMonth');
+}
+//统计活动数
+exports.countCampaign = function(){
+  currentWeekCampaignCount();
+  lastWeekCampaignCount();
+  lastMonthCampaignCount();
+}
+//挑战信过期
+var competitionMessageTimeout = function () {
+  // body...
+}
+//比分板过期
+var scoreBoardTimeout = function (argument) {
+  // body...
+}
 exports.init = function(){
   //自动统计小队分数
   var teamPointRule = new schedule.RecurrenceRule();
@@ -270,8 +272,39 @@ exports.init = function(){
   teamPointRule.hour = 0;
   teamPointRule.minute = 0;
   var teamPointSchedule = schedule.scheduleJob(teamPointRule, function(){
-    teamPoint();
+    teamRank();
   });
+  // teamRank();
+
+  //自动统计小队分数
+  // var teamPointRule = new schedule.RecurrenceRule();
+  // teamPointRule.hour = 0;
+  // teamPointRule.minute = 0;
+  // var teamPointSchedule = schedule.scheduleJob(teamPointRule, function(){
+  //     teamPoint();
+  // });
   // teamPoint();
+  // //自动完成已经结束的活动
+  // var finishCampaignRule = new schedule.RecurrenceRule();
+  // finishCampaignRule.minute = 0;
+  // var finishCampaignSchedule = schedule.scheduleJob(finishCampaignRule, function(){
+  //     finishCampaign();
+  // });
+  // //统计本周的活动数和活动人次，每小时一次
+  // var currentWeekCampaignRule = new schedule.RecurrenceRule();
+  // currentWeekCampaignRule.minute = 0;
+  // var currentWeekCampaignSchedule = schedule.scheduleJob(currentWeekCampaignRule,currentWeekCampaignCount );
+  // //统计上周的活动数和活动人次，每周一的0点运行一次
+  // var lastWeekCampaignRule = new schedule.RecurrenceRule();
+  // lastWeekCampaignRule.dayOfWeek = 1;
+  // lastWeekCampaignRule.hour = 0;
+  // lastWeekCampaignRule.minute = 0;
+  // var lastWeekCampaignSchedule = schedule.scheduleJob(lastWeekCampaignRule, lastWeekCampaignCount);
+  // //统计上月的活动数和活动人次，每月1号的0点运行一次
+  // var lastMonthCampaignRule = new schedule.RecurrenceRule();
+  // lastMonthCampaignRule.date = 1;
+  // lastMonthCampaignRule.hour = 0;
+  // lastMonthCampaignRule.minute = 0;
+  // var lastMonthCampaignSchedule = schedule.scheduleJob(lastMonthCampaignRule,lastMonthCampaignCount);
 };
 
