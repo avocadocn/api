@@ -68,7 +68,8 @@ exports.createChat = function (param,callback) {
             'chatroom_id': chat.chatroom_id,
             'create_date': chat.create_date,
             'content': chat.content,
-            'randomId': param.randomId
+            'randomId': param.randomId,
+            'chat_type': chat.chat_type
           };
           if(param.user) {
             socketChat.poster = {
