@@ -6634,7 +6634,11 @@
       "properties": {
         "coordinates": {
           "description": "坐标信息",
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          }
         },
         "name": {
           "type": "string",
