@@ -220,7 +220,7 @@
     submit.click(function () {
       var fd = new FormData($('#CompanyCoverPhotoForm')[0]);
       $.ajax({
-        url: baseUrl + '/companies/' + companyId + '/companyCover',
+        url: baseUrl + '/companies/' + companyId.val() + '/companyCover',
         type: 'PUT',
         data: fd,
         processData: false,

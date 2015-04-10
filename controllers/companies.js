@@ -570,11 +570,14 @@ module.exports = function (app) {
           msg: '请求数据错误'
         });
       }
+      if(req.company.id !== req.user.id) {
+        return res.status(403).send({msg:'权限错误'});
+      }
       uploader.uploadImg(req, {
         fieldName: 'cover',
         targetDir: '/public/img/company/cover',
         success: function(url, oriName) {
-          var companyCoverUrl = path.join('/img/company/logo', url);
+          var companyCoverUrl = path.join('/img/company/cover', url);
           Company.findByIdAndUpdate(req.company.id, {
             'info.cover': companyCoverUrl
           }, function(err) {
