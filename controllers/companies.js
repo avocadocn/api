@@ -408,6 +408,7 @@ module.exports = function (app) {
                 companyInviteCodes: company.register_invite_code,
                 staffInviteCode: company.invite_key,
                 inviteUrl: inviteUrl,
+                teamNumber: company.team.length,
                 intro: company.info.brief,
                 cover: company.info.cover
               });
