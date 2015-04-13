@@ -195,7 +195,7 @@ exports.createData = function (callback) {
         resCompanyDataList = results;
         console.log('成功生成所有测试数据');
         callback();
-        schedule.teamPoint();
+        schedule.teamRank();
       });
       
     });
