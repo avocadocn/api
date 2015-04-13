@@ -49,7 +49,7 @@ module.exports = function() {
                 accessToken[1] = res.body.token;
               }
               //将第一个公司第二个队的第二个活动设置比分
-              var campaign = data[0].teams[1].campaigns[1];
+              var campaign = data[0].teams[1].campaigns[2];
               var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
               request.post('/components/ScoreBoard/' + scoreBoardId)
                 .set('x-access-token', accessToken[0])
@@ -73,7 +73,7 @@ module.exports = function() {
 
       });
       it('确认没有设置的比分应该返回400', function(done) {
-        var campaign = data[0].teams[1].campaigns[2];
+        var campaign = data[0].teams[1].campaigns[1];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.put('/components/ScoreBoard/' + scoreBoardId)
           .set('x-access-token', accessToken[0])
@@ -85,7 +85,7 @@ module.exports = function() {
           });
       });
       it('确认自己设置的比分应该返回403', function(done) {
-        var campaign = data[0].teams[1].campaigns[1];
+        var campaign = data[0].teams[1].campaigns[2];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.put('/components/ScoreBoard/' + scoreBoardId)
           .set('x-access-token', accessToken[0])
@@ -134,7 +134,7 @@ module.exports = function() {
           });
       });
       it('确认没有权限的比分组件应该返回403', function(done) {
-        var campaign = data[0].teams[1].campaigns[1];
+        var campaign = data[0].teams[1].campaigns[2];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.put('/components/ScoreBoard/'+scoreBoardId)
           .set('x-access-token', accessToken[2])
@@ -146,7 +146,7 @@ module.exports = function() {
           });
       });
       it('确认比分应该成功', function(done) {
-        var campaign = data[0].teams[1].campaigns[1];
+        var campaign = data[0].teams[1].campaigns[2];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.put('/components/ScoreBoard/' + scoreBoardId)
           .set('x-access-token', accessToken[1])
@@ -157,7 +157,7 @@ module.exports = function() {
           });
       });
       it('重复确认比分应该返回400', function(done) {
-        var campaign = data[0].teams[1].campaigns[1];
+        var campaign = data[0].teams[1].campaigns[2];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.put('/components/ScoreBoard/' + scoreBoardId)
           .set('x-access-token', accessToken[1])

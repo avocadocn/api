@@ -54,7 +54,7 @@ module.exports = function() {
           });
       });
       it('应该成功设置比分', function(done) {
-        var campaign = data[2].teams[1].campaigns[1];
+        var campaign = data[2].teams[1].campaigns[2];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.post('/components/ScoreBoard/' + scoreBoardId)
           .set('x-access-token', accessToken[0])
@@ -76,7 +76,7 @@ module.exports = function() {
           });
       });
       it('修改自己设置的比分应该成功', function(done) {
-        var campaign = data[2].teams[1].campaigns[1];
+        var campaign = data[2].teams[1].campaigns[2];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.post('/components/ScoreBoard/' + scoreBoardId)
           .set('x-access-token', accessToken[0])
@@ -97,7 +97,7 @@ module.exports = function() {
           });
       });
       it('重复设置比分应该返回500', function(done) {
-        var campaign = data[2].teams[1].campaigns[1];
+        var campaign = data[2].teams[1].campaigns[2];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.post('/components/ScoreBoard/' + scoreBoardId)
           .set('x-access-token', accessToken[0])
@@ -120,7 +120,7 @@ module.exports = function() {
           });
       });
       it('修改已经设置的比分应该成功', function(done) {
-        var campaign = data[2].teams[1].campaigns[1];
+        var campaign = data[2].teams[1].campaigns[2];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.post('/components/ScoreBoard/' + scoreBoardId)
           .set('x-access-token', accessToken[1])
@@ -140,7 +140,7 @@ module.exports = function() {
             done();
           });
       });
-      it('设置未开始的比赛的比分应该返回400', function(done) {
+      it('设置未结束的比赛的比分应该返回400', function(done) {
         var campaign = data[2].teams[1].campaigns[0];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.post('/components/ScoreBoard/' + scoreBoardId)
@@ -159,7 +159,7 @@ module.exports = function() {
           .expect(400)
           .end(function(err, res) {
             if (err) return done(err);
-            res.body.msg.should.equal('活动还未开始，无法设置比分');
+            res.body.msg.should.equal('活动还未结束，无法设置比分');
             done();
           });
       });
@@ -187,7 +187,7 @@ module.exports = function() {
           });
       });
       it('设置没有权限的比分组件应该返回403', function(done) {
-        var campaign = data[1].teams[1].campaigns[1];
+        var campaign = data[1].teams[1].campaigns[2];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.post('/components/ScoreBoard/'+scoreBoardId)
           .set('x-access-token', accessToken[0])
@@ -210,7 +210,7 @@ module.exports = function() {
           });
       });
       it('设置不存在的比分组件应该返回404', function(done) {
-        var campaign = data[2].teams[1].campaigns[1];
+        var campaign = data[2].teams[1].campaigns[2];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.post('/components/ScoreBoard/111')
           .set('x-access-token', accessToken[0])
@@ -266,51 +266,29 @@ module.exports = function() {
             done();
           });
       });
-      it('应该成功设置比分', function(done) {
-        var campaign = data[2].teams[1].campaigns[2];
-        var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
-        request.post('/components/ScoreBoard/' + scoreBoardId)
-          .set('x-access-token', hrAccessToken)
-          .send({
-            "data": {
-              "scores": [
-                1,0
-              ],
-              "results": [
-                1,-1
-              ]
-            },
-            "isInit": true
-          })
-          .expect(200)
-          .end(function(err, res) {
-            if (err) return done(err);
-            done();
-          });
-      });
-      it('修改已经确认的比分应该返回500', function(done) {
-        var campaign = data[2].teams[1].campaigns[2];
-        var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
-        request.post('/components/ScoreBoard/' + scoreBoardId)
-          .set('x-access-token', hrAccessToken)
-          .send({
-            "data": {
-              "scores": [
-                5,1
-              ],
-              "results": [
-                1,-1
-              ]
-            }
-          })
-          .expect(500)
-          .end(function(err, res) {
-            if (err) return done(err);
-            res.body.msg.should.equal('抱歉，比分已确认，不可以再设置。');
-            done();
-          });
-      });
-      it('设置未开始的比赛的比分应该返回400', function(done) {
+      // it('修改已经确认的比分应该返回500', function(done) {
+      //   var campaign = data[2].teams[1].campaigns[2];
+      //   var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
+      //   request.post('/components/ScoreBoard/' + scoreBoardId)
+      //     .set('x-access-token', hrAccessToken)
+      //     .send({
+      //       "data": {
+      //         "scores": [
+      //           5,1
+      //         ],
+      //         "results": [
+      //           1,-1
+      //         ]
+      //       }
+      //     })
+      //     .expect(500)
+      //     .end(function(err, res) {
+      //       if (err) return done(err);
+      //       res.body.msg.should.equal('抱歉，比分已确认，不可以再设置。');
+      //       done();
+      //     });
+      // });
+      it('设置未结束的比赛的比分应该返回400', function(done) {
         var campaign = data[2].teams[1].campaigns[0];
         var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
         request.post('/components/ScoreBoard/' + scoreBoardId)
@@ -329,30 +307,7 @@ module.exports = function() {
           .expect(400)
           .end(function(err, res) {
             if (err) return done(err);
-            res.body.msg.should.equal('活动还未开始，无法设置比分');
-            done();
-          });
-      });
-      it('设置没有权限的比分组件应该返回403', function(done) {
-        var campaign = data[0].teams[1].campaigns[1];
-        var scoreBoardId = campaign.components[0].name=='ScoreBoard' ?campaign.components[0].id :campaign.components[1].id;
-        request.post('/components/ScoreBoard/'+scoreBoardId)
-          .set('x-access-token', hrAccessToken)
-          .send({
-            "data": {
-              "scores": [
-                1,0
-              ],
-              "results": [
-                1,-1
-              ]
-            },
-            "isInit": true
-          })
-          .expect(403)
-          .end(function(err, res) {
-            if (err) return done(err);
-            res.body.msg.should.equal('没有此权限');
+            res.body.msg.should.equal('活动还未结束，无法设置比分');
             done();
           });
       });
