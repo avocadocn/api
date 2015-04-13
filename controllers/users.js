@@ -390,7 +390,7 @@ module.exports = function (app) {
         else {
           //hr取来任命队长用
           if(!req.query.resultType || req.query.resultType=='1'){
-            outputOptions = {'nickname':1,'photo':1};
+            outputOptions = {'email':1,'nickname':1,'photo':1,'realname': 1};
             
           }
           //hr统计用户
