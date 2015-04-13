@@ -301,7 +301,7 @@ module.exports = function (app) {
     dealValidate: function (req, res ,next) {
       CompetitionMessage
       .findOne({_id:req.params.messageId})
-      .populate([{'path':'sponsor_team', 'select':{name:1, logo:1}}, {'path':'opposite_team', 'select':{name:1, logo:1}}])
+      .populate([{'path':'sponsor_team', 'select':{name:1, logo:1, leader:1}}, {'path':'opposite_team', 'select':{name:1, logo:1}}])
       .exec()
       .then(function(message) {
         if(!message) {
@@ -327,6 +327,7 @@ module.exports = function (app) {
     dealCompetition: function (req, res) {
       if(req.body.action==='accept') {
         req.message.status = 'accepted';
+        req.message.sponsor_unread = true;
       }
       else {
         req.message.status = 'rejected';
@@ -354,6 +355,10 @@ module.exports = function (app) {
               competition_type: req.message.competition_type,
               opponent_team: req.message.opposite_team
             });
+            var leader = req.message.sponsor_team.leader;
+            if(leader && leader.length) {
+              socketClient.pushMessage(leader[0]._id);
+            }
           }
           return res.status(200).send({msg:'处理成功'});
         }
