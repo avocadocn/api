@@ -104,7 +104,16 @@ module.exports = function (app) {
           if(req.user.provider!=='user' || !req.user.isTeamLeader(req.body.sponsor)) {
             return res.status(403).send({ msg: '权限错误'});
           }
-          else next();
+          else{
+            CompetitionMessage.count({sponsor_team:req.body.sponsor,opposite_team:req.body.opposite,status:{"$in":['sent', 'accepted']}},function (err, count) {
+              if (err) log(err);
+              if(count>0){
+                return res.status(400).send({ msg: '您上次发送给该小队的挑战信还未结束，无法再次发送'});
+              }else{
+                next();
+              }
+            })
+          } 
         }
         else {
           var resMsg = donlerValidator.combineMsg(msg);

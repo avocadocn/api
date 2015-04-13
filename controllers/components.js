@@ -136,11 +136,10 @@ module.exports = function (app) {
                 else if (!campaign.active) {
                   return res.status(400).send({ msg: '活动已经关闭'})
                 }
-                else if(campaign.start_time> Date.now()){
-                  return res.status(400).send({msg:'活动还未开始，无法设置比分'})
+                else if(campaign.end_time> Date.now()){
+                  return res.status(400).send({msg:'活动还未结束，无法设置比分'})
                 }
                 else{
-
                   var leaderTeam;
                   var opponentTid;
                   var allows = [];
