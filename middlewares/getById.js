@@ -23,8 +23,24 @@ module.exports = {
       if (!companyGroup) {
         res.status(400).send({ msg: '没有找到对应的小队' });
       } else {
-        req.companyGroup = companyGroup;
-        next();
+        Company.find({
+          '_id': companyGroup.cid,
+          'status.active': true
+        }, function(err, company) {
+          if (err) {
+            log(err);
+            return res.sendStatus(500);
+          } else {
+            if (!company) {
+              return res.status(403).send({
+                msg: '小队所属公司已屏蔽'
+              });
+            } else {
+              req.companyGroup = companyGroup;
+              next();
+            }
+          }
+        });
       }
     })
     .then(null, function (err) {
