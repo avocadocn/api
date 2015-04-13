@@ -88,6 +88,7 @@ module.exports = function (app) {
             return res.status(500).send({msg: '聊天保存失败'});
           } else {
             req.recommandTeam = recommandTeam;
+            next();
           }
         });
       }else {
