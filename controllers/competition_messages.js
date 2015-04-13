@@ -58,7 +58,7 @@ module.exports = function (app) {
       //验证两个队是不是一个类型或者一个公司
       var teamsValidator = function(name, value, callback) {
         if(value[0]===value[1]) return callback(false, '挑战小队数据错误'); //自己队不能给自己队发
-        CompanyGroup.find({'_id':{'$in':value}},{'gid':1, 'cid':1, 'leader':1, 'name':1, 'logo':1},function(err, teams) {
+        CompanyGroup.find({'_id':{'$in':value}},{'gid':1, 'cid':1, 'leader':1, 'name':1, 'logo':1, 'cname':1},function(err, teams) {
           if(err||teams.length<2) {
             callback(false, '挑战小队数据错误');
           }
