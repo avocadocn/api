@@ -72,11 +72,12 @@ exports.createChat = function (param,callback) {
             }
           }
           else if(param.posterTeam) {
-            socketChat.poster = {
+            socketChat.poster_team = {
               '_id': param.posterTeam._id,
               'photo': param.posterTeam.logo,
-              'nickname': param.posterTeam.name
+              'name': param.posterTeam.name
             }
+            socketChat.poster = socketChat.poster_team;
           }
           if(chat.photos) {
             socketChat.photos = chat.photos;

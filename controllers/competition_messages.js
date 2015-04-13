@@ -58,7 +58,7 @@ module.exports = function (app) {
       //验证两个队是不是一个类型或者一个公司
       var teamsValidator = function(name, value, callback) {
         if(value[0]===value[1]) return callback(false, '挑战小队数据错误'); //自己队不能给自己队发
-        CompanyGroup.find({'_id':{'$in':value}},{'gid':1, 'cid':1, 'leader':1},function(err, teams) {
+        CompanyGroup.find({'_id':{'$in':value}},{'gid':1, 'cid':1, 'leader':1, 'name':1, 'logo':1},function(err, teams) {
           if(err||teams.length<2) {
             callback(false, '挑战小队数据错误');
           }
@@ -158,7 +158,7 @@ module.exports = function (app) {
             });
             res.status(200).send({msg: '挑战信发送成功'});
             //发给对方队长
-            if(req.teams[0].leader.id === req.user.id) {
+            if(req.teams[0].leader && req.teams[0].leader[0]._id.toString() === req.user._id.toString()) {
               if(req.teams[1].leader.length>0) {
                 socketClient.pushMessage(req.teams[1].leader[0]._id);
               }
