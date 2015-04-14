@@ -261,7 +261,7 @@ module.exports = function (app) {
           // message: message,
           sponsorLeader:req.user.isTeamLeader(message.sponsor_team._id),
           oppositeLeader:req.user.isTeamLeader(message.opposite_team._id),
-          sponsor: req.user.isTeamMember(message.sponsor_team._id),
+          sponsor: !req.user.isTeamLeader(message.opposite_team._id) && req.user.isTeamMember(message.sponsor_team._id),
           opposite: req.user.isTeamMember(message.opposite_team._id)
         }
         if(result.sponsorLeader && message.sponsor_unread || result.oppositeLeader && message.opposite_unread) {
