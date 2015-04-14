@@ -958,7 +958,7 @@ module.exports = function (app) {
               logController.addLog(logBody);
               async.series([
                 function(callback){
-                  var _formatCampaign = campaignBusiness.formatCampaign(campaign,req.user);
+                  var _formatCampaign = campaignBusiness.formatCampaign(campaign,req.user,req.user);
                   callback(null,_formatCampaign);
                 },//格式化活动
                 function(callback){
@@ -1062,7 +1062,7 @@ module.exports = function (app) {
               logController.addLog(logBody);
               async.series([
                 function(callback){
-                  var _formatCampaign = campaignBusiness.formatCampaign(campaign,req.user);
+                  var _formatCampaign = campaignBusiness.formatCampaign(campaign,req.user,req.user);
                   callback(null,_formatCampaign);
                 },//格式化活动
                 function(callback){
