@@ -190,10 +190,11 @@ exports.formatCampaign = function (campaign, owner, user, callback) {
   // var photos = updateLatestPhotoService.getLatestPhotos(campaign.photo_album, 10, function (err, photoList) {
   //   resCampaign.photo_album.photos = photoList;
   //   resCampaign.moreFlag = photoList.length > 10;
-  //   callback && callback(err, resCampaign);
+  //   
   // });
   // resCampaign.photo_album.photos = photos;
   // resCampaign.moreFlag = photos.length > 10;
+  callback && callback(null, resCampaign);
   return resCampaign;
 
 };
