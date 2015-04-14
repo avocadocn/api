@@ -7,6 +7,7 @@ var mongoose = require('mongoose'),
     Rank = mongoose.model('Rank'),
     Group = mongoose.model('Group'),
     Region = mongoose.model('Region'),
+    CompetitionMessage = mongoose.model('CompetitionMessage'),
     async = require('async'),
     schedule = require('node-schedule');
 
@@ -257,13 +258,51 @@ exports.countCampaign = function(){
   lastMonthCampaignCount();
 }
 //挑战信过期
-var competitionMessageTimeout = function () {
-  // body...
+var competitionMessageTimeout = 7; //7天
+var competitionMessageTimeoutJob = function () {
+  var limitTime = new Date();
+  limitTime.setDate(limitTime.getDate()-competitionMessageTimeout);
+  CompetitionMessage.update({'status':'sent',create_time:{$lte:limitTime}}, { $set: { status: 'deal_timeout' }}, { multi: true } ,function(err,num){
+    if(err){
+      console.log(err);
+    }
+    else{
+      console.log('competitionMessageTimeout-noResponse:'+num);
+    }
+  })
+  CompetitionMessage.update({'status':'accepted',deal_time:{$lte:limitTime}}, { $set: { status: 'competion_timeout' }}, { multi: true } ,function(err,num){
+    if(err){
+      console.log(err);
+    }
+    else{
+      console.log('competitionMessageTimeout-noCompetition:'+num);
+    }
+  })
+
 }
 //比分板过期
-var scoreBoardTimeout = function (argument) {
-  // body...
+var scoreBoardTimeout = 3; //7天
+var scoreBoardTimeoutJob = function () {
+  var limitTime = new Date();
+  limitTime.setDate(limitTime.getDate()-scoreBoardTimeout);
+  ScoreBoard.update({'status':0,limit_time:{$lte:limitTime}}, { $set: { 'playing_teams.0.result':0,'playing_teams.1.result':0,'status':2}}, { multi: true } ,function(err,num){
+    if(err){
+      console.log(err);
+    }
+    else{
+      console.log('scoreBoardTimeout-noSet:'+num);
+    }
+  })
+  ScoreBoard.update({'status':1,deal_time:{$lte:limitTime}}, { $set: { 'status':2}}, { multi: true },function(err,num){
+   if(err){
+      console.log(err);
+    }
+    else{
+      console.log('scoreBoardTimeout-noResponse:'+num);
+    }
+  })
 }
+
 exports.init = function(){
   //自动统计小队分数
   var teamPointRule = new schedule.RecurrenceRule();
@@ -274,7 +313,18 @@ exports.init = function(){
     teamRank();
   });
   // teamRank();
-
+  //比分板过期
+  var scoreBoardRule = new schedule.RecurrenceRule();
+  scoreBoardRule.hour = 1;
+  var scoreBoardSchedule = schedule.scheduleJob(scoreBoardRule, function(){
+    scoreBoardTimeoutJob();
+  });
+  //挑战信过期
+  var competitionMessageRule = new schedule.RecurrenceRule();
+  competitionMessageRule.hour = 2;
+  var competitionMessageSchedule = schedule.scheduleJob(competitionMessageRule, function(){
+    competitionMessageTimeoutJob();
+  });
   //自动统计小队分数
   // var teamPointRule = new schedule.RecurrenceRule();
   // teamPointRule.hour = 0;

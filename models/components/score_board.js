@@ -51,7 +51,10 @@ var ScoreBoard = new Schema({
   create_date: {
     type: Date,
     default: Date.now
-  } // 创建日期，用于结合status判断比分板是否失效
+  },
+  limit_time:Date, // 可以开始填比分的时间，判断比分板是否失效
+  deal_time:Date
+
 });
 
 // 是否失效，超过7天就设为失效
@@ -80,7 +83,8 @@ ScoreBoard.statics = {
           companies: host.cid,
           teams: host.tid
         };
-
+        //活动结束后可以开始填比分
+        var limitTime = host.end_time;
         var host_type = 'campaign';
         var host_id = host._id;
 
@@ -106,7 +110,8 @@ ScoreBoard.statics = {
       owner: owner,
       host_type: host_type,
       host_id: host_id,
-      playing_teams: playingTeams
+      playing_teams: playingTeams,
+      limit_time: limitTime
     });
 
     scoreBoard.save(function (err) {
@@ -163,6 +168,7 @@ var setScore = function (scoreBoard, allowSetScore, data) {
     delete log.playing_team;
     scoreBoard.status = 2;
   } else {
+    scoreBoard.deal_time = Date.now;
     scoreBoard.status = 1;
   }
 
