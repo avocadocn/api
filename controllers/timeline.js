@@ -6,7 +6,8 @@ var tools = require('../tools/tools'),
     cache = require('../services/cache/Cache'),
     log = require('../services/error_log.js'),
     auth = require('../services/auth.js');
-var moment = require('moment');
+var async = require('async'),
+    moment = require('moment');
 
 
 /**
@@ -211,6 +212,42 @@ var formatCampaign = function(_campaign,user){
 
   return temp;
 };
+
+var searchCampaign = function(select_type, option, sort, limit, page, user, callback){
+  var now = new Date();
+  var _option = {}; 
+  for (var attr in option){
+    _option[attr] = option[attr];
+  }
+  switch(select_type){
+    //即将开始的活动
+    case '1':
+      _option.start_time = { '$gte':now };
+    break;
+    //正在进行的活动
+    case '2':
+      _option.start_time = { '$lt':now };
+      _option.end_time = { '$gte':now };
+    break;
+    //已经结束的活动
+    case '3':
+      _option.end_time = { '$lt':now};
+    break;
+  }
+  Campaign.paginate(_option,
+    parseInt(page) || 1,limit,function(err,pageCount,results,itemCount) {
+      if(err){
+        callback(err);
+      }
+      else{
+        var campaigns = [];
+        results.forEach(function(campaign) {
+          campaigns.push(formatCampaign(campaign,user));
+        });
+        callback(null, campaigns);
+      }
+    },{sortBy:sort});
+}
 
 module.exports = function (app) {
 
@@ -517,23 +554,53 @@ module.exports = function (app) {
         else if(requestType=='company'){
           options['cid'] = mongoose.Types.ObjectId(requestId);
         }
-        if(!req.query.unfinishFlag){
-          options.finish=true;
-        }
-        Campaign.paginate(options,
-          parseInt(req.query.page) || 1,10,function(err,pageCount,results,itemCount) {
-            if(err){
+        var page = req.query.page;
+        //个人足迹
+        if(requestType==='user') {
+          searchCampaign('3', options, '-start_time', 10, page, req.user, function(err, campaigns) {
+            if(err) {
               log(err);
-              res.status(400).send({ msg: '获取活动失败' });
+              return res.status(400).send({msg:'活动获取失败'});
             }
-            else{
-              var timeLine = [];
-              results.forEach(function(campaign) {
-                timeLine.push(formatCampaign(campaign,req.user));
-              });
-              return res.status(200).send(timeLine);
+            else {
+              return res.status(200).send([campaigns]);
             }
-          },{sortBy:{'start_time':-1}, populate: 'photo_album'});
+          });
+        }
+        //一进全部活动页...
+        else if(page!==1) {
+          async.parallel([
+            function(callback){
+              searchCampaign('3', options, '-start_time', 10, page, req.user, callback);
+            },//已结束的活动
+            function(callback){
+              searchCampaign('1', options, '-start_time', 100, 1, req.user, callback);
+            },//即将开始的活动
+            function(callback){
+              searchCampaign('2', options, '-start_time', 100, 1, req.user, callback);
+            }//正在进行的活动
+          ],function(err, values) {
+            if(err) {
+              log(err);
+              return res.status(400).send({ msg: '活动获取失败'});
+            }
+            else {
+              return res.status(200).send(values);
+            }
+          })
+        }
+        //loadmore时
+        else {
+          searchCampaign('3', option, '-start_time', 10, page, req.user, function(err, campaigns) {
+            if(err) {
+              log(err);
+              return res.status(400).send({msg:'活动获取失败'});
+            }
+            else {
+              return res.status(200).send(campaigns);
+            }
+          });
+        }
       })
       .then(null, function (err) {
         log(err);
