@@ -91,10 +91,12 @@ var Campaign = mongoose.model('Campaign');
  *  }
  * @param {Object} campaign mongoose.model('Campaign')定义的模型
  * @param {Object} user mongoose.model('User')定义的模型
+ * @param {Boolean} owner 发请求的用户
+ *
  * @param {Function} callback 形式为function(err, campaign)，通过异步回调取得的活动，其相册照片为更新后的可靠数据
  * @return {Object} 返回处理后的活动
  */
-exports.formatCampaign = function (campaign, user, callback) {
+exports.formatCampaign = function (campaign, owner, user, callback) {
   var now = new Date();
 
   var resCampaign = {
@@ -137,57 +139,61 @@ exports.formatCampaign = function (campaign, user, callback) {
   campaign.members.forEach(function (member) {
     memberIds.push(member._id);
   });
-  var role = auth.getRole(user, {
-    companies: campaign.cid,
-    teams: campaign.tid,
-    users: memberIds
-  });
-  if (campaign.confirm_status) {
-    var joinTaskName = campaign.campaign_type == 1 ? 'joinCompanyCampaign' : 'joinTeamCampaign';
-    var editTaskName = campaign.campaign_type == 1 ? 'editCompanyCampaign' : 'editTeamCampaign';
-    var allow = auth.auth(role, [
-      'quitCampaign', 'publishCampaignMessage', joinTaskName, editTaskName
-    ]);
-    if (campaign.deadline < now || (campaign.member_max > 0 && campaign.members.length >= campaign.member_max)) {
-      allow[joinTaskName] = false;
+  //只要获取自己的主体的活动时才去判断权限
+  if(user._id.toString()==owner._id.toString()){
+    var role = auth.getRole(owner, {
+      companies: campaign.cid,
+      teams: campaign.tid,
+      users: memberIds
+    });
+    if (campaign.confirm_status) {
+      var joinTaskName = campaign.campaign_type == 1 ? 'joinCompanyCampaign' : 'joinTeamCampaign';
+      var editTaskName = campaign.campaign_type == 1 ? 'editCompanyCampaign' : 'editTeamCampaign';
+      var allow = auth.auth(role, [
+        'quitCampaign', 'publishCampaignMessage', joinTaskName, editTaskName
+      ]);
+      if (campaign.deadline < now || (campaign.member_max > 0 && campaign.members.length >= campaign.member_max)) {
+        allow[joinTaskName] = false;
+      }
+      if (campaign.deadline < now) {
+        allow.quitCampaign = false;
+      }
+      if (campaign.start_time < now) {
+        allow[editTaskName] = false;
+      }
     }
-    if (campaign.deadline < now) {
-      allow.quitCampaign = false;
-    }
-    if (campaign.start_time < now) {
-      allow[editTaskName] = false;
-    }
-  }
-  else {
-    var allow = {};
-    if (role.team == 'leader' && [4, 5, 7, 9].indexOf(campaign.campaign_type) > -1) {
+    else {
+      var allow = {};
+      if (role.team == 'leader' && [4, 5, 7, 9].indexOf(campaign.campaign_type) > -1) {
 
-      var provokeRole = auth.getRole(user, {
-        companies: campaign.cid,
-        teams: [campaign.tid[0]]
-      });
-      var provokeAllow = auth.auth(provokeRole, [
-        'sponsorProvoke'
-      ]);
-      allow.quitProvoke = provokeAllow.sponsorProvoke;
-      provokeRole = auth.getRole(user, {
-        companies: campaign.cid,
-        teams: [campaign.tid[1]]
-      });
-      provokeAllow = auth.auth(provokeRole, [
-        'sponsorProvoke'
-      ]);
-      allow.dealProvoke = provokeAllow.sponsorProvoke;
+        var provokeRole = auth.getRole(user, {
+          companies: campaign.cid,
+          teams: [campaign.tid[0]]
+        });
+        var provokeAllow = auth.auth(provokeRole, [
+          'sponsorProvoke'
+        ]);
+        allow.quitProvoke = provokeAllow.sponsorProvoke;
+        provokeRole = auth.getRole(user, {
+          companies: campaign.cid,
+          teams: [campaign.tid[1]]
+        });
+        provokeAllow = auth.auth(provokeRole, [
+          'sponsorProvoke'
+        ]);
+        allow.dealProvoke = provokeAllow.sponsorProvoke;
+      }
     }
+    resCampaign.allow = allow;
   }
-  resCampaign.allow = allow;
-  var photos = updateLatestPhotoService.getLatestPhotos(campaign.photo_album, 10, function (err, photoList) {
-    resCampaign.photo_album.photos = photoList;
-    resCampaign.moreFlag = photoList.length > 10;
-    callback && callback(err, resCampaign);
-  });
-  resCampaign.photo_album.photos = photos;
-  resCampaign.moreFlag = photos.length > 10;
+  //不需要获取照片
+  // var photos = updateLatestPhotoService.getLatestPhotos(campaign.photo_album, 10, function (err, photoList) {
+  //   resCampaign.photo_album.photos = photoList;
+  //   resCampaign.moreFlag = photoList.length > 10;
+  //   callback && callback(err, resCampaign);
+  // });
+  // resCampaign.photo_album.photos = photos;
+  // resCampaign.moreFlag = photos.length > 10;
   return resCampaign;
 
 };

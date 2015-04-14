@@ -311,7 +311,7 @@ var getCampaignListHandle = function (req, res) {
     sort = req.query.sortBy || 'start_time',
     limit = parseInt(req.query.limit) || 0,
     populate =req.query.populate || '',
-    reqModel,team_ids;
+    reqModel,team_ids,CampaignOwner;
   switch(requestType){
   case 'company':
     reqModel = 'Company';
@@ -350,6 +350,7 @@ var getCampaignListHandle = function (req, res) {
           'active':true,
           'cid' : requestId
         };
+        CampaignOwner=req.user;
         break;
       case 'team':
         option = {
@@ -357,6 +358,7 @@ var getCampaignListHandle = function (req, res) {
           'cid':requestModal.cid,
           'tid':requestId
         };
+        CampaignOwner=req.user;
         break;
       case 'user':
         team_ids = [];
@@ -374,6 +376,7 @@ var getCampaignListHandle = function (req, res) {
         else if (req.query.join_flag=='0') {
           option['$nor'] = [{'campaign_unit.member._id':requestId}];
         }
+        CampaignOwner=requestModal;
         break;
       default:
         break;
@@ -412,7 +415,7 @@ var getCampaignListHandle = function (req, res) {
               formatCampaigns.push([]);
               var index = formatCampaigns.length-1;
               value.forEach(function(campaign){
-                formatCampaigns[index].push(campaignBusiness.formatCampaign(campaign,req.user));
+                formatCampaigns[index].push(campaignBusiness.formatCampaign(campaign,req.user,CampaignOwner));
               })
 
             })
@@ -435,7 +438,7 @@ var getCampaignListHandle = function (req, res) {
             }
             var formatCampaigns = [];
             campaigns.forEach(function (campaign) {
-              formatCampaigns.push(campaignBusiness.formatCampaign(campaign, req.user));
+              formatCampaigns.push(campaignBusiness.formatCampaign(campaign, req.user, CampaignOwner));
             });
             res.status(200).send(formatCampaigns);
           }
@@ -748,7 +751,7 @@ module.exports = function (app) {
         function(callback){
           //var _formatCampaign = formatCampaign(campaign,req.user);
           //callback(null,_formatCampaign);
-          campaignBusiness.formatCampaign(campaign, req.user, function (err, resCampaign) {
+          campaignBusiness.formatCampaign(campaign, req.user, req.user, function (err, resCampaign) {
             callback(null, resCampaign);
           });
         },//格式化活动
