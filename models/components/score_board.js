@@ -168,7 +168,7 @@ var setScore = function (scoreBoard, allowSetScore, data) {
     delete log.playing_team;
     scoreBoard.status = 2;
   } else {
-    scoreBoard.deal_time = Date.now;
+    scoreBoard.deal_time = new Date();
     scoreBoard.status = 1;
   }
 
