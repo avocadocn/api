@@ -265,7 +265,8 @@ module.exports = function (app) {
       var options = {
         gid: {
           '$ne': '0'
-        }
+        },
+        company_active: {$in: [true, null]}
       };
       if (req.query.personalFlag == 'true') {
         options['poster.role'] = 'Personal';
@@ -273,85 +274,64 @@ module.exports = function (app) {
         options['poster.role'] = 'HR';
       }
       req.options = options;
-      // 如果公司被屏蔽，无法获取公司小队信息(此功能暂且加到此处) 
-      var companyId;
-      if (req.user.provider === 'user') {
-        companyId = req.user.cid;
-      } else {
-        companyId = req.user.id;
-      }
-      Company.findById(companyId).exec()
-        .then(function(company) {
-          if (company.status.active === false) {
-            return res.status(403).send({
-              msg: '小队所属公司已屏蔽'
-            });
+      switch (req.query.hostType) {
+        case 'company':
+          options.cid = req.query.hostId || req.user.cid || req.user._id;
+          if (req.user.provider === 'user') {
+            options.active = true;
           }
-          switch (req.query.hostType) {
-            case 'company':
-              options.cid = req.query.hostId || req.user.cid || req.user._id;
-              if (req.user.provider === 'user') {
-                options.active = true;
-              }
-              next();
-              break;
-            case 'user':
+          next();
+          break;
+        case 'user':
 
-              var addIdsToOptions = function(userTeams) {
-                var teams = userTeams.filter(function(team) {
-                  if (team.group_type === 'virtual' || req.query.gid && req.query.gid != team.gid || req.query.leadFlag && !team.leader) {
-                    return false;
-                  } else {
-                    return true;
-                  }
-                });
-                var tids = tools.flatCollect(teams, '_id');
-                options._id = {
-                  $in: tids
-                };
-              };
-
-              //如果只要取用户的小队简单信息
-              if (req.query.brief === 'true') {
-                req.outputOptions = {
-                  'name': 1,
-                  'logo': 1
-                }
-              }
-
-              if (!req.query.hostId || req.query.hostId === req.user._id.toString()) {
-                options.cid = req.user.cid || req.user._id;
-                addIdsToOptions(req.user.team);
-                next();
+          var addIdsToOptions = function(userTeams) {
+            var teams = userTeams.filter(function(team) {
+              if (team.group_type === 'virtual' || req.query.gid && req.query.gid != team.gid || req.query.leadFlag && !team.leader) {
+                return false;
               } else {
-                User.findById(req.query.hostId).exec()
-                  .then(function(user) {
-                    if (!user) {
-                      res.status(404).send({
-                        msg: '用户查找失败'
-                      });
-                      return;
-                    }
-                    options.cid = user.cid;
-                    addIdsToOptions(user.team);
-                    next();
-                  })
-                  .then(null, function(err) {
-                    log(err);
-                    res.status(500).send({
-                      msg: '用户查找错误'
-                    });
-                  });
+                return true;
               }
-              break;
+            });
+            var tids = tools.flatCollect(teams, '_id');
+            options._id = {
+              $in: tids
+            };
+          };
+
+          //如果只要取用户的小队简单信息
+          if (req.query.brief === 'true') {
+            req.outputOptions = {
+              'name': 1,
+              'logo': 1
+            }
           }
-        })
-        .then(null, function(err) {
-          log(err);
-          res.status(500).send({
-            msg: '小队信息获取错误'
-          });
-        })
+
+          if (!req.query.hostId || req.query.hostId === req.user._id.toString()) {
+            options.cid = req.user.cid || req.user._id;
+            addIdsToOptions(req.user.team);
+            next();
+          } else {
+            User.findById(req.query.hostId).exec()
+              .then(function(user) {
+                if (!user) {
+                  res.status(404).send({
+                    msg: '用户查找失败'
+                  });
+                  return;
+                }
+                options.cid = user.cid;
+                addIdsToOptions(user.team);
+                next();
+              })
+              .then(null, function(err) {
+                log(err);
+                res.status(500).send({
+                  msg: '用户查找错误'
+                });
+              });
+          }
+          break;
+      }
     },
 
     getTeams: function(req, res) {
@@ -974,8 +954,8 @@ module.exports = function (app) {
     },
     getTeamTags : function(req, res) {
       Campaign.aggregate()
-      .project({"tags":1,"tid":1})
-      .match({'tid' : mongoose.Types.ObjectId(req.params.teamId)})//可在查询条件中加入时间
+      .project({"tags":1,"tid":1,"company_active":1})
+      .match({'tid' : mongoose.Types.ObjectId(req.params.teamId), 'company_active': {$in: [true, null]}})//可在查询条件中加入时间
       .unwind("tags")
       .group({_id : "$tags", number: { $sum : 1} })
       .sort({number:-1})
@@ -1020,16 +1000,13 @@ module.exports = function (app) {
     },
 
     getMembers: function (req, res) {
-      CompanyGroup.findById(req.params.teamId).populate('cid').exec()
+      CompanyGroup.findOne({'_id': req.params.teamId, 'company_active': {$in: [true, null]}}).exec()
         .then(function (team) {
           if (!team) {
             res.sendStatus(404);
             return;
           }
-          if(team.cid.status.active === false) {
-            return res.status(403).send({ msg: '小队所属公司已屏蔽' });
-          }
-          if(req.user.getCid().toString() !== team.cid.id) {
+          if(req.user.getCid().toString() !== team.cid.toString()) {
             return res.status(403).send({msg:'权限错误'});
           }
           res.status(200).send({'members':team.member,'leaders':team.leader});
@@ -1040,7 +1017,7 @@ module.exports = function (app) {
         });
     },
     getLedTeams: function(req, res) {
-      var options = {'cid':req.user.cid,'gid':req.query.gid || {'$ne':'0'},'leader._id':req.user._id};
+      var options = {'cid':req.user.cid,'gid':req.query.gid || {'$ne':'0'},'leader._id':req.user._id,'company_active': {$in: [true, null]}};
       CompanyGroup.find(options,{'logo':1,'cid':1,'name':1},function(err, companyGroups){
         if(err){
           console.log(err);
@@ -1092,7 +1069,7 @@ module.exports = function (app) {
         }
       }, 'fast', function (pass, msg) {
         if (pass) {
-          CompanyGroup.findById(req.query.tid).exec()
+          CompanyGroup.findOne({'_id': req.query.tid, 'company_active': {$in: [true, null]}}).exec()
           .then(function (companyGroup) {
             if (!companyGroup) {
               res.status(400).send({ msg: '没有找到对应的小队' });

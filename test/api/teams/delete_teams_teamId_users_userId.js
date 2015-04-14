@@ -73,10 +73,10 @@ module.exports = function() {
 
       request.delete('/teams/' + user.team[0]._id + '/users/' + user._id)
         .set('x-access-token', userAccessToken)
-        .expect(400)
+        .expect(403)
         .end(function(err, res) {
           if (err) return done(err);
-          res.body.msg.should.be.equal('未参加此小队');
+          res.body.msg.should.be.equal('您没有参加该小队');
           done();
         });
     });

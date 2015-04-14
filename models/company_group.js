@@ -133,6 +133,11 @@ var CompanyGroup = new Schema({
         type: Boolean,
         default: true
     },
+    // 小队所属公司是否关闭(true: 未关闭; false: 关闭)
+    company_active: { 
+        type: Boolean,
+        default: true
+    },
     home_court: [_home_court],       //主场(可能有多个)
     city: {//暂时是公司的city,将来若是填了主场，公司改变city时，小队不改变
         province: String,
