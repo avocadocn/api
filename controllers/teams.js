@@ -10,6 +10,7 @@ var User = mongoose.model('User'),
   Group = mongoose.model('Group');
 
 var log = require('../services/error_log.js'),
+  groups = require('../business/groups.js'),
   cache = require('../services/cache/Cache'),
   auth = require('../services/auth.js'),
   uploader = require('../services/uploader.js'),
@@ -978,25 +979,28 @@ module.exports = function (app) {
       if (!req.user) {
         return res.status(403).send({msg: '权限错误'});
       }
-      Group.find(null, function (err, group) {
-        if (err) {
-          log(err);
-          return res.status(500).send({msg: 'group寻找错误'});
-        }
-        var _length = group.length;
-        var groups = [];
-        for (var i = 0; i < _length; i++) {
-          if (group[i]._id !== '0') {
-            groups.push({
-              '_id': group[i]._id,
-              'groupType': group[i].group_type, //中文
-              'entityType': group[i].entity_type //英文
-              // 'icon': group[i].icon//暂时无值，到前端需用entityType来取icon
-            });
-          }
-        }
+      groups.getGroups(function(groups) {
         return res.status(200).send(groups);
-      });
+      })
+      // Group.find(null, function (err, group) {
+      //   if (err) {
+      //     log(err);
+      //     return res.status(500).send({msg: 'group寻找错误'});
+      //   }
+      //   var _length = group.length;
+      //   var groups = [];
+      //   for (var i = 0; i < _length; i++) {
+      //     if (group[i]._id !== '0') {
+      //       groups.push({
+      //         '_id': group[i]._id,
+      //         'groupType': group[i].group_type, //中文
+      //         'entityType': group[i].entity_type //英文
+      //         // 'icon': group[i].icon//暂时无值，到前端需用entityType来取icon
+      //       });
+      //     }
+      //   }
+      //   return res.status(200).send(groups);
+      // });
     },
 
     getMembers: function (req, res) {
