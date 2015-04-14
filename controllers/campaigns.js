@@ -53,7 +53,7 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
     break;
     //已经结束的活动
     case '3':
-      _option.end_time = { '$lte':now };
+      _option.end_time = { '$lt':now , '$gt': now-3600*24*12*2};
       _option['campaign_unit.member._id'] = requestId;
     break;
     //新活动（未参加）
@@ -391,7 +391,7 @@ var getCampaignListHandle = function (req, res) {
         option._id = { '$lte': req.query.nextPageStartId };
       }
       if(req.query.select_type =='0'){
-        async.series([
+        async.parallel([
           function(callback){
             searchCampaign('1', option, 'start_time', limit, requestId, team_ids, populate, callback);
           },//即将开始的活动
@@ -400,7 +400,10 @@ var getCampaignListHandle = function (req, res) {
           },//正在进行的活动
           function(callback){
             searchCampaign('4', option, '-create_time', limit, requestId, team_ids, populate, callback);
-          }//新活动（未参加）
+          },//新活动（未参加）
+          function(callback) {
+            searchCampaign('3', option, 'end_time', limit, requestId, team_ids, populate, callback);
+          }//结束两天内的活动
           // function(callback){
           //   searchCampaign('5', option, '-create_time', limit, requestId, team_ids, populate, callback);
           // }//未确认的挑战
