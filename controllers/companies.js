@@ -427,7 +427,8 @@ module.exports = function (app) {
                 email: company.info.email,
                 memberNumber: company.info.membernumber,
                 staffInviteCode: company.invite_key,
-                intro: company.info.brief
+                intro: company.info.brief,
+                cover: company.info.cover
               });
               break;
             default:
@@ -442,7 +443,8 @@ module.exports = function (app) {
                 address: company.info.address,
                 email: company.info.email,
                 memberNumber: company.info.membernumber,
-                intro: company.info.brief
+                intro: company.info.brief,
+                cover: company.info.cover
               });
               break;
           }
