@@ -53,8 +53,9 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
     break;
     //已经结束的活动
     case '3':
-      _option.end_time = { '$lt':now , '$gt': now-1000*3600*24*12*2};
+      _option.end_time = { '$lt':now , '$gt': now-1000*3600*24*2};
       _option['campaign_unit.member._id'] = requestId;
+      limit = 5;
     break;
     //新活动（未参加）
     case '4':
