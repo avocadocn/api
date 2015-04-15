@@ -304,7 +304,7 @@ var scoreBoardTimeoutJob = function () {
 }
 
 exports.init = function(){
-  //自动统计小队分数
+  //自动统计小队排名
   var teamPointRule = new schedule.RecurrenceRule();
   teamPointRule.dayOfWeek = 0;
   teamPointRule.hour = 0;

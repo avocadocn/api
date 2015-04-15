@@ -107,7 +107,7 @@ var CompanySchema = new Schema({
 
         cover:{ //封面
           type:String,
-          default: '/img/icons/default_company_logo.png'
+          default: '/img/company_cover.jpg'
         }
     },
     register_date: {
