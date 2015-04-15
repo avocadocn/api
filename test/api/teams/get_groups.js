@@ -41,7 +41,7 @@ module.exports = function() {
         .expect(200)
         .end(function(err, res) {
           if (err) console.log(err);
-          res.body.length.should.equal(12);
+          res.body.length.should.equal(17);
           done();
         });
     });
