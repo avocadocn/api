@@ -46,33 +46,73 @@ module.exports = function () {
         )
       },
       function(callback) {
-        var j = 0;
-        async.whilst(
-          function() {
-            return j < 2;
-          },
-          function(cb) {
-            request.post('/companies/login')
-              .send({
-                username: companies[j].username,
-                password: '55yali'
-              })
-              .expect(200)
-              .end(function (err, res) {
-                if (err) {
-                  console.log(res.body);
-                  cb(err);
-                }
-                hrToken[j] = res.body.token;
-                j++;
-                cb();
-              });
-          },
-          function(err) {
-            if(err) callback(err);
-            else callback();
-          }
-        )
+        async.parallel([
+            function(callback) {
+              request.post('/companies/login')
+                .send({
+                  username: companies[0].username,
+                  password: '55yali'
+                })
+                .expect(200)
+                .end(function(err, res) {
+                  if (err) {
+                    // console.log(res.body);
+                    callback(err);
+                  }
+                  hrToken[0] = res.body.token;
+                  callback();
+                });
+            },
+            function(callback) {
+              request.post('/companies/login')
+                .send({
+                  username: companies[1].username,
+                  password: '55yali'
+                })
+                .expect(200)
+                .end(function(err, res) {
+                  if (err) {
+                    // console.log(res.body);
+                    callback(err);
+                  }
+                  hrToken[1] = res.body.token;
+                  callback();
+                });
+            }
+          ],
+          // optional callback
+          function(err, results) {
+            callback(err, results);
+          });
+        // var j = 0;
+        // async.whilst(
+        //   function() {
+        //     return j < 2;
+        //   },
+        //   function(cb) {
+        //     request.post('/companies/login')
+        //       .send({
+        //         username: companies[j].username,
+        //         password: '55yali'
+        //       })
+        //       .expect(200)
+        //       .end(function (err, res) {
+        //         if (err) {
+        //           console.log(res.body);
+        //           cb(err);
+        //         }
+        //         hrToken[j] = res.body.token;
+        //         j++;
+        //         cb();
+        //       });
+        //   },
+        //   function(err) {
+        //     console.log(hrToken[0]);
+        //     console.log(hrToken[1]);
+        //     if(err) callback(err);
+        //     else callback();
+        //   }
+        // )
       }
     ],function(err, results) {
       if(err)

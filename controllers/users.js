@@ -608,7 +608,7 @@ module.exports = function (app) {
 
       User.findOne({
         email: req.body.email
-      }).exec()
+      }).populate('cid').exec()
         .then(function (user) {
           if (!user) {
             return res.status(401).send({ msg: '邮箱地址不存在,请检查或注册。' });
@@ -629,6 +629,9 @@ module.exports = function (app) {
           if(user.disabled) {
             return res.status(401).send({ msg: '账号已被关闭。'})
           }
+          if(!user.cid.status.active) {
+            return res.status(401).send({ msg: '你的账号所属公司已被关闭。'})
+          }
           var token = jwt.sign({
             type: "user",
             id: user._id.toString(),
@@ -644,7 +647,7 @@ module.exports = function (app) {
               res.status(200).send({
                 token: token,
                 id:user._id,
-                cid:user.cid,
+                cid:user.cid.id,
                 role:user.role
               });
             }

@@ -52,33 +52,71 @@ module.exports = function () {
             );
           },
           hr : function (cb) {
-            var j = 0;
-            async.whilst(
-              function() {return j < 2;},
-              function (cbc) {
+          async.parallel([
+              function(callback) {
                 request.post('/companies/login')
                   .send({
-                    username: data[j].model.username,
+                    username: data[0].model.username,
                     password: '55yali'
                   })
                   .expect(200)
-                  .end(function (r_err, res) {
-                    if (r_err) {
-                      console.log(r_err.stack);
-                      cbc(r_err);
-                    }else{
-                      hrToken[j] = res.body.token;
-                      j++;
-                      cbc();
+                  .end(function (err, res) {
+                    if (err) {
+                      // console.log(res.body);
+                      callback(err);
                     }
+                    hrToken[0] = res.body.token;
+                    callback();
                   });
               },
-              //whilst error
-              function(w_err) {
-                if(w_err) cb(w_err);
-                else cb();
+              function(callback) {
+                request.post('/companies/login')
+                  .send({
+                    username: data[1].model.username,
+                    password: '55yali'
+                  })
+                  .expect(200)
+                  .end(function (err, res) {
+                    if (err) {
+                      // console.log(res.body);
+                      callback(err);
+                    }
+                    hrToken[1] = res.body.token;
+                    callback();
+                  });
               }
-            );
+            ],
+            // optional callback
+            function(err, results) {
+              cb(err, results);
+            }); 
+            // var j = 0;
+            // async.whilst(
+            //   function() {return j < 2;},
+            //   function (cbc) {
+            //     request.post('/companies/login')
+            //       .send({
+            //         username: data[j].model.username,
+            //         password: '55yali'
+            //       })
+            //       .expect(200)
+            //       .end(function (r_err, res) {
+            //         if (r_err) {
+            //           console.log(r_err.stack);
+            //           cbc(r_err);
+            //         }else{
+            //           hrToken[j] = res.body.token;
+            //           j++;
+            //           cbc();
+            //         }
+            //       });
+            //   },
+            //   //whilst error
+            //   function(w_err) {
+            //     if(w_err) cb(w_err);
+            //     else cb();
+            //   }
+            // );
           }
         },
         //parallel error
