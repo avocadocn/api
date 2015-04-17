@@ -1288,8 +1288,12 @@ module.exports = function(app) {
             msg: '权限错误'
           });
         }
-        CircleComment.findByIdAndUpdate(
-          req.params.commentId, {
+        CircleComment.findOneAndUpdate({
+            _id: req.params.commentId,
+            status: {
+              $ne: 'delete'
+            }
+          }, {
             status: 'delete'
           },
           function(err, comment) {
@@ -1297,11 +1301,15 @@ module.exports = function(app) {
               log(err);
               return res.sendStatus(500);
             } else {
+              if (!comment) {
+                return res.status(400).send({
+                  msg: '评论已删除'
+                });
+              }
               res.status(200).send({
                 msg: '评论删除成功'
               });
               // Update comment_users of circle content
-              // Reference: http://stackoverflow.com/questions/11184079/how-to-increment-mongodb-document-object-fields-inside-an-arra
               var options = {
                 $inc: {
                   'comment_users.$.comment_num': -1
@@ -1314,9 +1322,13 @@ module.exports = function(app) {
               }
               CircleContent.update({
                   _id: comment.target_content_id,
-                  'comment_users._id': req.user._id,
-                  'comment_users.comment_num': {
-                    $gte: 1
+                  'comment_users': {
+                    '$elemMatch': {
+                      '_id': req.user._id,
+                      'comment_num': {
+                        $gte: 1
+                      }
+                    }
                   }
                 }, options,
                 function(err) {
