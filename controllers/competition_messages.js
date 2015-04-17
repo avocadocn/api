@@ -64,7 +64,10 @@ module.exports = function (app) {
           }
           else {
             req.teams = teams;//给下面保存cid和找队长用的= -.
-            if(teams[0].gid===teams[1].gid || teams[0].cid.toString()===teams[1].cid.toString())
+            if(teams[0]._id.toString()===value[1]&&teams[0].leader.length==0||teams[1]._id.toString()===value[1]&&teams[1].leader.length==0){
+              callback(false, '对方没有队长无法进行挑战');
+            }
+            else if(teams[0].gid===teams[1].gid || teams[0].cid.toString()===teams[1].cid.toString())
               callback(true);
             else
               callback(false, '挑战小队数据错误');
@@ -167,7 +170,7 @@ module.exports = function (app) {
             });
             res.status(200).send({msg: '挑战信发送成功'});
             //发给对方队长
-            if(req.teams[0].leader && req.teams[0].leader[0]._id.toString() === req.user._id.toString()) {
+            if(req.teams[0].leader.length>0 && req.teams[0].leader[0]._id.toString() === req.user._id.toString()) {
               if(req.teams[1].leader.length>0) {
                 socketClient.pushMessage(req.teams[1].leader[0]._id);
               }
