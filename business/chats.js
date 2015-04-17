@@ -21,6 +21,9 @@ exports.createChat = function (param,callback) {
       if(param.competitionMessageId) {
         chat.competition_message = param.competitionMessageId;
       }
+      if(param.campaign){
+        chat.campaign=param.campaign
+      }
       //挑战提醒类型的发送方为小队
       chat.poster_team = param.posterTeam._id;
     }
@@ -38,7 +41,6 @@ exports.createChat = function (param,callback) {
     }
     else {
       if (param.photo) chat.photos[0].ori_uri = null; //对外隐藏此属性
-      
       callback && callback(null,chat);
       //找出相关人员
       User.find({
@@ -62,7 +64,8 @@ exports.createChat = function (param,callback) {
             'content': chat.content,
             'randomId': param.randomId,
             'chat_type': chat.chat_type,
-            'comptition_type': chat.comptition_type
+            'comptition_type': chat.competition_type,
+            'campaign': chat.campaign
           };
           if(param.user) {
             socketChat.poster = {

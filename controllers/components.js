@@ -8,6 +8,7 @@ var Campaign = mongoose.model('Campaign');
 var CompanyGroup = mongoose.model('CompanyGroup');
 var donlerValidator = require('../services/donler_validator.js');
 var tools = require('../tools/tools.js');
+var chatsBusiness = require('../business/chats');
 
 /**
  * 发送比分请求、接受比分的站内信
@@ -240,8 +241,8 @@ module.exports = function (app) {
                   return res.status(400).send({msg:'活动还未开始，无法设置比分'})
                 }
                 else{
-                  var leaderTeam;
-                  var opponentTid;
+                  // var leaderTeam;
+                  // var opponentTid;
 
                   var confirmIndex = [];
                   for (var i = 0; i < scoreBoard.playing_teams.length; i++) {
@@ -255,14 +256,14 @@ module.exports = function (app) {
                     if (allow.confirmScoreBoardScore&&!playing_team.confirm) {
                       confirmIndex.push(i);
                     }
-                    if (req.user.provider === 'user') {
-                      var isLeader = req.user.isTeamLeader(playing_team.tid);
-                      if (isLeader) {
-                        leaderTeam = playing_team;
-                      } else {
-                        opponentTid = playing_team.tid;
-                      }
-                    }
+                    // if (req.user.provider === 'user') {
+                    //   var isLeader = req.user.isTeamLeader(playing_team.tid);
+                    //   if (isLeader) {
+                    //     leaderTeam = playing_team;
+                    //   } else {
+                    //     opponentTid = playing_team.tid;
+                    //   }
+                    // }
                   }
                   //如果一个都没有说明没有权限，目前只有两个队，所以如果有权限则数组中有一个
                   if(confirmIndex.length==0){
@@ -273,6 +274,25 @@ module.exports = function (app) {
                     if (err) {
                       return res.status(500).send({msg: err });
                     } else {
+                      var formatTeams =[{
+                          _id:scoreBoard.playing_teams[0].tid,
+                          name:scoreBoard.playing_teams[0].name,
+                          logo:scoreBoard.playing_teams[0].logo
+                        },{
+                          _id:scoreBoard.playing_teams[1].tid,
+                          name:scoreBoard.playing_teams[1].name,
+                          logo:scoreBoard.playing_teams[1].logo
+                      }]
+                      for (var i = 0; i < scoreBoard.playing_teams.length; i++) {
+                        var playing_team = scoreBoard.playing_teams[i];
+                        chatsBusiness.createChat({
+                          chatroomId: playing_team.tid,
+                          chatType: 7,
+                          campaign:campaign._id,
+                          posterTeam: formatTeams[i],
+                          opponent_team: formatTeams[(i+1)%2]
+                        });
+                      }
                       res.sendStatus(200);
                     }
                   });
