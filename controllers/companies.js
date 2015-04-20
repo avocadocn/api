@@ -1021,6 +1021,30 @@ module.exports = function (app) {
           res.sendStatus(500);
         });
     },
+
+    // 获取最近加入的成员
+    getLatestMembers: function(req, res, next) {
+      var limit = 12;
+      User.find({
+        cid: req.params.companyId,
+        active: true,
+        mail_active: true
+      }, {
+        email: 1,
+        nickname: 1,
+        realname: 1,
+        photo: 1,
+        register_date: 1
+      })
+        .sort('-register_date')
+        .limit(limit)
+        .exec()
+        .then(function(users) {
+          res.send({msg: '获取用户列表成功', users: users});
+        })
+        .then(null, next);
+    },
+
     getCompanyReportedMembers: function (req, res) {
       Report.find({
         host_type:'user',
