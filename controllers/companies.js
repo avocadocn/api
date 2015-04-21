@@ -1205,6 +1205,21 @@ module.exports = function (app) {
           res.sendStatus(204);
         }
       });
+    },
+
+    hasLeader: function(req, res, next) {
+      CompanyGroup.find({cid: req.params.companyId}, {leader: 1}).exec()
+        .then(function(teams) {
+          var hasLeader = false;
+          for (var i = 0, len = teams.length; i < len; i++) {
+            if (teams[i].leader && teams[i].leader.length > 0) {
+              hasLeader = true;
+              break;
+            }
+          }
+          res.send({hasLeader: hasLeader});
+        })
+        .then(null, next);
     }
 
   };

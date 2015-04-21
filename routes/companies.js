@@ -24,4 +24,5 @@ module.exports = function (app, ctrl) {
   app.post('/companies/login', ctrl.login);
   app.post('/companies/refresh/token', token.needToken, ctrl.refreshToken);
   app.post('/companies/logout', token.needToken, ctrl.logout);
+  app.get('/companies/:companyId/hasLeader', token.needToken, ctrl.hasLeader);
 };
