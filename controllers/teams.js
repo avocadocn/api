@@ -625,7 +625,7 @@ module.exports = function (app) {
                 if(err) {
                   console.log(err);
                 }
-                else {
+                else if(user) {
                   var leaderTeams = user.team.filter(LeaderFilter);
                   if(leaderTeams.length===1) {
                     user.role = 'EMPLOYEE';
