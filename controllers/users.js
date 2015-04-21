@@ -856,9 +856,18 @@ module.exports = function (app) {
 
     },
     batchinviteUser: function (req, res) {
+      //status
+      //0: 未注册
+      //1: 邀请成功
+      //2: 已经注册，且激活
+      //3: 已经注册，未激活
+      //4: 不是企业邮箱
+      //5: 不是合法邮箱
+      //6: 发生错误
       if(req.user.provider!== 'company'){
         return res.status(403).send({ msg: '您没有权限进行批量邀请用户' });
       }
+      var operateFlag = req.body.operate;
       var members = req.body.members;
       var createNewUser =function (member,callback) {
         var user = new User({
@@ -876,7 +885,7 @@ module.exports = function (app) {
         });
         user.save(function (err) {
           if (err) {
-            member.status = '创建用户发生错误';
+            member.status = 6;
             return callback(null,member)
           } else {
             sendEmail(user,callback);
@@ -896,25 +905,24 @@ module.exports = function (app) {
             name:user.realname
           }
           if (err) {
-            member.status='数据库发生错误';
+            member.status=6;
             log(err)
           }
           else{
-            member.status='已邀请';
+            member.status=1;
           }
           callback(null,member)
         });
-        
       }
       async.map(members, function (member,callback) {
         if (!validator.isEmail(member.email)) {
-          member.status = '请填写正确的邮箱地址';
+          member.status = 5;
           return callback(null,member)
         }
         // 判断邮箱后缀是否为企业允许的邮箱后缀
         var emailDomain = member.email.split('@')[1];
         if (req.user.email.domain.indexOf(emailDomain) === -1) {
-          member.status = '该邮箱不是企业允许的邮箱。如果您需要向该邮箱发送邀请链接，请先在企业账号设置中添加邮箱。';
+          member.status = 4;
           return callback(null,member)
         }
 
@@ -929,16 +937,30 @@ module.exports = function (app) {
         }).exec()
           .then(function (user) {
             if (!user) {
+              member.status = 0
               // 没有注册则新创建用户
-              createNewUser(member,callback);
+              if(operateFlag){
+                createNewUser(member,callback);
+              }
+              else{
+                callback(null,member)
+              }
+              
             } else {
               if (user.mail_active === true) {
                 // 如果已经激活，则返回提示
-                member.status = '该用户已激活，无须再发送邀请信了。';
+                member.status = 2;
                 callback(null,member)
               } else {
                 // 还没有激活，则重新发送邀请信
-                sendEmail(user,callback);
+                member.status = 3;
+                if(operateFlag){
+                  sendEmail(user,callback);
+                }
+                else{
+                  callback(null,member)
+                }
+                
               }
             }
 
