@@ -814,6 +814,7 @@ module.exports = function (app) {
       function createNewUser() {
         var user = new User({
           email: req.body.email,
+          username: req.body.email,
           active: true,
           mail_active: false,
           invited: true,
@@ -847,7 +848,103 @@ module.exports = function (app) {
 
 
     },
+    batchinviteUser: function (req, res) {
+      if(req.user.provider!== 'company'){
+        return res.status(403).send({ msg: '您没有权限进行批量邀请用户' });
+      }
+      var members = req.body.members;
+      var createNewUser =function (member,callback) {
+        var user = new User({
+          email: member.email,
+          username: member.email,
+          realname:member.name,
+          nickname:member.name,
+          password:req.user.default_user_password,
+          active: true,
+          mail_active: false,
+          invited: true,
+          cid: req.user._id,
+          cname: req.user.info.name,
+          company_official_name: req.user.info.official_name
+        });
+        user.save(function (err) {
+          if (err) {
+            member.status = '创建用户发生错误';
+            return callback(null,member)
+          } else {
+            sendEmail(user,callback);
+          }
+        });
+      }
 
+      function sendEmail(user,callback) {
+        emailService.sendInvitedStaffActiveMail(user.email, {
+          inviteKey: req.user.invite_key,
+          uid: user.id,
+          cid: req.user.id,
+          cname: req.user.info.name
+        }, function (err) {
+          var member = {
+            email:user.email,
+            name:user.realname
+          }
+          if (err) {
+            member.status='数据库发生错误';
+            log(err)
+          }
+          else{
+            member.status='已邀请';
+          }
+          callback(null,member)
+        });
+        
+      }
+      async.map(members, function (member,callback) {
+        if (!validator.isEmail(member.email)) {
+          member.status = '请填写正确的邮箱地址';
+          return callback(null,member)
+        }
+        // 判断邮箱后缀是否为企业允许的邮箱后缀
+        var emailDomain = member.email.split('@')[1];
+        if (req.user.email.domain.indexOf(emailDomain) === -1) {
+          member.status = '该邮箱不是企业允许的邮箱。如果您需要向该邮箱发送邀请链接，请先在企业账号设置中添加邮箱。';
+          return callback(null,member)
+        }
+
+        // 查询该邮箱是否已被注册过了
+        User.findOne({
+          email: member.email
+        }, {
+          _id: 1,
+          email: 1,
+          mail_active: 1,
+          invited: 1
+        }).exec()
+          .then(function (user) {
+            if (!user) {
+              // 没有注册则新创建用户
+              createNewUser(member,callback);
+            } else {
+              if (user.mail_active === true) {
+                // 如果已经激活，则返回提示
+                member.status = '该用户已激活，无须再发送邀请信了。';
+                callback(null,member)
+              } else {
+                // 还没有激活，则重新发送邀请信
+                sendEmail(user,callback);
+              }
+            }
+
+          })
+          .then(null, function (err) {
+            member.status = '检查用户发生错误';
+            log(err)
+            callback(null,member)
+          });
+      }, function(err, result){
+        res.send(result)
+      });
+    },
     getUserPhotosValidate: function (req, res, next) {
       donlerValidator({
         start: {

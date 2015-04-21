@@ -17,7 +17,7 @@ module.exports = function (app, ctrl) {
   app.post('/users/:userId/open', token.needToken, getById.getUserById, ctrl.open);
   app.post('/users/:userId/active', token.needToken, getById.getUserById, ctrl.activeUser);
   app.post('/users/actions/invite', token.needToken, ctrl.inviteUser);
-
+  app.post('/users/actions/batchinvite', token.needToken, ctrl.batchinviteUser);
   app.post('/users/login', ctrl.login);
   app.post('/users/refresh/token', token.needToken, ctrl.refreshToken);
   app.post('/users/logout', token.needToken, ctrl.logout);
