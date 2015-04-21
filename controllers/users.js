@@ -395,12 +395,16 @@ module.exports = function (app) {
           }
           //hr统计用户
           else if (req.query.resultType=='2'){
-            outputOptions = {'nickname':1,'photo':1,'username':1,'realname':1,'department':1,'team':1,'campaignCount':1,'score':1};
+            findOptions = {'cid':req.params.companyId};
+            outputOptions = {'nickname':1,'photo':1,'username':1,'realname':1,'department':1,'team':1,'campaignCount':1,'score':1,'active':1,'mail_active':1};
           }
           //待激活用户
           else if (req.query.resultType=='3') {
             findOptions = {'cid':req.params.companyId, 'active':false};
             outputOptions = {'username':1,'register_date':1,'mail_active':1, 'nickname':1};
+          }else if (req.query.resultType=='4') {
+            findOptions = {'cid':req.params.companyId, 'active':false, 'mail_active':false};
+            outputOptions = {'_id':1};
           }
         }
       }
@@ -697,6 +701,7 @@ module.exports = function (app) {
       });
     },
 
+    //屏蔽
     close: function (req, res) {
       var role = auth.getRole(req.user, {
         companies: [req.resourceUser.cid],
@@ -720,6 +725,7 @@ module.exports = function (app) {
 
     },
 
+    //取消屏蔽
     open: function (req, res) {
       var role = auth.getRole(req.user, {
         companies: [req.resourceUser.cid],
@@ -742,6 +748,7 @@ module.exports = function (app) {
       });
     },
 
+    //激活
     activeUser: function (req, res, next) {
       var srcUser = req.resourceUser;
       var role = auth.getRole(req.user, {
