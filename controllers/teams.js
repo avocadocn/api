@@ -701,6 +701,9 @@ module.exports = function (app) {
             uploadUser.name = req.user.nickname;
             uploadUser.photo = req.user.photo;
           }
+          team.family && team.family.forEach(function(photo, index){
+            photo.select = false;
+          });
           team.family.push({
             uri: path.join('/img/group/family', url),
             upload_user: uploadUser
@@ -735,14 +738,19 @@ module.exports = function (app) {
       var originFamilyPhotos = team.family.filter(function(photo){
         return (!photo.hidden && photo.select);
       });
-      var familyPhotos = [];
-      for(var i=0;i<originFamilyPhotos.length;i++){
-        familyPhotos.push({
-          _id: originFamilyPhotos[i]._id,
-          uri: originFamilyPhotos[i].uri,
-          select: originFamilyPhotos[i].select
-        });
-      }
+      var familyPhotoIndex= originFamilyPhotos.length-1;
+      var familyPhotos = [{
+        _id: originFamilyPhotos[familyPhotoIndex]._id,
+        uri: originFamilyPhotos[familyPhotoIndex].uri,
+        select: originFamilyPhotos[familyPhotoIndex].select
+      }];
+      // for(var i=0;i<originFamilyPhotos.length;i++){
+      //   familyPhotos.push({
+      //     _id: originFamilyPhotos[i]._id,
+      //     uri: originFamilyPhotos[i].uri,
+      //     select: originFamilyPhotos[i].select
+      //   });
+      // }
       return res.status(200).send(familyPhotos);
     },
     toggleSelectFamilyPhoto : function(req, res) {
