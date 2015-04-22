@@ -415,33 +415,32 @@ module.exports = function (app) {
         // 获取常用的几个属性，尽管前端可能只需要其中的一部分
         outputOptions = {'email':1, 'nickname':1, 'photo': 1, 'realname': 1};
       }
-      var pageNum = 10;
-      var limitNum=0,
-          skipNum =0;
       if(req.query.page) {
-        limitNum = pageNum+1;
-        skipNum = pageNum *(req.query.page-1);
+        var pageNum = 10;
+        var page = req.query.page;
+        User.paginate(findOptions, page, pageNum, function(err, pageCount, results, itemCount) {
+          if(err){
+            log(err);
+            res.status(500).send({msg:err});
+          }
+          else{
+            return res.send({'users':results,'maxPage':pageCount,'hasNext':pageCount>page});
+          }
+        },{columns:outputOptions, sortBy:{'nickname':1}});
       }
-      User.find(findOptions,outputOptions)
-      .sort('nickname')
-      .limit(limitNum)
-      .skip(skipNum)
-      .exec()
-      .then(function (users){
-        if(req.query.page) {
-          return res.status(200).send({
-            users:users.slice(0,pageNum),
-            hasNext:users.length==limitNum
-          });
-        }
-        else{
+      else{
+        User.find(findOptions,outputOptions)
+        .sort('nickname')
+        .exec()
+        .then(function (users){
           return res.status(200).send(users);
-        }
-      })
-      .then(null, function (err){
-        log(err);
-        return res.status(500).send({msg:'查询错误'});
-      })
+        })
+        .then(null, function (err){
+          log(err);
+          return res.status(500).send({msg:'查询错误'});
+        })
+      }
+
     },
 
     updateValidate: function (req, res, next) {

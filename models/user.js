@@ -5,7 +5,8 @@
  */
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema,
-  crypto = require('crypto');
+  crypto = require('crypto'),
+  mongoosePaginate = require('mongoose-paginate');
 
 var _device = new Schema({
   platform: String,
@@ -234,7 +235,7 @@ UserSchema.virtual('password').set(function(password) {
 }).get(function() {
   return this._password;
 });
-
+UserSchema.plugin(mongoosePaginate);
 /**
  * Validations
  */
