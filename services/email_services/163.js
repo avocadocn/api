@@ -166,7 +166,7 @@ exports.sendInvitedStaffActiveMail = function (email, host, data, callback) {
   var from = '动梨<service@donler.com>';
   var to = email;
   var subject = '动梨账号激活';
-  var description = cname + '邀请您注册动梨，请点击下面的链接来激活帐户：';
+  var description = '您的公司' + cname + '已经在动梨上建立了自己的社区，以后您和同事们的活动就可以在动梨上发布、报名、分享，快来点击注册，加入您的小伙伴们吧！请点击下面的链接来激活帐户：';
   var link = 'http://' + host + '/users/invite?key=' + inviteKey + '&uid=' + uid + '&cid=' + cid;
 
   fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
