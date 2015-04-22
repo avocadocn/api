@@ -159,6 +159,7 @@ module.exports = function (app) {
       if(req.query.resultType=="simple") {
         var simpleBriefTeam = {
           _id: team._id,
+          active:team.active,
           name: team.name,
           cname: team.cname,
           logo: team.logo,
@@ -206,6 +207,7 @@ module.exports = function (app) {
       }
       var briefTeam = {
         _id: team._id,
+        active:team.active,
         name: team.name,
         cname: team.cname,
         logo: team.logo,
