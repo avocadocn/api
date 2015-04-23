@@ -862,7 +862,8 @@ module.exports = function (app) {
       //3: 已经注册，未激活
       //4: 不是企业邮箱
       //5: 不是合法邮箱
-      //6: 发生错误
+      //6: 邮件发送错误
+      //7: 数据库发送错误
       if(req.user.provider!== 'company'){
         return res.status(403).send({ msg: '您没有权限进行批量邀请用户' });
       }
@@ -884,25 +885,22 @@ module.exports = function (app) {
         });
         user.save(function (err) {
           if (err) {
-            member.status = 6;
+            member.status = 7;
             return callback(null,member)
           } else {
-            sendEmail(user,callback);
+            member.id= user.id;
+            sendEmail(member,callback);
           }
         });
       }
 
-      function sendEmail(user,callback) {
-        emailService.sendInvitedStaffActiveMail(user.email, {
+      function sendEmail(member,callback) {
+        emailService.sendInvitedStaffActiveMail(member.email, {
           inviteKey: req.user.invite_key,
-          uid: user.id,
+          uid: member.id,
           cid: req.user.id,
           cname: req.user.info.name
         }, function (err) {
-          var member = {
-            email:user.email,
-            name:user.realname
-          }
           if (err) {
             member.status=6;
             log(err)
