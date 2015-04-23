@@ -54,6 +54,7 @@ var searchCampaign = function(select_type, option, sort, limit, requestId, teamI
     //已经结束的活动
     case '3':
       sort ='-end_time';
+      _option.end_time = { '$lt':now };
       _option['campaign_unit.member._id'] = requestId;
       limit = 5;
     break;
