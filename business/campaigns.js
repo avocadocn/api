@@ -328,6 +328,7 @@ var formatterList = {
     for(var i=0; i<campaignsLength; i++) {
       var formatCampaign = {
         _id: campaigns[i]._id,
+        campaignType:campaigns[i].campaign_type,
         start: new Date(campaigns[i].start_time).valueOf(),
         end: new Date(campaigns[i].end_time).valueOf(),
         class: 'event-info'
