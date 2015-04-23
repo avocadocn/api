@@ -694,7 +694,8 @@ module.exports = function (app) {
         unActivatedUsers: function(callback) {
           User.find({
             'cid': req.params.companyId,
-            'mail_active': false
+            'mail_active': false,
+            'invited':{"$ne":true}
           }, function (err, users) {
             if(err) {
               callback(err);

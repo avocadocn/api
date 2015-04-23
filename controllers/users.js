@@ -400,7 +400,7 @@ module.exports = function (app) {
           }
           //待激活用户
           else if (req.query.resultType=='3') {
-            findOptions = {'cid':req.params.companyId, 'active':false};
+            findOptions = {'cid':req.params.companyId, 'active':false,'invited':{"$ne":true}};
             outputOptions = {'username':1,'register_date':1,'mail_active':1, 'nickname':1};
           }else if (req.query.resultType=='4') {
             findOptions = {'cid':req.params.companyId, 'active':false, 'mail_active':false};
