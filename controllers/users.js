@@ -301,13 +301,18 @@ module.exports = function (app) {
           });
           var allow = auth.auth(role, ['getUserCompleteData', 'getUserBriefData', 'getUserMinData']);
           if (allow.getUserCompleteData) {
-            var tids = [];
+            var tids = [],teams=[];
             user.team.forEach(function (team) {//不拿部门和公司
-              if(team.entity_type!='virtual') tids.push(team._id);
+              if(team.entity_type!='virtual'){
+                tids.push(team._id);
+                teams.push(team);
+              }
             });
 
             var completeData = {
               _id: user._id,
+              active:user.active,
+              mail_active:user.mail_active,
               email: user.email,
               nickname: user.nickname,
               photo: user.photo,
@@ -329,7 +334,8 @@ module.exports = function (app) {
               lastCommentTime: user.last_comment_time,
               score: user.score.total || 0,
               tags: user.tags,
-              campaignCount:user.campaignCount || 0
+              campaignCount:user.campaignCount || 0,
+              team: teams
             };
             res.status(200).send(completeData);
           } else if (allow.getUserBriefData) {
@@ -391,12 +397,11 @@ module.exports = function (app) {
           //hr取来任命队长用
           if(!req.query.resultType || req.query.resultType=='1'){
             outputOptions = {'email':1,'nickname':1,'photo':1,'realname': 1};
-            
           }
           //hr统计用户
           else if (req.query.resultType=='2'){
             findOptions = {'cid':req.params.companyId};
-            outputOptions = {'nickname':1,'photo':1,'username':1,'realname':1,'department':1,'team':1,'campaignCount':1,'score':1,'active':1,'mail_active':1};
+            outputOptions = {'nickname':1,'photo':1,'username':1,'sex': 1,'phone':1,'qq':1,'introduce': 1,'realname':1,'department':1,'team':1,'campaignCount':1,'score':1,'active':1,'mail_active':1};
           }
           //待激活用户
           else if (req.query.resultType=='3') {
@@ -424,6 +429,14 @@ module.exports = function (app) {
             res.status(500).send({msg:err});
           }
           else{
+            if (req.query.resultType=='2'){
+              results.forEach(function (user) {
+                var index = tools.arrayObjectIndexOf(user.team,'0','gid')
+                if(index>-1){
+                  user.team.splice(index,1);
+                }
+              })
+            }
             return res.send({'users':results,'maxPage':pageCount,'hasNext':pageCount>page});
           }
         },{columns:outputOptions, sortBy:{'nickname':1}});
