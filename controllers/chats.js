@@ -106,7 +106,7 @@ module.exports = function (app) {
         chatType: req.body.chatType,
         photo: req.photo,
         opponent_team: req.recommandTeam,
-        randomId: req.body.randomId  || req.randomId,
+        randomId: req.body.randomId  || parseInt(req.randomId),
         user: req.user
       };
       chatsBusiness.createChat(param,function (err, chat) {
