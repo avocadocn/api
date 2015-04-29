@@ -446,6 +446,12 @@ module.exports = function (app) {
         .sort('nickname')
         .exec()
         .then(function (users){
+          users.forEach(function(user) {
+            var index = tools.arrayObjectIndexOf(user.team, '0', 'gid')
+            if (index > -1) {
+              user.team.splice(index, 1);
+            }
+          })
           return res.status(200).send(users);
         })
         .then(null, function (err){
