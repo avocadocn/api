@@ -288,15 +288,16 @@ module.exports = function (app) {
           };
         });
       }
+      //暂时不让公司管理组有聊天室. 2015.4.29 -M
       // 只有是队长才可以参与公司管理讨论组
-      if (req.user.role === 'LEADER') {
-        chatroomIds.push(req.user.getCid());
-        chatroomList.push({
-          kind: 'company',
-          _id: req.user.cid,
-          name: req.user.company_official_name
-        });
-      }
+      // if (req.user.role === 'LEADER') {
+      //   chatroomIds.push(req.user.getCid());
+      //   chatroomList.push({
+      //     kind: 'company',
+      //     _id: req.user.cid,
+      //     name: req.user.company_official_name
+      //   });
+      // }
       if(!chatroomList.length) {
         return res.send({chatroomList: chatroomList});
       }
