@@ -1757,7 +1757,7 @@ function createCircleContent(req, res, next) {
       for (var i = 0; i < campaign_unit.length && !findUserTeam; i++) {
         var members = campaign_unit[i].member;
         for (var j = 0; j < members.length; j++) {
-          if (members[j]._id.toString() == req.user.id) {
+          if (members[j]._id.toString() == req.user.id&&campaign_unit[i].team&&campaign_unit[i].team._id) {
             post_user_tid = campaign_unit[i].team._id.toString();
             findUserTeam = true;
             break;
