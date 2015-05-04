@@ -266,7 +266,7 @@ module.exports = function (app) {
       });
     },
 
-    getUserById: function (req, res) {
+    getUserById: function (req, res, next) {
       //获取免打扰开关
       if(req.query.responseKey==='pushToggle') {
         var user = {'pushToggle' : req.user.push_toggle};
@@ -379,10 +379,7 @@ module.exports = function (app) {
           }
 
         })
-        .then(null, function (err) {
-          log(err);
-          res.sendStatus(500);
-        });
+        .then(null, next);
     },
 
     getCompanyUsers: function (req, res) {
@@ -692,10 +689,6 @@ module.exports = function (app) {
       var token = req.headers['x-access-token'];
       tokenService.redisToken.refresh(token)
         .then(function(reply) {
-          // TODO
-          // 此处其实没必要再返回token了，因为没有修改，但是为了确保现在的app能正常使用，仍返回原来的token
-          // 等android和ios app都更改过service后，此处就可以不返回token了
-          // - by CahaVar 2015-05-04
           res.send({
             msg: '更新成功',
             newToken: token

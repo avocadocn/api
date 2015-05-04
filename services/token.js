@@ -1,5 +1,7 @@
 'use strict';
 
+var errorLog = require('./error_log');
+
 var jwt = require('jsonwebtoken');
 var mongoose = require('mongoose');
 var Q = require('q');
@@ -13,7 +15,7 @@ var config = require('../config/config');
 var isConnect = false;
 redisClient.on("error", function (err) {
   isConnect = false;
-  console.log("[redis]" + err);
+  errorLog("[redis]" + err);
 });
 redisClient.on("ready", function () {
   isConnect = true;
