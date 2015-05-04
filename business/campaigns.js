@@ -386,17 +386,39 @@ exports.queryAndFormat = function (opts, callback) {
     if (opts.reqQuery.page_id) {
       dbQueryOptions._id = { '$lte': opts.reqQuery.page_id };
     }
+    // HR 活动状态筛选功能
+    // opts.reqQuery.status 
+    // 值     状态
+    // 1     未开始
+    // 2     进行中
+    // 3     已结束
+    // opts.reqQuery.statusType
+    // 值     状态请求出处
+    // 0       活动日历
+    // 1       活动管理
     if(opts.reqQuery.status) {
       var index = opts.reqQuery.status;
       switch(index) {
         case '1':
-          dbQueryOptions.$and = [{'start_time': {'$gt': new Date()}}, {'start_time': {'$lte': new Date(parseInt(opts.reqQuery.to))}}];
+          if(opts.reqQuery.statusType == '1') {
+            dbQueryOptions.start_time = {'$gt': new Date()};
+          } else {
+            dbQueryOptions.$and = [{'start_time': {'$gt': new Date()}}, {'start_time': {'$lte': new Date(parseInt(opts.reqQuery.to))}}];
+          }
           break;
         case '2':
-          dbQueryOptions.$and = [ {'start_time': {'$lte': new Date()}}, {'start_time': {'$lte': new Date(parseInt(opts.reqQuery.to))}}, {'end_time': {'$gte': new Date()}}, {'end_time': { '$gte': new Date(parseInt(opts.reqQuery.from))}}];
+          if (opts.reqQuery.statusType == '1') {
+            dbQueryOptions.$and = [{'start_time': {'$lte': new Date()}}, {'end_time': {'$gte': new Date()}}];
+          } else {
+            dbQueryOptions.$and = [ {'start_time': {'$lte': new Date()}}, {'start_time': {'$lte': new Date(parseInt(opts.reqQuery.to))}}, {'end_time': {'$gte': new Date()}}, {'end_time': { '$gte': new Date(parseInt(opts.reqQuery.from))}}];
+          }
           break;
         case '3':
-          dbQueryOptions.$and = [{'end_time': {'$lt': new Date()}}, {'end_time': {'$gte': new Date(parseInt(opts.reqQuery.from))}}];
+          if(opts.reqQuery.statusType == '1') {
+            dbQueryOptions.end_time = {'$lt': new Date()};
+          } else {
+            dbQueryOptions.$and = [{'end_time': {'$lt': new Date()}}, {'end_time': {'$gte': new Date(parseInt(opts.reqQuery.from))}}];
+          }
           break;
       }
     }
