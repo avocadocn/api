@@ -68,6 +68,11 @@ var CompanySchema = new Schema({
             type: Boolean,
             default: false
         },
+        verification: {//暂时只能0、1。 0表示过了系统审核,1表示未审核（快速注册）,未来可以增加各种审核
+            type: Number,
+            default: 0,
+            enum: [0,1]
+        },
 
         date: Number
     },
