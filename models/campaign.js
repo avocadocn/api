@@ -158,6 +158,10 @@ var Campaign = new Schema({
   circle_content_sum: {
     type: Number,
     default: 0
+  },
+  number_of_members: {
+    type: Number,
+    default: 0
   }
 });
 

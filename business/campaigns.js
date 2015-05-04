@@ -373,9 +373,9 @@ exports.queryAndFormat = function (opts, callback) {
     pageSize = Number(opts.reqQuery.limit);
   }
 
-  var sortOptions = '-start_time -_id';
+  // var sortOptions = '-start_time -_id';
   // todo set custom sort
-
+  var sortOptions = opts.reqQuery.sort + ' -_id';
   var setPagerOptions = function () {
     if(opts.reqQuery.to){
       dbQueryOptions.start_time = { '$lte': new Date(parseInt(opts.reqQuery.to)) };
@@ -385,6 +385,20 @@ exports.queryAndFormat = function (opts, callback) {
     }
     if (opts.reqQuery.page_id) {
       dbQueryOptions._id = { '$lte': opts.reqQuery.page_id };
+    }
+    if(opts.reqQuery.status) {
+      var index = opts.reqQuery.status;
+      switch(index) {
+        case '1':
+          dbQueryOptions.$and = [{'start_time': {'$gt': new Date()}}, {'start_time': {'$lte': new Date(parseInt(opts.reqQuery.to))}}];
+          break;
+        case '2':
+          dbQueryOptions.$and = [ {'start_time': {'$lte': new Date()}}, {'start_time': {'$lte': new Date(parseInt(opts.reqQuery.to))}}, {'end_time': {'$gte': new Date()}}, {'end_time': { '$gte': new Date(parseInt(opts.reqQuery.from))}}];
+          break;
+        case '3':
+          dbQueryOptions.$and = [{'end_time': {'$lt': new Date()}}, {'end_time': {'$gte': new Date(parseInt(opts.reqQuery.from))}}];
+          break;
+      }
     }
   };
 
