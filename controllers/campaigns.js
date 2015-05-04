@@ -946,6 +946,8 @@ module.exports = function (app) {
         if (!joinResult.success) {
           return res.status(400).send({msg: joinResult.msg});
         } else {
+          // 加入活动，活动参加人数加1
+          campaign.number_of_members = campaign.number_of_members + 1;
           campaign.save(function (err) {
             if (err) {
               log(err);
@@ -1050,6 +1052,10 @@ module.exports = function (app) {
         if (!quitResult) {
           return res.status(400).send({msg:'该成员未参加活动'});
         } else {
+          // 退出活动，活动参加人数减1
+          if(campaign.number_of_members > 0) {
+            campaign.number_of_members = campaign.number_of_members - 1;
+          }
           campaign.save(function (err) {
             if (err) {
               log(err);

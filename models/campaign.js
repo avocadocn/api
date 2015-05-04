@@ -159,6 +159,7 @@ var Campaign = new Schema({
     type: Number,
     default: 0
   },
+  // 活动参加人数
   number_of_members: {
     type: Number,
     default: 0
