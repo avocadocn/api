@@ -658,7 +658,8 @@ module.exports = function (app) {
           }
           var payload = {
             type: "user",
-            id: user._id.toString()
+            id: user._id.toString(),
+            exp: app.get('tokenExpires') + Date.now()
           };
           var token = jwt.sign(payload, app.get('tokenSecret'));
           var pushInfo = req.body.pushInfo ||{};
@@ -676,12 +677,7 @@ module.exports = function (app) {
               });
 
               tokenService.redisToken.create(token, payload)
-                .then(function(reply) {
-                  // 创建成功不需要再处理了
-                })
-                .then(null, function(err) {
-                  console.log(err.stack || err);
-                });
+                .then(null, console.log);
             }
           });
 
@@ -705,7 +701,23 @@ module.exports = function (app) {
             newToken: token
           });
         })
-        .then(null, next);
+        .then(null, function(err) {
+          var newToken = jwt.sign({
+            type: "user",
+            id: req.user._id.toString(),
+            exp: app.get('tokenExpires') + Date.now()
+          }, app.get('tokenSecret'));
+          req.user.updateDeviceToken(req.headers['x-access-token'], newToken);
+          req.user.save(function(err) {
+            if (err) next(err);
+            else {
+              res.send({
+                msg: '更新成功',
+                newToken: newToken
+              });
+            }
+          });
+        });
     },
 
     logout: function (req, res) {
@@ -722,12 +734,7 @@ module.exports = function (app) {
         } else {
           res.sendStatus(204);
           tokenService.redisToken.delete(token)
-            .then(function(reply) {
-              // 成功后不必作特别处理
-            })
-            .then(null, function(err) {
-              console.log(err.stack || err);
-            });
+            .then(null, console.log);
         }
       });
     },

@@ -10,8 +10,13 @@ var redisToken = {};
 
 var config = require('../config/config');
 
+var isConnect = false;
 redisClient.on("error", function (err) {
+  isConnect = false;
   console.log("[redis]" + err);
+});
+redisClient.on("ready", function () {
+  isConnect = true;
 });
 
 var headersKeys = ['x-app-id', 'x-api-key', 'x-device-id', 'x-device-type', 'x-platform', 'x-version'];
@@ -43,17 +48,36 @@ var validateHeaders = function (headers, device) {
 exports.verifying = function(req, res, next) {
   var token = req.headers['x-access-token'];
   if (token && token !== 'null') {
-    redisToken.get(token)
-      .then(function(replies) {
-        var type = replies[0];
-        var id = replies[1];
-        req.tokenUser = {
-          type: type,
-          id: id
-        };
-        next();
-      })
-      .then(null, next);
+    if (isConnect) {
+      redisToken.get(token)
+        .then(function(replies) {
+          var type = replies[0];
+          var id = replies[1];
+          req.tokenUser = {
+            type: type,
+            id: id
+          };
+          next();
+        })
+        .then(null, next);
+    }
+    else {
+      jwt.verify(token, config.token.secret, function (err, decoded) {
+        if (err) {
+          console.log(err);
+          next();
+        }
+        else {
+          if (decoded.exp > Date.now()) {
+            req.tokenUser = {
+              type: decoded.type,
+              id: decoded.id
+            };
+          }
+          next();
+        }
+      });
+    }
   }
   else {
     next();
@@ -106,6 +130,11 @@ var invalidErrorMsg = '不是一个有效的Json Web Token';
 redisToken.create = function(jwt, payload) {
   var deferred = Q.defer();
 
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+
   var res = jwt.split('.');
   if (!res[2]) {
     deferred.reject(new Error(invalidErrorMsg));
@@ -146,6 +175,11 @@ redisToken.create = function(jwt, payload) {
 redisToken.refresh = function(jwt) {
   var deferred = Q.defer();
 
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+
   var res = jwt.split('.');
   if (!res[2]) {
     deferred.reject(new Error(invalidErrorMsg));
@@ -169,6 +203,11 @@ redisToken.refresh = function(jwt) {
 redisToken.delete = function(jwt) {
   var deferred = Q.defer();
 
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+
   var res = jwt.split('.');
   if (!res[2]) {
     deferred.reject(new Error(invalidErrorMsg));
@@ -190,6 +229,11 @@ redisToken.delete = function(jwt) {
  */
 redisToken.get = function(jwt) {
   var deferred = Q.defer();
+
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
 
   var res = jwt.split('.');
   if (!res[2]) {
