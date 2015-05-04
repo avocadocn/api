@@ -2,6 +2,17 @@
 
 var jwt = require('jsonwebtoken');
 var mongoose = require('mongoose');
+var Q = require('q');
+var redis = require('redis');
+var redisClient = redis.createClient();
+
+var redisToken = {};
+
+var config = require('../config/config');
+
+redisClient.on("error", function (err) {
+  console.log("[redis]" + err);
+});
 
 var headersKeys = ['x-app-id', 'x-api-key', 'x-device-id', 'x-device-type', 'x-platform', 'x-version'];
 var modelKeys = ['app_id', 'api_key', 'device_id', 'device_type', 'platform', 'version'];
@@ -29,49 +40,25 @@ var validateHeaders = function (headers, device) {
   return false;
 };
 
-/**
- * 创建tokenDevice对象以便保存或更新
- * @param  {Object} headers req.headers
- * @return {Object}         see user.token_device
- */
-exports.createTokenDevice = function (headers) {
-  var tokenDevice = {};
-  for (var i = 0; i < headersKeys.length; i++) {
-    var headersKey = headersKeys[i];
-    var modelKey = modelKeys[i];
-    if (headers[headersKey]) {
-      tokenDevice[modelKey] = headers[headersKey];
-    } else {
-      tokenDevice[modelKey] = null;
-    }
+exports.verifying = function(req, res, next) {
+  var token = req.headers['x-access-token'];
+  if (token && token !== 'null') {
+    redisToken.get(token)
+      .then(function(replies) {
+        var type = replies[0];
+        var id = replies[1];
+        req.tokenUser = {
+          type: type,
+          id: id
+        };
+        next();
+      })
+      .then(null, next);
   }
-  return tokenDevice;
-};
+  else {
+    next();
+  }
 
-exports.verifying = function (app) {
-  return function (req, res, next) {
-    var token = req.headers['x-access-token'];
-    if (token) {
-
-      jwt.verify(token, app.get('tokenSecret'), function (err, decoded) {
-        if (err) {
-          console.log(err);
-          next();
-        } else {
-          if (decoded.exp > Date.now()) {
-            req.tokenUser = {
-              type: decoded.type,
-              id: decoded.id
-            };
-          }
-          next();
-        }
-      });
-    } else {
-      next();
-    }
-
-  };
 };
 
 
@@ -98,12 +85,126 @@ exports.needToken = function (req, res, next) {
         req.user = user;
         next();
       })
-      .then(null, function (err) {
-        // todo temp err handle
-        console.log(err);
-        res.sendStatus(500);
-      });
+      .then(null, next);
   } else {
     res.status(401).send({msg:'您没有登录或者登录超时，请重新登录'});
   }
 };
+
+
+
+// atk: access token
+var identifier = 'atk:';
+var invalidErrorMsg = '不是一个有效的Json Web Token';
+
+/**
+ * 截取json web token的加密部分作为key存到redis数据库
+ * @param  {String} jwt JsonWebToken String
+ * @param  {Object} payload jsonWebToken存储的数据(不支持多层嵌套的对象)
+ * @return {Promise}
+ */
+redisToken.create = function(jwt, payload) {
+  var deferred = Q.defer();
+
+  var res = jwt.split('.');
+  if (!res[2]) {
+    deferred.reject(new Error(invalidErrorMsg));
+    return deferred.promise;
+  }
+  var hashKey = identifier + res[2];
+
+  var args = [];
+  args.push(hashKey);
+
+  for (var key in payload) {
+    if (key !== 'iat') {
+      args.push(key);
+      args.push(payload[key].toString());
+    }
+  }
+
+  redisClient.hmset(args, function(err, reply) {
+    if (err) deferred.reject(err);
+    else setExpire();
+  });
+
+  function setExpire() {
+    var exp = config.token.expires / 1000; // 单位是秒
+    redisClient.expire(hashKey, exp, function(err, reply) {
+      if (err) deferred.reject(err);
+      else deferred.resolve(reply);
+    });
+  }
+  return deferred.promise;
+};
+
+/**
+ * 更新token的生存时间
+ * @param  {String} jwt
+ * @return {Promise}
+ */
+redisToken.refresh = function(jwt) {
+  var deferred = Q.defer();
+
+  var res = jwt.split('.');
+  if (!res[2]) {
+    deferred.reject(new Error(invalidErrorMsg));
+    return deferred.promise;
+  }
+  var hashKey = identifier + res[2];
+
+  var exp = config.token.expires / 1000; // 单位是秒
+  redisClient.expire(hashKey, exp, function(err, reply) {
+    if (err) deferred.reject(err);
+    else deferred.resolve(reply);
+  });
+  return deferred.promise;
+};
+
+/**
+ * 删除token
+ * @param  {String} jwt
+ * @return {Promise}
+ */
+redisToken.delete = function(jwt) {
+  var deferred = Q.defer();
+
+  var res = jwt.split('.');
+  if (!res[2]) {
+    deferred.reject(new Error(invalidErrorMsg));
+    return deferred.promise;
+  }
+  var hashKey = identifier + res[2];
+
+  redisClient.del(hashKey, function(err, reply) {
+    if (err) deferred.reject(err);
+    else deferred.resolve(reply);
+  });
+  return deferred.promise;
+};
+
+/**
+ * 获取token的数据
+ * @param  {String} jwt
+ * @return {Promise}
+ */
+redisToken.get = function(jwt) {
+  var deferred = Q.defer();
+
+  var res = jwt.split('.');
+  if (!res[2]) {
+    deferred.reject(new Error(invalidErrorMsg));
+    return deferred.promise;
+  }
+  var hashKey = identifier + res[2];
+
+  var args = [hashKey, 'type', 'id'];
+
+  redisClient.hmget(args, function(err, replies) {
+    if (err) deferred.reject(err);
+    else deferred.resolve(replies);
+  });
+  return deferred.promise;
+};
+
+exports.redisToken = redisToken;
