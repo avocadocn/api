@@ -656,11 +656,11 @@ module.exports = function (app) {
           if(!user.cid.status.active) {
             return res.status(401).send({ msg: '你的账号所属公司已被关闭。'})
           }
-          var token = jwt.sign({
+          var payload = {
             type: "user",
-            id: user._id.toString(),
-            exp: app.get('tokenExpires') + Date.now()
-          }, app.get('tokenSecret'));
+            id: user._id.toString()
+          };
+          var token = jwt.sign(payload, app.get('tokenSecret'));
           var pushInfo = req.body.pushInfo ||{};
           user.addDevice(req.headers, token, pushInfo);
           user.save(function (err) {
@@ -674,6 +674,14 @@ module.exports = function (app) {
                 cid:user.cid.id,
                 role:user.role
               });
+
+              tokenService.redisToken.create(token, payload)
+                .then(function(reply) {
+                  // 创建成功不需要再处理了
+                })
+                .then(null, function(err) {
+                  console.log(err.stack || err);
+                });
             }
           });
 
@@ -685,24 +693,19 @@ module.exports = function (app) {
     },
 
     refreshToken: function (req, res, next) {
-      var newToken = jwt.sign({
-        type: "user",
-        id: req.user._id.toString(),
-        exp: app.get('tokenExpires') + Date.now()
-      }, app.get('tokenSecret'));
-      req.user.updateDeviceToken(req.headers['x-access-token'], newToken);
-      req.user.save(function (err) {
-        if (err) {
-          console.log(err.stack || err);
-          res.status(500).send({msg: '服务器错误'});
-        }
-        else {
+      var token = req.headers['x-access-token'];
+      tokenService.redisToken.refresh(token)
+        .then(function(reply) {
+          // TODO
+          // 此处其实没必要再返回token了，因为没有修改，但是为了确保现在的app能正常使用，仍返回原来的token
+          // 等android和ios app都更改过service后，此处就可以不返回token了
+          // - by CahaVar 2015-05-04
           res.send({
             msg: '更新成功',
-            newToken: newToken
+            newToken: token
           });
-        }
-      });
+        })
+        .then(null, next);
     },
 
     logout: function (req, res) {
@@ -710,6 +713,7 @@ module.exports = function (app) {
         res.sendStatus(403);
         return;
       }
+      var token = req.headers['x-access-token'];
       req.user.removeDevice(req.headers);
       req.user.save(function (err) {
         if (err) {
@@ -717,6 +721,13 @@ module.exports = function (app) {
           res.sendStatus(500);
         } else {
           res.sendStatus(204);
+          tokenService.redisToken.delete(token)
+            .then(function(reply) {
+              // 成功后不必作特别处理
+            })
+            .then(null, function(err) {
+              console.log(err.stack || err);
+            });
         }
       });
     },
