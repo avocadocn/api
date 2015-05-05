@@ -3,6 +3,20 @@
 var token = require('../services/token.js');
 var getById = require('../middlewares/getById.js');
 
+var session = require('express-session');
+var RedisStore = require('connect-redis')(session);
+var config = require('../config/config');
+
+var sessionMiddleware = session({
+    store: new RedisStore(),
+    resave: false,
+    saveUninitialized: true,
+    secret: config.token.secret,
+    cookie: {
+      maxAge: config.token.expires
+    }
+});
+
 module.exports = function (app, ctrl) {
 
   app.post('/companies', ctrl.registerValidate, ctrl.register, ctrl.registerSave);
@@ -21,8 +35,9 @@ module.exports = function (app, ctrl) {
   app.get('/companies/:companyId/reportedMembers', token.needToken, ctrl.getCompanyReportedMembers);
   app.get('/companies/:companyId/departments', token.needToken, ctrl.getCompanyDepartments);
   app.get('/companies/:companyId/tags', token.needToken, ctrl.getCompanyTags);
-  app.post('/companies/login', ctrl.login);
-  app.post('/companies/refresh/token', token.needToken, ctrl.refreshToken);
-  app.post('/companies/logout', token.needToken, ctrl.logout);
+  app.post('/companies/login', sessionMiddleware, ctrl.login);
+  app.post('/companies/refresh/token', token.needToken, sessionMiddleware, ctrl.refreshToken);
+  app.post('/companies/logout', token.needToken, sessionMiddleware, ctrl.logout);
   app.get('/companies/:companyId/hasLeader', token.needToken, ctrl.hasLeader);
 };
+

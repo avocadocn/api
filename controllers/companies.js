@@ -1161,6 +1161,9 @@ module.exports = function (app) {
               log(err);
               res.sendStatus(500);
             } else {
+              // mgcid: manager company id for hr manager
+              req.session.mgcid = company.id;
+
               res.status(200).send({ token: token, id:company._id });
 
               tokenService.redisToken.create(token, payload)
@@ -1183,6 +1186,7 @@ module.exports = function (app) {
             msg: '更新成功',
             newToken: token
           });
+          req.session.touch();
         })
         .then(null, function(err) {
           var newToken = jwt.sign({
@@ -1198,6 +1202,7 @@ module.exports = function (app) {
                 msg: '更新成功',
                 newToken: newToken
               });
+              req.session.touch();
             }
           });
         });
@@ -1215,7 +1220,10 @@ module.exports = function (app) {
           log(err);
           res.sendStatus(500);
         } else {
+          req.session.destroy();
+
           res.sendStatus(204);
+
           tokenService.redisToken.delete(token)
             .then(null, console.log);
         }

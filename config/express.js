@@ -43,9 +43,17 @@ app.set('root', rootPath);
 app.set('tokenSecret', config.token.secret);
 app.set('tokenExpires', config.token.expires);
 
-app.use(cors({
-  methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']
-}));
+
+var whitelist = ['http://55yali.com', 'http://donler.com', 'http://localhost:3000'];
+var corsOpts = {
+  origin: function(origin, callback) {
+    var originIsWhitelisted = whitelist.indexOf(origin) !== -1;
+    callback(null, originIsWhitelisted);
+  },
+  methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  credentials: true
+};
+app.use(cors(corsOpts));
 
 if (config.env === 'development') {
   app.use(morgan('dev'));
