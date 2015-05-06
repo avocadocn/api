@@ -307,12 +307,12 @@ var formatterList = {
     for(var i=0; i<campaignsLength; i++) {
       var formatCampaign = {
         '_id': campaigns[i]._id,
-        'unitId': campaigns[i].campaign_type===1 || campaigns[i].campaign_type>5? campaigns[i].cid[0]: campaigns[i].tid[0],
+        'unitId': campaigns[i].campaign_type===1 || campaigns[i].campaign_type>5? campaigns[i].cid[0]: campaigns[i].tid ? campaigns[i].tid[0] : undefined,
         'campaignType':campaigns[i].campaign_type,
         'theme': campaigns[i].theme,
         'startTime': campaigns[i].start_time,
         'endTime': campaigns[i].end_time,
-        'memberNumber': campaigns[i].members.length,
+        'memberNumber': campaigns[i].members ? campaigns[i].members.length : campaigns[i].number_of_members ? campaigns[i].number_of_members : 0,
         'active': campaigns[i].active
       };
       if(campaigns[i].start_time > new Date()) formatCampaign.status = '未开始';
@@ -372,85 +372,150 @@ exports.queryAndFormat = function (opts, callback) {
   if (opts.reqQuery.limit) {
     pageSize = Number(opts.reqQuery.limit);
   }
+  if (opts.reqQuery.requestType === 'HR') {
+    var aggregateOptions = [];
 
-  // var sortOptions = '-start_time -_id';
-  // todo set custom sort
-  var sortOptions = opts.reqQuery.sort + ' -_id';
-  var setPagerOptions = function () {
-    if(opts.reqQuery.to){
-      dbQueryOptions.start_time = { '$lte': new Date(parseInt(opts.reqQuery.to)) };
+    var optionBeforeSortHandle = {
+      $match: {$and: [{'cid': opts.campaignOwner.company._id}, {'number_of_members': {$ne: -1}}]}
+    };
+    // get campaigins of certain team
+    if(opts.campaignOwner.teams) {
+      optionBeforeSortHandle.$match.$and.push({'tid': opts.campaignOwner.teams.map(function (team) { return team._id })});
     }
-    if(opts.reqQuery.from){
-      dbQueryOptions.end_time = { '$gte': new Date(parseInt(opts.reqQuery.from)) };
+    // get campaigns of a range of time
+    if (opts.reqQuery.to) {
+      optionBeforeSortHandle.$match.$and.push({'start_time': {'$lte': new Date(parseInt(opts.reqQuery.to))}});
     }
-    if (opts.reqQuery.page_id) {
-      dbQueryOptions._id = { '$lte': opts.reqQuery.page_id };
+
+    if (opts.reqQuery.from) {
+      optionBeforeSortHandle.$match.$and.push({'end_time': {'$gte': new Date(parseInt(opts.reqQuery.from))}});
     }
-    // HR 活动状态筛选功能
-    // opts.reqQuery.status 
-    // 值     状态
-    // 1     未开始
-    // 2     进行中
-    // 3     已结束
-    // opts.reqQuery.statusType
-    // 值     状态请求出处
-    // 0       活动日历
-    // 1       活动管理
+
+    // get next page of campaign order by time(startTime or endTime)
+    if(opts.reqQuery.lastCampaignId) {
+      var pushInfoToOption = {
+        pushInfoAboutStartTime: function(option, isAsc, time, objectId) {
+          if(isAsc) {
+            option.push({$or: [{'start_time': {$gt: time}}, {$and: [{'start_time': {'$eq': time}}, {'_id': {$gt: objectId}}]}]});
+          } else {
+            option.push({$or: [{'start_time': {$lt: time}}, {$and: [{'start_time': {'$eq': time}}, {'_id': {$gt: objectId}}]}]});
+          }
+        },
+        pushInfoAboutEndTime: function(option, isAsc, time, objectId) {
+          if(isAsc) {
+            option.push({$or: [{'end_time': {$gt: time}}, {$and: [{'end_time': {'$eq': time}}, {'_id': {$gt: objectId}}]}]});
+          } else {
+            option.push({$or: [{'end_time': {$lt: time}}, {$and: [{'end_time': {'$eq': time}}, {'_id': {$gt: objectId}}]}]});
+          }
+        }
+      }
+      console.log(opts.reqQuery.sort);
+      var sortInfo = opts.reqQuery.sort;
+      var time;
+      if(opts.reqQuery.queryNextPageTime) {
+        time = new Date(parseInt(opts.reqQuery.queryNextPageTime));
+      }
+      var objectId = mongoose.Types.ObjectId(opts.reqQuery.lastCampaignId);
+
+      if(sortInfo.indexOf('start_time') !== -1 ) {
+        if(sortInfo.indexOf('-') === -1) {
+          pushInfoToOption.pushInfoAboutStartTime(optionBeforeSortHandle.$match.$and, true, time, objectId);
+        } else {
+          pushInfoToOption.pushInfoAboutStartTime(optionBeforeSortHandle.$match.$and, false, time, objectId);
+        }
+      } else if(sortInfo.indexOf('end_time') !== -1) {
+        if(sortInfo.indexOf('-') === -1) {
+          pushInfoToOption.pushInfoAboutEndTime(optionBeforeSortHandle.$match.$and, true, time, objectId);
+        } else {
+          pushInfoToOption.pushInfoAboutEndTime(optionBeforeSortHandle.$match.$and, false, time, objectId);
+        }
+      }
+    }
+
+    /**
+     * HR 活动状态筛选功能
+     * opts.reqQuery.status 状态
+     * 值     状态
+     * 1     未开始
+     * 2     进行中
+     * 3     已结束
+     */
     if(opts.reqQuery.status) {
       var index = opts.reqQuery.status;
       switch(index) {
         case '1':
-          if(opts.reqQuery.statusType == '1') {
-            dbQueryOptions.start_time = {'$gt': new Date()};
-          } else {
-            dbQueryOptions.$and = [{'start_time': {'$gt': new Date()}}, {'start_time': {'$lte': new Date(parseInt(opts.reqQuery.to))}}];
-          }
+          optionBeforeSortHandle.$match.$and.push({'start_time': {'$gt': new Date()}});
           break;
         case '2':
-          if (opts.reqQuery.statusType == '1') {
-            dbQueryOptions.$and = [{'start_time': {'$lte': new Date()}}, {'end_time': {'$gte': new Date()}}];
-          } else {
-            dbQueryOptions.$and = [ {'start_time': {'$lte': new Date()}}, {'start_time': {'$lte': new Date(parseInt(opts.reqQuery.to))}}, {'end_time': {'$gte': new Date()}}, {'end_time': { '$gte': new Date(parseInt(opts.reqQuery.from))}}];
-          }
+          optionBeforeSortHandle.$match.$and.push({'start_time': {'$lte': new Date()}});
+          optionBeforeSortHandle.$match.$and.push({'end_time': {'$gte': new Date()}});
           break;
         case '3':
-          if(opts.reqQuery.statusType == '1') {
-            dbQueryOptions.end_time = {'$lt': new Date()};
-          } else {
-            dbQueryOptions.$and = [{'end_time': {'$lt': new Date()}}, {'end_time': {'$gte': new Date(parseInt(opts.reqQuery.from))}}];
-          }
+          optionBeforeSortHandle.$match.$and.push({'end_time': {'$lt': new Date()}});
           break;
       }
     }
-  };
+    aggregateOptions.push(optionBeforeSortHandle);
 
-  // todo 根据campaignOwner和result等条件设置查询
-  if (opts.campaignOwner.user) {
-    // todo 查询用户的活动
-  } else {
-    // todo 查询公司或小队活动
-    if (opts.campaignOwner.company && !opts.campaignOwner.teams) {
-      dbQueryOptions.cid = opts.campaignOwner.company._id;
-      if(!opts.reqQuery.attrs || opts.reqQuery.attrs.indexOf('allCampaign')===-1)//非HR取所有公司所有小队
-        dbQueryOptions.campaign_type = 1;
-    } else if (opts.campaignOwner.teams) {
-      dbQueryOptions.tid = opts.campaignOwner.teams.map(function (team) { return team._id });
-    }
-    if(!opts.reqQuery.attrs || opts.reqQuery.attrs.indexOf('showClose')===-1)
-      dbQueryOptions.active =  true;
-    setPagerOptions();
-    dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize + 1);
-  }
+    // set sort option
+    var optionSortHandle = {
+      $sort: {}
+    };
 
-  dbQuery.exec()
-    .then(function (campaigns) {
-      var nextCampaign;
-      if (campaigns.length > pageSize) {
-        nextCampaign = campaigns[pageSize];
+    if (opts.reqQuery.sort) {
+      var sort = opts.reqQuery.sort;
+      if (sort.indexOf('start_time') !== -1) {
+        if (sort.indexOf('-') == -1) {
+          optionSortHandle.$sort.start_time = 1;
+        } else {
+          optionSortHandle.$sort.start_time = -1;
+        }
+      } else if (sort.indexOf('end_time') !== -1) {
+        if (sort.indexOf('-') == -1) {
+          optionSortHandle.$sort.end_time = 1;
+        } else {
+          optionSortHandle.$sort.end_time = -1;
+        }
+      } else {
+        if (sort.indexOf('-') == -1) {
+          optionSortHandle.$sort.number_of_members = 1;
+        } else {
+          optionSortHandle.$sort.number_of_members = -1;
+        }
       }
-      var plainCampaigns = campaigns.slice(0, pageSize).map(function (campaign) {
-        return campaign.toObject({ virtuals: true });
-      });
+      optionSortHandle.$sort._id = 1;
+    }
+
+    aggregateOptions.push(optionSortHandle);
+
+    // get next page of campaign order by number of campaign's member
+    if(opts.reqQuery.numOfMem) {
+      var sortInfo = opts.reqQuery.sort;
+      var numOfMem = parseInt(opts.reqQuery.numOfMem);
+      var objectId = mongoose.Types.ObjectId(opts.reqQuery.lastCampaignId);
+      if(sortInfo.indexOf('number_of_members') !== -1 ) {
+        if(sortInfo.indexOf('-') === -1) {
+          aggregateOptions.push({$match: {$or: [{'number_of_members': {$gt: numOfMem}}, {$and: [{'number_of_members': {$eq: numOfMem}}, {'_id': {$gt: objectId}}]}]}});
+        } else {
+          aggregateOptions.push({$match: {$or: [{'number_of_members': {$lt: numOfMem}}, {$and: [{'number_of_members': {$eq: numOfMem}}, {'_id': {$gt: objectId}}]}]}});
+        }
+      }
+      
+    }
+    // set the limit option
+    aggregateOptions.push({$limit : pageSize + 1});
+    
+    console.log(aggregateOptions);
+    console.log(aggregateOptions[0].$match.$and);
+    Campaign.aggregate(aggregateOptions).exec(function(err, campaigns) {
+      if(err) {
+        callback(err);
+      }
+      var hasNext = false;
+      if(campaigns.length > pageSize) {
+        hasNext = true;
+      }
+      var plainCampaigns = campaigns.slice(0, pageSize);
       formatter(plainCampaigns, formatterOptions, function (err, resCampaigns) {
         if (err) {
           callback(err);
@@ -461,15 +526,86 @@ exports.queryAndFormat = function (opts, callback) {
         else {
           callback(null, {
             campaigns: resCampaigns,
-            hasNext: !!nextCampaign,
-            nextId: nextCampaign ? nextCampaign.id : undefined
+            hasNext: hasNext
           });
         }
       });
-    })
-    .then(null, function (err) {
-      callback(err);
     });
+  } else {
+    var sortOptions = '-start_time -_id';
+    // todo set custom sort
+    // var sortOptions = opts.reqQuery.sort + ' -_id';
+    var setPagerOptions = function() {
+      if (opts.reqQuery.to) {
+        dbQueryOptions.start_time = {
+          '$lte': new Date(parseInt(opts.reqQuery.to))
+        };
+      }
+      if (opts.reqQuery.from) {
+        dbQueryOptions.end_time = {
+          '$gte': new Date(parseInt(opts.reqQuery.from))
+        };
+      }
+      if (opts.reqQuery.page_id) {
+        dbQueryOptions._id = {
+          '$lte': opts.reqQuery.page_id
+        };
+      }
+    };
+
+    // todo 根据campaignOwner和result等条件设置查询
+    if (opts.campaignOwner.user) {
+      // todo 查询用户的活动
+    } else {
+      // todo 查询公司或小队活动
+      if (opts.campaignOwner.company && !opts.campaignOwner.teams) {
+        dbQueryOptions.cid = opts.campaignOwner.company._id;
+        if (!opts.reqQuery.attrs || opts.reqQuery.attrs.indexOf('allCampaign') === -1) //非HR取所有公司所有小队
+          dbQueryOptions.campaign_type = 1;
+      } else if (opts.campaignOwner.teams) {
+        dbQueryOptions.tid = opts.campaignOwner.teams.map(function(team) {
+          return team._id
+        });
+      }
+      if (!opts.reqQuery.attrs || opts.reqQuery.attrs.indexOf('showClose') === -1)
+        dbQueryOptions.active = true;
+      setPagerOptions();
+      dbQuery = Campaign.find(dbQueryOptions).sort(sortOptions).limit(pageSize + 1);
+    }
+
+    dbQuery.exec()
+      .then(function(campaigns) {
+        var nextCampaign;
+        if (campaigns.length > pageSize) {
+          nextCampaign = campaigns[pageSize];
+        }
+        var plainCampaigns = campaigns.slice(0, pageSize).map(function(campaign) {
+          return campaign.toObject({
+            virtuals: true
+          });
+        });
+        formatter(plainCampaigns, formatterOptions, function(err, resCampaigns) {
+          if (err) {
+            callback(err);
+          } else if (opts.reqQuery.result === 'calendar') {
+            callback(null, {
+              success: 1,
+              result: resCampaigns
+            });
+          } else {
+            callback(null, {
+              campaigns: resCampaigns,
+              hasNext: !!nextCampaign,
+              nextId: nextCampaign ? nextCampaign.id : undefined
+            });
+          }
+        });
+      })
+      .then(null, function(err) {
+        callback(err);
+      });
+  }
+
 
 };
 
