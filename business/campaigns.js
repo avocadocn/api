@@ -409,7 +409,6 @@ exports.queryAndFormat = function (opts, callback) {
           }
         }
       }
-      console.log(opts.reqQuery.sort);
       var sortInfo = opts.reqQuery.sort;
       var time;
       if(opts.reqQuery.queryNextPageTime) {
@@ -505,8 +504,6 @@ exports.queryAndFormat = function (opts, callback) {
     // set the limit option
     aggregateOptions.push({$limit : pageSize + 1});
     
-    console.log(aggregateOptions);
-    console.log(aggregateOptions[0].$match.$and);
     Campaign.aggregate(aggregateOptions).exec(function(err, campaigns) {
       if(err) {
         callback(err);
