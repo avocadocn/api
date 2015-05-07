@@ -44,10 +44,14 @@ app.set('tokenSecret', config.token.secret);
 app.set('tokenExpires', config.token.expires);
 
 
-var whitelist = ['http://55yali.com', 'http://donler.com', 'http://localhost:3000'];
+var whitelist = ['55yali.com', 'donler.com', 'localhost:3000'];
 var corsOpts = {
   origin: function(origin, callback) {
-    var originIsWhitelisted = whitelist.indexOf(origin) !== -1;
+    var originIsWhitelisted = false;
+    for (var i = 0, len = whitelist.length; i < len; i++) {
+      originIsWhitelisted = origin.indexOf(whitelist[i]) !== -1;
+      if (originIsWhitelisted) break;
+    }
     callback(null, originIsWhitelisted);
   },
   methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE'],
