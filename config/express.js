@@ -47,12 +47,17 @@ app.set('tokenExpires', config.token.expires);
 var whitelist = ['55yali.com', 'donler.com', 'localhost:3000'];
 var corsOpts = {
   origin: function(origin, callback) {
-    var originIsWhitelisted = false;
-    for (var i = 0, len = whitelist.length; i < len; i++) {
-      originIsWhitelisted = origin.indexOf(whitelist[i]) !== -1;
-      if (originIsWhitelisted) break;
+    if (origin) {
+      var originIsWhitelisted = false;
+      for (var i = 0, len = whitelist.length; i < len; i++) {
+        originIsWhitelisted = origin.indexOf(whitelist[i]) !== -1;
+        if (originIsWhitelisted) break;
+      }
+      callback(null, originIsWhitelisted);
     }
-    callback(null, originIsWhitelisted);
+    else {
+      callback(null, true);
+    }
   },
   methods: ['GET', 'PUT', 'PATCH', 'POST', 'DELETE'],
   credentials: true
