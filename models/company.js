@@ -74,7 +74,7 @@ var CompanySchema = new Schema({
             enum: [0,1]
         },
 
-        date: Number
+        date: Date
     },
 
     team:[_team],
