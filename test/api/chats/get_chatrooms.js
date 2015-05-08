@@ -47,7 +47,7 @@ module.exports = function () {
       });
     });
 
-    it('队长获取聊天列表成功，且应有公司管理聊天室', function (done) {
+    it.skip('队长获取聊天列表成功，且应有公司管理聊天室', function (done) {
       request.get('/chatrooms')
         .set('x-access-token', userToken[0])
         .expect(200)

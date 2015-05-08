@@ -45,7 +45,7 @@ module.exports = function (app) {
         });
     },
     userInfoValidate: function (req, res) {
-      var email = req.body.email;
+      var email = req.body.email ? req.body.email.toLowerCase() :req.body.email;
       var cid = req.body.cid;
       var inviteKey = req.body.inviteKey;
       // if(!cid) {
@@ -141,7 +141,7 @@ module.exports = function (app) {
         }
         callback(true);
       };
-
+      var email = req.body.email.toLowerCase();
       donlerValidator({
         cid: {
           name: '公司id',
@@ -150,12 +150,12 @@ module.exports = function (app) {
         },
         email: {
           name: '企业邮箱',
-          value: req.body.email,
+          value: email,
           validators: ['required', 'email', isUsedEmail]
         },
         domain: {
           name: '邮箱后缀',
-          value: req.body.email.split('@')[1],
+          value: email.split('@')[1],
           validators: [validateDomain]
         },
         nickname: {
@@ -194,7 +194,7 @@ module.exports = function (app) {
     },
 
     register: function (req, res) {
-      var email = req.body.email;
+      var email = req.body.email.toLowerCase();
       var user = new User({
         email: email,
         username: email,
@@ -239,7 +239,7 @@ module.exports = function (app) {
     },
 
     forgetPassword: function (req, res) {
-      User.findOne({email: req.body.email}, function(err, user) {
+      User.findOne({email: req.body.email.toLowerCase()}, function(err, user) {
         if(err || !user) {
           return res.status(400).send({msg:'邮箱填写错误'});
         } else {
@@ -628,7 +628,7 @@ module.exports = function (app) {
       }
 
       User.findOne({
-        email: req.body.email
+        email: req.body.email.toLowerCase()
       }).populate('cid').exec()
         .then(function (user) {
           if (!user) {
@@ -803,8 +803,8 @@ module.exports = function (app) {
     },
 
     inviteUser: function (req, res, next) {
-
-      if (!validator.isEmail(req.body.email)) {
+      var email =req.body.email ? req.body.email.toLowerCase():req.body.email;
+      if (!validator.isEmail(email)) {
         res.status(400).send({ msg: '请填写正确的邮箱地址' });
         return;
       }
@@ -815,7 +815,7 @@ module.exports = function (app) {
       }
 
       // 判断邮箱后缀是否为企业允许的邮箱后缀
-      var emailDomain = req.body.email.split('@')[1];
+      var emailDomain = email.split('@')[1];
       if (req.user.email.domain.indexOf(emailDomain) === -1) {
         res.status(400).send({ msg: '该邮箱不是企业允许的邮箱。如果您需要向该邮箱发送邀请链接，请先在企业账号设置中添加邮箱。' });
         return;
@@ -823,7 +823,7 @@ module.exports = function (app) {
 
       // 查询该邮箱是否已被注册过了
       User.findOne({
-        email: req.body.email
+        email: email
       }, {
         _id: 1,
         email: 1,
@@ -851,8 +851,8 @@ module.exports = function (app) {
 
       function createNewUser() {
         var user = new User({
-          email: req.body.email,
-          username: req.body.email,
+          email: email,
+          username: email,
           active: true,
           mail_active: false,
           invited: true,

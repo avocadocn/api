@@ -53,7 +53,7 @@ module.exports = function (app) {
     companyInfoValidate: function (req, res) {
       var option;
       if ( req.body.email ) {
-        option = {'login_email': req.body.email};
+        option = {'login_email': req.body.email.toLowerCase()};
       }
       else if ( req.body.username ) {//此步骤在邮箱认证后，故暂时在app中未用到
         option = {'username': req.body.username};
@@ -206,7 +206,7 @@ module.exports = function (app) {
         },
         email: {
           name: '企业邮箱',
-          value: req.body.email,
+          value: req.body.email.toLowerCase(),
           validators: ['required', 'email', emailValidate]
         },
         phone: {
@@ -230,6 +230,7 @@ module.exports = function (app) {
     },
 
     register: function (req, res, next) {
+      var email = req.body.email?req.body.email.toLowerCase():req.body.email;
       var company = new Company({
         info: {
           name: req.body.name,
@@ -246,11 +247,11 @@ module.exports = function (app) {
           },
           linkman: req.body.contacts,
           phone: req.body.phone,
-          email: req.body.email
+          email: email
         },
-        login_email: req.body.email,
+        login_email: email,
         email: {
-          domain: [req.body.email.split('@')[1]]
+          domain: [email.split('@')[1]]
         }
       });
 
@@ -341,7 +342,7 @@ module.exports = function (app) {
 
     forgetPassword: function (req, res) {
       Company.findOne({
-        login_email: req.body.email
+        login_email: req.body.email ? req.body.email.toLowerCase():req.body.email
       }, function(err, company) {
         if (err || !company) {
           return res.status(400).send({msg:'邮箱填写错误'});
@@ -529,7 +530,7 @@ module.exports = function (app) {
         },
         email: {
           name: '企业邮箱',
-          value: req.body.email,
+          value: req.body.email ? req.body.email.toLowerCase():req.body.email,
           validators: ['email']
         }
       }, 'complete', function (pass, msg) {
@@ -659,7 +660,7 @@ module.exports = function (app) {
         company.info.phone = req.body.phone;
       }
       if (req.body.email) {
-        company.info.email = req.body.email;
+        company.info.email = req.body.email.toLowerCase();
       }
       company.save(function (err) {
         if (err) {
