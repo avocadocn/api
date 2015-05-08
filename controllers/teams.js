@@ -401,7 +401,8 @@ module.exports = function (app) {
               lastCampaign: companyGroups[i].last_campaign,
               score: companyGroups[i].score,
               officialTeam: companyGroups[i].poster.role=='Personal' ? false : true,
-              score_rank: companyGroups[i].score_rank
+              score_rank: companyGroups[i].score_rank,
+              gid:companyGroups[i].gid
             };
             if(role.company=='hr'){
               briefTeam.count = companyGroups[i].count;
