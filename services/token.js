@@ -53,15 +53,20 @@ exports.verifying = function(req, res, next) {
     if (isConnect) {
       redisToken.get(token)
         .then(function(replies) {
-          var type = replies[0];
-          var id = replies[1];
-          req.tokenUser = {
-            type: type,
-            id: id
-          };
+          if (replies && replies.length === 2) {
+            var type = replies[0];
+            var id = replies[1];
+            req.tokenUser = {
+              type: type,
+              id: id
+            };
+          }
           next();
         })
-        .then(null, next);
+        .then(null, function(err) {
+          console.log(err);
+          next();
+        });
     }
     else {
       jwt.verify(token, config.token.secret, function (err, decoded) {
