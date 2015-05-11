@@ -44,7 +44,7 @@ app.set('tokenSecret', config.token.secret);
 app.set('tokenExpires', config.token.expires);
 
 
-var whitelist = ['55yali.com', 'donler.com', 'localhost'];
+var whitelist = ['55yali.com', 'donler.com', 'donler.cn', 'localhost'];
 var corsOpts = {
   origin: function(origin, callback) {
     if (origin) {
