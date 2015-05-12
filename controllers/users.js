@@ -128,7 +128,7 @@ module.exports = function (app) {
         }
       };
 
-      
+
       // var validateDepartment = function (name, value, callback) {
       //   if (!value) {
       //     callback(true);
@@ -226,7 +226,6 @@ module.exports = function (app) {
         role: 'EMPLOYEE'
       });
 
-      // if (!publicDomain.isPublicDomain(value) || req.company.invite_key === req.body.inviteKey) {
       user.save(function (err) {
         if (err) {
           log(err);
@@ -242,10 +241,6 @@ module.exports = function (app) {
           }
         });
       });
-      // }
-      else {
-        res.status(400).send({msg:'验证码错误'});
-      }
     },
 
     forgetPassword: function (req, res) {
