@@ -20,6 +20,8 @@ var tools = require('../tools/tools.js');
 var syncData = require('../services/sync_data.js');
 var departmentController = require('../controllers/departments');
 var async = require('async');
+var publicDomain = require('../services/public_domain.js');
+
 module.exports = function (app) {
 
   return {
@@ -70,8 +72,10 @@ module.exports = function (app) {
             //     return res.status(200).send({'active':4});
             //   }
             //   else{
+            var domain = email.split('@')[1];
+            var hideInviteKey = !publicDomain.isPublicDomain(domain);
             //这个邮箱没用过,可以注册
-            return res.status(200).send({'active':1});
+            return res.status(200).send({'active':1, 'hideInviteKey':hideInviteKey});
             //   }
             // });
           }
@@ -117,7 +121,7 @@ module.exports = function (app) {
       };
 
       var validateDomain = function (name, value, callback) {
-        if (req.company.email.domain.indexOf(value) === -1) {
+        if (publicDomain.isPublicDomain(value) && req.company.email.domain.indexOf(value) === -1) {
           callback(false, '邮箱后缀与公司允许的后缀不一致');
         } else {
           callback(true);
