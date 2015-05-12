@@ -5,7 +5,8 @@
  */
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema,
-    crypto = require('crypto');
+    crypto = require('crypto'),
+    mongoosePaginate = require('mongoose-paginate');
 
 var _device = new Schema({
     platform:String,
@@ -127,6 +128,7 @@ var CompanySchema = new Schema({
     device: [_device]
 });
 
+CompanySchema.plugin(mongoosePaginate);
 /**
  * Virtuals
  */
