@@ -125,7 +125,11 @@ var CompanySchema = new Schema({
     register_invite_code: [String],
     // 企业给用户的邀请码
     invite_key: String,
-    device: [_device]
+    device: [_device],
+    guide_step:{
+        type: Number,
+        default: 0
+    }
 });
 
 CompanySchema.plugin(mongoosePaginate);

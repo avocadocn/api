@@ -411,7 +411,8 @@ module.exports = function (app) {
                 inviteUrl: inviteUrl,
                 teamNumber: company.team.length,
                 intro: company.info.brief,
-                cover: company.info.cover
+                cover: company.info.cover,
+                guide_step: company.guide_step || 0
               });
               break;
             case 'member':
@@ -661,6 +662,9 @@ module.exports = function (app) {
       }
       if (req.body.email) {
         company.info.email = req.body.email.toLowerCase();
+      }
+      if (req.body.guide_step) {
+        company.guide_step = req.body.guide_step;
       }
       company.save(function (err) {
         if (err) {
