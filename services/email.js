@@ -102,14 +102,14 @@ emailService.sendStaffActiveMail = function (email, uid, cid, callback) {
  * @param {String} cid 公司id
  * @param {Function} callback 形式为function(err)
  */
-emailService.sendNewStaffActiveMail = function (email, uid, cid, callback) {
-  getConfig(function (err, config) {
-    if (err) {
-      return callback(err);
-    }
-    getService(config).sendNewStaffActiveMail(email, uid, cid, config.host.product, callback);
-  });
-};
+// emailService.sendNewStaffActiveMail = function (email, uid, cid, callback) {
+//   getConfig(function (err, config) {
+//     if (err) {
+//       return callback(err);
+//     }
+//     getService(config).sendNewStaffActiveMail(email, uid, cid, config.host.product, callback);
+//   });
+// };
 
 /**
  * 发送员工激活邮件（被邀请时）

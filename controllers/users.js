@@ -121,30 +121,40 @@ module.exports = function (app) {
       };
 
       var validateDomain = function (name, value, callback) {
-        if (publicDomain.isPublicDomain(value) && req.company.email.domain.indexOf(value) === -1) {
+        if (req.company.email.domain.indexOf(value) === -1) {
           callback(false, '邮箱后缀与公司允许的后缀不一致');
         } else {
           callback(true);
         }
       };
 
-      var validateDepartment = function (name, value, callback) {
-        if (!value) {
+      
+      // var validateDepartment = function (name, value, callback) {
+      //   if (!value) {
+      //     callback(true);
+      //     return;
+      //   }
+      //   var departments = req.company.department;
+      //   for (var i = 0; i < value.length; i++) {
+      //     var index = tools.arrayObjectIndexOf(departments, value[i], 'name');
+      //     if (index === -1) {
+      //       callback(false, '公司没有开设该部门');
+      //       return;
+      //     } else {
+      //       departments = departments[index].department;
+      //     }
+      //   }
+      //   callback(true);
+      // };
+      var validateInviteKey = function (name, value, callback) {
+        var domain = value.email.split('@')[1];
+        if(!publicDomain.isPublicDomain(domain) || value.company.invite_key === value.inviteKey) {
           callback(true);
-          return;
         }
-        var departments = req.company.department;
-        for (var i = 0; i < value.length; i++) {
-          var index = tools.arrayObjectIndexOf(departments, value[i], 'name');
-          if (index === -1) {
-            callback(false, '公司没有开设该部门');
-            return;
-          } else {
-            departments = departments[index].department;
-          }
+        else {
+          callback(false,'激活码错误');
         }
-        callback(true);
-      };
+      }
       var email = req.body.email.toLowerCase();
       donlerValidator({
         cid: {
@@ -177,15 +187,20 @@ module.exports = function (app) {
           value: req.body.realname,
           validators: ['required']
         },
-        department: {
-          name: '部门',
-          value: req.body.department,
-          validators: [validateDepartment]
-        },
+        // department: {
+        //   name: '部门',
+        //   value: req.body.department,
+        //   validators: [validateDepartment]
+        // },
         phone: {
           name: '手机号码',
           value: req.body.phone,
           validators: ['number']
+        }, 
+        invite_key: {
+          name: '邀请码',
+          value: {inviteKey:req.body.inviteKey, email: email, company:req.company},
+          validators: [validateInviteKey]
         }
       }, 'complete', function (pass, msg) {
         if (pass) {
@@ -211,26 +226,14 @@ module.exports = function (app) {
         role: 'EMPLOYEE'
       });
 
-      var inviteKeyValid = false;
-      if (req.body.inviteKey && req.company.invite_key === req.body.inviteKey) {
-        inviteKeyValid = true;
-        user.invite_active = true;
-      }
-
+      // if (!publicDomain.isPublicDomain(value) || req.company.invite_key === req.body.inviteKey) {
       user.save(function (err) {
         if (err) {
           log(err);
           res.sendStatus(500);
           return;
         }
-
-        var emailSender;
-        if (inviteKeyValid) {
-          emailSender = emailService.sendStaffActiveMail;
-        } else {
-          emailSender = emailService.sendNewStaffActiveMail;
-        }
-        emailSender(user.email, user._id.toString(), user.cid.toString(), function (err) {
+        emailService.sendStaffActiveMail(user.email, user._id.toString(), user.cid.toString(), function (err) {
           if (err) {
             log(err);
             res.sendStatus(500);
@@ -239,7 +242,10 @@ module.exports = function (app) {
           }
         });
       });
-
+      // }
+      else {
+        res.status(400).send({msg:'验证码错误'});
+      }
     },
 
     forgetPassword: function (req, res) {

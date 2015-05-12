@@ -131,31 +131,31 @@ exports.sendCompanyActiveMail = function (email, cid, host, callback) {
   });
 };
 
-exports.sendNewStaffActiveMail = function (email, uid, cid, host, callback) {
-  var from = '动梨<service@donler.com>';
-  var to = email;
-  var subject = '动梨账号激活';
-  var description = '我们收到您在动梨的申请信息，请点击下面的链接来激活帐户：';
-  var link = 'http://' + host + '/users/mailActive?key=' + encrypt.encrypt(uid, secret) + '&uid=' + uid + '&cid=' + cid;
+// exports.sendNewStaffActiveMail = function (email, uid, cid, host, callback) {
+//   var from = '动梨<service@donler.com>';
+//   var to = email;
+//   var subject = '动梨账号激活';
+//   var description = '我们收到您在动梨的申请信息，请点击下面的链接来激活帐户：';
+//   var link = 'http://' + host + '/users/mailActive?key=' + encrypt.encrypt(uid, secret) + '&uid=' + uid + '&cid=' + cid;
 
-  fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
-    if (err) throw err;
-    var fn = jade.compile(data);
-    var html = fn({
-      'title': '注册激活',
-      'host': siteProtocol + host,
-      'who': email,
-      'description': description,
-      'link': link
-    });
-    transport.sendMail({
-      from: from,
-      to: to,
-      subject: subject,
-      html: html
-    }, callback);
-  });
-};
+//   fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
+//     if (err) throw err;
+//     var fn = jade.compile(data);
+//     var html = fn({
+//       'title': '注册激活',
+//       'host': siteProtocol + host,
+//       'who': email,
+//       'description': description,
+//       'link': link
+//     });
+//     transport.sendMail({
+//       from: from,
+//       to: to,
+//       subject: subject,
+//       html: html
+//     }, callback);
+//   });
+// };
 
 exports.sendInvitedStaffActiveMail = function (email, host, data, callback) {
   var inviteKey = data.inviteKey;
