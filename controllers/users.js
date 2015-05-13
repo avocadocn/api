@@ -1111,61 +1111,66 @@ module.exports = function (app) {
      *   email: String // 公司邮箱
      */
     resendActiveEmail: function(req, res, next) {
-      var sendInvalidMsg = function(msg) {
-        res.status(400).send({msg: msg});
-      };
-      if (!req.body.email) {
-        return sendInvalidMsg('缺少email');
-      }
-      else if (!validator.isEmail(email)) {
-        return sendInvalidMsg('email无效');
-      }
-      var email = req.body.email.toLowerCase();
-      Company.findOne({'info.email': email}).exec()
-        .then(function(company) {
-          // 是快速注册的公司
-          if (company && company.status.verification === 1) {
-            // 因为status.active默认为false，所以忽略
-            // 按理说，未激活的公司不应该是被管理员屏蔽的状态
-            if (company.status.mail_active) {
-              res.status(400).send({msg: '已经激活，请直接登录', isActive: true});
-            }
-            else {
-              emailService.sendQuickRegisterActiveMail(company.login_email, company.info.name, company.id, function(err) {
-                if(err) {
-                  log(err);
+      donlerValidator({
+        email: {
+          name: 'email',
+          value: req.body.email,
+          validators: ['required','email']
+        }
+      }, 'fast', function (pass, msg) {
+        if (pass) {
+          var email = req.body.email.toLowerCase();
+          Company.findOne({'info.email': email}).exec()
+            .then(function(company) {
+              // 是快速注册的公司
+              if (company && company.status.verification === 1) {
+                // 因为status.active默认为false，所以忽略
+                // 按理说，未激活的公司不应该是被管理员屏蔽的状态
+                if (company.status.mail_active) {
+                  res.status(400).send({msg: '已经激活，请直接登录', isActive: true});
                 }
-                else{
-                  res.send({msg: '已经重新发送激活邮件', hasResend: true});
+                else {
+                  emailService.sendQuickRegisterActiveMail(company.login_email, company.info.name, company.id, function(err) {
+                    if(err) {
+                      log(err);
+                    }
+                    else{
+                      res.send({msg: '已经重新发送激活邮件', hasResend: true});
+                    }
+                  });
                 }
-              });
-            }
-          }
-          else {
-            // 不是快速注册
-            return User.findOne({email: email}).exec().then(function(user) {
-              if (!user) {
-                res.status(400).send({msg: '该邮箱对应的用户不存在'});
-                return;
-              }
-
-              if (user.mail_active) {
-                res.status(400).send({msg: '已经激活，请直接登录', isActive: true});
               }
               else {
-                emailService.sendStaffActiveMail(user.email, user._id.toString(), user.cid.toString(), function (err) {
-                  if (err) {
-                    log(err);
-                    next()
-                  } else {
-                    res.send({msg: '已经重新发送激活邮件', hasResend: true});
+                // 不是快速注册
+                return User.findOne({email: email}).exec().then(function(user) {
+                  if (!user) {
+                    res.status(400).send({msg: '该邮箱对应的用户不存在'});
+                    return;
+                  }
+
+                  if (user.mail_active) {
+                    res.status(400).send({msg: '已经激活，请直接登录', isActive: true});
+                  }
+                  else {
+                    emailService.sendStaffActiveMail(user.email, user._id.toString(), user.cid.toString(), function (err) {
+                      if (err) {
+                        log(err);
+                        next()
+                      } else {
+                        res.send({msg: '已经重新发送激活邮件', hasResend: true});
+                      }
+                    });
                   }
                 });
               }
-            });
-          }
-        })
-        .then(null, next);
+            })
+            .then(null, next);
+        } else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+        }
+      });
+      
     }
   };
 };

@@ -339,6 +339,7 @@ paths:
     get:
       tags:
         - photoAlbums
+        - users
       summary: 获取用户上传过的照片
       parameters:
         - name: userId
@@ -364,7 +365,8 @@ paths:
   /users/resend/activeEmail:
     post:
       tags:
-        - resendActiveEamil
+        - users
+      operationId: resendActiveEamil
       summary: 重新发送激活邮件
       consumes:
         - application/json

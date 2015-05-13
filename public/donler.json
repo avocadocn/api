@@ -501,7 +501,8 @@
     "/users/{userId}/photos": {
       "get": {
         "tags": [
-          "photoAlbums"
+          "photoAlbums",
+          "users"
         ],
         "summary": "获取用户上传过的照片",
         "parameters": [
@@ -540,8 +541,9 @@
     "/users/resend/activeEmail": {
       "post": {
         "tags": [
-          "resendActiveEamil"
+          "users"
         ],
+        "operationId": "resendActiveEamil",
         "summary": "重新发送激活邮件",
         "consumes": [
           "application/json"
