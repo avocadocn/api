@@ -75,8 +75,12 @@ module.exports = function (app) {
           if(!req.body.name)//验证email和username时只需返回是否存在
             res.send({ validate:0, msg:'已经存在' });
           else{//是验证的名字的话未验证邮箱提醒他去验证邮箱或给donler发送邮件
-            if(company.status.mail_active && company.status.active) //没被屏蔽，邮箱也验证了
-            res.send({ validate:0, msg:'已经存在'});
+            if(company.status.mail_active && company.status.active) {//没被屏蔽，邮箱也验证了
+              var domain = false;
+              var emailDomain = req.body.email.toLowerCase().split('@')[1];
+              if(emailDomain && company.email.domain.indexOf(emailDomain)>-1) {domain = true;}
+              res.send({ validate:0, msg:'已经存在', cid:company._id, domain: domain});
+            }
             else if(!company.status.mail_active)
               res.send({ validate:1, msg: '已被使用，未激活'});
             else if(!company.status.active)
