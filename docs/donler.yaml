@@ -361,7 +361,31 @@ paths:
           description: error
           schema:
             $ref: Error
-
+  /users/resend/activeEmail:
+    post:
+      tags:
+        - resendActiveEamil
+      summary: 重新发送激活邮件
+      consumes:
+        - application/json
+      produces:
+        - text/plain
+      parameters:
+        - name: body
+          description: 重新发送激活的目标邮箱
+          required: true
+          schema:
+            $ref: resendActiveEamilForm
+          in: body
+      responses:
+        "200":
+          description: 重新发送成功
+          schema:
+            $ref: resendActiveEamilResult
+        default:
+          description: error
+          schema:
+            $ref: Error
   /companies:
     post:
       tags:
@@ -5626,3 +5650,23 @@ definitions:
       token:
         description: token
         type: string
+  resendActiveEamilForm:
+    title: resendActiveEamilForm
+    type: object
+    properties:
+      email:
+        description: email
+        type: string
+  resendActiveEamilResult:
+    title: resendActiveEamilResult
+    type: object
+    properties:
+      msg:
+        description: 返回信息
+        type: string
+      hasResend:
+        description: 是否已经发送
+        type: boolean
+      isActive:
+        description: 是否已经激活
+        type: boolean

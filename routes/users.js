@@ -24,4 +24,6 @@ module.exports = function (app, ctrl) {
 
   app.get('/users/:userId/photos', token.needToken, ctrl.getUserPhotosValidate, ctrl.getUserPhotos);
   app.get('/users/:userId/comments', token.needToken, getById.getUserById, ctrl.getUserComments);
+
+  app.post('/users/resend/activeEmail', ctrl.resendActiveEmail); // 重发激活邮件
 };
