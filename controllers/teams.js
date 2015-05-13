@@ -987,9 +987,6 @@ module.exports = function (app) {
       });
     },
     getGroups: function (req, res) {
-      if (!req.user) {
-        return res.status(403).send({msg: '权限错误'});
-      }
       groups.getGroups(function(groups) {
         return res.status(200).send(groups);
       })
@@ -1012,12 +1009,6 @@ module.exports = function (app) {
       //   }
       //   return res.status(200).send(groups);
       // });
-    },
-    
-    getGroupsList: function(req, res) {
-      groups.getGroups(function(groups) {
-        return res.status(200).send(groups);
-      })
     },
 
     getMembers: function (req, res) {
