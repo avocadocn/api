@@ -21,6 +21,7 @@ module.exports = function (app, ctrl) {
 
   app.post('/companies', ctrl.registerValidate, ctrl.register, ctrl.registerSave);
   app.post('/companies/quickRegister', ctrl.quickRegisterValidate, ctrl.quickRegister);
+  app.post('/companies/quickRegisterTeams', ctrl.quickRegisterTeams);
 
   app.get('/companies/:companyId', token.needToken, ctrl.getCompany);
   app.put('/companies/:companyId', token.needToken, ctrl.getCompanyById, ctrl.updateCompanyValidate, ctrl.updateCompanyLogo, ctrl.updateCompany);

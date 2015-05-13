@@ -8,6 +8,7 @@ var mongoose = require('mongoose');
 var Company = mongoose.model('Company');
 var User = mongoose.model('User');
 var CompanyGroup = mongoose.model('CompanyGroup');
+var Group = mongoose.model('Group');
 var Department = mongoose.model('Department');
 var CompanyRegisterInviteCode = mongoose.model('CompanyRegisterInviteCode');
 var Campaign = mongoose.model('Campaign');
@@ -700,6 +701,148 @@ module.exports = function (app) {
           next(err);
         }
       });
+    },
+    quickRegisterTeams: function(req, res) {
+      var companyDoc, userDoc, groupDoc;
+
+      if (!mongoose.Types.ObjectId.isValid(req.body.uid)) {
+        res.status(400).send({
+          msg: 'uid不是一个有效的id'
+        });
+        return;
+      }
+
+      // 采取抛出异常的方式中断Promise链
+      var BreakError = function(msg) {
+        this.typeError = 'break';
+        Error.call(this, msg);
+      };
+      BreakError.prototype = Object.create(Error.prototype);
+      User.findById(req.body.uid).exec()
+        .then(function(user) {
+          if (!user) {
+            res.status(400).send({
+              msg: 'uid无效'
+            });
+            throw new BreakError();
+          }
+          userDoc = user;
+          return Group.find().exec();
+
+        })
+        .then(function(groups) {
+          groupDoc = groups;
+          return Company.findById(userDoc.cid).exec();
+        })
+        .then(function(company) {
+          if (!company) {
+            res.status(400).send({
+              msg: 'uid无效'
+            });
+            throw new BreakError();
+          }
+          companyDoc = company;
+
+          var teams = [];
+          req.body.groups.forEach(function(group) {
+            var groupIndex = tools.arrayObjectIndexOf(groupDoc, group._id, '_id');
+            var team = new CompanyGroup({
+              cid: companyDoc._id,
+              gid: group._id,
+              poster: {
+                role: 'HR'
+              },
+              group_type: groupDoc[groupIndex].group_type,
+              cname: companyDoc.info.name,
+              name: companyDoc.info.name + '-' + groupDoc[groupIndex].group_type + '队',
+              logo: '/img/icons/group/' + groupDoc[groupIndex].entity_type.toLowerCase() + '_on.png',
+              entity_type: groupDoc[groupIndex].entity_type,
+              city: {
+                province: companyDoc.info.city.province,
+                city: companyDoc.info.city.city,
+                district: companyDoc.info.city.district
+              },
+              member: [{
+                _id: userDoc._id,
+                nickname: userDoc.nickname,
+                photo: userDoc.photo,
+              }],
+              leader: [{
+                _id: userDoc._id,
+                nickname: userDoc.nickname,
+                photo: userDoc.photo,
+              }]
+            });
+            teams.push(team);
+          });
+          var createTeamsDeferred = Q.defer();
+          // 文档和源码的注释都是骗人的吧，promise为啥只返回一个team，只能自己处理了
+          CompanyGroup.create(teams, function(err) {
+            if (err) createTeamsDeferred.reject(err);
+            else {
+              var result = [];
+              for (var i = 1, len = arguments.length; i < len; i++) {
+                result.push(arguments[i]);
+              }
+              createTeamsDeferred.resolve(result);
+            }
+          });
+          return createTeamsDeferred.promise;
+        })
+        .then(function(teams) {
+          userDoc.team = [];
+          companyDoc.team = [];
+
+          // 添加chatroom
+          userDoc.chatrooms = [{
+            _id: companyDoc._id
+          }];
+          // 把人加到小队并变成队长, 并把小队加到公司
+          for (var i = 0, len = teams.length; i < len; i++) {
+            var team = teams[i];
+            userDoc.team.push({
+              gid: team.gid,
+              _id: team._id,
+              group_type: team.group_type,
+              entity_type: team.entity_type,
+              name: team.name,
+              leader: true,
+              logo: team.logo
+            });
+            userDoc.chatrooms.push({
+              _id: team._id
+            });
+            companyDoc.team.push({
+              gid: team.gid,
+              group_type: team.group_type,
+              name: team.name,
+              id: team._id
+            });
+          }
+          var saveUserDeferred = Q.defer();
+          userDoc.save(function(err) {
+            if (err) saveUserDeferred.reject(err);
+            else saveUserDeferred.resolve();
+          });
+
+          var saveCompanyDeferred = Q.defer();
+          companyDoc.save(function(err) {
+            if (err) saveCompanyDeferred.reject(err);
+            else saveCompanyDeferred.resolve();
+          });
+          return Q.all([saveUserDeferred.promise, saveCompanyDeferred.promise]);
+        })
+        .then(function() {
+          res.status(200).send({
+            result: 1,
+            msg: '注册成功'
+          });
+        })
+        .then(null, function(err) {
+          if (err.typeError !== 'break') {
+            next(err);
+          }
+        });
     },
     updateCompanyLogo: function (req, res, next) {
       if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
