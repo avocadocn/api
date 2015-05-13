@@ -20,6 +20,7 @@ module.exports = function (app, ctrl) {
   app.get('/teams/:teamId/tags', token.needToken, ctrl.getTeamTags);
   app.get('/teams/:teamId/members', token.needToken, ctrl.getMembers);
   app.get('/groups', token.needToken, ctrl.getGroups);
+  app.get('/groups/list', ctrl.getGroupsList);
   app.get('/teams/lead/list', token.needToken, ctrl.getLedTeams);
 
   app.get('/teams/search/:type', token.needToken, ctrl.getSearchTeamsOptions, ctrl.getSearchTeams);

@@ -1013,6 +1013,12 @@ module.exports = function (app) {
       //   return res.status(200).send(groups);
       // });
     },
+    
+    getGroupsList: function(req, res) {
+      groups.getGroups(function(groups) {
+        return res.status(200).send(groups);
+      })
+    },
 
     getMembers: function (req, res) {
       CompanyGroup.findOne({'_id': req.params.teamId, 'company_active': {$in: [true, null]}}).exec()
