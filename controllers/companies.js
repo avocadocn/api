@@ -78,7 +78,7 @@ module.exports = function (app) {
           else{//是验证的名字的话未验证邮箱提醒他去验证邮箱或给donler发送邮件
             if(company.status.mail_active && company.status.active) {//没被屏蔽，邮箱也验证了
               var domain = false;
-              var emailDomain = req.body.email.toLowerCase().split('@')[1];
+              var emailDomain = req.body.email ? req.body.email.toLowerCase().split('@')[1] : null;
               if(emailDomain && company.email.domain.indexOf(emailDomain)>-1) {domain = true;}
               res.send({ validate:0, msg:'已经存在', cid:company._id, domain: domain});
             }
