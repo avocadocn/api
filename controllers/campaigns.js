@@ -540,7 +540,7 @@ module.exports = function (app) {
         deadline: {
           name: '报名截止时间',
           value: req.body.deadline,
-          validators: [donlerValidator.after(req.body.start_time),donlerValidator.before(req.body.end_time)]
+          validators: [donlerValidator.after(new Date()),donlerValidator.before(req.body.end_time)]
         },
         member_max: {
           name: '人数上限',
