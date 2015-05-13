@@ -54,14 +54,14 @@ module.exports = function (app) {
     //验证用户正在注册时输入的信息
     companyInfoValidate: function (req, res) {
       var option;
-      if ( req.body.email ) {
+      if(req.body.name) {
+        option = {'info.name': req.body.name};
+      }
+      else if ( req.body.email ) {
         option = {'login_email': req.body.email.toLowerCase()};
       }
       else if ( req.body.username ) {//此步骤在邮箱认证后，故暂时在app中未用到
         option = {'username': req.body.username};
-      }
-      else if ( req.body.name){
-        option = {'info.name': req.body.name};
       }
       else{
         return res.status(400).send({msg:'数据输入有误'});
