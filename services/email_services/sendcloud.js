@@ -4,7 +4,8 @@ var mailer = require('nodemailer'),
   encrypt = require('../encrypt'),
   jade = require('jade'),
   path = require('path'),
-  fs = require('fs');
+  fs = require('fs'),
+  config = require('../../config/config.js');
 
 var emailTemplatePath = path.join(__dirname, 'mail_template.jade');
 
@@ -22,7 +23,7 @@ var transport = mailer.createTransport('SMTP', mailOption);
 
 var siteProtocol = 'http://';
 
-var secret = '18801912891';
+var secret = config.SECRET;
 
 exports.sendStaffResetPwdMail = function (email, uid, host, callback) {
   var from = '动梨<service@donler.com>';
@@ -208,5 +209,38 @@ exports.sendFeedBackMail = function (email, content, callback) {
       subject: subject,
       html: html
     }, callback);
+  });
+};
+
+/**
+ * 快速注册邮箱验证
+ * @param  {[type]} who  接收人的邮件地址
+ * @param  {[type]} name 接收人的公司名
+ * @param  {[type]} id   HR的公司id
+ * @param  {[type]} host 当前host
+ * @return {[type]}      
+ */
+exports.sendQuickRegisterActiveMail = function(who, name, id, host, callback) {
+  var from = '动梨<service@donler.com>';
+  var to = who;
+  var subject = name + '快速注册激活';
+  var description = '我们收到您在动梨的注册申请信息，请点击下面的链接来激活帐户：';
+  var link = 'http://' + host + '/company/quickvalidate?key=' + encrypt.encrypt(id,config.SECRET) + '&id=' + id;
+  fs.readFile(emailTemplatePath, 'utf8', function (err, data) {
+    if (err) {throw err;}
+    var fn = jade.compile(data);
+    var html = fn({
+      'title': '快速注册激活',
+      'host': siteProtocol + host,
+      'who': who,
+      'description': description,
+      'link': link
+    });
+    transport.sendMail({
+      from: from,
+      to: to,
+      subject: subject,
+      html: html
+    },callback);
   });
 };

@@ -3,6 +3,7 @@
 var soap = require('soap');
 var async = require('async');
 var encrypt = require('../encrypt.js');
+var config = require('../../config/config.js');
 
 var global_config = {
   wsdl: 'http://donler.dmdelivery.com/x/soap-v3/wsdl.php',
@@ -24,7 +25,7 @@ var global_config = {
   }
 };
 
-var secret = '18801912891';
+var secret = config.SECRET;
 
 /**
  * 发送邮件

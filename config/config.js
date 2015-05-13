@@ -15,4 +15,5 @@ default:
   break;
 }
 config.rootPath = path.join(__dirname, '../');
+config.SECRET = 'c011fd597b3e';
 module.exports = config;

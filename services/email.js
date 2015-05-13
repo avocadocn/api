@@ -148,5 +148,22 @@ emailService.sendFeedBackMail = function (email, content, callback) {
   });
 };
 
+/**
+ * 发送快速注册激活邮件
+ * @param  {String} email [description]
+ * @param  {String} cname [description]
+ * @param  {String} cid   [description]
+ * @param  {String} host  [description]
+ * @param {Function} callback 形式为function(err)
+ */
+emailService.sendQuickRegisterActiveMail = function (email, cname, cid, callback) {
+  getConfig(function (err, config) {
+    if(err) {
+      return callback(err);
+    }
+    getService(config).sendQuickRegisterActiveMail(email, cname, cid, config.host.product, callback);
+  })
+};
+
 module.exports = emailService;
 

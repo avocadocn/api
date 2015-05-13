@@ -15,6 +15,7 @@ var Report = mongoose.model('Report');
 var jwt = require('jsonwebtoken');
 var async = require('async');
 var moment = require('moment');
+var Q = require('q');
 
 var log = require('../services/error_log.js');
 var emailService = require('../services/email.js');
@@ -24,6 +25,7 @@ var donlerValidator = require('../services/donler_validator.js');
 var uploader = require('../services/uploader.js');
 var syncData = require('../services/sync_data.js');
 var tools = require('../tools/tools.js');
+var qrcodeService = require('../services/qrcode');
 
 
 
@@ -547,6 +549,151 @@ module.exports = function (app) {
         } else {
           var resMsg = donlerValidator.combineMsg(msg);
           res.status(400).send({ msg: resMsg });
+        }
+      });
+    },
+    quickRegisterValidate: function (req, res, next) {
+
+      var emailValidate = function (name, value, callback) {
+        if (!value) {
+          callback(true);
+        }
+        Company.findOne({ 'info.email': value }, { '_id': 1 }).exec()
+          .then(function (company) {
+            if (!company) {
+              callback(true);
+            } else {
+              var msg = util.format('%s已被注册', name);
+              callback(false, msg);
+            }
+          })
+          .then(null, function (err) {
+            log(err);
+            var msg = util.format('验证%s时出错', name);
+            callback(false, msg);
+          });
+      };
+
+      donlerValidator({
+        name: {
+          name: '公司名称',
+          value: req.body.name,
+          validators: ['required']
+        },
+        province: {
+          name: '省份',
+          value: req.body.province,
+          validators: ['required']
+        },
+        city: {
+          name: '城市',
+          value: req.body.city,
+          validators: ['required']
+        },
+        district: {
+          name: '地区',
+          value: req.body.district,
+          validators: ['required']
+        },
+        region: {
+          name: '省市区',
+          value: req.body.province + ',' + req.body.city + ',' + req.body.district,
+          validators: ['region']
+        },
+        email: {
+          name: '企业邮箱',
+          value: req.body.email.toLowerCase(),
+          validators: ['required', 'email', emailValidate]
+        },
+        password: {
+          name: '密码',
+          value: req.body.password,
+          validators: ['required', donlerValidator.minLength(6), donlerValidator.maxLength(30)]
+        }
+
+      }, 'complete', function (pass, msg) {
+        if (pass) {
+          next();
+        } else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+        }
+      });
+    },
+    quickRegister: function(req, res, next) {
+      var email = req.body.email ?req.body.email.toLowerCase():req.body.email;
+      var userDoc, companyDoc;
+
+      companyDoc = new Company({
+        username: email,
+        login_email: email,
+        password: req.body.password,
+        status: {
+          mail_active :false,
+          active: false,
+          verification: 1
+        },
+        info: {
+          name: req.body.name,
+          official_name: req.body.name,
+          city: {
+            province: req.body.province,
+            city: req.body.city,
+            district: req.body.district
+          },
+          email: email,
+          membernumber: 1
+        },
+        email: {
+          domain: email.split('@')[1]
+        },
+        invite_key: tools.randomAlphaNumeric(8)
+      });
+
+      var deferred = Q.defer();
+      var qrDir = '/img/qrcode/companyinvite/';
+      var fileName = companyDoc.id + '.png';
+      var inviteUrl = req.headers.host + '/users/invite?key=' + companyDoc.invite_key + '&cid=' + companyDoc.id;
+      qrcodeService.generateCompanyQrcode(qrDir, fileName, inviteUrl, function(err, qrcodeUrl) {
+        if (err) deferred.reject(err);
+        else deferred.resolve(qrcodeUrl);
+      });
+
+      deferred.promise
+      .then(function(qrcodeUrl) {
+        companyDoc.invite_qrcode = qrcodeUrl;
+        return Company.create(companyDoc);
+      })
+      .then(function(company) {
+        companyDoc = company;
+
+        // 创建完公司，开始创建用户
+        return User.create({
+          username: email,
+          password: req.body.password,
+          nickname: email.split('@')[0],
+          email: email,
+          role: 'LEADER',
+          cid: company._id,
+          cname: req.body.name,
+          company_official_name: req.body.name
+        });
+      })
+      .then(function(user) {
+        userDoc = user;
+        res.send({
+          msg: '注册成功',
+          uid: user._id,
+          inviteKey: companyDoc.invite_key,
+          qrcodeUrl: companyDoc.invite_qrcode
+        });
+        emailService.sendQuickRegisterActiveMail(userDoc.email, companyDoc.info.name, companyDoc.id, function(err) {
+          if(err) {console.log(err.stack);}
+        });
+      })
+      .then(null, function(err) {
+        if (err.typeError !== 'break') {
+          next(err);
         }
       });
     },
