@@ -119,7 +119,7 @@ module.exports = function (app) {
         'gid':team.gid,
         'score_rank.rank':{
           '$lte' : team.score_rank.rank + backwardTeamNum,
-          '$gte' : team.score_rank.rank - forwardTeamNum
+          '$gte' : Math.max(team.score_rank.rank - forwardTeamNum, 1)
         }
       }
       CompanyGroup.find(option,{score: 1,score_rank: 1,name: 1,logo: 1, cname:1})
