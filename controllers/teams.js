@@ -286,7 +286,7 @@ module.exports = function (app) {
           next();
           break;
         case 'user':
-
+          options.active = true;
           var addIdsToOptions = function(userTeams) {
             var teams = userTeams.filter(function(team) {
               if (team.group_type === 'virtual' || req.query.gid && req.query.gid != team.gid || req.query.leadFlag && !team.leader) {

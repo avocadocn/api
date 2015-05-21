@@ -288,6 +288,7 @@ module.exports = function (app) {
           };
         });
       }
+
       //暂时不让公司管理组有聊天室. 2015.4.29 -M
       // 只有是队长才可以参与公司管理讨论组
       // if (req.user.role === 'LEADER') {
@@ -326,7 +327,7 @@ module.exports = function (app) {
           //---为了排序写两步
           //先把results里有的放到列表里
           var posterIdList = [];
-          var posterTeamIdList =[];
+          // var posterTeamIdList =[];
           var resultChatroomList = [];
           var resultsLength = results.length;
           for (var i=0; i<results.length; i++) {
@@ -336,7 +337,7 @@ module.exports = function (app) {
               chatroom.latestChat = results[i].latestChat;
               resultChatroomList.push(chatroom);
               chatroom.latestChat.poster && posterIdList.push(chatroom.latestChat.poster);
-              chatroom.latestChat.poster_team && posterTeamIdList.push(chatroom.latestChat.poster_team);
+              // chatroom.latestChat.poster_team && posterTeamIdList.push(chatroom.latestChat.poster_team);
             }
           }
           //再把results里没有的放进去
@@ -354,7 +355,8 @@ module.exports = function (app) {
             },
             function(callback){
               // 查询posterTeam
-              queryPosterTeams(posterTeamIdList, resultChatroomList,callback);
+              // queryPosterTeams(posterTeamIdList, resultChatroomList,callback);
+              queryPosterTeams(chatroomIds, resultChatroomList,callback);
             }
           ],
           function(err, results){
@@ -397,30 +399,37 @@ module.exports = function (app) {
             callback(err);
           });
       }
-      function queryPosterTeams(posterTeamIdList, chatroomList, callback) {
+      function queryPosterTeams(chatroomIds, chatroomList, callback) {
         CompanyGroup.find({
-          _id: {$in: posterTeamIdList}
+          _id: {$in: chatroomIds}
         }, {
           _id: 1,
           cid: 1,
           name: 1,
-          logo: 1
+          logo: 1,
+          active: 1
         })
           .exec()
           .then(function (teams) {
             // 填充chatroomList的poster，原先为id，现将其替换为含用户昵称头像的对象
-            chatroomList.forEach(function (chatroom) {
-              for (var i = 0; i < teams.length; i++) {
-                if (chatroom.latestChat && chatroom.latestChat.poster_team && chatroom.latestChat.poster_team.toString() === teams[i]._id.toString()) {
-                  chatroom.latestChat.poster = {
-                    _id: teams[i]._id,
-                    name: teams[i].name,
-                    logo: teams[i].logo
-                  };
+            for (var i=teams.length-1; i>=0; i--) {
+              for(var j=chatroomList.length-1; j>=0; j--) {
+                if(chatroomList[j]._id.toString() === teams[i]._id.toString()) {
+                  if(teams[i].active===false) { //如果小队被关闭，则不返回给他
+                    chatroomList.splice(j,1);
+                  }else {
+                    if(chatroomList[j].latestChat && chatroomList[j].latestChat.poster_team) {
+                      chatroomList[j].latestChat.poster = {
+                        _id: teams[i]._id,
+                        name: teams[i].name,
+                        logo: teams[i].logo
+                      };
+                    }
+                  }
                   break;
                 }
               }
-            });
+            }
             callback(null);
           })
           .then(null, function (err) {
