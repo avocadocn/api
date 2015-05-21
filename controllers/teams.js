@@ -741,12 +741,18 @@ module.exports = function (app) {
       var originFamilyPhotos = team.family.filter(function(photo){
         return (!photo.hidden && photo.select);
       });
-      var familyPhotoIndex= originFamilyPhotos.length-1;
-      var familyPhotos = [{
-        _id: originFamilyPhotos[familyPhotoIndex]._id,
-        uri: originFamilyPhotos[familyPhotoIndex].uri,
-        select: originFamilyPhotos[familyPhotoIndex].select
-      }];
+      if(originFamilyPhotos.length) {
+        var familyPhotoIndex= originFamilyPhotos.length-1;
+        var familyPhotos = [{
+          _id: originFamilyPhotos[familyPhotoIndex]._id,
+          uri: originFamilyPhotos[familyPhotoIndex].uri,
+          select: originFamilyPhotos[familyPhotoIndex].select
+        }];
+        return res.status(200).send(familyPhotos);
+      } else {
+        return res.status(200).send([]);
+      }
+
       // for(var i=0;i<originFamilyPhotos.length;i++){
       //   familyPhotos.push({
       //     _id: originFamilyPhotos[i]._id,
@@ -754,7 +760,7 @@ module.exports = function (app) {
       //     select: originFamilyPhotos[i].select
       //   });
       // }
-      return res.status(200).send(familyPhotos);
+      
     },
     toggleSelectFamilyPhoto : function(req, res) {
       var team = req.companyGroup;
