@@ -14,7 +14,11 @@ module.exports = {
       return res.status(400).send({ msg: 'teamId不能为空' });
     }
 
-    CompanyGroup.findById(req.params.teamId).populate('poster._id').exec()
+    if(!mongoose.Types.ObjectId.isValid(req.params.teamId)){
+      return res.status(404).send({ msg: '没有找到对应的小队' });
+    }
+
+    CompanyGroup.findOne({'_id': req.params.teamId, 'company_active': {$in: [true, null]}}).populate('poster._id').exec()
     .then(function (companyGroup) {
       if (!companyGroup) {
         res.status(400).send({ msg: '没有找到对应的小队' });
@@ -32,6 +36,10 @@ module.exports = {
   getUserById : function(req, res, next) {
     if (!req.params.userId ) {
       return res.status(400).send({ msg: 'userId不能为空' });
+    }
+
+    if(!mongoose.Types.ObjectId.isValid(req.params.userId)){
+      return res.status(404).send({ msg: '没有找到对应的用户' });
     }
 
     User.findById(req.params.userId).exec()

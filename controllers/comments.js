@@ -8,14 +8,16 @@ var Campaign = mongoose.model('Campaign'),
     PhotoAlbum = mongoose.model('PhotoAlbum'),
     Photo = mongoose.model('Photo'),
     User = mongoose.model('User'),
-    CompanyGroup = mongoose.model('CompanyGroup');
-var async = require('async');
+    CompanyGroup = mongoose.model('CompanyGroup'),
+    CompetitionMessage = mongoose.model('CompetitionMessage');
+var async = require('async'),
+    xss = require('xss');
 var auth = require('../services/auth.js'),
     log = require('../services/error_log.js'),
     socketClient = require('../services/socketClient'),
     uploader = require('../services/uploader.js'),
-    tools = require('../tools/tools.js');
-
+    tools = require('../tools/tools.js'),
+    donlerValidator = require('../services/donler_validator.js');
 var shieldTip = "该评论已经被系统屏蔽";
 /**
  * 为comments的每个comment设置权限
@@ -64,9 +66,9 @@ var setDeleteAuth = function setDeleteAuth(data, callback) {
       Campaign.findById(data.host_id).exec()
         .then(function (campaign) {
           var is_leader = false;
-          if (campaign.team && user.provider === 'user') {
-            for (var i = 0; i < campaign.team.length; i++) {
-              if (user.isTeamLeader(campaign.team[i].toString())) {
+          if (campaign.tid && user.provider === 'user') {
+            for (var i = 0; i < campaign.tid.length; i++) {
+              if (user.isTeamLeader(campaign.tid[i].toString())) {
                 is_leader = true;
                 break;
               }
@@ -122,122 +124,6 @@ var setDeleteAuth = function setDeleteAuth(data, callback) {
       break;
   }
 };
-//for push comment
-var updateUserCommentList = function(campaign, user, reqUserId ,callback){
-  var arrayMaxLength = 30;
-  var isInTeams = false;
-  var teamLength = campaign.tid.length;
-  for(var i=0; i<teamLength; i++){
-    if(tools.arrayObjectIndexOf(user.team,campaign.tid[i],'_id')>-1) {
-      isInTeams = true;
-      break;
-    }
-  }
-  // if(campaign.whichUnit(user._id)) {//已参加->在小队
-  if(isInTeams){//在campaign所在小队
-    var campaignIndex = tools.arrayObjectIndexOf(user.commentCampaigns, campaign._id, '_id');
-    if(campaignIndex === -1) {//如果user中没有
-      //放到最前,数组长度到max值时去掉最后面的campaign
-      user.commentCampaigns.unshift({
-        '_id': campaign._id,
-        'unread': user._id.toString() == reqUserId.toString() ? 0 : 1
-      });
-      if(user.commentCampaigns.length>arrayMaxLength) {
-        user.commentCampaigns.length = arrayMaxLength;
-      }
-    }else{//如果存在于user中
-      //更新到最前,如果不是自己发的,unread数增加
-      if(user._id.toString() != reqUserId.toString())
-        user.commentCampaigns[campaignIndex].unread++;
-      var campaignNeedUpdate = user.commentCampaigns.splice(campaignIndex,1);
-      user.commentCampaigns.unshift(campaignNeedUpdate[0]);
-    }
-  }else{//未参加
-    var campaignIndex = tools.arrayObjectIndexOf(user.unjoinedCommentCampaigns, campaign._id, '_id');
-    if(campaignIndex === -1) {//如果user中没有
-      //放到最前,数组长度到max值时去掉最后面的campaign
-      user.unjoinedCommentCampaigns.unshift({
-        '_id': campaign._id,
-        'unread': user._id.toString() == reqUserId.toString() ? 0 : 1
-      });
-      if(user.unjoinedCommentCampaigns.length>arrayMaxLength) {
-        user.unjoinedCommentCampaigns.length = arrayMaxLength;
-      }
-    }else{//如果存在于user中
-      //更新到最前,如果不是自己发的,unread数增加
-      if(user._id.toString() != reqUserId.toString())
-        user.unjoinedCommentCampaigns[campaignIndex].unread++;
-      var campaignNeedUpdate = user.unjoinedCommentCampaigns.splice(campaignIndex,1);
-      user.unjoinedCommentCampaigns.unshift(campaignNeedUpdate[0]);
-    }
-  }
-  user.save(function(err){
-    if(err){
-      console.log('user save error:',err);
-    }else{
-      callback();
-    }
-  });
-};
-
-var socketPush = function(campaign, comment, joinedUids, unjoinedUids){
-  var commentCampaign = {
-    '_id':campaign._id,
-    'theme': campaign.theme,
-    'latestComment': campaign.latestComment
-  };
-  var ct = campaign.campaign_type;
-  if(ct===1){
-    commentCampaign.logo = campaign.campaign_unit[0].company.logo;
-  }
-  else if(ct===2||ct===6){//是单小队/部门活动
-    commentCampaign.logo = campaign.campaign_unit[0].team.logo;
-  }else{//是挑战
-    commentCampaign.logo = '/img/icons/vs.png';//图片todo
-  }
-  var socketComment = {
-    '_id': comment._id,
-    'poster': comment.poster,
-    'createDate': comment.create_date,
-    'content': comment.content,
-    'randomId': comment.randomId
-  };
-  if(comment.photos){
-    socketComment.photos = comment.photos;
-  }
-  socketClient.pushComment(joinedUids, unjoinedUids, commentCampaign, socketComment);
-};
-
-/**
- * [userReadComment description]
- * @param  {object} user 用户
- * @param  {string} campaignId 看的是哪个活动的评论
- */
-var userReadComment = function (user, campaignId, callback) {
-  var find = false;
-  for(var i=0; i<user.commentCampaigns.length; i++){
-    if(campaignId.toString()===user.commentCampaigns[i]._id.toString()) {
-      user.commentCampaigns[i].unread = 0;
-      find = true;
-      break;
-    }
-  }
-  if(!find){
-    for(var i=0; i<user.unjoinedCommentCampaigns.length; i++){
-      if(campaignId.toString()===user.unjoinedCommentCampaigns[i]._id.toString()) {
-        user.unjoinedCommentCampaigns[i].unread = 0;
-        find = true;
-        break;
-      }
-    }
-  }
-  user.save(function(err){
-    if(err){
-      console.log('user save error:',err);
-    }
-    callback();
-  });
-};
 
 module.exports = function (app) {
 
@@ -247,31 +133,55 @@ module.exports = function (app) {
       var hostId = req.params.hostId;
       var hostType = req.params.hostType;
       switch (hostType) {
-      case 'campaign':
-        Campaign.findById(hostId).exec()
-          .then(function (campaign) {
-            if (!campaign) {
-              return res.status(403).send({ msg: '权限错误' });
-            }
-            var role = auth.getRole(req.user, {
-              companies: campaign.cid,
-              teams: campaign.tid
+        case 'campaign':
+          Campaign.findById(hostId).exec()
+            .then(function (campaign) {
+              if (!campaign) {
+                return res.status(400).send({ msg: '无此活动' });
+              }
+              var role = auth.getRole(req.user, {
+                companies: campaign.cid,
+                teams: campaign.tid
+              });
+              var allow = auth.auth(role, ['publishComment']);
+              if (!allow.publishComment) {
+                return res.status(403).send({ msg: '权限错误' });
+              }
+              req.campaign = campaign;
+              req.photoAlbumId = campaign.photo_album;
+              next();
+            })
+            .then(null, function (err) {
+              log(err);
+              res.sendStatus(500);
             });
-            var allow = auth.auth(role, ['publishComment']);
-            if (!allow.publishComment) {
-              return res.status(403).send({ msg: '权限错误' });
-            }
-            req.campaign = campaign;
-            req.photoAlbumId = campaign.photo_album;
-            next();
-          })
-          .then(null, function (err) {
-            log(err);
-            res.sendStatus(500);
-          });
-        break;
-      default:
-        return res.status(403).send({ msg: '权限错误' });
+          break;
+        case 'competition_message':
+          CompetitionMessage.findById(hostId)
+          .populate('sponsor_team opposite_team')
+          .exec()
+            .then(function (competitionMessage) {
+              if (!competitionMessage) {
+                return res.status(400).send({ msg: '无此挑战信' });
+              }
+              var role = auth.getRole(req.user, {
+                companies: [competitionMessage.sponsor_cid, competitionMessage.opposite_cid],
+                teams: [competitionMessage.sponsor_team, competitionMessage.opposite_team]
+              });
+              var allow = auth.auth(role, ['publishComment']);
+              if (!allow.publishComment) {
+                return res.status(403).send({ msg: '权限错误' });
+              }
+              req.competitionMessage = competitionMessage;
+              next();
+            })
+            .then(null, function (err) {
+              log(err);
+              res.sendStatus(500);
+            });
+          break;
+        default:
+          return res.status(403).send({ msg: '权限错误' });
       }
 
     },
@@ -318,8 +228,10 @@ module.exports = function (app) {
         subDir: req.user.getCid().toString(),
         saveOrigin: true,
         getFields: function (fields) {
-          randomId = fields.randomId[0];
-          req.randomId = randomId;
+          if(fields.randomId) {
+            randomId = fields.randomId[0];
+            req.randomId = randomId;
+          }
         },
         getSize: function (size) {
           imgSize = size;
@@ -420,8 +332,24 @@ module.exports = function (app) {
         }];
       }
       if (req.body && req.body.content) {
-        var content = req.body.content;
+        var content = xss(req.body.content);
         comment.content = content;
+      }
+      if(req.competitionMessage) {
+        var teamIndex;
+        if(req.user.isTeamLeader(req.competitionMessage.sponsor_team._id)) {
+          teamIndex ='sponsor_team';
+        }else {
+          teamIndex ='opposite_team';
+        }
+        var nowTeam =req.competitionMessage[teamIndex]
+        var posterTeam = {
+          '_id': nowTeam._id,
+          'cid': nowTeam.cid,
+          'name': nowTeam.name,
+          'logo': nowTeam.logo
+        };
+        comment.poster_team = posterTeam;
       }
       comment.save(function (err) {
         if (err) {
@@ -434,89 +362,36 @@ module.exports = function (app) {
           if (req.campaign) {
             var campaign = req.campaign;
             campaign.comment_sum++;
-            var poster = {
-              '_id': req.user._id,
-              'nickname': req.user.nickname,
-              'photo': req.user.photo
-            };
-            campaign.latestComment = {
-              '_id': comment._id,
-              'poster': poster,
-              'createDate': comment.create_date
-            };
-            if (content) {
-              campaign.latestComment.content = content;
-            }
-            //如果不在已评论过的人列表
-            if (tools.arrayObjectIndexOf(campaign.commentMembers, req.user._id, '_id') === -1) {
-              campaign.commentMembers.push(poster);
-            }
             
             campaign.save(function (err) {
               if (err) {
                 log(err);
               }
             });
-            //获取在此小队的人
-            var getUidsInTeams = function (tids, callback) {
-              CompanyGroup.find({'_id':{'$in':tids}},function(err, teams){
-                if(err){
-                  console.log(err);
-                  callback(null,err);
-                }else {
-                  var teamUids = [];
-                  var teamLength = teams.length;
-                  for(var i=0; i<teamLength; i++) {
-                    var memberLength = teams[i].member.length;
-                    for(var j=0;j<memberLength;j++) {
-                      teamUids.push(teams[i].member[j]._id.toString());
-                    }
-                  }
-                  callback(teamUids);
-                }
-              })
-            };
-            //for users操作 & socket
-            //参加的人->在此小队的人
-            // var joinedUids = [];
-            // for(var i = 0; i<campaign.members.length; i++) {
-            //   joinedUids.push(campaign.members[i]._id.toString());
-            // }
-            //未参加
-            getUidsInTeams(campaign.tid,function(teamUids,err){
-              if(!err){
-                var joinedUids = teamUids ;
-                //未参加->不在此小队的评论过的人
-                var unjoinedUids = [];
-                for(var i = 0; i<campaign.commentMembers.length;i++) {
-                  if(joinedUids.indexOf(campaign.commentMembers[i]._id.toString()) === -1){
-                    unjoinedUids.push(campaign.commentMembers[i]._id.toString());
-                  }
-                }
-                //---socket
-                if(req.body.randomId){
-                  comment.randomId=req.body.randomId;
-                }
-                if (req.randomId) {
-                  comment.randomId=req.randomId;
-                }
-                socketPush(campaign, comment, joinedUids, unjoinedUids);
-
-                //users操作
-                var revalentUids = joinedUids.concat(unjoinedUids);
-                User.find({'_id':{'$in':revalentUids}},{'commentCampaigns':1,'unjoinedCommentCampaigns':1,'team':1},function(err,users){
-                  if(err){
-                    console.log(err);
-                  }else{
-                    async.map(users,function(user,callback){
-                      updateUserCommentList(campaign, user, req.user._id, function(){
-                        callback();
-                      });
-                    },function(err, results) {
-                      return;
-                    });
-                  }
-                });
+            
+          }
+          if (req.competitionMessage) {
+            //更新挑战信未读状态
+            
+            //socket
+            //发给另一个队长
+            //先看自己是不是第一个队的队长，如果不是，那肯定是第二个队的= -...
+            var sponsor_team = req.competitionMessage.sponsor_team;
+            var opposite_team = req.competitionMessage.opposite_team;
+            if(req.user.isTeamLeader(sponsor_team._id)) {
+              req.competitionMessage.opposite_unread =true;
+              opposite_team.leader.forEach(function(leader, index){
+                socketClient.pushMessage(leader._id);
+              });
+            }else {
+              req.competitionMessage.sponsor_unread =true;
+              sponsor_team.leader.forEach(function(leader, index){
+                socketClient.pushMessage(leader._id);
+              });
+            }
+            req.competitionMessage.save(function (err) {
+              if (err) {
+                log(err);
               }
             });
           }
@@ -526,29 +401,80 @@ module.exports = function (app) {
 
 
     getComments: function(req, res) {
-      //获取评论，只有comment 无reply
-      Comment.getComments({
-        hostType: req.query.requestType,
-        hostId: req.query.requestId
-      }, req.query.createDate, req.query.limit, function (err, comments, nextStartDate) {
-        setDeleteAuth({
-          host_type: req.query.requestType,
-          host_id: req.query.requestId,
-          user: req.user,
-          comments: comments
-        }, function (err) {
-          if (err) console.log(err);
-          // 即使错误依然会做基本的权限设置（公司可删自己员工的，自己可以删自己的），所以依旧返回数据
-          res.status(202).send({'comments': comments, nextStartDate: nextStartDate});
-          userReadComment(req.user, req.query.requestId, function(){});
-        });
-      });
-    },
-    readComments: function(req, res) {
-      var host_id = req.body.requestId;
-      userReadComment(req.user, host_id, function() {
-        return res.status(200).send();
-      });
+      donlerValidator({
+        requestType: {
+          name: '主体类型',
+          value: req.query.requestType,
+          validators: ['required']
+        },
+        requestId: {
+          name: '主体ID',
+          value: req.query.requestId,
+          validators: ['required']
+        },
+        limit: {
+          name: '数量限制',
+          value: req.query.limit,
+          validators: ['number']
+        }
+      }, 'complete', function (pass, msg) {
+        if(pass) {
+          var model = '';
+          switch(req.query.requestType) {
+            case 'campaign':
+              model ='Campaign';
+              break;
+            case 'competition_message':
+              model='CompetitionMessage';
+              break;
+            default:
+              return res.status(400).send({msg:'无法获取该类型的评论'});
+          }
+          mongoose.model(model).findOne({_id: req.query.requestId}, function(err, model) {
+            if(err || !model) return res.status(500).send({msg:'无对应的主体'});
+            else {
+              var requestCid;
+              switch(req.query.requestType) {
+                case 'campaign':
+                  requestCid =model.cid;
+                  break;
+                case 'competition_message':
+                  requestCid =[model.sponsor_cid.toString(), model.opposite_cid.toString()];
+                  break;
+              }
+              if(req.user.provider === 'company' && requestCid.indexOf(req.user._id) === -1 || req.user.provider === 'user' && requestCid.indexOf(req.user.cid.toString())=== -1) {
+                return res.status(403).send({msg:'权限错误'});
+              }
+              else {
+                //获取评论，只有comment 无reply
+                Comment.getComments({
+                  hostType: req.query.requestType,
+                  hostId: req.query.requestId
+                }, req.query.createDate, req.query.limit, function (err, comments, nextStartDate) {
+                  if(req.query.requestType=='competition_message')
+                    return res.status(200).send({'comments': comments, nextStartDate: nextStartDate});
+                  setDeleteAuth({
+                    host_type: req.query.requestType,
+                    host_id: req.query.requestId,
+                    user: req.user,
+                    comments: comments
+                  }, function (err) {
+                    if (err) console.log(err);
+                    // 即使错误依然会做基本的权限设置（公司可删自己员工的，自己可以删自己的），所以依旧返回数据
+                    res.status(200).send({'comments': comments, nextStartDate: nextStartDate});
+                    // userReadComment(req.user, req.query.requestId, function(){});
+                  });
+                });
+              }
+            }
+          })
+        }
+        else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          return res.status(422).send({ msg: resMsg });
+        }
+      })
+
     },
 
     deleteComment: function(req, res) {
@@ -613,10 +539,7 @@ module.exports = function (app) {
           .then(null, function (err) {
             callback(err);
           });
-
       };
-
-
 
       var comment = req.comment;
       setDeleteAuth({
@@ -636,7 +559,7 @@ module.exports = function (app) {
               return res.status(500).send({msg: 'comment save error'});
             }
             // save成功就意味着已经改为delete状态，后续操作不影响已经成功这个事实，故直接返回成功状态
-            res.status(200).send('success');
+            res.status(200).send({ msg: 'success' });
 
             // 计数-1
             if (comment.host_type === "campaign" || comment.host_type === "campaign_detail") {
@@ -692,71 +615,6 @@ module.exports = function (app) {
       })
       .then(null, function (err) {
         return res.status(500).send({msg: 'Comment not found'});
-      });
-    },
-    getCommentList: function(req, res) {
-      var campaigns= [];
-      if(req.query.type==='joined')
-        campaigns = req.user.commentCampaigns;
-      else if(req.query.type === 'unjoined')
-        campaigns = req.user.unjoinedCommentCampaigns;
-      var campaignIds = [];
-      for(var i = 0; i<campaigns.length; i++){
-        campaignIds.push(campaigns[i]._id);
-      }
-      Campaign.find({_id:{'$in':campaignIds}})
-      .sort('-latestComment.createDate')
-      .exec()
-      .then(function (commentCampaigns) {
-        var formatCommentCampaigns = [];
-        for(var i = 0; i<commentCampaigns.length; i++){
-          var campaign = commentCampaigns[i];
-          var logo = '';
-          var ct = campaign.campaign_type;
-          if(ct===1){
-            logo = campaign.campaign_unit[0].company.logo;
-          }
-          else if(ct===2||ct===6){//是单小队/部门活动
-            logo = campaign.campaign_unit[0].team.logo;
-          }else{//是挑战
-            logo = '/img/icons/vs.png';//图片todo
-          }
-          var indexOfUser = tools.arrayObjectIndexOf(campaigns, campaign._id ,'_id');
-          var unread = campaigns[indexOfUser].unread;
-          formatCommentCampaigns.push({
-            _id: campaign._id,
-            theme: campaign.theme,
-            latestComment: campaign.latestComment,
-            unread: unread,
-            logo: logo
-          });
-        }
-        if(req.query.type==='joined') {
-          var unjoinedCampaigns = req.user.unjoinedCommentCampaigns;
-          var unreadUnjoined = false; // 是否有未读的未参加活动讨论
-          for(var i =0; i<unjoinedCampaigns.length; i++){
-            if(unjoinedCampaigns[i].unread){
-              unreadUnjoined = true;
-              break;
-            }
-          }
-          if(unjoinedCampaigns.length>0){
-            Campaign.findOne({'_id':unjoinedCampaigns[0]._id}, {'latestComment':1,'theme':1}, function(err, unjoinedCampaign){
-              if(err){
-                log(err);
-              }
-              return res.status(200).send({'commentCampaigns':formatCommentCampaigns, 'newUnjoinedCampaignComment':unreadUnjoined, 'latestUnjoinedCampaign':unjoinedCampaign});
-            });
-          }else{
-            return res.status(200).send({'commentCampaigns':formatCommentCampaigns});
-          }
-        }else{
-          return res.status(200).send({'commentCampaigns':formatCommentCampaigns})
-        }
-      })
-      .then(null, function (err) {
-        log(err);
-        return res.status(500).send({msg: 'Campaign not found'});
       });
     }
   };

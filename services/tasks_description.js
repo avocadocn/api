@@ -31,6 +31,9 @@ var registeredTasks = {
   publishComment: {
     company: ['member']
   },
+  getScoreBoardScore: {
+    company: ['hr','member']
+  },
   setScoreBoardScore: {
     company: ['hr'],
     team: ['leader']
@@ -101,6 +104,9 @@ var registeredTasks = {
     company: ['hr'],
     team: ['leader']
   },
+  getTeams:{
+    company: ['hr', 'member']
+  },
   joinTeam: function (role) {
     if (role.company === 'member' && !role.team) {
       return true;
@@ -109,13 +115,14 @@ var registeredTasks = {
     }
   },
   quitTeam: {
-    team: ['leader', 'member']
+    team: ['member']
   },
   closeTeam: {
     company: ['hr']
   },
   createTeams:{
-    company: ['hr', 'member']
+    company: ['hr']
+    // company: ['hr', 'member'] 个人小队功能开放
   },
   editTeam: {
     company: ['hr'],
@@ -186,13 +193,20 @@ var registeredTasks = {
     company: ['hr'],
     user: ['self']
   },
+  // 激活用户(当发邮件失败时hr可直接激活)
+  activeUser: {
+    company: ['hr']
+  },
+
   editCompany: {
     company: ['hr']
   },
   // 能操作某user加入小队
-  joinTeamOperation: {
-    company: ['hr'],
-    user: ['self']
+  joinTeamOperation: function(role) {
+    if (role.company === 'member' && role.user ==='self' || role.company === 'hr')
+      return true;
+    else
+      return false;
   },
   // 能操作某user退出小队
   quitTeamOperation: {
@@ -208,6 +222,11 @@ var registeredTasks = {
     team: ['leader']
   },
 
+  // 获取相册数据
+  getPhotoAlbum: {
+    company: ['member', 'hr']
+  },
+
   // 编辑相册
   editPhotoAlbum: {
     company: ['hr'],
@@ -220,10 +239,24 @@ var registeredTasks = {
     team: ['leader']
   },
 
+  // 获取小队的相册列表
+  getTeamPhotoAlbums: {
+    company: ['member', 'hr']
+  },
+
+  // 获取相册的照片列表
+  getPhotos: {
+    company: ['member', 'hr']
+  },
+
+  // 获取单张照片详细数据
+  getPhoto: {
+    company: ['member', 'hr']
+  },
+
   // 上传照片
   uploadPhoto: {
-    company: ['hr'],
-    team: ['leader', 'member']
+    company: ['hr', 'member']
   },
 
   // 修改照片
@@ -253,8 +286,57 @@ var registeredTasks = {
   // 任命队长
   appointLeader: {
     company: ['hr']
-  }
+  },
 
+  deleteCircleContent: {
+    user: ['self']
+  },
+  // 获取公司统计信息
+  getCompanyStatistics: {
+    company: ['hr']
+  },
+
+  createCircleComment: {
+    company: ['member']
+  },
+
+  deleteCircleComment: {
+    user: ['self']
+  },
+
+  publishCompanyCircle: function(role) {
+    if (role.user == 'self' && role.company == 'member') {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  publishTeamCircle: function(role) {
+    if (role.user == 'self' && (role.team == 'leader' || role.team == 'member')) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  getUserComments: {
+    company: ['hr']
+  },
+
+  // 基本的部门操作：添加、修改、删除、任命管理员
+  operateDepartment: {
+    company: ['hr']
+  },
+
+  // 获取讨论组列表
+  getChatRooms: {
+    company: ['member']
+  },
+  // 获取小组的排行榜信息
+  getTeamRank: {
+    company: ['member']
+  }
 };
 
 module.exports = registeredTasks;

@@ -85,8 +85,8 @@ exports.flatCollect = function (array, attr) {
  * @return {String}
  */
 exports.randomAlphaNumeric = function (len) {
-  var text = "";
-  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var text = '';
+  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   var randomMax = possible.length;
   for(var i = 0; i < len; i++) {
     text += possible.charAt(Math.floor(Math.random() * randomMax));

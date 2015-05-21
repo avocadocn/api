@@ -89,6 +89,38 @@ var PhotoAlbum = new Schema({
   }
 });
 
+PhotoAlbum.statics = {
+  /**
+   * 创建相册
+   * @param {String} name 相册名
+   * @param {Object} owner 相册所属
+   * @param {Object} user 创建者，将req.user传入即可
+   * @return {Object} PhotoAlbum实例
+   * @constructor
+   */
+  New: function (name, owner, user) {
+    var photoAlbum = new this({
+      name: name,
+      owner: owner
+    });
+    if (user.provider === 'user') {
+      photoAlbum.create_user = {
+        _id: user._id,
+        name: user.nickname,
+        type: 'user'
+      }
+    } else if (user.provider === 'company') {
+      photoAlbum.create_user = {
+        _id: user._id,
+        name: user.info.name,
+        type: 'hr'
+      };
+    }
+    photoAlbum.update_user = photoAlbum.create_user;
+    return photoAlbum;
+  }
+};
+
 PhotoAlbum.methods = {
 
   pushPhoto: function (photo) {

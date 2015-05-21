@@ -126,3 +126,47 @@ var auth = function (role, tasks) {
 
 exports.getRole = getRole;
 exports.auth = auth;
+
+/**
+ * 权限判断中间件，需要在执行该中间件之前取得req.user,以及req.srcOwner
+ * example:
+ *  app.get('/something', function (req, res, next) {
+ *    // do something
+ *    req.user = user
+ *    req.srcOwner = {
+ *      companies: [cid1, cid2],
+ *      teams: tids,
+ *      users: [uid]
+ *    };
+ *  }, authMiddleware(['doSomething']), doSomethingHandle};
+ * @param {Array} tasks 任务列表
+ * @returns {Function} express中间件
+ */
+exports.authMiddleware = function (tasks) {
+  return function (req, res, next) {
+    try {
+      var notAllow = function () {
+        res.status(403).send({ msg: '您没有权限' });
+      };
+
+      if (!req.user) {
+        return notAllow();
+      }
+
+      if (!req.srcOwner) {
+        return notAllow();
+      }
+
+      var role = getRole(req.user, req.srcOwner);
+      var allow = auth(role, tasks);
+      for (var key in allow) {
+        if (allow[key] === false) {
+          return notAllow();
+        }
+      }
+      next();
+    } catch (e) {
+      next(e);
+    }
+  };
+};

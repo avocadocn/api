@@ -4,8 +4,8 @@
  * Module dependencies.
  */
 var mongoose = require('mongoose'),
-    Schema = mongoose.Schema;
-    // mongoosePaginate = require('mongoose-paginate');
+    Schema = mongoose.Schema,
+    mongoosePaginate = require('mongoose-paginate');
 
 
 
@@ -118,10 +118,11 @@ var CompanyGroup = new Schema({
             type: Number,
             default: 0
         },
+        //活跃度积分
         total:{
             type: Number,
             default: 0
-        }
+        },
     },
     photo_album_list: [{
         type: Schema.Types.ObjectId,
@@ -129,6 +130,11 @@ var CompanyGroup = new Schema({
     }],
     arena_id: Schema.Types.ObjectId,
     active: {
+        type: Boolean,
+        default: true
+    },
+    // 小队所属公司是否关闭(true: 未关闭; false: 关闭)
+    company_active: { 
         type: Boolean,
         default: true
     },
@@ -177,10 +183,34 @@ var CompanyGroup = new Schema({
         _id: Schema.Types.Object,
         theme: String,
         start_time: Date
+    },
+    score_rank:{
+        //战绩积分
+        score:{
+            type: Number,
+            default: 0
+        },
+        //战绩排名
+        rank:{
+            type: Number,
+            default: 0
+        },
+        win:{
+            type: Number,
+            default: 0
+        },
+        tie:{
+            type: Number,
+            default: 0
+        },
+        lose:{
+            type: Number,
+            default: 0
+        }
     }
 });
 
-// CompanyGroup.plugin(mongoosePaginate);
+CompanyGroup.plugin(mongoosePaginate);
 /**
  * Virtuals
  */

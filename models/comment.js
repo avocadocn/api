@@ -21,6 +21,13 @@ var Comment = new Schema({
     realname:String,
     photo:String
   },
+  //挑战日志的评论以小队发送，所以有此属性
+  poster_team:{
+    _id:Schema.Types.ObjectId,
+    cid:Schema.Types.ObjectId,
+    name:String,
+    logo:String
+  },
   reply_to: {
     _id: Schema.Types.ObjectId,
     nickname: String
@@ -38,7 +45,7 @@ var Comment = new Schema({
   },
   host_type:{
     type: String,
-    enum: ['message', 'album', 'campaign', 'competition', 'campaign_detail', 'photo', 'comment']
+    enum: ['message', 'album', 'campaign', 'competition', 'campaign_detail', 'photo', 'comment', 'competition_message']
   },
   //2014/10以后代码中不会有message、campaign_detail了～
   photos: [{
@@ -78,19 +85,22 @@ Comment.statics = {
     if (hostData.hostType === 'campaign_detail' || hostData.hostType === 'campaign') {
       hostType = { '$in': ['campaign', 'campaign_detail'] };
     }
-    this.find({
+    var option = {
       host_type: hostType,
       host_id: hostData.hostId,
-      status: { '$ne': 'delete' },
-      create_date: {
-        '$lte': pageStartDate || Date.now()
+      status: { '$ne': 'delete' }
+    }
+    if(pageStartDate) {
+      option.create_date = {
+        '$gte': pageStartDate
       }
-    })
+    }
+    this.find(option)
       .limit(pageSize + 1)
-      .sort('-create_date')
+      .sort('create_date')
       .exec()
       .then(function (comments) {
-        if (comments.length === pageSize + 1) {
+        if (comments.length!==0 && comments.length === pageSize + 1) {
           var nextComment = comments.pop();
           callback(null, comments, nextComment.create_date);
         } else {

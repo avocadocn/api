@@ -5,7 +5,8 @@
  */
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema,
-    crypto = require('crypto');
+    crypto = require('crypto'),
+    mongoosePaginate = require('mongoose-paginate');
 
 var _device = new Schema({
     platform:String,
@@ -68,8 +69,13 @@ var CompanySchema = new Schema({
             type: Boolean,
             default: false
         },
+        verification: {//暂时只能0、1。 0表示过了系统审核,1表示未审核（快速注册）,未来可以增加各种审核
+            type: Number,
+            default: 0,
+            enum: [0,1]
+        },
 
-        date: Number
+        date: Date
     },
 
     team:[_team],
@@ -103,6 +109,10 @@ var CompanySchema = new Schema({
         membernumber: {
             type: Number,
             default: 0
+        },
+        cover:{ //封面
+            type:String,
+            default: '/img/company_cover.png'
         }
     },
     register_date: {
@@ -118,9 +128,14 @@ var CompanySchema = new Schema({
     register_invite_code: [String],
     // 企业给用户的邀请码
     invite_key: String,
-    device: []
+    device: [_device],
+    guide_step:{
+        type: Number,
+        default: 0
+    }
 });
 
+CompanySchema.plugin(mongoosePaginate);
 /**
  * Virtuals
  */

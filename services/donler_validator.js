@@ -170,7 +170,7 @@ donlerValidator.isLength = function (length) {
 
 donlerValidator.after = function (date) {
   return function (name, value, callback) {
-    if (validatorModule.isAfter(value, date)) {
+    if (!value || validatorModule.isAfter(value, date)) {
       callback(true);
     } else {
       var formatDate;
@@ -187,7 +187,7 @@ donlerValidator.after = function (date) {
 
 donlerValidator.before = function (date) {
   return function (name, value, callback) {
-    if (validatorModule.isBefore(value, date)) {
+    if (!value || validatorModule.isBefore(value, date)) {
       callback(true);
     } else {
       var formatDate;
@@ -235,7 +235,7 @@ donlerValidator.combineMsg = function (msg) {
 
 
 validators.required = function (name, value, callback) {
-  if (value==undefined) {
+  if (value == undefined) {
     var msg = util.format('%s不能为空', name);
     callback(false, msg);
   } else {
@@ -328,5 +328,23 @@ validators.region = function (name, value, callback) {
     });
 };
 
+/**
+ * 验证是否是一个有效的ObjectId
+ * @param {String} name
+ * @param {String} value
+ * @param {Function} callback
+ */
+validators.objectId = function (name, value, callback) {
+  if (!value) {
+    callback(true);
+    return;
+  }
+  if (!mongoose.Types.ObjectId.isValid(value)) {
+    var msg = util.format('%s不是一个有效的ObjectId', name);
+    callback(false, msg);
+  } else {
+    callback(true);
+  }
+};
 
 module.exports = donlerValidator;

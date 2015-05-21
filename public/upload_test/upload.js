@@ -160,5 +160,81 @@
 
   })();
 
+  (function () {
 
+    var circleContentPhotoTestEle = $('#circleContentPhotoTest');
+    var submit = circleContentPhotoTestEle.find('.js_submit');
+
+    submit.click(function () {
+      var fd = new FormData($('#circleContentForm')[0]);
+      $.ajax({
+        url: baseUrl + '/circle_contents',
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        headers: getCommonHeaders(),
+        success: function (data, status) {
+          alert('success');
+          console.log(data, status);
+        },
+        error: function (data, status) {
+          console.log(data, status);
+        }
+      });
+    });
+
+  })();
+
+  (function () {
+
+    var circleContentPhotoTestEle = $('#circleContentPhotoTestWithPhoto');
+    var submit = circleContentPhotoTestEle.find('.js_submit');
+
+    submit.click(function () {
+      var fd = new FormData($('#circleContentFormWithPhoto')[0]);
+      $.ajax({
+        url: baseUrl + '/circle_contents',
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        headers: getCommonHeaders(),
+        success: function (data, status) {
+          alert('success');
+          console.log(data, status);
+        },
+        error: function (data, status) {
+          console.log(data, status);
+        }
+      });
+    });
+
+  })();
+
+  (function () {
+
+    var CompanyCoverPhotoTestEle = $('#CompanyCoverPhotoTest');
+    var submit = CompanyCoverPhotoTestEle.find('.js_submit');
+    var companyId = CompanyCoverPhotoTestEle.find('.js_companyId');
+    submit.click(function () {
+      var fd = new FormData($('#CompanyCoverPhotoForm')[0]);
+      $.ajax({
+        url: baseUrl + '/companies/' + companyId.val() + '/companyCover',
+        type: 'PUT',
+        data: fd,
+        processData: false,
+        contentType: false,
+        headers: getCommonHeaders(),
+        success: function (data, status) {
+          alert('success');
+          console.log(data, status);
+        },
+        error: function (data, status) {
+          console.log(data, status);
+        }
+      });
+    });
+
+  })();
 })(jQuery);

@@ -14,7 +14,7 @@
     <input type="text" id="x-api-key" value="key1a2b3c4d5e6f" placeholder="api key"/>
     <input type="text" id="x-device-id" value="did1a2b3c4d5e6f" placeholder="设备id"/>
     <input type="text" id="x-device-type" value="iphone 6" placeholder="设备型号"/>
-    <input type="text" id="x-platform" value="ios" placeholder="平台系统"/>
+    <input type="text" id="x-platform" value="iOS" placeholder="平台系统"/>
     <input type="text" id="x-version" value="8.0" placeholder="平台版本"/>
   </div>
 
@@ -67,8 +67,38 @@
     <input id="host_id" type="text" placeholder="host_id" required/>
     <input id="host_type" type="hidden" value="campaign"/>
     <button class="js_submit">提交</button>
+    <button class="show">查看</button>
   </div>
 
+  <div id="circleContentPhotoTest">
+    <h1>同事圈测试</h1>
+    <p>No Photo</p>
+    <form id="circleContentForm" enctype="multipart/form-data">
+      <input type="text" name="content" value="test" placeholder="circle-content"/>
+      <input type="text" name="campaign_id" placeholder="campaign_id" required/>
+    </form>
+    <button class="js_submit">提交</button>
+  </div>
+
+  <div id="circleContentPhotoTestWithPhoto">
+    <h1>同事圈照片</h1>
+    <p>Photo</p>
+    <form id="circleContentFormWithPhoto" enctype="multipart/form-data">
+      <input type="text" name="content" value="test" placeholder="circle-content"/>
+      <input type="file" name="photo" required/>
+      <input type="text" name="campaign_id" placeholder="campaign_id" required/>
+    </form>
+    <button class="js_submit">提交</button>
+  </div>
+  <div id="CompanyCoverPhotoTest">
+    <h1>同事圈照片</h1>
+    <p>Photo</p>
+    <form id="CompanyCoverPhotoForm" enctype="multipart/form-data">
+      <input type="file" name="cover" required/>
+    </form>
+    <input class="js_companyId" type="text" name="companyId" placeholder="companyId"/>
+    <button class="js_submit">提交</button>
+  </div>
   <script src="./jquery-2.1.1.min.js"></script>
   <script src="./upload.js"></script>
 </body>

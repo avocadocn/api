@@ -188,6 +188,11 @@ paths:
           type: string
           in: path
           default: 53aa6fc011fd597b3e1be250
+        - name: reslutType
+          description: 结果类型
+          required: false
+          type: integer
+          in: path
       responses:
         "200":
           description: 获取成功
@@ -310,10 +315,31 @@ paths:
             $ref: Error
         "204":
           description: 解除屏蔽成功
+  "/users/{userId}/active":
+      post:
+        tags:
+          - users
+        summary: 激活成员
+        operationId: activeUser
+        parameters:
+          - name: userId
+            description: 用户id
+            required: true
+            type: string
+            in: path
+            default: 53aa707a11fd597b3e1be260
+        responses:
+          default:
+            description: error
+            schema:
+              $ref: Error
+          "200":
+            description: 激活成功
   "/users/{userId}/photos":
     get:
       tags:
         - photoAlbums
+        - users
       summary: 获取用户上传过的照片
       parameters:
         - name: userId
@@ -332,6 +358,32 @@ paths:
           description: 成功
           schema:
             $ref: PhotoListData
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /users/resend/activeEmail:
+    post:
+      tags:
+        - users
+      operationId: resendActiveEamil
+      summary: 重新发送激活邮件
+      consumes:
+        - application/json
+      produces:
+        - text/plain
+      parameters:
+        - name: body
+          description: 重新发送激活的目标邮箱
+          required: true
+          schema:
+            $ref: resendActiveEamilForm
+          in: body
+      responses:
+        "200":
+          description: 重新发送成功
+          schema:
+            $ref: resendActiveEamilResult
         default:
           description: error
           schema:
@@ -537,6 +589,23 @@ paths:
           description: error
           schema:
             $ref: Error
+  "/companies/{companyId}/undisposed":
+    get:
+      tags:
+        - companies
+      summary: 获取公司的未处理队长、员工
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+          default: 53aa6fc011fd597b3e1be250
+      responses:
+        "200":
+          description: 未处理数据
+          schema:
+            $ref: UndisposedResponse
   "/companies/{companyId}/statistics":
     get:
       tags:
@@ -573,6 +642,32 @@ paths:
             type: array
             items:
               $ref: StatisticsTeam
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/companies/{companyId}/charts":
+    get:
+      tags:
+        - companies
+      summary: 获取公司图表相关统计信息
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+          default: 53aa6fc011fd597b3e1be250
+        - name: chart
+          description: 图表类型
+          required: true
+          type: string
+          in: query
+          enum:
+            - bar
+            - pie
+          default: bar
+      responses:
         default:
           description: error
           schema:
@@ -731,6 +826,11 @@ paths:
           required: false
           type: boolean
           in: query
+        - name: brief
+          description: 是否取简要数据（id、name、photo）
+          required: false
+          type: boolean
+          in: query
       responses:
         "200":
           description: 小队数据
@@ -757,6 +857,13 @@ paths:
           type: string
           in: path
           default: 53aa701011fd597b3e1be25d
+        - name: resultType
+          description: 结果类型
+          required: false
+          type: string
+          in: query
+          enum:
+            - simple
       responses:
         "200":
           description: 成功
@@ -789,7 +896,7 @@ paths:
         #   description: logo
         #   required: false
         #   type: file
-        #   in: formData 
+        #   in: formData
         - name: brief
           description: 小队简介
           required: false
@@ -1102,6 +1209,59 @@ paths:
           description: error
           schema:
             $ref: Error
+  "/teams/search/{type}":
+    get:
+      tags:
+        - teams
+      summary:  查找对手
+      operationId: getSearchTeams
+      parameters:
+        - name: type
+          description: 查找类型
+          required: true
+          type: string
+          enum:
+            - sameCity
+            - nearbyTeam
+            - search
+          in: path
+        - name: tid
+          description: 需要查找对手的小队的id
+          required: true
+          type: string
+          in: query
+        - name: latitude
+          description: 查找附近的对手时的纬度
+          required: false
+          type: string
+          in: query
+        - name: longtitude
+          description: 查找附近的对手时的经度
+          required: false
+          type: string
+          in: query
+        - name: key
+          description: 按名称查找的关键字
+          required: false
+          type: string
+          in: query
+        - name: page
+          description: 页数
+          required: false
+          type: number
+          format: int32
+          in: query
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: Team
+        default:
+          description: error
+          schema:
+            $ref: Error
   /groups:
     get:
       tags:
@@ -1261,9 +1421,55 @@ paths:
       summary: 获取活动列表
       operationId: getCampaign
       parameters:
+        - name: cid
+          description: 获取公司的活动时，对应的公司id(v1.2)
+          type: string
+          in: query
+        - name: tids
+          description: 获取小队的活动时，对应的小队id(v1.2)
+          type: array
+          items:
+            type: string
+          in: query
+        - name: uid
+          description: 获取用户的活动时，对应的用户id(v1.2)
+          type: string
+          in: query
+        - name: result
+          description: 返回的结果类型(v1.2)
+          type: string
+          in: query
+        - name: page_id
+          description: 分页用的id(v1.2)
+          type: string
+          in: query
+        - name: attrs
+          description: 附加属性(v1.2)
+          type: array
+          items:
+            type: string
+          in: query
+        - name: sort
+          description: 排序依据(v1.2)
+          type: array
+          items:
+            type: string
+          in: query
+        - name: from
+          description: 活动结束时间的最小值(v1.0, v1.2)
+          type: string
+          in: query
+        - name: to
+          description: 活动开始时间的最大值(v1.0, v1.2)
+          type: string
+          in: query
+        - name: limit
+          description: 限制数(v1.0, v1.2)
+          type: integer
+          format: int32
+          in: query
         - name: requestType
-          description: '获取活动的主体类型：user,team,company'
-          required: true
+          description: 获取活动的主体类型：user,team,company (v1.0)
           type: string
           in: query
           enum:
@@ -1271,46 +1477,25 @@ paths:
             - team
             - company
         - name: requestId
-          description: 获取活动的主体id
-          required: true
-          type: string
-          in: query
-        - name: from
-          description: 活动结束时间的最小值
-          required: false
-          type: string
-          in: query
-        - name: to
-          description: 活动开始时间的最大值
-          required: false
+          description: 获取活动的主体id(v1.0)
           type: string
           in: query
         - name: select_type
-          description: '选择的活动类型--0:全部1:即将开始的活动2:正在进行的活动3:已经结束的活动4:新活动（未参加）5:未确认的挑战'
-          required: false
+          description: 选择的活动类型--0:全部1:即将开始的活动2:正在进行的活动3:已经结束的活动4:新活动（未参加）5:未确认的挑战 6:发同事圈需要的活动 (v1.0)
           type: integer
           format: int32
           in: query
         - name: join_flag
-          description: 是否为已经参加的活动
-          required: false
+          description: 是否为已经参加的活动(v1.0)
           type: integer
           format: int32
           in: query
         - name: sortBy
-          description: 排序的依据
-          required: false
+          description: 排序的依据(v1.0)
           type: string
           in: query
-        - name: limit
-          description: 限制数
-          required: false
-          type: integer
-          format: int32
-          in: query
         - name: populate
-          description: populate的属性，数组，用，隔开
-          required: false
+          description: populate的属性，数组，用，隔开(v1.0)
           type: array
           items:
             type: string
@@ -1533,12 +1718,68 @@ paths:
           description: error
           schema:
             $ref: Error
+  "/campaigns/competition/{teamId}":
+    get:
+      tags:
+        - campaigns
+      summary: 获取外公是小队与公司间的比赛列表
+      operationId: getCompetitionOfCompanyWithTeam
+      consumes:
+        - application/json
+      parameters:
+        - name: teamId
+          description: 获取的目标小队的id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: Campaign
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/campaigns/competition/{fromTeamId}/{targetTeamId}":
+    get:
+      tags:
+        - campaigns
+      summary: 获取两个小队间的比赛列表
+      operationId: getCompetitionOfTeams
+      consumes:
+        - application/json
+      parameters:
+        - name: fromTeamId
+          description: 需要获取信息的小队的id
+          required: true
+          type: string
+          in: path
+        - name: targetTeamId
+          description: 获取的目标小队的id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: Campaign
+        default:
+          description: error
+          schema:
+            $ref: Error
+
   "/components/ScoreBoard/{componentId}":
     get:
       tags:
         - components
-      summary: 获取比分记录
-      operationId: getScoreLogs
+      summary: 获取比分
+      operationId: getScore
       consumes:
         - application/json
       parameters:
@@ -1553,7 +1794,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: ScoreLog
+              $ref: ScoreComponent
         default:
           description: error
           schema:
@@ -1604,8 +1845,110 @@ paths:
           description: error
           schema:
             $ref: Error
-
-
+  "/components/ScoreBoard/logs/{componentId}":
+      get:
+        tags:
+          - components
+        summary: 获取比分记录
+        operationId: getScoreLogs
+        consumes:
+          - application/json
+        parameters:
+          - name: componentId
+            description: 组件 Id
+            required: true
+            type: string
+            in: path
+        responses:
+          "200":
+            description: 成功
+            schema:
+              type: array
+              items:
+                $ref: ScoreLog
+          default:
+            description: error
+            schema:
+              $ref: Error
+  "/components/Vote/{componentId}":
+    post:
+      tags:
+        - components
+      summary: 投赞成票
+      operationId: vote
+      consumes:
+        - application/json
+      parameters:
+        - name: componentId
+          description: 组件 Id
+          required: true
+          type: string
+          in: path
+        - name: body
+          description: 小队Id
+          required: true
+          schema:
+            $ref: VoteData
+          in: body
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: Vote
+        default:
+          description: error
+          schema:
+            $ref: Error
+    delete:
+      tags:
+        - components
+      summary: 取消赞成票
+      operationId: cancelVote
+      consumes:
+        - application/json
+      parameters:
+        - name: componentId
+          description: 活动 Id
+          required: true
+          type: string
+          in: path
+        - name: tid
+          description: 小队Id
+          required: true
+          schema:
+            $ref: VoteData
+          in: body
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: Vote
+        default:
+          description: error
+          schema:
+            $ref: Error
+    get:
+      tags:
+        - components
+      summary: 获取投票信息
+      operationId: getVote
+      consumes:
+        - application/json
+      parameters:
+        - name: componentId
+          description: 活动 Id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: Vote
+        default:
+          description: error
+          schema:
+            $ref: Error
   "/timeline/record/{requestType}/{requestId}":
     get:
       tags:
@@ -1993,6 +2336,7 @@ paths:
           in: path
           enum:
             - campaign
+            - competition_message
         - name: hostId
           type: string
           description: hostId
@@ -2098,7 +2442,327 @@ paths:
           schema:
             type: object
             $ref: CommentsList
-            
+  /circle_contents:
+    post:
+      tags:
+        - circles
+      summary: 创建新同事圈内容
+      operationId: createCircleContent
+      consumes:
+        - multipart/form-data
+      description: 此功能测试移动到upload_test
+      parameters:
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+  /circle/company:
+    get:
+      tags:
+        - circles
+      summary: 获取公司同事圈内容
+      operationId: getCompanyCircle
+      parameters:
+        - name: latest_content_date
+          description: 最新一个消息发布时间
+          required: false
+          type: string
+          format: date-time
+          in: query
+        - name: last_content_date
+          description: 最后一个消息发布时间
+          required: false
+          type: string
+          format: date-time
+          in: query
+        - name: limit
+          description: 数量限制
+          required: false
+          type: number
+          in: query
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: ResCircle
+  /circle/campaign/{campaignId}:
+    get:
+      tags:
+        - circles
+      summary: 获取活动同事圈内容
+      operationId: getCampaignCircle
+      parameters:
+        - name: campaignId
+          description: 活动id
+          required: true
+          type: string
+          in: path
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: ResCircle
+  /circle/team/{teamId}:
+    get:
+      tags:
+        - circles
+      summary: 获取小队同事圈内容
+      operationId: getCampaignCircle
+      parameters:
+        - name: teamId
+          description: 小队id
+          required: true
+          type: string
+          in: path
+        - name: latest_content_date
+          description: 最新一个消息发布时间
+          required: false
+          type: string
+          format: date-time
+          in: query
+        - name: last_content_date
+          description: 最后一个消息发布时间
+          required: false
+          type: string
+          format: date-time
+          in: query
+        - name: limit
+          description: 数量限制
+          required: false
+          type: number
+          in: query
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: ResCircle
+  /circle/user/{userId}:
+    get:
+      tags:
+        - circles
+      summary: 获取个人同事圈内容
+      operationId: getCampaignCircle
+      parameters:
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+        - name: latest_content_date
+          description: 最新一个消息发布时间
+          required: false
+          type: string
+          format: date-time
+          in: query
+        - name: last_content_date
+          description: 最后一个消息发布时间
+          required: false
+          type: string
+          format: date-time
+          in: query
+        - name: limit
+          description: 数量限制
+          required: false
+          type: number
+          in: query
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: ResCircle
+  /circle_contents/{contentId}:
+    get:
+      tags:
+        - circles
+      summary: 获取同事圈内容详情
+      operationId: getCircleContent
+      parameters:
+        - name: contentId
+          description: 消息id
+          required: true
+          type: string
+          in: path
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+          schema:
+            $ref: ResCircle
+    delete:
+      tags:
+        - circles
+      summary: 删除已发同事圈
+      operationId: deleteCircleContent
+      parameters:
+        - name: contentId
+          description: 消息id
+          required: true
+          type: string
+          in: path
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+  /circle_contents/{contentId}/comments:
+    post:
+      tags:
+        - circles
+      summary: 发表同事圈评论或赞
+      operationId: createCircleComment
+      parameters:
+        - name: contentId
+          description: 消息id
+          required: true
+          type: string
+          in: path
+        - name: body
+          schema:
+            $ref: CommentForm
+          in: body
+          required: true
+          description: 评论
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+  /circle_comments/{commentId}:
+    delete:
+      tags:
+        - circles
+      summary: 删除同事圈评论或取消赞
+      operationId: deleteCircleComment
+      parameters:
+        - name: contentId
+          description: 消息id
+          required: false
+          type: string
+          in: path
+        - name: commentId
+          description: 评论id
+          required: true
+          type: string
+          in: path
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+  /circle_reminds:
+    get:
+      tags:
+        - circles
+      summary: 获取是否有新评论、新朋友圈内容、消息(包括最新消息人的头像)
+      operationId: getReminds
+      parameters:
+        - name: last_read_time
+          description: 上次查询朋友圈的时间
+          required: true
+          type: string
+          format: date-time
+          in: query
+        - name: last_comment_date
+          description: 上次查询朋友评论的时间
+          required: true
+          type: string
+          format: date-time
+          in: query
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+          schema:
+            $ref: NewReminds
+  /circle_reminds/comments:
+    get:
+      tags:
+        - circles
+      summary: 获取同事圈提醒
+      operationId: getCircleComments
+      consumes:
+        - application/json
+      parameters:
+        # - name: latest_content_date
+        #   description: 最新消息的发布时间
+        #   required: false
+        #   type: string
+        #   format: date-time
+        #   in: query
+        - name: last_comment_date
+          description: 上一次查询评论的时间
+          required: false
+          type: string
+          format: date-time
+          in: query
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: CircleCommentRespond
+    # delete:
+    #   tags:
+    #     - circles
+    #   summary: 删除消息列表
+    #   operationId: deleteCircleComment
+    #   parameters:
+    #     - name: commentId
+    #       description: 评论id(若无，则删除列表所有消息)
+    #       required: false
+    #       type: string
+    #       in: query
+    #   responses:
+    #     default:
+    #       description: error
+    #       schema:
+    #         $ref: Error
+    #     "200":
+    #       description: 成功
 
   /messages:
     post:
@@ -2427,6 +3091,319 @@ paths:
           description: error
           schema:
             $ref: Error
+  /chats:
+    get:
+      tags:
+        - chats
+      summary: 获取讨论内容
+      parameters:
+        - name: chatroom
+          description: 讨论组的id
+          type: string
+          in: query
+          required: true
+        - name: nextDate
+          description: 下一页的第一个讨论的发表时间
+          type: string
+          in: query
+        - name: nextId
+          description: 下一页的第一个讨论的id
+          type: string
+          in: query
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: ChatListResData
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/chatrooms/{chatroomId}/chats":
+    post:
+      tags:
+        - chats
+      summary: 发布讨论
+      operationId: createChat
+      parameters:
+        - name: chatroomId
+          description: 讨论组id
+          default: '53aa701011fd597b3e1be25d'
+          type: string
+          required: true
+          in: path
+        - name: body
+          description: 发布讨论数据
+          schema:
+            $ref: PostChatForm
+          in: body
+      responses:
+        "200":
+          description: 发布成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/chats/{chatId}":
+    delete:
+      tags:
+        - chats
+      summary: 删除一条讨论的消息
+      parameters:
+        - name: chatId
+          type: string
+          description: 消息id
+          in: path
+      responses:
+        "200":
+          descritpion: 删除成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /chatrooms:
+    get:
+      tags:
+        - chats
+      summary: 获取讨论组列表
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: ChatRoomListResData
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /chatrooms/unread:
+    get:
+      tags:
+        - chats
+      summary: 获取讨论组未读数
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: ChatroomListUnreadData
+  "/chatrooms/actions/read":
+    post:
+      tags:
+        - chats
+      summary: 将某组讨论列表的未读消息数清零
+      parameters:
+        - name: body
+          schema:
+            $ref: ReadChatRoomPostData
+          in: body
+      responses:
+        "200":
+          description: 清零成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /rank:
+    get:
+      tags:
+        - rank
+      summary: 获取榜单
+      operationId: getRank
+      consumes:
+        - application/json
+      parameters:
+        - name: province
+          description: 省
+          required: true
+          type: string
+          in: query
+        - name: city
+          description: 城市
+          required: false
+          type: string
+          in: query
+        - name: gid
+          description: 小队类型
+          required: true
+          type: string
+          in: query
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: RankResult
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/rank/team/{teamId}":
+    get:
+      tags:
+        - rank
+      summary: 获取小队榜单
+      operationId: getTeamRank
+      consumes:
+        - application/json
+      parameters:
+        - name: teamId
+          description: 小队Id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: RankTeam
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /rank/user:
+    get:
+      tags:
+        - rank
+      summary: 获取个人所有参加的小队的榜单
+      operationId: getUserTeamRank
+      consumes:
+        - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: RankTeamList
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /rank/update:
+    post:
+      tags:
+        - rank
+      summary: 更新榜单
+      operationId: updateRank
+      consumes:
+        - application/json
+      parameters:
+        - name: body
+          schema:
+            $ref: updateRankForm
+          in: body
+      responses:
+        "200":
+          description: 成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /competition_messages:
+    get:
+      tags:
+        - competition_messages
+      summary: 获取挑战信（个人/小队，发出/收到的挑战日志）
+      operationId: getCompetitionMessages
+      consumes:
+        - application/json
+      parameters:
+        - name: sponsor
+          in: query
+          type: string
+          description: 挑战发起方id 两个id都不填为个人获取
+        - name: opposite
+          in: query
+          type: string
+          description: 被挑战方id 两个id都不填为个人获取
+        - name: messageType
+          in: query
+          type: string
+          description: 个人接收或发出的列表
+          enum:
+            - receive
+            - sponsor
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: CompetitionMessage
+        default:
+          description: error
+          schema:
+            $ref: Error
+    post:
+      tags:
+        - competition_messages
+      summary: 发挑战信
+      operationId: postCompetitionMessages
+      consumes:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: postCompetitionMessage
+          required: true
+          description: 发挑战信数据
+      responses:
+        "200":
+          description: 成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+
+  /competition_messages/{messageId}:
+    get:
+      tags:
+        - competition_messages
+      summary: 查看某挑战
+      operationId: getCompetitionMessage
+      consumes:
+        - application/json
+      parameters:
+        - name: messageId
+          in: path
+          type: string
+          description: 挑战信id
+          required: true
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: CompetitionMessage
+        default:
+          description: error
+          schema:
+            $ref: Error
+    put:
+      tags:
+        - competition_messages
+      summary: 接收/拒绝挑战
+      operationId: putCompetitionMessages
+      consumes:
+        - application/json
+      parameters:
+        - name: messageId
+          in: path
+          type: string
+          description: 挑战信id
+          required: true
+        - name: body
+          schema:
+            $ref: putCompetitionMessage
+          in: body
+          description: 接受、拒绝参数
+      responses:
+        "200":
+          description: 成功
+        default:
+          description: error
+          schema:
+            $ref: Error
 definitions:
   LoginForm:
     title: LoginForm
@@ -2702,6 +3679,15 @@ definitions:
       contacts:
         description: 联系人
         type: string
+      areacode:
+        description: 联系电话区号
+        type: string
+      number:
+        description: 联系电话
+        type: string
+      extension:
+        description: 分机号
+        type: string
       email:
         description: 公司邮箱
         type: string
@@ -2815,6 +3801,16 @@ definitions:
         items:
           type: string
           description: 照片url
+  UndisposedResponse:
+    title: UndisposedResponse
+    type: object
+    properties:
+      noLeaderTeams:
+        description: 未任命队长人数
+        type: number
+      unActivatedUsers:
+        description: 未审核人数
+        type: number
   StatisticsTeam:
     title: StatisticsTeam
     type: object
@@ -2995,6 +3991,9 @@ definitions:
         type: array
         items:
           type: string
+      messageId:
+        description: 挑战信id
+        type: string
   Campaign:
     title: Campaign
     properties:
@@ -3045,6 +4044,9 @@ definitions:
         type: integer
       member_max:
         description: 报名人数上限
+        type: integer
+      circle_content_sum:
+        description: 精彩瞬间数目
         type: integer
       tags:
         description: 标签
@@ -3310,7 +4312,6 @@ definitions:
         items:
           type: object
           $ref: SimplePhoto
-         
   CommentsResponse:
     title: CommentsResponse
     type: object
@@ -3394,6 +4395,10 @@ definitions:
         type: string
       specific_type:
         $ref: MessageSpecificType
+      msgType:
+        type: string
+        enum:
+          - inProvokeLeaders
   MessageSpecificType:
     title: MessageSpecificType
     descriptions: 站内信的类型
@@ -3596,25 +4601,18 @@ definitions:
   HomeCourt:
     title: HomeCourt
     required:
-      - loc
+      - coordinates
       - name
     properties:
-      loc:
+      coordinates:
         description: 坐标信息
-        $ref: HomeCourtLoc
+        type: array
+        items:
+          type: number
+          format: double
       name:
         type: string
         description: 主场名
-  HomeCourtLoc:
-    title: HomeCourtLoc
-    required:
-      - coordinates
-    properties:
-      coordinates:
-        type: array
-        description: 坐标
-        items:
-          type: object
   FamilyPhoto:
     title: FamilyPhoto
     required:
@@ -3860,7 +4858,7 @@ definitions:
     properties:
       label:
         type: string
-      value: 
+      value:
         type: string
       data:
         type: array
@@ -3875,7 +4873,7 @@ definitions:
     properties:
       label:
         type: string
-      value: 
+      value:
         type: string
       data:
         type: array
@@ -3889,7 +4887,7 @@ definitions:
     properties:
       label:
         type: string
-      value: 
+      value:
         type: string
   ScoreData:
     title: ScoreData
@@ -3917,6 +4915,49 @@ definitions:
         items:
           type: integer
           format: int32
+  ScorePlayingTeam:
+    title: ScorePlayingTeams
+    required:
+      - allowManage
+      - _id
+      - cid
+      - logo
+      - name
+      - tid
+      - confirm
+    properties:
+      allowManage:
+        type: boolean
+      _id:
+        type: string
+      cid:
+        type: string
+      logo:
+        type: string
+      name:
+        type: string
+      result:
+        type: string
+      score:
+        type: integer
+        format: int32
+      confirm:
+        type: boolean
+      tid:
+        type: string
+  ScoreComponent:
+    title: ScoreComponent
+    required:
+      - playingTeams
+      - status
+    properties:
+      playingTeams:
+        type: array
+        items:
+          $ref: ScorePlayingTeam
+      status:
+        type: integer
+        format: int32
   ScoreLog:
     title: ScoreLog
     required:
@@ -4013,6 +5054,69 @@ definitions:
         type: string
       name:
         type: string
+  NewReminds:
+    title: NewReminds
+    properties:
+      newChat:
+        type: boolean
+      newDiscover:
+        type: boolean
+      newCircleContent:
+        type: object
+        $ref: NewCircleContent
+      newCircleComment:
+        type: number
+  NewCircleContent:
+    title: NewCircleContent
+    properties:
+      post_user_id:
+        type: object
+        $ref: Member
+  CircleCommentRespond:
+    title: CircleCommentRespond
+    required:
+      - _id
+      - kind
+      - content
+      - targetContent
+      - targetUserId
+      - poster
+      - postDate
+    properties:
+      _id:
+        type: string
+      kind:
+        type: string
+        enum:
+          - comment
+          - appreciate
+      content:
+        type: string
+      targetContent:
+        $ref: TargetContent
+      targetUserId:
+        type: string
+      poster:
+        $ref: Member
+      postDate:
+        type: string
+        formData: date-time
+  TargetContent:
+    title: TargetContent
+    properties:
+      _id:
+        type: string
+      content:
+        type: string
+      photos:
+        type: array
+        items:
+          type: string
+  PostChatForm:
+    title: postChatForm
+    properties:
+      content:
+        type: string
   ReportForm:
     title: ReportForm
     required:
@@ -4043,3 +5147,528 @@ definitions:
           - 6
       content:
         type: string
+  ResCircle:
+    title: ResCircle
+    required:
+      - CircleContent
+      - comments
+    properties:
+      content:
+        type: CircleContent
+        description: 消息相关信息
+      comments:
+        type: array
+        description: 消息相关评论数组
+        items:
+          type: CircleComment
+  CircleUser:
+    title: ResCircle
+    required:
+      - photo
+      - nickname
+    properties:
+      photo:
+        type: string
+        description: 用户头像
+      nickname:
+        type: string
+        description: 用户姓名
+  CircleContent:
+    title: Content
+    required:
+      - _id
+      - cid
+      - post_user_id
+      - post_date
+      - status
+    properties:
+      _id:
+        type: string
+        description: 消息id
+      cid:
+        type: string
+        description: 公司名称
+      tid:
+        type: array
+        description: 小队id数组
+        items:
+          type: string
+      campaign_id:
+        type: array
+        description: 活动id数组
+        items:
+          type: string
+      content:
+        type: string
+        description: 消息内容
+      photos:
+        type: array
+        description: 消息图片
+        items:
+          $ref: ContentPhoto
+      post_user_id:
+        type: string
+        description: 消息发布者id
+      post_date:
+        type: string
+        description: 消息时间
+        format: date-time
+      status:
+        type: string
+        description: 消息状态
+      comment_users:
+        type: array
+        description: 参与过评论的用户id数组
+        items:
+          type: string
+      comments:
+        type: array
+        description: 消息相关评论数组
+        items:
+          type: CircleComment
+  CircleComment:
+    title: CircleComment
+    required:
+      - _id
+      - kind
+      - is_only_to_content
+      - target_content_id
+      - target_user_id
+      - post_user_cid
+      - post_user_id
+      - post_date
+      - status
+    properties:
+      _id:
+        type: string
+        description: 评论id
+      kind:
+        type: string
+        description: 类型
+      content:
+        type: string
+        description: 评论内容
+      is_only_to_content:
+        type: boolean
+        description: 回复对象
+      target_content_id:
+        type: string
+        description: 评论目标消息的id
+      target_user_id:
+        type: string
+        description: 评论目标用户的id
+      post_user_cid:
+        type: string
+        description: 发评论或赞的用户的公司id
+      post_user_id:
+        type: string
+        description: 发评论或赞的用户的id
+      post_date:
+        type: string
+        description: 发评论时间
+        format: date-time
+      status:
+        type: string
+        description: 消息状态
+  CommentForm:
+    title: CommentForm
+    type: object
+    required:
+      - kind
+      - is_only_to_content
+    properties:
+      kind:
+        description: 类型，评论或赞
+        type: string
+      content:
+        description: 评论内容
+        type: string
+      is_only_to_content:
+        description: 回复对象
+        type: boolean
+      target_user_id:
+        description: 评论用户的id
+        type: string
+      is_only_to_content:
+        description: 回复对象
+        type: boolean
+  ChatRoomListResData:
+    title: ChatRoomListResData
+    type: object
+    required:
+      - chatRoomList
+    properties:
+      chatRoomList:
+        description: 讨论列表
+        type: array
+        items:
+          $ref: ChatRoom
+  ChatroomListUnreadData:
+    title: ChatroomListUnreadData
+    type: array
+    properties:
+      chatrooms:
+        description: 讨论列表(带未读数)
+        type: array
+        items:
+         $ref: ChatroomUnread
+  ChatroomUnread:
+    title: ChatroomUnread
+    type: object
+    properties:
+      _id:
+        type: string
+        description: 讨论组id
+      unread:
+        type: number
+        description: 未读数
+  ChatRoom:
+    title: ChatRoom
+    type: object
+    required:
+      - kind
+      - _id
+      - name
+    properties:
+      kind:
+        type: string
+        description: 讨论组类型，company or team
+      _id:
+        type: string
+        description: 讨论组的id
+      name:
+        type: string
+        description: 讨论组的名字（公司或小队名）
+      logo:
+        type: string
+        description: 讨论组的logo
+      latestChat:
+        $ref: Chat
+  Chat:
+    title: Chat
+    type: object
+    required:
+      - _id
+      - content
+      - create_date
+      - poster
+    properties:
+      _id:
+        type: string
+        description: 讨论_id
+      content:
+        type: string
+        description: 讨论文本内容
+      create_date:
+        type: string
+        format: date-time
+        description: 讨论发表时间
+      poster:
+        $ref: Poster
+      photos:
+        type: array
+        items:
+          $ref: ChatPhoto
+  Poster:
+    title: Poster
+    type: object
+    required:
+      - _id
+      - cid
+      - nickname
+      - photo
+    properties:
+      _id:
+        type: string
+        description: 用户_id
+      cid:
+        type: string
+        description: 公司id
+      nickname:
+        type: string
+        description: 用户昵称
+      photo:
+        type: string
+        description: 用户头像
+  ChatPhoto:
+    title: ChatPhoto
+    type: object
+    required:
+      - uri
+      - width
+      - height
+    properties:
+      uri:
+        type: string
+        description: 图片uri
+      width:
+        type: integer
+        format: int32
+        description: 图片宽度
+      height:
+        type: integer
+        format: int32
+        description: 图片高度
+  ChatListResData:
+    title: ChatListResData
+    type: object
+    required:
+      - hasNextPage
+      - chats
+    properties:
+      hasNextPage:
+        type: boolean
+        description: 是否还有下一页
+      nextDate:
+        type: string
+        format: date-time
+        description: 下一页第一个讨论的发表时间
+      nextId:
+        type: string
+        description: 下一页第一个讨论的id
+      chats:
+        type: array
+        items:
+          $ref: Chat
+  postCompetitionMessage:
+    title: postCompetitionMessage
+    type: object
+    required:
+      - sponsor
+      - opposite
+      - type
+      - content
+    properties:
+      sponsor:
+        type: string
+        description: 发起方id
+      opposite:
+        type: string
+        description: 被挑方id
+      type:
+        type: number
+        description: 挑战or联谊
+        enum:
+          - 1
+          - 2
+      content:
+        type: string
+        description: 挑战词
+  putCompetitionMessage:
+    title: putCompetitionMessage
+    type: object
+    required:
+      - action
+    properties:
+      action:
+        type: string
+        enum:
+          - accept
+          - reject
+  CompetitionMessage:
+    title: CompetitionMessage
+    type: object
+    required:
+      - sponsor_team
+      - opposite_team
+      - competition_type
+      - create_time
+      - status
+      - content
+    properties:
+      sponsor_team:
+        type: object
+        $ref: Team
+      opposite_team:
+        type: object
+        $ref: Team
+      competition_type:
+        type: number
+        description: 类型，1为挑战，2为联谊
+      create_time:
+        type: string
+        format: date-time
+        description: 创建时间
+      deal_time:
+        type: string
+        format: date-time
+        description: 处理事件
+      status:
+        type: string
+        description: 状态
+      campaign:
+        type: string
+        description: 活动id
+      content:
+        type: string
+        description: 挑战词
+  RankCity:
+    title: RankCity
+    type: object
+    required:
+      - province
+      - city
+    properties:
+      province:
+        description: 省
+        type: string
+      city:
+        description: 市
+        type: string
+  RankGroupType:
+    title: RankGroupType
+    type: object
+    required:
+      - _id
+      - name
+    properties:
+      _id:
+        description: 小队类型id
+        type: string
+      name:
+        description: 小队类型名称
+        type: string
+  RankTeam:
+    title: RankTeam
+    type: object
+    required:
+      - _id
+      - name
+    properties:
+      _id:
+        description: 小队id
+        type: string
+      name:
+        description: 小队名称
+        type: string
+      cid:
+        description: 小队的公司id
+        type: string
+      cname:
+        description: 小队的公司名称
+        type: string
+      logo:
+        description: 小队logo
+        type: string
+      rank:
+        description: 小队排名
+        type: string
+      score:
+        description: 小队分数
+        type: string
+      activity_score:
+        description: 小队活跃度
+        type: string
+  Rank:
+    title: Rank
+    type: object
+    properties:
+      create_date:
+        description: 创建时间
+        type: string
+        format: date-time
+      city:
+        $ref: RankCity
+      group_type:
+        $ref: RankGroupType
+      name:
+        description: 榜单名称
+        type: string
+      team:
+        description: 小队
+        type: array
+        items:
+          $ref: RankTeam
+  ReadChatRoomPostData:
+    title: ReadChatRoomPostData
+    type: object
+    properties:
+      chatRoomIds:
+        type: array
+        items:
+          type: string
+  RankResult:
+    title: RankResult
+    type: object
+    properties:
+      rank:
+        $ref: Rank
+      team:
+        type: array
+        items:
+          $ref: RankTeam
+  RankTeamList:
+    title: RankTeamList
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          $ref: RankTeam
+      team:
+        $ref: RankTeam
+  VoteUnit:
+    title: VoteUnit
+    type: object
+    properties:
+      tid:
+        description: 小队Id
+        type: string
+      positive:
+        description: 赞成数
+        type: integer
+        format: int32
+      positive_member:
+        type: array
+        items:
+          type: string
+  Vote:
+    title: Vote
+    type: object
+    properties:
+      host_id:
+        description: 主题Id
+        type: string
+      host_type:
+        description: 主体类型
+        type: string
+        enum:
+          - campaign
+      units:
+        type: array
+        items:
+          $ref: VoteUnit
+  VoteData:
+    title: VoteData
+    type: object
+    properties:
+      tid:
+        description: 小队Id
+        type: string
+  updateRankForm:
+    title: updateRankForm
+    type: object
+    properties:
+      token:
+        description: token
+        type: string
+  resendActiveEamilForm:
+    title: resendActiveEamilForm
+    type: object
+    properties:
+      email:
+        description: email
+        type: string
+  resendActiveEamilResult:
+    title: resendActiveEamilResult
+    type: object
+    properties:
+      msg:
+        description: 返回信息
+        type: string
+      hasResend:
+        description: 是否已经发送
+        type: boolean
+      isActive:
+        description: 是否已经激活
+        type: boolean

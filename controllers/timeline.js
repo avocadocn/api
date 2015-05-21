@@ -6,7 +6,8 @@ var tools = require('../tools/tools'),
     cache = require('../services/cache/Cache'),
     log = require('../services/error_log.js'),
     auth = require('../services/auth.js');
-var moment = require('moment');
+var async = require('async'),
+    moment = require('moment');
 
 
 /**
@@ -136,81 +137,84 @@ var formatCampaign = function(_campaign,user){
   var photos = _campaign.photo_album.photos || [];
   var temp = {
     '_id':_campaign._id,
-    'active':_campaign.active,
-    'confirm_status':_campaign.confirm_status,
     'theme':_campaign.theme,
-    'content':_campaign.content ? _campaign.content.replace(/<\/?[^>]*>/g, ''):'',
-    'member_max':_campaign.member_max,
+    // 'content':_campaign.content ? _campaign.content.replace(/<\/?[^>]*>/g, ''):'',
+    // 'member_max':_campaign.member_max,
     'members_count':_campaign.members.length,
     'location':_campaign.location,
     'start_time':_campaign.start_time,
-    'finish':_campaign.finish,
-    'end_time':_campaign.end_time,
-    'deadline':_campaign.deadline,
-    'comment_sum':_campaign.comment_sum,
-    'join_flag':tools.arrayObjectIndexOf(_campaign.members,user._id,'_id')>-1?1:-1,
-    'due_flag':now>_campaign.deadline ? 1 : 0,
-    'tags':_campaign.tags,
-    'campaign_mold':_campaign.campaign_mold,
     'campaign_unit':_campaign.campaign_unit,
-    'photo_album': {
-      '_id': _campaign.photo_album._id,
-      'photos': photos.slice(-10, photos.length),
-      'name': _campaign.photo_album.name
-    },
-    'campaign_type':_campaign.campaign_type,
-    'is_start': _campaign.start_time <= Date.now(),
-    'is_end': _campaign.end_time <= Date.now()
+    'campaign_type':_campaign.campaign_type
   };
-  var _formatTime = formatTime(_campaign.start_time,_campaign.end_time);
-  temp.start_flag = _formatTime.start_flag;
-  temp.remind_text =_formatTime.remind_text;
-  temp.time_text = _formatTime.time_text;
-  temp.deadline_rest = formatrestTime(now,_campaign.deadline);
-  var memberIds = [];
-  _campaign.members.forEach(function (member) {
-    memberIds.push(member._id);
-  });
-  var role = auth.getRole(user, {
-    companies: _campaign.cid,
-    teams: _campaign.tid,
-    users: memberIds
-  });
-  if(_campaign.confirm_status) {
-    var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
-    var allow = auth.auth(role, [
-      'quitCampaign',joinTaskName
-    ]);
-    if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
-      allow[joinTaskName]=false;
-    }
-  }
-  else {
-    if(role.team=='leader' && [4,5,7,9].indexOf(_campaign.campaign_type)>-1){
-      var allow = {};
-      var provokeRole = auth.getRole(user, {
-        companies: _campaign.cid,
-        teams: [_campaign.tid[0]]
-      });
-      var provokeAllow = auth.auth(provokeRole, [
-        'sponsorProvoke'
-      ]);
-      allow.quitProvoke = provokeAllow.sponsorProvoke;
-      provokeRole = auth.getRole(user, {
-        companies: _campaign.cid,
-        teams: [_campaign.tid[1]]
-      });
-      provokeAllow = auth.auth(provokeRole, [
-        'sponsorProvoke'
-      ]);
-      allow.dealProvoke = provokeAllow.sponsorProvoke;
-    }
-  }
+  // var _formatTime = formatTime(_campaign.start_time,_campaign.end_time);
+  // var memberIds = [];
+  // _campaign.members.forEach(function (member) {
+  //   memberIds.push(member._id);
+  // });
+  // var role = auth.getRole(user, {
+  //   companies: _campaign.cid,
+  //   teams: _campaign.tid,
+  //   users: memberIds
+  // });
+  // if(_campaign.confirm_status) {
+  //   var joinTaskName = _campaign.campaign_type==1?'joinCompanyCampaign':'joinTeamCampaign';
+  //   var allow = auth.auth(role, [
+  //     'quitCampaign',joinTaskName
+  //   ]);
+  //   if (_campaign.deadline < now || (_campaign.member_max >0 && _campaign.members.length >= _campaign.member_max)) {
+  //     allow[joinTaskName]=false;
+  //   }
+  // }
+  // else {
+  //   if(role.team=='leader' && [4,5,7,9].indexOf(_campaign.campaign_type)>-1){
+  //     var allow = {};
+  //     var provokeRole = auth.getRole(user, {
+  //       companies: _campaign.cid,
+  //       teams: [_campaign.tid[0]]
+  //     });
+  //     var provokeAllow = auth.auth(provokeRole, [
+  //       'sponsorProvoke'
+  //     ]);
+  //     allow.quitProvoke = provokeAllow.sponsorProvoke;
+  //     provokeRole = auth.getRole(user, {
+  //       companies: _campaign.cid,
+  //       teams: [_campaign.tid[1]]
+  //     });
+  //     provokeAllow = auth.auth(provokeRole, [
+  //       'sponsorProvoke'
+  //     ]);
+  //     allow.dealProvoke = provokeAllow.sponsorProvoke;
+  //   }
+  // }
 
-  temp.allow = allow;
+  // temp.allow = allow;
 
   return temp;
 };
+
+var searchCampaign = function(requestType, option, sort, limit, page, user, callback){
+  var now = new Date();
+  var _option = {}; 
+  for (var attr in option){
+    _option[attr] = option[attr];
+  }
+  if(requestType==='user') {
+    _option.end_time = { '$lt':now};
+  }
+  Campaign.paginate(_option,
+    parseInt(page) || 1,limit,function(err,pageCount,results,itemCount) {
+      if(err){
+        callback(err);
+      }
+      else{
+        var campaigns = [];
+        results.forEach(function(campaign) {
+          campaigns.push(formatCampaign(campaign,user));
+        });
+        callback(null, campaigns);
+      }
+    },{sortBy:sort});
+}
 
 module.exports = function (app) {
 
@@ -517,23 +521,17 @@ module.exports = function (app) {
         else if(requestType=='company'){
           options['cid'] = mongoose.Types.ObjectId(requestId);
         }
-        if(!req.query.unfinishFlag){
-          options.finish=true;
-        }
-        Campaign.paginate(options,
-          parseInt(req.query.page) || 1,10,function(err,pageCount,results,itemCount) {
-            if(err){
-              log(err);
-              res.status(400).send({ msg: '获取活动失败' });
-            }
-            else{
-              var timeLine = [];
-              results.forEach(function(campaign) {
-                timeLine.push(formatCampaign(campaign,req.user));
-              });
-              return res.status(200).send(timeLine);
-            }
-          },{sortBy:{'start_time':-1}, populate: 'photo_album'});
+        var page = req.query.page;
+
+        searchCampaign(requestType, options, '-start_time', 20, page, req.user, function(err, campaigns) {
+          if(err) {
+            log(err);
+            return res.status(400).send({msg:'活动获取失败'});
+          }
+          else {
+            return res.status(200).send(campaigns);
+          }
+        });
       })
       .then(null, function (err) {
         log(err);

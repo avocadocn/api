@@ -6,16 +6,21 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var Company = mongoose.model('Company');
 var Photo = mongoose.model('Photo');
+var Comment = mongoose.model('Comment');
 
 var jwt = require('jsonwebtoken');
 var log = require('../services/error_log.js');
 var tokenService = require('../services/token.js');
 var donlerValidator = require('../services/donler_validator.js');
+var validator = require('validator');
 var emailService = require('../services/email.js');
 var uploader = require('../services/uploader.js');
 var auth = require('../services/auth.js');
 var tools = require('../tools/tools.js');
 var syncData = require('../services/sync_data.js');
+var departmentController = require('../controllers/departments');
+var async = require('async');
+var publicDomain = require('../services/public_domain.js');
 
 module.exports = function (app) {
 
@@ -42,7 +47,7 @@ module.exports = function (app) {
         });
     },
     userInfoValidate: function (req, res) {
-      var email = req.body.email;
+      var email = req.body.email ? req.body.email.toLowerCase() :req.body.email;
       var cid = req.body.cid;
       var inviteKey = req.body.inviteKey;
       // if(!cid) {
@@ -67,8 +72,10 @@ module.exports = function (app) {
             //     return res.status(200).send({'active':4});
             //   }
             //   else{
+            var domain = email.split('@')[1];
+            var hideInviteKey = !publicDomain.isPublicDomain(domain);
             //这个邮箱没用过,可以注册
-            return res.status(200).send({'active':1});
+            return res.status(200).send({'active':1, 'hideInviteKey':hideInviteKey});
             //   }
             // });
           }
@@ -121,24 +128,34 @@ module.exports = function (app) {
         }
       };
 
-      var validateDepartment = function (name, value, callback) {
-        if (!value) {
-          callback(true);
-          return;
-        }
-        var departments = req.company.department;
-        for (var i = 0; i < value.length; i++) {
-          var index = tools.arrayObjectIndexOf(departments, value[i], 'name');
-          if (index === -1) {
-            callback(false, '公司没有开设该部门');
-            return;
-          } else {
-            departments = departments[index].department;
-          }
-        }
-        callback(true);
-      };
 
+      // var validateDepartment = function (name, value, callback) {
+      //   if (!value) {
+      //     callback(true);
+      //     return;
+      //   }
+      //   var departments = req.company.department;
+      //   for (var i = 0; i < value.length; i++) {
+      //     var index = tools.arrayObjectIndexOf(departments, value[i], 'name');
+      //     if (index === -1) {
+      //       callback(false, '公司没有开设该部门');
+      //       return;
+      //     } else {
+      //       departments = departments[index].department;
+      //     }
+      //   }
+      //   callback(true);
+      // };
+      var validateInviteKey = function (name, value, callback) {
+        var domain = value.email.split('@')[1];
+        if(!publicDomain.isPublicDomain(domain) || value.company.invite_key === value.inviteKey) {
+          callback(true);
+        }
+        else {
+          callback(false,'激活码错误');
+        }
+      }
+      var email = req.body.email.toLowerCase();
       donlerValidator({
         cid: {
           name: '公司id',
@@ -147,12 +164,12 @@ module.exports = function (app) {
         },
         email: {
           name: '企业邮箱',
-          value: req.body.email,
+          value: email,
           validators: ['required', 'email', isUsedEmail]
         },
         domain: {
           name: '邮箱后缀',
-          value: req.body.email.split('@')[1],
+          value: email.split('@')[1],
           validators: [validateDomain]
         },
         nickname: {
@@ -170,15 +187,20 @@ module.exports = function (app) {
           value: req.body.realname,
           validators: ['required']
         },
-        department: {
-          name: '部门',
-          value: req.body.department,
-          validators: [validateDepartment]
-        },
+        // department: {
+        //   name: '部门',
+        //   value: req.body.department,
+        //   validators: [validateDepartment]
+        // },
         phone: {
           name: '手机号码',
           value: req.body.phone,
-          validators: ['number', donlerValidator.isLength(11)]
+          validators: ['number']
+        }, 
+        invite_key: {
+          name: '邀请码',
+          value: {inviteKey:req.body.inviteKey, email: email, company:req.company},
+          validators: [validateInviteKey]
         }
       }, 'complete', function (pass, msg) {
         if (pass) {
@@ -191,7 +213,7 @@ module.exports = function (app) {
     },
 
     register: function (req, res) {
-      var email = req.body.email;
+      var email = req.body.email.toLowerCase();
       var user = new User({
         email: email,
         username: email,
@@ -201,15 +223,8 @@ module.exports = function (app) {
         password: req.body.password,
         realname: req.body.realname,
         phone: req.body.phone,
-        role: 'EMPLOYEE',
-        invite_active: false
+        role: 'EMPLOYEE'
       });
-
-      var inviteKeyValid = false;
-      if (req.body.inviteKey && req.company.invite_key === req.body.inviteKey) {
-        inviteKeyValid = true;
-        user.invite_active = true;
-      }
 
       user.save(function (err) {
         if (err) {
@@ -217,14 +232,7 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
-
-        var emailSender;
-        if (inviteKeyValid) {
-          emailSender = emailService.sendStaffActiveMail;
-        } else {
-          emailSender = emailService.sendNewStaffActiveMail;
-        }
-        emailSender(user.email, user._id.toString(), user.cid.toString(), function (err) {
+        emailService.sendStaffActiveMail(user.email, user._id.toString(), user.cid.toString(), function (err) {
           if (err) {
             log(err);
             res.sendStatus(500);
@@ -233,11 +241,10 @@ module.exports = function (app) {
           }
         });
       });
-
     },
 
     forgetPassword: function (req, res) {
-      User.findOne({email: req.body.email}, function(err, user) {
+      User.findOne({email: req.body.email.toLowerCase()}, function(err, user) {
         if(err || !user) {
           return res.status(400).send({msg:'邮箱填写错误'});
         } else {
@@ -264,12 +271,29 @@ module.exports = function (app) {
       });
     },
 
-    getUserById: function (req, res) {
+    getUserById: function (req, res, next) {
       //获取免打扰开关
       if(req.query.responseKey==='pushToggle') {
         var user = {'pushToggle' : req.user.push_toggle};
         return res.status(200).send(user);
       }
+      //获取某活动的未读评论数
+      // if(req.query.commentCampaignId) {
+      //   var indexOfCC = tools.arrayObjectIndexOf(req.user.commentCampaigns, req.query.commentCampaignId, '_id');
+      //   if(indexOfCC > -1) {
+      //     var unreadNumbers = req.user.commentCampaigns[indexOfCC].unread;
+      //     return res.status(200).send({unreadNumbers: unreadNumbers});
+      //   }else {
+      //     var indexOfUCC = tools.arrayObjectIndexOf(req.user.unjoinedCommentCampaigns, req.query.commentCampaignId, '_id');
+      //     if(indexOfUCC > -1) {
+      //       var unreadNumbers = req.user.unjoinedCommentCampaigns[indexOfUCC].unread;
+      //       return res.status(200).send({unreadNumbers: unreadNumbers});
+      //     } else {
+      //       return res.status(200).send({unreadNumbers: 0});
+      //     }
+      //   }
+      // }
+      
       //非获取免打扰
       User.findById(req.params.userId).exec()
         .then(function (user) {
@@ -282,13 +306,18 @@ module.exports = function (app) {
           });
           var allow = auth.auth(role, ['getUserCompleteData', 'getUserBriefData', 'getUserMinData']);
           if (allow.getUserCompleteData) {
-            var tids = [];
+            var tids = [],teams=[];
             user.team.forEach(function (team) {//不拿部门和公司
-              if(team.entity_type!='virtual') tids.push(team._id);
+              if(team.entity_type!='virtual'){
+                tids.push(team._id);
+                teams.push(team);
+              }
             });
 
             var completeData = {
               _id: user._id,
+              active:user.active,
+              mail_active:user.mail_active,
               email: user.email,
               nickname: user.nickname,
               photo: user.photo,
@@ -310,7 +339,8 @@ module.exports = function (app) {
               lastCommentTime: user.last_comment_time,
               score: user.score.total || 0,
               tags: user.tags,
-              campaignCount:user.campaignCount || 0
+              campaignCount:user.campaignCount || 0,
+              team: teams
             };
             res.status(200).send(completeData);
           } else if (allow.getUserBriefData) {
@@ -354,36 +384,86 @@ module.exports = function (app) {
           }
 
         })
-        .then(null, function (err) {
-          log(err);
-          res.sendStatus(500);
-        });
+        .then(null, next);
     },
 
     getCompanyUsers: function (req, res) {
+      //resultType :1仅nickname，photo
+      //2: username,photo,realname,department,team,campaignCount,score
+      //3:待激活用户
       var findOptions = {'cid':req.params.companyId, 'active':true, 'mail_active':true};
       var outputOptions = {};
-      if(req.user.provider==='company') { //hr取来任命队长用
+      if(req.user.provider==='company') { 
         if(req.user._id.toString() !== req.params.companyId) return res.sendStatus(403);
         else {
-          outputOptions = {'nickname':1,'photo':1};
+          //hr取来任命队长用
+          if(!req.query.resultType || req.query.resultType=='1'){
+            outputOptions = {'email':1,'nickname':1,'photo':1,'realname': 1};
+          }
+          //hr统计用户
+          else if (req.query.resultType=='2'){
+            findOptions = {'cid':req.params.companyId};
+            outputOptions = {'nickname':1,'photo':1,'username':1,'sex': 1,'phone':1,'qq':1,'introduce': 1,'realname':1,'department':1,'team':1,'campaignCount':1,'score':1,'active':1,'mail_active':1};
+          }
+          //待激活用户
+          else if (req.query.resultType=='3') {
+            findOptions = {'cid':req.params.companyId, 'active':false,'invited':{"$ne":true}};
+            outputOptions = {'username':1,'register_date':1,'mail_active':1, 'nickname':1};
+          }else if (req.query.resultType=='4') {
+            findOptions = {'cid':req.params.companyId, 'active':false, 'mail_active':false};
+            outputOptions = {'_id':1};
+          }
         }
       }
       else if(req.user.cid.toString() !== req.params.companyId){
         return res.sendStatus(403);
-      }else{//用户取来通讯录用
-        outputOptions = {'email':1,'nickname':1};
+      }else{
+        // 用户取来通讯录用及获取公司成员用
+        // 获取常用的几个属性，尽管前端可能只需要其中的一部分
+        outputOptions = {'email':1, 'nickname':1, 'photo': 1, 'realname': 1};
       }
-      User.find(findOptions,outputOptions)
-      .sort('nickname')
-      .exec()
-      .then(function (users){
-        return res.status(200).send(users);
-      })
-      .then(null, function (err){
-        log(err);
-        return res.status(500).send({msg:'查询错误'});
-      })
+      if(req.query.page) {
+        var pageNum = 10;
+        var page = req.query.page;
+        User.paginate(findOptions, page, pageNum, function(err, pageCount, results, itemCount) {
+          if(err){
+            log(err);
+            res.status(500).send({msg:err});
+          }
+          else{
+            if (req.query.resultType=='2'){
+              results.forEach(function (user) {
+                var index = tools.arrayObjectIndexOf(user.team,'0','gid')
+                if(index>-1){
+                  user.team.splice(index,1);
+                }
+              })
+            }
+            return res.send({'users':results,'maxPage':pageCount,'hasNext':pageCount>page});
+          }
+        },{columns:outputOptions, sortBy:{'nickname':1}});
+      }
+      else{
+        User.find(findOptions,outputOptions)
+        .sort('nickname')
+        .exec()
+        .then(function (users){
+          if (req.query.resultType == '2') {
+            users.forEach(function(user) {
+              var index = tools.arrayObjectIndexOf(user.team, '0', 'gid')
+              if (index > -1) {
+                user.team.splice(index, 1);
+              }
+            })
+          }
+          return res.status(200).send(users);
+        })
+        .then(null, function (err){
+          log(err);
+          return res.status(500).send({msg:'查询错误'});
+        })
+      }
+
     },
 
     updateValidate: function (req, res, next) {
@@ -412,9 +492,9 @@ module.exports = function (app) {
           value: req.body.realname,
           validators: [donlerValidator.minLength(1), donlerValidator.maxLength(20)]
         },
-        intro: {
+        introduce: {
           name: '简介',
-          value: req.body.realname,
+          value: req.body.introduce,
           validators: [donlerValidator.maxLength(40)]
         },
         phone: {
@@ -470,7 +550,7 @@ module.exports = function (app) {
             next();
           } else {
             log(err);
-            res.sendStatus(500);
+            res.status(500).send({ msg: '服务器错误' });
           }
         }
       });
@@ -488,9 +568,6 @@ module.exports = function (app) {
       }
       if (req.body.realname) {
         user.realname = req.body.realname;
-      }
-      if (req.body.intro) {
-        user.introduce = req.body.intro;
       }
       if (req.body.phone) {
         user.phone = req.body.phone;
@@ -525,7 +602,22 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
-        res.sendStatus(200);
+        if(req.body.did && (!user.department || !user.department._id || user.department._id.toString()!= req.body.did)) {
+          departmentController(app).joinDepartment(user,req.body.did,function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+              return;
+            }
+            else {
+              res.sendStatus(200);
+            }
+          });
+        }
+        else {
+          res.sendStatus(200);
+        }
+
         if (req.updatePhoto) {
           syncData.updateUlogo(user._id);
         }
@@ -541,8 +633,8 @@ module.exports = function (app) {
       }
 
       User.findOne({
-        email: req.body.email
-      }).exec()
+        email: req.body.email.toLowerCase()
+      }).populate('cid').exec()
         .then(function (user) {
           if (!user) {
             return res.status(401).send({ msg: '邮箱地址不存在,请检查或注册。' });
@@ -563,11 +655,15 @@ module.exports = function (app) {
           if(user.disabled) {
             return res.status(401).send({ msg: '账号已被关闭。'})
           }
-          var token = jwt.sign({
+          if(!user.cid.status.active) {
+            return res.status(401).send({ msg: '你的账号所属公司已被关闭。'})
+          }
+          var payload = {
             type: "user",
             id: user._id.toString(),
             exp: app.get('tokenExpires') + Date.now()
-          }, app.get('tokenSecret'));
+          };
+          var token = jwt.sign(payload, app.get('tokenSecret'));
           var pushInfo = req.body.pushInfo ||{};
           user.addDevice(req.headers, token, pushInfo);
           user.save(function (err) {
@@ -578,9 +674,13 @@ module.exports = function (app) {
               res.status(200).send({
                 token: token,
                 id:user._id,
-                cid:user.cid,
-                role:user.role
+                cid:user.cid.id,
+                role:user.role,
+                guide_step:(user.cid.guide_step || user.email !==user.cid.login_email) ? 1:0
               });
+
+              tokenService.redisToken.create(token, payload)
+                .then(null, console.log);
             }
           });
 
@@ -592,32 +692,38 @@ module.exports = function (app) {
     },
 
     refreshToken: function (req, res, next) {
-      var newToken = jwt.sign({
-        type: "user",
-        id: req.user._id.toString(),
-        exp: app.get('tokenExpires') + Date.now()
-      }, app.get('tokenSecret'));
-      req.user.updateDeviceToken(req.headers['x-access-token'], newToken);
-      req.user.save(function (err) {
-        if (err) {
-          console.log(err.stack || err);
-          res.status(500).send({msg: '服务器错误'});
-        }
-        else {
+      var token = req.headers['x-access-token'];
+      tokenService.redisToken.refresh(token)
+        .then(function(reply) {
           res.send({
             msg: '更新成功',
-            newToken: newToken
+            newToken: token
           });
-        }
-      });
+        })
+        .then(null, function(err) {
+          var newToken = jwt.sign({
+            type: "user",
+            id: req.user._id.toString(),
+            exp: app.get('tokenExpires') + Date.now()
+          }, app.get('tokenSecret'));
+          req.user.updateDeviceToken(req.headers['x-access-token'], newToken);
+          req.user.save(function(err) {
+            if (err) next(err);
+            else {
+              res.send({
+                msg: '更新成功',
+                newToken: newToken
+              });
+            }
+          });
+        });
     },
-
-
     logout: function (req, res) {
       if (req.user.provider !== 'user') {
         res.sendStatus(403);
         return;
       }
+      var token = req.headers['x-access-token'];
       req.user.removeDevice(req.headers);
       req.user.save(function (err) {
         if (err) {
@@ -625,10 +731,13 @@ module.exports = function (app) {
           res.sendStatus(500);
         } else {
           res.sendStatus(204);
+          tokenService.redisToken.delete(token)
+            .then(null, console.log);
         }
       });
     },
 
+    //屏蔽
     close: function (req, res) {
       var role = auth.getRole(req.user, {
         companies: [req.resourceUser.cid],
@@ -652,6 +761,7 @@ module.exports = function (app) {
 
     },
 
+    //取消屏蔽
     open: function (req, res) {
       var role = auth.getRole(req.user, {
         companies: [req.resourceUser.cid],
@@ -674,6 +784,230 @@ module.exports = function (app) {
       });
     },
 
+    //激活
+    activeUser: function (req, res, next) {
+      var srcUser = req.resourceUser;
+      var role = auth.getRole(req.user, {
+        companies: [srcUser.cid]
+      });
+      var allow = auth.auth(role, ['activeUser']);
+      if (!allow.activeUser) {
+        res.status(403).send({ msg: '您没有权限' });
+        return;
+      }
+
+      srcUser.mail_active = true;
+      srcUser.active = true;
+      srcUser.save(function (err) {
+        if (err) {
+          next(err);
+          return;
+        }
+        res.send({ msg: '激活成功' });
+      });
+    },
+
+    inviteUser: function (req, res, next) {
+      var email =req.body.email ? req.body.email.toLowerCase():req.body.email;
+      if (!validator.isEmail(email)) {
+        res.status(400).send({ msg: '请填写正确的邮箱地址' });
+        return;
+      }
+
+      if (req.user.provider !== 'company') {
+        res.status(403).send({ msg: '您没有权限' });
+        return;
+      }
+
+      // 判断邮箱后缀是否为企业允许的邮箱后缀
+      var emailDomain = email.split('@')[1];
+      if (req.user.email.domain.indexOf(emailDomain) === -1) {
+        res.status(400).send({ msg: '该邮箱不是企业允许的邮箱。如果您需要向该邮箱发送邀请链接，请先在企业账号设置中添加邮箱。' });
+        return;
+      }
+
+      // 查询该邮箱是否已被注册过了
+      User.findOne({
+        email: email
+      }, {
+        _id: 1,
+        email: 1,
+        mail_active: 1,
+        invited: 1
+      }).exec()
+        .then(function (user) {
+          if (!user) {
+            // 没有注册则新创建用户
+            createNewUser();
+          } else {
+            if (user.mail_active === true) {
+              // 如果已经激活，则返回提示
+              res.send({ msg: '该用户已激活，无须再发送邀请信了。' });
+            } else {
+              // 还没有激活，则重新发送邀请信
+              sendEmail(user);
+            }
+          }
+
+        })
+        .then(null, function (err) {
+          next(err);
+        });
+
+      function createNewUser() {
+        var user = new User({
+          email: email,
+          username: email,
+          active: true,
+          mail_active: false,
+          invited: true,
+          cid: req.user._id,
+          cname: req.user.info.name,
+          company_official_name: req.user.info.official_name
+        });
+        user.save(function (err) {
+          if (err) {
+            next(err);
+          } else {
+            sendEmail(user);
+          }
+        });
+      }
+
+      function sendEmail(user) {
+        emailService.sendInvitedStaffActiveMail(user.email, {
+          inviteKey: req.user.invite_key,
+          uid: user.id,
+          cid: req.user.id,
+          cname: req.user.info.name
+        }, function (err) {
+          if (err) {
+            next(err);
+          } else {
+            res.status(201).send({ msg: '成功发送邀请信' });
+          }
+        });
+      }
+
+
+    },
+    batchinviteUser: function (req, res) {
+      //status
+      //0: 未注册
+      //1: 邀请成功
+      //2: 已经注册，且激活
+      //3: 已经注册，未激活
+      //4: 不是企业邮箱
+      //5: 不是合法邮箱
+      //6: 邮件发送错误
+      //7: 数据库发送错误
+      if(req.user.provider!== 'company'){
+        return res.status(403).send({ msg: '您没有权限进行批量邀请用户' });
+      }
+      var operateFlag = req.body.operate;
+      var members = req.body.members;
+      var createNewUser =function (member,callback) {
+        var user = new User({
+          email: member.email,
+          username: member.email,
+          realname:member.name,
+          nickname:member.name,
+          password:req.user.default_user_password,
+          active: true,
+          mail_active: false,
+          invited: true,
+          cid: req.user._id,
+          cname: req.user.info.name,
+          company_official_name: req.user.info.official_name
+        });
+        user.save(function (err) {
+          if (err) {
+            member.status = 7;
+            return callback(null,member)
+          } else {
+            member.id= user.id;
+            sendEmail(member,callback);
+          }
+        });
+      }
+
+      function sendEmail(member,callback) {
+        emailService.sendInvitedStaffActiveMail(member.email, {
+          inviteKey: req.user.invite_key,
+          uid: member.id,
+          cid: req.user.id,
+          cname: req.user.info.name
+        }, function (err) {
+          if (err) {
+            member.status=6;
+            log(err)
+          }
+          else{
+            member.status=1;
+          }
+          callback(null,member)
+        });
+      }
+      async.map(members, function (member,callback) {
+        if (!validator.isEmail(member.email)) {
+          member.status = 5;
+          return callback(null,member)
+        }
+        // 判断邮箱后缀是否为企业允许的邮箱后缀
+        var emailDomain = member.email.split('@')[1];
+        if (req.user.email.domain.indexOf(emailDomain) === -1) {
+          member.status = 4;
+          return callback(null,member)
+        }
+
+        // 查询该邮箱是否已被注册过了
+        User.findOne({
+          email: member.email
+        }, {
+          _id: 1,
+          email: 1,
+          mail_active: 1,
+          invited: 1
+        }).exec()
+          .then(function (user) {
+            if (!user) {
+              member.status = 0
+              // 没有注册则新创建用户
+              if(operateFlag){
+                createNewUser(member,callback);
+              }
+              else{
+                callback(null,member)
+              }
+              
+            } else {
+              if (user.mail_active === true) {
+                // 如果已经激活，则返回提示
+                member.status = 2;
+                callback(null,member)
+              } else {
+                // 还没有激活，则重新发送邀请信
+                member.status = 3;
+                if(operateFlag){
+                  sendEmail(user,callback);
+                }
+                else{
+                  callback(null,member)
+                }
+                
+              }
+            }
+
+          })
+          .then(null, function (err) {
+            member.status = '检查用户发生错误';
+            log(err)
+            callback(null,member)
+          });
+      }, function(err, result){
+        res.send(result)
+      });
+    },
     getUserPhotosValidate: function (req, res, next) {
       donlerValidator({
         start: {
@@ -748,6 +1082,100 @@ module.exports = function (app) {
           log(err);
           res.sendStatus(500);
         });
+    },
+    getUserComments: function (req, res) {
+      var srcUser = req.resourceUser;
+      var role = auth.getRole(req.user, {
+        companies: [srcUser.cid]
+      });
+      var allow = auth.auth(role, ['getUserComments']);
+      if (!allow.getUserComments) {
+        res.status(403).send({ msg: '您没有权限' });
+        return;
+      }
+      Comment.find({'poster._id':req.params.userId})
+        .sort('-create_date')
+        .limit(10)
+        .exec()
+        .then(function (comments) {
+          res.status(200).send(comments);
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
+    },
+    /**
+     * 重发激活邮件
+     * req.body:
+     *   email: String // 公司邮箱
+     */
+    resendActiveEmail: function(req, res, next) {
+      donlerValidator({
+        email: {
+          name: 'email',
+          value: req.body.email,
+          validators: ['required','email']
+        }
+      }, 'fast', function (pass, msg) {
+        if (pass) {
+          var email = req.body.email.toLowerCase();
+          Company.findOne({'info.email': email}).exec()
+            .then(function(company) {
+              // 是快速注册的公司
+              if (company && company.status.verification === 1) {
+                // 因为status.active默认为false，所以忽略
+                // 按理说，未激活的公司不应该是被管理员屏蔽的状态
+                if (company.status.mail_active) {
+                  res.status(400).send({msg: '已经激活，请直接登录', isActive: true});
+                }
+                else {
+                  emailService.sendQuickRegisterActiveMail(company.login_email, company.info.name, company.id, function(err) {
+                    if(err) {
+                      log(err);
+                    }
+                    else{
+                      res.send({msg: '已经重新发送激活邮件', hasResend: true});
+                    }
+                  });
+                }
+              }
+              else {
+                // 不是快速注册
+                return User.findOne({email: email}).exec().then(function(user) {
+                  if (!user) {
+                    res.status(400).send({msg: '该邮箱对应的用户不存在'});
+                    return;
+                  }
+
+                  if (user.mail_active) {
+                    res.status(400).send({msg: '已经激活，请直接登录', isActive: true});
+                  }
+                  else {
+                    emailService.sendStaffActiveMail(user.email, user._id.toString(), user.cid.toString(), function (err) {
+                      if (err) {
+                        log(err);
+                        next()
+                      } else {
+                        res.send({msg: '已经重新发送激活邮件', hasResend: true});
+                      }
+                    });
+                  }
+                });
+              }
+            })
+            .then(null, next);
+        } else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          res.status(400).send({ msg: resMsg });
+        }
+      });
+      
     }
   };
 };
+
+
+
+
+
