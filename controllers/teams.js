@@ -55,7 +55,7 @@ module.exports = function (app) {
             function (callback) {
               i--;
               Group.findOne({_id:selectedGroups[i]._id}).exec().then(function(group){
-                var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : company.info.official_name + '-' + group.groupType + '队';
+                var tname = selectedGroups[i].teamName ? selectedGroups[i].teamName : group.groupType + '队' + '-' + company.info.official_name;
                 var companyGroup = new CompanyGroup();
                 companyGroup.cid = company._id;
                 companyGroup.cname = company.info.name;
