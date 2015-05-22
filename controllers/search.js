@@ -41,7 +41,9 @@ module.exports = function (app) {
                 'mail_active': companies[i].status.mail_active
               });
             }
-            return res.status(200).send({companies:companies_rst, pageCount:pageCount});
+            // return res.status(200).send({companies:companies_rst, pageCount:pageCount});
+            // 切回以前的数据返回
+            return res.status(200).send(companies_rst);
           } else {
             return res.status(200).send([]);
           }
