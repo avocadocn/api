@@ -153,7 +153,6 @@ emailService.sendFeedBackMail = function (email, content, callback) {
  * @param  {String} email [description]
  * @param  {String} cname [description]
  * @param  {String} cid   [description]
- * @param  {String} host  [description]
  * @param {Function} callback 形式为function(err)
  */
 emailService.sendQuickRegisterActiveMail = function (email, cname, cid, callback) {
@@ -164,6 +163,19 @@ emailService.sendQuickRegisterActiveMail = function (email, cname, cid, callback
     getService(config).sendQuickRegisterActiveMail(email, cname, cid, config.host.product, callback);
   })
 };
-
+/**
+ * 发送hr操作指南邮件
+ * @param  {String} email [description]
+ * @param  {String} cname [description]
+ * @param {Function} callback 形式为function(err)
+ */
+emailService.sendCompanyOperationGuideMail = function (email, cname, callback) {
+  getConfig(function (err, config) {
+    if(err) {
+      return callback(err);
+    }
+    getService(config).sendCompanyOperationGuideMail(email, cname, config.host.product, callback);
+  })
+};
 module.exports = emailService;
 

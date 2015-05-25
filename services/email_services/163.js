@@ -8,6 +8,7 @@ var mailer = require('nodemailer'),
   config = require('../../config/config.js');
 
 var emailTemplatePath = path.join(__dirname, 'mail_template.jade');
+var hrGuidEmailTemplatePath = path.join(__dirname, 'mail_template_company_guide.jade');
 
 var mailOption = {
   host: 'smtp.ym.163.com',
@@ -233,4 +234,34 @@ exports.sendQuickRegisterActiveMail = function(who, name, id, host, callback) {
       html: html
     }, callback);
   });
+};
+/**
+ * 公司操作指南
+ * @param {String} who 接收人的邮件地址
+ * @param  {[type]} name 接收人的公司名
+ * @param  {[type]} host 当前host
+ * @param  {Function} callback 回调函数
+ */
+exports.sendCompanyOperationGuideMail = function(who, name, host, callback) {
+  var from = '动梨<service@donler.com>';
+  var to = who;
+  var subject = '公司操作指南';
+  fs.readFile(hrGuidEmailTemplatePath, 'utf8', function (err, data) {
+     if (err) {throw err;}
+    var fn = jade.compile(data);
+    var html = fn({
+      'title': '公司操作指南',
+      'host': siteProtocol + host,
+      'who': who,
+      'name': name
+    });
+    transport.sendMail({
+      from: from,
+
+      to: to,
+      subject: subject,
+      html: html
+    },callback);
+  });
+
 };
