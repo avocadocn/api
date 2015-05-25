@@ -66,6 +66,7 @@ app.use(cors(corsOpts));
 
 if (config.env === 'development') {
   app.use(morgan('dev'));
+  app.use(serveStatic(path.join(rootPath, 'public/')));
 } else if (config.env === 'production') {
   app.use(morgan('combined'));
 }
@@ -91,6 +92,4 @@ walk(path.join(rootPath, 'routes/'), function (file, path) {
 });
 require('../services/schedule').init();
 app.use(errorHandle);
-
-app.use(serveStatic(path.join(rootPath, 'public/')));
 module.exports = app;
