@@ -153,7 +153,6 @@ emailService.sendFeedBackMail = function (email, content, callback) {
  * @param  {String} email [description]
  * @param  {String} cname [description]
  * @param  {String} cid   [description]
- * @param  {String} host  [description]
  * @param {Function} callback 形式为function(err)
  */
 emailService.sendQuickRegisterActiveMail = function (email, cname, cid, callback) {
@@ -165,11 +164,9 @@ emailService.sendQuickRegisterActiveMail = function (email, cname, cid, callback
   })
 };
 /**
- * 发送快速注册激活邮件
+ * 发送hr操作指南邮件
  * @param  {String} email [description]
  * @param  {String} cname [description]
- * @param  {String} cid   [description]
- * @param  {String} host  [description]
  * @param {Function} callback 形式为function(err)
  */
 emailService.sendCompanyOperationGuideMail = function (email, cname, callback) {
