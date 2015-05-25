@@ -13,21 +13,27 @@ html
           -webkit-box-sizing: border-box !important;
           box-sizing: border-box !important;
         }
+
         .text_left {
           text-align: left !important;
         }
+
         .text_right {
           text-align: right !important;
         }
+
         .text_center {
           text-align: center !important;
         }
+
         .xs_hidden {
           display: none !important;
         }
+
         .footer {
           padding: 30px 0;
         }
+
         .mobile_wrap {
           padding: 10px;
           border: 1px solid #DCDCDC;
@@ -35,40 +41,51 @@ html
           background-color: #f9fcfd;
           color: #5d5e5e;
         }
+
         .desktop_wrap {
           border: none !important;
         }
+
         .mobile_wrap_top_border {
           border-top: 8px solid #3498db;
         }
+
         .xs_block {
           display: block !important;
         }
+
         .foot_text_line_1, .foot_text_line_2 {
           margin: 0 !important;
         }
       }
+
       @media (min-width: 450px) {
         .sm_hidden {
           display: none !important;
         }
+
         .foot_text_line_1 {
           margin: 20px 0 10px !important;
         }
+
         .foot_text_line_2 {
           margin: 10px 0 20px;
         }
+
         .foot_text_span {
           margin-left: 10px;
         }
+
         .desktop_wrap {
           border-radius: 0.1px;
           border: 3px solid #DCDCDC;
         }
       }
+
       .dashed {
         border-top: 2px dashed #DCDCDC;
       }
+
       .solid {
         border-top: 2px solid #DCDCDC;
       }
@@ -83,50 +100,45 @@ html
       .mobile_wrap_top_border
       .mobile_wrap
         p(style="color: #008000;")
-          span(style="font-size:24px") Hi,
-          span= who
+          span(style="font-size:24px") 尊敬的用户：
         .solid.xs_hidden(style="border-top: 2px solid #DCDCDC;")
         div(style="font-size: 14px; line-height: 20px;")
-          p= description
-          p: a(style="text-decoration: none; word-break: break-all;" href="#{link}") #{link}
+          p 您好！
+          p 欢迎使用动梨，您的帐号除了能登录个人版外，也能登录动梨企业版。
+          p 用户名：#{name}
+          p 注册邮箱：#{who} (您可以绑定为其他邮箱)
+          p 登录地址：
+            a(style="text-decoration: none; word-break: break-all;" href="http://www.donler.com") http://www.donler.com
         .dashed.sm_hidden(style="display: none;")
         div(style="margin-top: 40px;")
-          p(style="color: #3bbee8;height:40px; line-height:40px; padding-left:40px; background:url(http://donlercom.qiniudn.com/img/icons/1_03.png) no-repeat left center; background-size: 40px;")
-            span(style="font-size:24px; padding-left:10px;") 动梨 “活动助理”
-          div(style="background:url(http://donlercom.qiniudn.com/img/icons/ico_01.png) no-repeat left top; padding-left: 30px; margin: 16px 0; background-size: 30px; min-height: 30px;")
+          p(style="color: #3bbee8;height:40px; line-height:40px;")
+            span(style="font-size:24px; padding-left:10px;") 企业版团队管理功能主要有
+          div(style="padding-left: 30px; margin: 16px 0; background-size: 30px; min-height: 30px;")
             table(cellpadding="0" cellspacing="0" style="width: 100%; margin-left: 10px; font-size: 14px;")
               tr
                 td.col.text_left(width="75" style="text-align: left; height: 30px; line-height: 30px;")
-                  strong 快速建组
-                td.col.text_left(style="text-align: left; line-height: 20px;")
-                  span 在线完成公司内部或外部活动的创建和报名，移动客户端数据同步
-          div(style="background:url(http://donlercom.qiniudn.com/img/icons/ico_03.png) no-repeat left top; padding-left: 30px; margin: 16px 0; background-size: 30px; min-height: 30px;")
+                  strong 1. 批量导入，一键邀请同事加入
+          div(style="padding-left: 30px; margin: 16px 0; background-size: 30px; min-height: 30px;")
             table(cellpadding="0" cellspacing="0" style="width: 100%; margin-left: 10px; font-size: 14px;")
               tr
                 td.col.text_left(width="75" style="text-align: left; height: 30px; line-height: 30px;")
-                  strong 简单管理
-                td.col.text_left(style="text-align: left; line-height: 20px;")
-                  span 员工活动日程列表，一键参与方便快捷，随时了解活动动态
-          div(style="background:url(http://donlercom.qiniudn.com/img/icons/ico_02.png) no-repeat left top; padding-left: 30px; margin: 16px 0; background-size: 30px; min-height: 30px;")
+                  strong 2. 新建小队，完善企业活动体系
+          div(style="padding-left: 30px; margin: 16px 0; background-size: 30px; min-height: 30px;")
             table(cellpadding="0" cellspacing="0" style="width: 100%; margin-left: 10px; font-size: 14px;")
               tr
                 td.col.text_left(width="75" style="text-align: left; height: 30px; line-height: 30px;")
-                  strong 随时分享
-                td.col.text_left(style="text-align: left; line-height: 20px;")
-                  span 快速分享，随时记录，精彩不错过
-          div(style="background:url(http://donlercom.qiniudn.com/img/icons/ico_04.png) no-repeat left top; padding-left: 30px; margin: 16px 0; background-size: 30px; min-height: 30px;")
+                  strong 3. 设置队长，管理活动更加轻松
+          div(style="padding-left: 30px; margin: 16px 0; background-size: 30px; min-height: 30px;")
             table(cellpadding="0" cellspacing="0" style="width: 100%; margin-left: 10px; font-size: 14px;")
               tr
                 td.col.text_left(width="75" style="text-align: left; height: 30px; line-height: 30px;")
-                  strong 日程管理
-                td.col.text_left(style="text-align: left; line-height: 20px;")
-                  span 日程、提醒、双重辅助，员工公司活动事务井井有条
+                  strong 4. 完善资料，认证开放更多功能
         .solid.xs_hidden(style="border-top: 2px solid #DCDCDC;")
         .dashed.sm_hidden(style="display: none;")
         .footer
           p.text_center.foot_text_line_1(style="color: #989898; margin: 20px 0 10px; font-size: 14px; line-height: 20px;") 本邮件由系统自动发出，请勿回复
           div.foot_text_line_2(style="width: 100%; margin: 10px 0 20px; color: #989898; font-size: 14px;")
-            .col.text_center(style="float: left;")
+            .col.text_center.foot_text_span(style="float: left;")
               span(style="margin: 0; line-height: 20px;") 动梨 国内第一款针对企业活动的管理软件
             div(style="clear: both;")
         .dashed.xs_hidden(style="border-top: 2px dashed #DCDCDC;")
@@ -141,3 +153,4 @@ html
             td.col(style="width: 33.33%; margin-top: 10px;")
               div(style="background:url(http://donlercom.qiniudn.com/img/icons/wx.png) no-repeat left center; height:30px; line-height:30px; padding-left:40px !important; background-size: 30px; font-size: 14px;")
                 span 微信号：donler
+        
