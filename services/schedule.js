@@ -72,6 +72,7 @@ var teamPoint = function(){
           //   });
 
         //TODO:将所有的已经结束的该小队活动进行统计，效率较低
+        //ps 此处的value为单个team
         Campaign.find({'active':true,'tid':value._id,'end_time':{'$lte':now}}).exec(function(err,campaigns){
           campaigns.forEach(function(campaign){
             campaignNum++;
@@ -111,7 +112,9 @@ var teamRank = exports.teamRank =function(){
             groups.forEach(function(group){
               //虚拟组不计算
               if(group._id!="0"){
-                CompanyGroup.find({'active':true,'city.province':region.name,'city.city': city.name,gid:group._id}).sort('-score_rank.score -score.total -score.win_percent -score.campaign -score.member').exec(function (err,teams) {
+                //找出所有同类型的正常小队并进行排名
+                CompanyGroup.find({'active':true,'company_active':{'$ne':false},'city.province':region.name,'city.city': city.name,gid:group._id})
+                .sort('-score_rank.score -score.total -score.win_percent -score.campaign -score.member').exec(function (err,teams) {
                   var rank = new Rank();
                   rank.group_type ={
                     _id:group._id,
@@ -121,6 +124,7 @@ var teamRank = exports.teamRank =function(){
                     province: region.name,
                     city: city.name
                   }
+                  //将前十个放入rank里
                   teams.forEach(function (team,index) {
                     team.score_rank.rank = index+1;
                     if(index<rankLimit){
@@ -251,6 +255,7 @@ var lastMonthCampaignCount =  function(){
   endTime.setMilliseconds(0);
   countCampaign(startTime,endTime,'lastMonth');
 }
+//项目中没用到 -M
 //统计活动数
 exports.countCampaign = function(){
   currentWeekCampaignCount();

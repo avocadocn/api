@@ -93,6 +93,7 @@ var CompanyGroup = new Schema({
     },
     entity_type: String,
     brief: String,
+    //每日更新
     score: {
         campaign:{
             type: Number,
@@ -148,6 +149,7 @@ var CompanyGroup = new Schema({
         type: Date,
         default: Date.now
     },
+    //每日
     count:{
         current_week_campaign: {
             type: Number,
@@ -185,11 +187,13 @@ var CompanyGroup = new Schema({
         start_time: Date
     },
     score_rank:{
+        //实时更新
         //战绩积分
         score:{
             type: Number,
             default: 0
         },
+        //一周统计
         //战绩排名
         rank:{
             type: Number,

@@ -60,6 +60,7 @@ module.exports = function (app) {
                 // console.log(odds_percent);
                 team.odds_percent = odds_percent;
               });
+              //除了榜单上的，还放上自己公司的小队
               CompanyGroup.find({active:true, cid: cid ,gid:req.query.gid},{cid: 1,name:1,logo:1,gid: 1,score:1,score_rank:1})
               .exec()
               .then(function (teams) {
@@ -221,7 +222,7 @@ module.exports = function (app) {
     },
     update: function (req,res) {
       if(req.body.token=='55yali') {
-        schedule.teamPoint();
+        schedule.teamRank();
         res.sendStatus(200);
       }
       else{
