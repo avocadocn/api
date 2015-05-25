@@ -329,6 +329,7 @@ var formatterList = {
       var formatCampaign = {
         _id: campaigns[i]._id,
         campaignType:campaigns[i].campaign_type,
+        active: campaigns[i].active,
         start: new Date(campaigns[i].start_time).valueOf(),
         end: new Date(campaigns[i].end_time).valueOf(),
         class: 'event-info'
@@ -438,19 +439,26 @@ exports.queryAndFormat = function (opts, callback) {
      * 1     未开始
      * 2     进行中
      * 3     已结束
+     * 4     已关闭
      */
     if(opts.reqQuery.status) {
       var index = opts.reqQuery.status;
       switch(index) {
         case '1':
           optionBeforeSortHandle.$match.$and.push({'start_time': {'$gt': new Date()}});
+          optionBeforeSortHandle.$match.$and.push({'active': true});
           break;
         case '2':
           optionBeforeSortHandle.$match.$and.push({'start_time': {'$lte': new Date()}});
           optionBeforeSortHandle.$match.$and.push({'end_time': {'$gte': new Date()}});
+          optionBeforeSortHandle.$match.$and.push({'active': true});
           break;
         case '3':
           optionBeforeSortHandle.$match.$and.push({'end_time': {'$lt': new Date()}});
+          optionBeforeSortHandle.$match.$and.push({'active': true});
+          break;
+        case '4':
+          optionBeforeSortHandle.$match.$and.push({'active': false});
           break;
       }
     }
