@@ -406,6 +406,7 @@ module.exports = function (app) {
             };
             if(role.company=='hr'){
               briefTeam.count = companyGroups[i].count;
+              briefTeam.members = membersWithoutLeader;
             }
             if(companyGroups[i].poster.role=='Personal') {
               briefTeam.poster = {

@@ -57,7 +57,7 @@ module.exports = function (app) {
               rank.team.forEach(function(team) {
                 var totalCompNum = team.lose + team.tie + team.win ;
                 var odds_percent = team.win ? Math.floor(team.win/totalCompNum*100) :0;
-                console.log(odds_percent);
+                // console.log(odds_percent);
                 team.odds_percent = odds_percent;
               });
               CompanyGroup.find({active:true, cid: cid ,gid:req.query.gid},{cid: 1,name:1,logo:1,gid: 1,score:1,score_rank:1})
