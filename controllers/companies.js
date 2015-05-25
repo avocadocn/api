@@ -762,6 +762,8 @@ module.exports = function (app) {
                 city: companyDoc.info.city.city,
                 district: companyDoc.info.city.district
               },
+              active: false,
+              company_active: false,
               member: [{
                 _id: userDoc._id,
                 nickname: userDoc.nickname,
