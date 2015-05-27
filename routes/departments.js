@@ -10,7 +10,7 @@ module.exports = function (app, ctrl) {
   app.post('/departments', token.needToken, ctrl.createDepartment);
   app.get('/departments/:departmentId', token.needToken, ctrl.getDepartment);
   app.put('/departments/:departmentId', token.needToken, ctrl.updateDepartment);
-  app.delete('/departments/:departmentId', token.needToken, ctrl.deleteDepartment);
+  app.del('/departments/:departmentId', token.needToken, ctrl.deleteDepartment);
 
   app.post('/departments/:departmentId/actions/appointManager', token.needToken, ctrl.appointManager);
 

@@ -8,11 +8,11 @@ module.exports = function(app, ctrl) {
   // 获取某个内容的详情及其评论
   app.get('/circle_contents/:contentId', token.needToken, ctrl.getCircleContent);
   // delete /circle_contents/:contentId 删除已发消息
-  app.delete('/circle_contents/:contentId', token.needToken, ctrl.getCircleContentById, ctrl.deleteCircleContent);
+  app.del('/circle_contents/:contentId', token.needToken, ctrl.getCircleContentById, ctrl.deleteCircleContent);
   // post /circle_contents/:contentId/comments 评论或赞
   app.post('/circle_contents/:contentId/comments', token.needToken, ctrl.getCircleContentById, ctrl.createCircleComment);
   // delete /circle_comments/:commentId 撤消评论或取消赞
-  app.delete('/circle_comments/:commentId', token.needToken, ctrl.deleteCircleComment);
+  app.del('/circle_comments/:commentId', token.needToken, ctrl.deleteCircleComment);
   // get /circle/company 获取公司消息及评论
   app.get('/circle/company', token.needToken, ctrl.getCompanyCircle);
   app.get('/circle/team/:teamId', token.needToken, ctrl.getTeamCircle);

@@ -9,6 +9,6 @@ module.exports = function (app, ctrl) {
   app.get('/components/ScoreBoard/logs/:componentId', token.needToken, ctrl.ScoreBoard.getLogs);
   app.put('/components/ScoreBoard/:componentId',token.needToken, ctrl.ScoreBoard.confirmScore);
   app.post('/components/Vote/:componentId',token.needToken, ctrl.Vote.vote);
-  app.delete('/components/Vote/:componentId',token.needToken, ctrl.Vote.cancelVote);
+  app.del('/components/Vote/:componentId',token.needToken, ctrl.Vote.cancelVote);
   app.get('/components/Vote/:componentId',token.needToken, ctrl.Vote.getVote);
 };
