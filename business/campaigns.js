@@ -307,7 +307,7 @@ var formatterList = {
     for(var i=0; i<campaignsLength; i++) {
       var formatCampaign = {
         '_id': campaigns[i]._id,
-        'unitId': campaigns[i].campaign_type===1 || campaigns[i].campaign_type>5? campaigns[i].cid[0]: campaigns[i].tid ? campaigns[i].tid[0] : undefined,
+        'unitId': campaigns[i].campaign_type===1 || campaigns[i].campaign_type>5? campaigns[i].cid[0]: campaigns[i].tid ? campaigns[i].tid : [], // return the array of tid
         'campaignType':campaigns[i].campaign_type,
         'theme': campaigns[i].theme,
         'startTime': campaigns[i].start_time,
