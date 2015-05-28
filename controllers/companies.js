@@ -1457,6 +1457,13 @@ module.exports = function (app) {
           };
           var token = jwt.sign(payload, app.get('tokenSecret'));
           company.addDevice(req.headers, token);
+          var isBrowser = function(req) {
+            var deviceAgent = req.headers["user-agent"].toLowerCase();
+            return !deviceAgent.match(/(iphone|ipod|ipad|android)/);
+          };
+          if(!company.guide_step && isBrowser(req)){
+            company.guide_step=1;
+          }
           company.save(function (err) {
             if (err) {
               log(err);

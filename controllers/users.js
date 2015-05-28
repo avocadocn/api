@@ -676,7 +676,7 @@ module.exports = function (app) {
                 id:user._id,
                 cid:user.cid.id,
                 role:user.role,
-                guide_step:(user.cid.guide_step || user.email !==user.cid.login_email) ? 1:0
+                guide_step:(user.cid.guide_step || user.email !==user.cid.username) ? 1:0
               });
 
               tokenService.redisToken.create(token, payload)
