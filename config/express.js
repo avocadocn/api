@@ -18,24 +18,6 @@ var config = require(path.join(rootPath, 'config/config.js'));
 var token = require(path.join(rootPath, 'services/token.js'));
 var errorHandle = require(path.join(rootPath, 'services/error_handle.js'));
 
-var walk = function(path, callback) {
-  fs.readdirSync(path).forEach(function(file) {
-    var newPath = path + '/' + file;
-    var stat = fs.statSync(newPath);
-    if (stat.isFile()) {
-      if (/(.*)\.(js$)/.test(file)) {
-        if (callback) {
-          callback(file, newPath)
-        } else {
-          require(newPath);
-        }
-      }
-    } else if (stat.isDirectory()) {
-      walk(newPath, callback);
-    }
-  });
-};
-
 var app = express();
 
 // app config
@@ -77,19 +59,57 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 app.use(token.verifying);
 
 var controllers = {};
-walk(path.join(rootPath, 'controllers/'), function (file, path) {
+
+//walk controllers & routes
+var controllers = {};
+
+var walk = function(path, callback, folderFile) {
+  fs.readdirSync(path).forEach(function(file) {
+    var newPath = path + '/' + file;
+    var stat = fs.statSync(newPath);
+    if (stat.isFile()) {
+      if (/(.*)\.(js$)/.test(file)) {
+        if (callback) {
+          callback(folderFile, file, newPath)
+        } else {
+          require(newPath);
+        }
+      }
+    } else if (stat.isDirectory()) {
+      walk(newPath, callback, file);
+    }
+  });
+};
+var versions = ['v1_3', 'v1_4'];
+
+var routers = {};
+versions.forEach(function(version) {
+  //Set every attr in routers to be a router object;
+  routers[version] = express.Router();
+});
+walk(path.join(rootPath, 'controllers'), function (version, file, path) {
   var ctrlName = file.split('.')[0];
-  controllers[ctrlName] = require(path);
+  if(!controllers[ctrlName]) {
+    controllers[ctrlName] = {};
+  }
+  controllers[ctrlName][version] = require(path)(app);
 });
 
-walk(path.join(rootPath, 'routes/'), function (file, path) {
+walk(path.join(rootPath, 'routes'), function (version, file, path) {
   var routeName = file.split('.')[0];
   var ctrl;
   if (controllers[routeName]) {
-    ctrl = controllers[routeName](app);
+    ctrl = controllers[routeName];
   }
-  require(path)(app, ctrl);
+  require(path)(routers[version], ctrl);
 });
+
+app.use('/',routers['v1_3']);
+versions.forEach(function(version) {
+  app.use('/'+version, routers[version]);
+  // console.log(routers[version]);
+});
+
 require('../services/schedule').init();
 app.use(errorHandle);
 module.exports = app;
