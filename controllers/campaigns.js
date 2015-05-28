@@ -22,7 +22,10 @@ var logController = require('../controllers/log'),
     pushService = require('../services/push.js'),
     tools = require('../tools/tools.js'),
     campaignBusiness = require('../business/campaigns');
-
+var isIos = function(req) {
+  var deviceAgent = req.headers["user-agent"].toLowerCase();
+  return deviceAgent.match(/(iphone|ipod|ipad)/);
+};
 var perPageNum = 4;
 var searchCampaign = function(select_type, option, sort, limit, requestId, teamIds, populate, callback){
   var now = new Date();
@@ -759,7 +762,7 @@ module.exports = function (app) {
           //callback(null,_formatCampaign);
           campaignBusiness.formatCampaign(campaign, req.user, req.user, function (err, resCampaign) {
             callback(null, resCampaign);
-          });
+          },isIos(req));
         },//格式化活动
         function(callback){
           _formatCampaignUnit(campaign,callback);

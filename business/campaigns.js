@@ -96,7 +96,7 @@ var Campaign = mongoose.model('Campaign');
  * @param {Function} callback 形式为function(err, campaign)，通过异步回调取得的活动，其相册照片为更新后的可靠数据
  * @return {Object} 返回处理后的活动
  */
-exports.formatCampaign = function (campaign, owner, user, callback) {
+exports.formatCampaign = function (campaign, owner, user, callback,isIos) {
   var now = new Date();
 
   var resCampaign = {
@@ -105,7 +105,7 @@ exports.formatCampaign = function (campaign, owner, user, callback) {
     'confirm_status': campaign.confirm_status,
     'create_time': campaign.create_time,
     'theme': campaign.theme,
-    'content': campaign.content ? campaign.content.replace(/<\/?[^>]*>/g, '') : '',
+    'content': campaign.content ? (isIos ?campaign.content.replace(/<\/?[^>]*>/g, '') :campaign.content): '',
     'member_max': campaign.member_max,
     'member_min': campaign.member_min,
     'members_count': campaign.members.length,
