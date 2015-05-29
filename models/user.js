@@ -38,7 +38,11 @@ var _team = new Schema({
     type: Boolean,
     default: false
   },
-  logo: String
+  logo: String,
+  active: { //小队是否关闭(true: 正常 false: 关闭)
+    type: Boolean,
+    default: true
+  }
 });
 
 var chatroom = new Schema({

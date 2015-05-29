@@ -618,6 +618,24 @@ module.exports = function (app) {
           }
           else{
             res.status(200).send({msg:'成功'});
+            User.update({
+              'cid': req.user.id, // HR 
+              'team': {
+                '$elemMatch': {
+                  '_id': req.companyGroup._id.toString()
+                }
+              }
+            }, {
+              '$set': {
+                'team.$.active': false
+              }
+            }, {
+              multi: true
+            }, function(err) {
+              if (err) {
+                log(err);
+              }
+            });
             var LeaderFilter = function(userTeam) {
               if(userTeam.leader===true) {
                 return true;
@@ -667,6 +685,24 @@ module.exports = function (app) {
           }
           else{
             res.status(200).send({msg:'成功'});
+            User.update({
+              'cid': req.user.id,
+              'team': {
+                '$elemMatch': {
+                  '_id': req.companyGroup.id
+                }
+              }
+            }, {
+              '$set': {
+                'team.$.active': true
+              }
+            }, {
+              multi: true
+            }, function(err) {
+              if (err) {
+                log(err);
+              }
+            });
             if(team.leader.length>0) {
               User.findByIdAndUpdate(team.leader[0]._id,{'$set': {'role':'LEADER'}}, function(err) {
                 if(err) {
