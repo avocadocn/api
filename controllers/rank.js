@@ -118,6 +118,8 @@ module.exports = function (app) {
         'city.province':unescape(team.city.province),
         'city.city':unescape(team.city.city),
         'gid':team.gid,
+        'active':true,
+        'company_active': {'$in': [true, null]},
         'score_rank.rank':{
           '$lte' : team.score_rank.rank + backwardTeamNum,
           '$gte' : Math.max(team.score_rank.rank - forwardTeamNum, 1)
