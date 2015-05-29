@@ -10,6 +10,7 @@ var scoreItems = {
   quitOfficialTeam: -5, // 退出官方小队
   uploadPhotoToOfficialTeam: 0 // 上传照片到官方小队相册
 };
+exports.scoreItems = scoreItems;
 
 /**
  * 添加用户积分
