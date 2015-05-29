@@ -469,12 +469,14 @@ exports.init = function(){
   //比分板过期
   var scoreBoardRule = new schedule.RecurrenceRule();
   scoreBoardRule.hour = 1;
+  scoreBoardRule.minute = 0;
   var scoreBoardSchedule = schedule.scheduleJob(scoreBoardRule, scoreBoardTimeoutJob);
   // scoreBoardTimeoutJob();
 
   //挑战信过期
   var competitionMessageRule = new schedule.RecurrenceRule();
   competitionMessageRule.hour = 2;
+  scoreBoardRule.minute = 0;
   var competitionMessageSchedule = schedule.scheduleJob(competitionMessageRule, competitionMessageTimeoutJob);
   // competitionMessageTimeoutJob()
 
