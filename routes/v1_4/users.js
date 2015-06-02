@@ -9,13 +9,13 @@ module.exports = function (app, ctrl) {
   app.post('/users/validate', ctrl.v1_3.userInfoValidate);
 
   app.get('/users/:userId', token.needToken, ctrl.v1_3.getUserById);
-  app.put('/users/:userId', token.needToken, getById.getUserById, ctrl.v1_3.updateValidate, ctrl.v1_3.updatePhoto, ctrl.v1_3.update);
-  app.get('/users/list/:companyId', token.needToken, ctrl.v1_3.getCompanyUsers);
+  app.put('/users/:userId', token.needToken, getById.getUserById, ctrl.v1_3.updateValidate, ctrl.v1_3.updatePhoto, ctrl.v1_4.update);
+  app.get('/users/list/:companyId', token.needToken, ctrl.v1_4.getCompanyUsers);
   app.post('/users/forgetPassword', ctrl.v1_3.forgetPassword);
   app.post('/users/sendFeedback', token.needToken, ctrl.v1_3.sendFeedback);
-  app.post('/users/:userId/close', token.needToken, getById.getUserById, ctrl.v1_3.close);
-  app.post('/users/:userId/open', token.needToken, getById.getUserById, ctrl.v1_3.open);
-  app.post('/users/:userId/active', token.needToken, getById.getUserById, ctrl.v1_3.activeUser);
+  app.post('/users/:userId/close', token.needToken, getById.getUserById, ctrl.v1_4.close);
+  app.post('/users/:userId/open', token.needToken, getById.getUserById, ctrl.v1_4.open);
+  app.post('/users/:userId/active', token.needToken, getById.getUserById, ctrl.v1_4.activeUser);
   app.post('/users/actions/invite', token.needToken, ctrl.v1_3.inviteUser);
   app.post('/users/actions/batchinvite', token.needToken, ctrl.v1_3.batchinviteUser);
   app.post('/users/login', ctrl.v1_3.login);
