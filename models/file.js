@@ -83,10 +83,7 @@ var File = new Schema({
     required: true,
     enum: ['normal', 'delete'], // normal: 正常, delete: 删除（只是标记，文件仍存在）
     default: 'normal'
-  },
-
-  // 在circle_content的index 0~8
-  circle_index: Number
+  }
 
 });
 

@@ -117,7 +117,7 @@ module.exports = function (app) {
 
         function taskExtraHandle(callback) {
           // 额外的处理（例如发到同事圈的图片用gm写到public目录）
-          extraFilesHandle(data.fileDatas, data.owner, req.user.getCid(), fields.index, callback);
+          extraFilesHandle(data.fileDatas, data.owner, req.user.getCid(), callback);
         }
 
         function taskCreateAndSave(callback) {
@@ -301,10 +301,10 @@ function createNewDateName(file) {
  * @param {Object|String} cid 公司id
  * @param {Function} callback 形式为function (err) {}
  */
-function extraFilesHandle(fileDatas, owner, cid, index, callback) {
+function extraFilesHandle(fileDatas, owner, cid, callback) {
   switch (owner.kind) {
   case 'CircleContent':
-    extraHandleCircleContentFiles(fileDatas, cid, index, callback);
+    extraHandleCircleContentFiles(fileDatas, cid, callback);
     break;
   default:
     callback(new Error('文件所属的模型的类型不是允许的值'));
@@ -324,7 +324,7 @@ function extraFilesHandle(fileDatas, owner, cid, index, callback) {
  * @param {Object|String} cid 公司id
  * @param {Function} callback 形式为function (err) {}
  */
-function extraHandleCircleContentFiles(fileDatas, cid, index, callback) {
+function extraHandleCircleContentFiles(fileDatas, cid, callback) {
   var uriDir = path.join('img/circle', createDateCidDir(cid, 'YYYY-MM'));
   var systemDir = path.join(yaliDir, 'public', uriDir);
   async.series([
@@ -376,12 +376,6 @@ function extraHandleCircleContentFiles(fileDatas, cid, index, callback) {
               parallelCallback(e);
             }
 
-          },
-          saveIndex: function (parallelCallback) {
-            if(index) {
-              fileData.circle_index = parseInt(index[0]);
-            }
-            parallelCallback();
           }
         }, mapCallback);
 

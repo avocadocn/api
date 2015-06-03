@@ -1808,58 +1808,55 @@ function activeCircleContent(req, res, next) {
 
       // 查找circleContent对应的文件
       File.find({
-        'owner.kind': 'CircleContent',
-        'owner._id': circleContent._id
-      }, {
-        _id: 0,
-        uri: 1,
-        width: 1,
-        height: 1,
-        circle_index:1
-      })
-      .sort('circle_index')
-      .exec()
-      .then(function(files) {
-        if (files.length === 0 && (!circleContent.content || circleContent.content === '')) {
-          res.send({
-            msg: '发表失败，不允许既无文本内容又没有图片'
-          });
-          // TODO: 可以考虑将此CircleContent从数据库中删除，或是定期清除
-          return;
-        }
-        circleContent.photos = files;
-        circleContent.status = 'show';
-        circleContent.save(function(err) {
-          if (err) {
-            next(err);
-          } else {
+          'owner.kind': 'CircleContent',
+          'owner._id': circleContent._id
+        }, {
+          _id: 0,
+          uri: 1,
+          width: 1,
+          height: 1
+        }).exec()
+        .then(function(files) {
+          if (files.length === 0 && (!circleContent.content || circleContent.content === '')) {
             res.send({
-              msg: '发表成功',
-              circleContent: circleContent
+              msg: '发表失败，不允许既无文本内容又没有图片'
             });
-            // 更新活动精彩瞬间数目
-            Campaign.update({
-              _id: circleContent.campaign_id
-            }, {
-              $inc: {
-                circle_content_sum: 1
-              }
-            }, function(err, numberAffected) {
-              if(err) {
-                log(err);
-              }
-            });
-
-            var poster = {
-              _id: req.user._id,
-              nickname: req.user.nickname,
-              photo: req.user.photo
-            };
-            socketClient.pushCircleContent(circleContent.cid, poster);
+            // TODO: 可以考虑将此CircleContent从数据库中删除，或是定期清除
+            return;
           }
-        });
-      })
-      .then(null, next);
+          circleContent.photos = files;
+          circleContent.status = 'show';
+          circleContent.save(function(err) {
+            if (err) {
+              next(err);
+            } else {
+              res.send({
+                msg: '发表成功',
+                circleContent: circleContent
+              });
+              // 更新活动精彩瞬间数目
+              Campaign.update({
+                _id: circleContent.campaign_id
+              }, {
+                $inc: {
+                  circle_content_sum: 1
+                }
+              }, function(err, numberAffected) {
+                if(err) {
+                  log(err);
+                }
+              });
+
+              var poster = {
+                _id: req.user._id,
+                nickname: req.user.nickname,
+                photo: req.user.photo
+              };
+              socketClient.pushCircleContent(circleContent.cid, poster);
+            }
+          });
+        })
+        .then(null, next);
     })
     .then(null, next);
 }
