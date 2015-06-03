@@ -4,7 +4,7 @@ var token = require('../../services/token');
 
 module.exports = function(app, ctrl) {
   // post /circle_contents 发新消息
-  app.post('/circle_contents', token.needToken, ctrl.v1_3.singleImgUploadSwitcher, ctrl.v1_3.getFormData, ctrl.v1_3.uploadPhotoForContent, ctrl.v1_3.createCircleContent);
+  app.post('/circle_contents', token.needToken, ctrl.v1_4.singleImgUploadSwitcher, ctrl.v1_4.getFormData, ctrl.v1_4.uploadPhotoForContent, ctrl.v1_4.createCircleContent);
   // 获取某个内容的详情及其评论
   app.get('/circle_contents/:contentId', token.needToken, ctrl.v1_3.getCircleContent);
   // delete /circle_contents/:contentId 删除已发消息
