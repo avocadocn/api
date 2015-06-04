@@ -211,6 +211,10 @@ var CompanyGroup = new Schema({
             type: Number,
             default: 0
         }
+    },
+    timeHash: {
+        type: Date,
+        default: Date.now
     }
 });
 

@@ -5,12 +5,12 @@ var getById  = require('../../middlewares/getById');
 
 module.exports = function (app, ctrl) {
   app.post('/teams', token.needToken, ctrl.v1_3.createTeams);
-  app.get('/teams', token.needToken, ctrl.v1_3.getTeamsValidate, ctrl.v1_3.getTeamsSetQueryOptions, ctrl.v1_3.getTeams);
+  app.get('/teams', token.needToken, ctrl.v1_4.getTeamsValidate, ctrl.v1_4.getTeamsSetQueryOptions, ctrl.v1_4.getTeams);
   app.get('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.v1_3.getTeam);
   app.put('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.v1_3.updateTeamLogo, ctrl.v1_3.editTeamData);
   // app.put('/teams/:teamId/update', token.needToken, getById.getTeamById, ctrl.v1_3.updatePersonalTeam);
-  app.delete('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.v1_3.deleteTeam);
-  app.post('/teams/:teamId/actions/open', token.needToken, getById.getTeamById, ctrl.v1_3.openTeam);
+  app.delete('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.v1_4.deleteTeam);
+  app.post('/teams/:teamId/actions/open', token.needToken, getById.getTeamById, ctrl.v1_4.openTeam);
   app.post('/teams/:teamId/family_photos', token.needToken, getById.getTeamById, ctrl.v1_3.uploadFamilyPhotos);
   app.get('/teams/:teamId/family_photos', token.needToken, getById.getTeamById, ctrl.v1_3.getFamilyPhotos);
   // app.put('/teams/:teamId/family_photos/:familyPhotoId', token.needToken, getById.getTeamById, ctrl.v1_3.toggleSelectFamilyPhoto);
