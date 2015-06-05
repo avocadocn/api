@@ -172,6 +172,7 @@ var teamPoint = function(){
             'member' : memberNum * 10,
             'total' : campaignNum * 10 + parseInt(photoNum/5) + parseInt(commentNum / 20) + participatorNum + memberNum * 10
           }
+          value.timeHash = new Date();
           value.save(function(err){
             if(err){
               console.log('TEAM_POINT_FAILED!',err);

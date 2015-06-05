@@ -7,7 +7,7 @@ module.exports = function (app, ctrl) {
   app.post('/teams', token.needToken, ctrl.v1_3.createTeams);
   app.get('/teams', token.needToken, ctrl.v1_4.getTeamsValidate, ctrl.v1_4.getTeamsSetQueryOptions, ctrl.v1_4.getTeams);
   app.get('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.v1_3.getTeam);
-  app.put('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.v1_3.updateTeamLogo, ctrl.v1_3.editTeamData);
+  app.put('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.v1_3.updateTeamLogo, ctrl.v1_4.editTeamData);
   // app.put('/teams/:teamId/update', token.needToken, getById.getTeamById, ctrl.v1_3.updatePersonalTeam);
   app.delete('/teams/:teamId', token.needToken, getById.getTeamById, ctrl.v1_4.deleteTeam);
   app.post('/teams/:teamId/actions/open', token.needToken, getById.getTeamById, ctrl.v1_4.openTeam);
@@ -15,8 +15,8 @@ module.exports = function (app, ctrl) {
   app.get('/teams/:teamId/family_photos', token.needToken, getById.getTeamById, ctrl.v1_3.getFamilyPhotos);
   // app.put('/teams/:teamId/family_photos/:familyPhotoId', token.needToken, getById.getTeamById, ctrl.v1_3.toggleSelectFamilyPhoto);
   app.delete('/teams/:teamId/family_photos/:familyPhotoId', token.needToken, getById.getTeamById, ctrl.v1_3.deleteFamilyPhoto);
-  app.put('/teams/:teamId/users/:userId', token.needToken, getById.getUserById, getById.getTeamById, ctrl.v1_3.joinTeam);
-  app.delete('/teams/:teamId/users/:userId', token.needToken, getById.getUserById, getById.getTeamById, ctrl.v1_3.quitTeam);
+  app.put('/teams/:teamId/users/:userId', token.needToken, getById.getUserById, getById.getTeamById, ctrl.v1_4.joinTeam);
+  app.delete('/teams/:teamId/users/:userId', token.needToken, getById.getUserById, getById.getTeamById, ctrl.v1_4.quitTeam);
   app.get('/teams/:teamId/tags', token.needToken, ctrl.v1_3.getTeamTags);
   app.get('/teams/:teamId/members', token.needToken, ctrl.v1_3.getMembers);
   app.get('/groups', ctrl.v1_3.getGroups);
