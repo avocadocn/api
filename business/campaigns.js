@@ -110,6 +110,7 @@ exports.formatCampaign = function (campaign, owner, user, callback) {
     'member_min': campaign.member_min,
     'members_count': campaign.members.length,
     'location': campaign.location,
+    'address': campaign.location.name,
     'start_time': campaign.start_time,
     'finish': campaign.finish,
     'end_time': campaign.end_time,
@@ -128,7 +129,8 @@ exports.formatCampaign = function (campaign, owner, user, callback) {
     'campaign_type': campaign.campaign_type,
     'is_start': campaign.start_time <= Date.now(),
     'is_end': campaign.end_time <= Date.now(),
-    'circle_content_sum': campaign.circle_content_sum
+    'circle_content_sum': campaign.circle_content_sum,
+    'timeHash': campaign.timeHash
   };
   var _formatTime = formatTime(campaign.start_time, campaign.end_time);
   resCampaign.start_flag = _formatTime.start_flag;

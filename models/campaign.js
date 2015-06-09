@@ -163,6 +163,10 @@ var Campaign = new Schema({
   number_of_members: {
     type: Number,
     default: 0
+  },
+  timeHash: {
+    type: Date,
+    default: Date.now
   }
 });
 

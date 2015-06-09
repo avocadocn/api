@@ -246,7 +246,7 @@ module.exports = function (app) {
             }
             formatCompanyGroups.push(briefTeam);
           }
-          console.log(formatCompanyGroups.slice(0, 1));
+          // console.log(formatCompanyGroups.slice(0, 1));
           return res.status(200).send(formatCompanyGroups);
         })
         .then(null, function (err) {
