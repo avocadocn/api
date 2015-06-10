@@ -110,7 +110,6 @@ exports.formatCampaign = function (campaign, owner, user, callback) {
     'member_min': campaign.member_min,
     'members_count': campaign.members.length,
     'location': campaign.location,
-    'address': campaign.location.name,
     'start_time': campaign.start_time,
     'finish': campaign.finish,
     'end_time': campaign.end_time,

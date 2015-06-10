@@ -10,7 +10,7 @@ module.exports = function (app, ctrl) {
   app.post('/campaigns', token.needToken, ctrl.v1_3.postCampaign);
   app.get('/campaigns', token.needToken, ctrl.v1_4.getCampaigns.switcher, ctrl.v1_4.getCampaigns.filter, ctrl.v1_4.getCampaigns.getHolder, ctrl.v1_4.getCampaigns.auth, ctrl.v1_4.getCampaigns.queryAndFormat);
   app.get('/campaigns/:campaignId',token.needToken, resources.getCampaignByParamId, auth.authMiddleware(['getCampaigns']), ctrl.v1_3.getCampaign);
-  app.put('/campaigns/:campaignId',token.needToken, resources.getCampaignByParamId, ctrl.v1_3.updateCampaign);
+  app.put('/campaigns/:campaignId',token.needToken, resources.getCampaignByParamId, ctrl.v1_4.updateCampaign);
   app.delete('/campaigns/:campaignId', token.needToken, resources.getCampaignByParamId, ctrl.v1_4.closeCampaign);
   app.post('/campaigns/:campaignId/users/:userId', token.needToken, resources.getCampaignByParamId, ctrl.v1_4.joinCampaign);
   app.delete('/campaigns/:campaignId/users/:userId', token.needToken, resources.getCampaignByParamId, ctrl.v1_4.quitCampaign);

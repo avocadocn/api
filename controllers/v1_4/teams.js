@@ -220,11 +220,6 @@ module.exports = function (app) {
               officialTeam: companyGroups[i].poster.role=='Personal' ? false : true,
               score_rank: companyGroups[i].score_rank,
               gid:companyGroups[i].gid,
-
-              totalScore: companyGroups[i].score.total, // use temporally
-              campaignScore: companyGroups[i].score.campaign, // use temporally
-              leader: companyGroups[i].leader.length ? companyGroups[i].leader[0].nickname : '暂无', // use temporally
-
               timeHash: companyGroups[i].timeHash
             };
             if(role.company=='hr'){
