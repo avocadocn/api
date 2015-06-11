@@ -266,7 +266,7 @@ var teamRank = exports.teamRank =function(){
 //结束的活动改变状态
 var finishCampaign = function(){
   //把比赛都开始都没应答的视为关闭
-  Campaign.update({'active':true,'start_time':{'$lt':new Date()},'campaign_type':{'$in':[4,5,7,9]},'confirm_status':false},{$set:{'active':false}},{multi:true},function(err,num){
+  Campaign.update({'active':true,'start_time':{'$lt':new Date()},'campaign_type':{'$in':[4,5,7,9]},'confirm_status':false},{$set:{'active':false, 'timeHash': new Date()}},{multi:true},function(err,num){
     if(err){
       console.log(err);
     }
@@ -282,7 +282,7 @@ var finishCampaign = function(){
 
     // 必须在更新完成员积分后再进行，否则无法查询将要设为结束的活动
     // 把时间到了的设为finish
-    Campaign.update({'finish':false,'end_time': {'$lt':new Date()}},{$set:{'finish':true}},{multi: true},function(err,num){
+    Campaign.update({'finish':false,'end_time': {'$lt':new Date()}},{$set:{'finish':true, 'timeHash': new Date()}},{multi: true},function(err,num){
       if(err){
         console.log(err);
       }
