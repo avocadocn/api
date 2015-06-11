@@ -308,7 +308,7 @@ module.exports = function (app) {
           if (allow.getUserCompleteData) {
             var tids = [],teams=[];
             user.team.forEach(function (team) {//不拿部门和公司
-              if(team.entity_type!='virtual'){
+              if(team.entity_type!='virtual' && team.active){
                 tids.push(team._id);
                 teams.push(team);
               }
