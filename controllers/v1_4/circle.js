@@ -232,6 +232,9 @@ module.exports = function(app) {
           }, {
             $inc: {
               circle_content_sum: 1
+            },
+            $set: {
+              'timeHash': new Date()
             }
           }, function(err, numberAffected) {
             if (err) {
@@ -245,6 +248,74 @@ module.exports = function(app) {
             photo: req.user.photo
           };
           socketClient.pushCircleContent(circleContent.cid, poster);
+        }
+      });
+    },
+    /**
+     * Delete the circle-contents
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    deleteCircleContent: function(req, res) {
+      // Judge authority
+      var users = [];
+      users.push(req.circleContent.post_user_id);
+      var role = auth.getRole(req.user, {
+        users: users
+      });
+      var allow = auth.auth(role, ['deleteCircleContent']);
+      if (!allow.deleteCircleContent) {
+        return res.status(403).send({
+          msg: '权限错误'
+        });
+      }
+
+      CircleContent.findByIdAndUpdate(req.params.contentId, {
+        status: 'delete'
+      }, function(err, circleContent) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        } else {
+          res.status(200).send({
+            msg: '同事圈消息删除成功'
+          });
+
+          CircleComment.update({
+            target_content_id: req.params.contentId,
+            status: 'show'
+          }, {
+            $set: {
+              status: 'content_delete'
+            }
+          }, {
+            multi: true
+          }, function(err) {
+            if (err) {
+              log(err);
+              return res.sendStatus(500);
+            }
+          });
+
+          Campaign.update({
+            '_id': circleContent.campaign_id,
+            'circle_content_sum': {
+              $gt: 0
+            }
+          }, {
+            $inc: {
+              'circle_content_sum': -1
+            },
+            $set: {
+              'timeHash': new Date()
+            }
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
+          });
+
         }
       });
     }

@@ -8,7 +8,7 @@ module.exports = function(app, ctrl) {
   // 获取某个内容的详情及其评论
   app.get('/circle_contents/:contentId', token.needToken, ctrl.v1_3.getCircleContent);
   // delete /circle_contents/:contentId 删除已发消息
-  app.delete('/circle_contents/:contentId', token.needToken, ctrl.v1_3.getCircleContentById, ctrl.v1_3.deleteCircleContent);
+  app.delete('/circle_contents/:contentId', token.needToken, ctrl.v1_3.getCircleContentById, ctrl.v1_4.deleteCircleContent);
   // post /circle_contents/:contentId/comments 评论或赞
   app.post('/circle_contents/:contentId/comments', token.needToken, ctrl.v1_3.getCircleContentById, ctrl.v1_3.createCircleComment);
   // delete /circle_comments/:commentId 撤消评论或取消赞
