@@ -1,6 +1,6 @@
 'use strict';
 
-var https = require('https');
+// var https = require('https');
 var request = require('request');
 var querystring = require('querystring');
 var log = require('./error_log.js');
@@ -11,62 +11,102 @@ var orgName = '';
 var appName = '';
 var mongoose = require('mongoose'),
     Config = mongoose.model('Config');
+// var http_request = function (data, path, method, callback,hasReSend) {
+//   data = data || {};
+//   method = method || 'GET';
+
+//   var postData = JSON.stringify(data);
+//   var options = {
+//     host: 'a1.easemob.com',
+//     path: '/'+orgName+'/'+appName + path,
+//     method: method,
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'Authorization': 'Bearer ' + token
+//     }
+//   };
+//   var req = https.request(options, function (res) {
+//     var chunks = [];
+//     var size = 0;
+//     res.setEncoding('utf8');
+//     // console.log(path,res.statusCode);
+//     if(!hasReSend) {
+//       if(res.statusCode===401) {
+//         get_token(function () {
+//           http_request(data, path, method, callback, true);
+//         });
+//         return;
+//       }
+//       else if(res.statusCode===503){
+//         http_request(data, path, method, callback, true);
+//         return;
+//       }
+//     }
+//     res.on('data', function (chunk) {
+//       chunks.push(chunk);
+//       size += chunk.length;
+//     });
+//     res.on('end', function () {
+//       var data = JSON.parse(Buffer.concat(chunks, size).toString());
+//       if(data.error){
+//         console.log('error' + data.error);
+//       }
+//       if (callback)
+//         callback(data.error,data);
+//     });
+//   });
+
+//   req.on('error', function (e) {
+//     console.log('problem with request: ' + e.message);
+//     if (callback)
+//       callback(e.message);
+//   });
+
+//   // write data to request body
+//   req.write(postData);
+//   req.end();
+// };
 var http_request = function (data, path, method, callback,hasReSend) {
   data = data || {};
   method = method || 'GET';
 
   var postData = JSON.stringify(data);
   var options = {
-    host: 'a1.easemob.com',
-    path: '/'+orgName+'/'+appName + path,
+    uri:  'https://a1.easemob.com/'+orgName+'/'+appName + path,
     method: method,
+    json:true,
     headers: {
-      'Content-Type': 'application/json',
       'Authorization': 'Bearer ' + token
     }
   };
-
-  var req = https.request(options, function (res) {
-    var chunks = [];
-    var size = 0;
-    res.setEncoding('utf8');
-    // console.log(path,res.statusCode);
-    if(!hasReSend) {
-      if(res.statusCode===401) {
-        get_token(function () {
-          http_request(data, path, method, callback, true);
-        });
-        return;
-      }
-      else if(res.statusCode===503){
-        http_request(data, path, method, callback, true);
-        return;
-      }
+  if(data){
+    options.body = data;
+  }
+  request(options, function (error, response, body) {
+    if(error){
+      console.log('error' + error);
+      if (callback)
+        callback(error);
     }
-    res.on('data', function (chunk) {
-      chunks.push(chunk);
-      size += chunk.length;
-    });
-    res.on('end', function () {
-      var data = JSON.parse(Buffer.concat(chunks, size).toString());
-      // console.log(data);
-      if(data.error){
-        log('error' + data.error);
+    else{
+      // console.log(error,response.statusCode,body);
+      if(!hasReSend) {
+        if(response.statusCode===401) {
+          get_token(function () {
+            http_request(data, path, method, callback, true);
+          });
+          return;
+        }
+        else if(response.statusCode===503){
+          http_request(data, path, method, callback, true);
+          return;
+        }
       }
       if (callback)
-        callback(data.error,data);
-    });
+        callback(error, body);
+    }
+    
   });
-
-  req.on('error', function (e) {
-    log('problem with request: ' + e.message);
-    if (callback)
-      callback(e.message);
-  });
-
-  // write data to request body
-  req.write(postData);
-  req.end();
 };
 //获取环信appkey
 var get_key = function (callback) {
