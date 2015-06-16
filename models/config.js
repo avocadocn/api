@@ -38,7 +38,13 @@ var Config = new Schema({
       port:Number
     }
   },
-
+  //环信appkey配置
+  easemob:{
+    client_id:String,
+    client_secret:String,
+    org_name:String,
+    app_name:String
+  },
   smtp: {
     type: String,
     enum: ['163', 'webpower', 'sendcloud']

@@ -215,7 +215,8 @@ var CompanyGroup = new Schema({
     timeHash: {
         type: Date,
         default: Date.now
-    }
+    },
+    easemobId:String
 });
 
 CompanyGroup.plugin(mongoosePaginate);

@@ -111,5 +111,6 @@ versions.forEach(function(version) {
 });
 
 require('../services/schedule').init();
+
 app.use(errorHandle);
 module.exports = app;

@@ -21,7 +21,7 @@ var syncData = require('../../services/sync_data.js');
 var departmentController = require('./departments');
 var async = require('async');
 var publicDomain = require('../../services/public_domain.js');
-
+var easemob = require('../../services/easemob.js');
 module.exports = function (app) {
 
   return {
@@ -756,6 +756,9 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
+        //屏蔽环信中的用户，同时强制下线
+        easemob.user.deactivate(req.resourceUser.user.id);
+        easemob.user.disconnect(req.resourceUser.user.id);
         res.sendStatus(204);
       });
 
@@ -780,6 +783,8 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
+        //取消封禁
+        easemob.user.activate(req.resourceUser.user.id);
         res.sendStatus(204);
       });
     },
@@ -803,6 +808,8 @@ module.exports = function (app) {
           next(err);
           return;
         }
+        //激活时在环信中创建用户
+        easemob.user.create({"username":srcUser.id,"password":srcUser.id});
         res.send({ msg: '激活成功' });
       });
     },

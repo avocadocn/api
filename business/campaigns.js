@@ -105,7 +105,7 @@ exports.formatCampaign = function (campaign, owner, user, callback) {
     'confirm_status': campaign.confirm_status,
     'create_time': campaign.create_time,
     'theme': campaign.theme,
-    'content': campaign.content ? campaign.content.replace(/<\/?[^>]*>/g, '') : '',
+    'content': campaign.content ? campaign.content: '',
     'member_max': campaign.member_max,
     'member_min': campaign.member_min,
     'members_count': campaign.members.length,

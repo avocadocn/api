@@ -27,7 +27,7 @@ var uploader = require('../../services/uploader.js');
 var syncData = require('../../services/sync_data.js');
 var tools = require('../../tools/tools.js');
 var qrcodeService = require('../../services/qrcode');
-
+var easemob = require('../../services/easemob.js');
 
 
 module.exports = function (app) {
@@ -305,6 +305,7 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
+
         // 使用邀请码
         if (req.body.inviteCode) {
           CompanyRegisterInviteCode.findOne({
@@ -341,7 +342,8 @@ module.exports = function (app) {
               log(err);
             });
         }
-
+        //注册时创建hr账号，作为小队的管理员
+        easemob.user.create({"username":company.id,"password":company.id});
         res.sendStatus(201);
       });
 
@@ -692,6 +694,10 @@ module.exports = function (app) {
           inviteKey: companyDoc.invite_key,
           qrcodeUrl: companyDoc.invite_qrcode
         });
+        //注册时创建hr账号，作为小队的管理员
+        easemob.user.create({"username":companyDoc.id,"password":companyDoc.id});
+        //注册时创建hr对应的个人账号
+        easemob.user.create({"username":user.id,"password":user.id});
         emailService.sendQuickRegisterActiveMail(userDoc.email, companyDoc.info.name, companyDoc.id, function(err) {
           if(err) {console.log(err.stack);}
         });
@@ -774,6 +780,14 @@ module.exports = function (app) {
                 nickname: userDoc.nickname,
                 photo: userDoc.photo,
               }]
+            });
+            //创建群聊
+            easemob.group.add({
+              "groupname":team.name,
+              "desc":team.brief,
+              "public":true,
+              "owner":team.cid,
+              "members":[userDoc._id]
             });
             teams.push(team);
           });

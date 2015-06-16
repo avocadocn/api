@@ -20,7 +20,7 @@ var tools = require('../../tools/tools.js');
 var syncData = require('../../services/sync_data.js');
 var async = require('async');
 var publicDomain = require('../../services/public_domain.js');
-
+var easemob = require('../../services/easemob.js');
 module.exports = function (app) {
 
   return {
@@ -44,6 +44,8 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
+        easemob.user.deactivate(req.resourceUser.user.id);
+        easemob.user.disconnect(req.resourceUser.user.id);
         res.sendStatus(204);
       });
 
@@ -69,6 +71,7 @@ module.exports = function (app) {
           res.sendStatus(500);
           return;
         }
+        easemob.user.activate(req.resourceUser.user.id);
         res.sendStatus(204);
       });
     },
@@ -92,6 +95,7 @@ module.exports = function (app) {
           next(err);
           return;
         }
+        easemob.user.create({"username":srcUser.id,"password":srcUser.id});
         res.send({ msg: '激活成功' });
       });
     },

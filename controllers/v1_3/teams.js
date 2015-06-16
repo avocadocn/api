@@ -19,6 +19,7 @@ var log = require('../../services/error_log.js'),
   userScore = require('../../services/user_score.js'),
   tools = require('../../tools/tools.js'),
   async = require('async');
+var easemob = require('../../services/easemob.js');
 var personalTeamScoreLimit = 100;
 var perPageNum = 4;
 module.exports = function (app) {
@@ -87,6 +88,18 @@ module.exports = function (app) {
                     callback(err);
                   }
                   else{
+                    var getMemberId = function (member) {
+                      return member._id;
+                    }
+                    var groupMembers = companyGroup.member.map(getMemberId);
+                    //创建群聊
+                    easemob.group.add({
+                      "groupname":companyGroup.name,
+                      "desc":companyGroup.brief,
+                      "public":true,
+                      "owner":company._id,
+                      "members":groupMembers
+                    });
                     teamId = companyGroup._id;
                     company.team.push({
                       'gid': companyGroup.gid,
@@ -569,7 +582,13 @@ module.exports = function (app) {
           }
           else{
             res.status(200).send({msg:'成功'});
-
+            if(teamNameChanged || req.body.brief) {
+              //编辑群聊信息
+              easemob.group.edit({
+                "groupname":team.name,
+                "description":team.brief
+              });
+            }
             if (req.isUpdateLogo) {
               syncData.updateTlogo(team._id);
             }
@@ -667,6 +686,18 @@ module.exports = function (app) {
           }
           else{
             res.status(200).send({msg:'成功'});
+            var getMemberId = function (member) {
+              return member._id;
+            }
+            var groupMembers = team.member.map(getMemberId);
+            //创建群聊
+            easemob.group.add({
+              "groupname":team.name,
+              "desc":team.brief,
+              "public":true,
+              "owner":team.cid,
+              "members":groupMembers
+            });
             if(team.leader.length>0) {
               User.findByIdAndUpdate(team.leader[0]._id,{'$set': {'role':'LEADER'}}, function(err) {
                 if(err) {
@@ -874,6 +905,8 @@ module.exports = function (app) {
                   log(uErr);
                   return res.status(500).send({msg:'保存错误'});
                 }
+                //加入群聊
+                easemob.group.addUser(team._id,user._id);
                 return res.status(200).send({msg:'加入成功'});
               });
 
@@ -962,6 +995,8 @@ module.exports = function (app) {
                 log(uErr);
                 return res.status(500).send({msg:'保存错误'});
               }
+              //从群聊中删除
+              easemob.group.deleteUser(team._id,user._id);
               return res.status(200).send({msg:'退出成功'});
             });
 
