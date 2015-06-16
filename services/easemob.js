@@ -103,7 +103,7 @@ var http_request = function (data, path, method, callback,hasReSend) {
         }
       }
       if (callback)
-        callback(error, body);
+        callback(body.error, body);
     }
     
   });
