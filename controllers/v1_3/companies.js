@@ -783,11 +783,21 @@ module.exports = function (app) {
             });
             //创建群聊
             easemob.group.add({
-              "groupname":team.name,
+              "groupname":team.id,
               "desc":team.brief,
               "public":true,
               "owner":team.cid,
               "members":[userDoc._id]
+            },function (error,data) {
+              if(error){
+                log(error);
+              }
+              else{
+                team.easemobId = data.data.groupid;
+                team.save(function (error) {
+                  log(error);
+                })
+              }
             });
             teams.push(team);
           });

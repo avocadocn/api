@@ -82,65 +82,73 @@ module.exports = function (app) {
                 }else{
                   companyGroup.poster = {role: 'HR'};
                 }
-                companyGroup.save(function(err) {
-                  if (err) {
-                    log(err);
-                    callback(err);
-                  }
-                  else{
-                    var getMemberId = function (member) {
+                var getMemberId = function (member) {
                       return member._id;
                     }
-                    var groupMembers = companyGroup.member.map(getMemberId);
-                    //创建群聊
-                    easemob.group.add({
-                      "groupname":companyGroup.name,
-                      "desc":companyGroup.brief,
-                      "public":true,
-                      "owner":company._id,
-                      "members":groupMembers
-                    });
-                    teamId = companyGroup._id;
-                    company.team.push({
-                      'gid': companyGroup.gid,
-                      'group_type': companyGroup.group_type,
-                      'name': companyGroup.name,
-                      'id': companyGroup._id,
-                      'group_level': groupLevel
-                    });
-                    company.save(function(err){
-                      if(err){
-                        log(err);
-                        callback(err)
-                      }else{
-                        if(groupLevel===1) {//更新个人的team表
-                          var _team = {
-                            gid: companyGroup.gid,
-                            _id: companyGroup._id,
-                            group_type: companyGroup.group_type,
-                            entity_type: companyGroup.entity_type,
-                            name: companyGroup.name,
-                            leader: true,
-                            logo: companyGroup.logo
-                          }
-                          req.user.team.push(_team);
-                          req.user.established_team.push(_team);
-                          req.user.save(function(err) {
-                            if(err){
-                              log(err);
-                              callback(err);
-                            }else{
-                              callback(null);
-                            }
-                          });
-                        }else{
-                          callback(null);
-                        }
-                      }
-                    });
-
+                var groupMembers = companyGroup.member.map(getMemberId);
+                //创建群聊
+                easemob.group.add({
+                  "groupname":companyGroup.id,
+                  "desc":companyGroup.name,
+                  "public":true,
+                  "owner":company._id,
+                  "members":groupMembers
+                },function (error,data) {
+                  if(error){
+                    log(error);
                   }
+                  else{
+                    companyGroup.easemobId = data.data.groupid;
+                  }
+                  companyGroup.save(function(err) {
+                    if (err) {
+                      log(err);
+                      callback(err);
+                    }
+                    else{
+                      
+                      teamId = companyGroup._id;
+                      company.team.push({
+                        'gid': companyGroup.gid,
+                        'group_type': companyGroup.group_type,
+                        'name': companyGroup.name,
+                        'id': companyGroup._id,
+                        'group_level': groupLevel
+                      });
+                      company.save(function(err){
+                        if(err){
+                          log(err);
+                          callback(err)
+                        }else{
+                          if(groupLevel===1) {//更新个人的team表
+                            var _team = {
+                              gid: companyGroup.gid,
+                              _id: companyGroup._id,
+                              group_type: companyGroup.group_type,
+                              entity_type: companyGroup.entity_type,
+                              name: companyGroup.name,
+                              leader: true,
+                              logo: companyGroup.logo
+                            }
+                            req.user.team.push(_team);
+                            req.user.established_team.push(_team);
+                            req.user.save(function(err) {
+                              if(err){
+                                log(err);
+                                callback(err);
+                              }else{
+                                callback(null);
+                              }
+                            });
+                          }else{
+                            callback(null);
+                          }
+                        }
+                      });
+                    }
+                  });
                 });
+
               })
               .then(null, function (err) {
                 log(err);
@@ -582,13 +590,6 @@ module.exports = function (app) {
           }
           else{
             res.status(200).send({msg:'成功'});
-            if(teamNameChanged || req.body.brief) {
-              //编辑群聊信息
-              easemob.group.edit({
-                "groupname":team.name,
-                "description":team.brief
-              });
-            }
             if (req.isUpdateLogo) {
               syncData.updateTlogo(team._id);
             }
@@ -630,6 +631,11 @@ module.exports = function (app) {
           return res.status(400).send({msg: '该小队已经被关闭'});
         }
         team.active = false;
+        //删除群聊
+        easemob.group.delete(team.easemobId,function (error,data) {
+          console.log(error,data);
+        });
+        team.easemobId = null;
         team.save(function(err){
           if(err){
             log(err);
@@ -679,34 +685,42 @@ module.exports = function (app) {
           return res.status(400).send({msg: '该小队处于已处于打开状态'});
         }
         team.active = true;
-        team.save(function(err){
-          if(err){
-            log(err);
-            return res.status(500).send({msg:'保存错误'});
+        var getMemberId = function (member) {
+          return member._id;
+        }
+        var groupMembers = team.member.map(getMemberId);
+        //创建群聊
+        easemob.group.add({
+          "groupname":team.id,
+          "desc":team.name,
+          "public":true,
+          "owner":team.cid,
+          "members":groupMembers
+        },function (error,data) {
+          if(error){
+            log(error)
           }
           else{
-            res.status(200).send({msg:'成功'});
-            var getMemberId = function (member) {
-              return member._id;
-            }
-            var groupMembers = team.member.map(getMemberId);
-            //创建群聊
-            easemob.group.add({
-              "groupname":team.name,
-              "desc":team.brief,
-              "public":true,
-              "owner":team.cid,
-              "members":groupMembers
-            });
-            if(team.leader.length>0) {
-              User.findByIdAndUpdate(team.leader[0]._id,{'$set': {'role':'LEADER'}}, function(err) {
-                if(err) {
-                  console.log(err);
-                }
-              });
-            }
+            team.easemobId = data.data.groupid;
           }
+          team.save(function(err){
+            if(err){
+              log(err);
+              return res.status(500).send({msg:'保存错误'});
+            }
+            else{
+              res.status(200).send({msg:'成功'});
+              if(team.leader.length>0) {
+                User.findByIdAndUpdate(team.leader[0]._id,{'$set': {'role':'LEADER'}}, function(err) {
+                  if(err) {
+                    console.log(err);
+                  }
+                });
+              }
+            }
+          });
         });
+        
       }
     },
     uploadFamilyPhotos: function (req, res) {
@@ -906,7 +920,7 @@ module.exports = function (app) {
                   return res.status(500).send({msg:'保存错误'});
                 }
                 //加入群聊
-                easemob.group.addUser(team._id,user._id);
+                easemob.group.addUser(team.easemobId,user._id);
                 return res.status(200).send({msg:'加入成功'});
               });
 
@@ -996,7 +1010,7 @@ module.exports = function (app) {
                 return res.status(500).send({msg:'保存错误'});
               }
               //从群聊中删除
-              easemob.group.deleteUser(team._id,user._id);
+              easemob.group.deleteUser(team.easemobId,user._id);
               return res.status(200).send({msg:'退出成功'});
             });
 
