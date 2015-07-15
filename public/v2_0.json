@@ -5,7 +5,7 @@
     "description": "Donler API v2",
     "version": "2.0.0"
   },
-  "host": "localhost:3002/2_0",
+  "host": "localhost:3002/v2_0",
   "schemes": [
     "http"
   ],
@@ -96,6 +96,40 @@
           }
         }
       }
+    },
+    "/interaction/activity": {
+      "post": {
+        "tags": [
+          "interaction"
+        ],
+        "summary": "发活动",
+        "operationId": "postActivity",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "description": "活动信息",
+            "required": true,
+            "schema": {
+              "$ref": "ActivityForm"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -154,6 +188,44 @@
       "properties": {
         "_id": {
           "description": "giftid",
+          "type": "string"
+        }
+      }
+    },
+    "ActivityForm": {
+      "title": "ActivityForm",
+      "type": "object",
+      "properties": {
+        "cid": {
+          "description": "cid",
+          "type": "string"
+        },
+        "target": {
+          "description": "目标id",
+          "type": "string"
+        },
+        "target_type": {
+          "description": "目标类型",
+          "type": "number"
+        },
+        "theme": {
+          "description": "主题",
+          "type": "string"
+        },
+        "start_time": {
+          "description": "开始时间",
+          "type": "date-time"
+        },
+        "end_time": {
+          "description": "结束时间",
+          "type": "date-time"
+        },
+        "deadline": {
+          "description": "截止时间",
+          "type": "date-time"
+        },
+        "activity_mold": {
+          "description": "活动类型",
           "type": "string"
         }
       }

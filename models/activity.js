@@ -36,14 +36,7 @@ var Activity = new Schema({
   end_time: Date,
   deadline: Date,
   //活动类型,篮球等
-  campaign_mold: String,
-  //活动组件
-  components: [
-    {
-      name: String,
-      _id: Schema.Types.ObjectId
-    }
-  ]
+  activity_mold: String
 });
 
 
