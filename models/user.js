@@ -166,6 +166,8 @@ var UserSchema = new Schema({
   chatrooms: [chatroom],
   // commentCampaigns: [latestCommentCampaign], //参加了的讨论列表
   // unjoinedCommentCampaigns: [latestCommentCampaign], //未参加的讨论列表
+  
+  //todo
   score: {
     // 积分总数
     total: {
@@ -228,10 +230,37 @@ var UserSchema = new Schema({
   // 邀请人id
   invite_person: Schema.Types.ObjectId,
 
+  //修改个人基本资料时更新
   timeHash: {
     type: Date,
     default: Date.now
-  }
+  },
+
+  // 个人照片
+  photos: [{
+    uri: String,
+    create_time: {
+      type: Date,
+      default: Date.now
+    },
+    //是否显示
+    display: {
+      type: Boolean,
+      default: true
+    }
+  }],
+
+  // 关注
+  concern: [{
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    create_time: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 });
 
 /**
