@@ -1,0 +1,112 @@
+swagger: "2.0"
+info:
+  title: Donler API v2
+  description: Donler API v2
+  version: 2.0.0
+host: "localhost:3002/2_0"
+schemes:
+  - http
+produces:
+  - application/json
+  - text/plain
+paths:
+  /gifts/{userId}/{direction}:
+    get:
+      tags:
+        - gifts
+      summary: 获取用户收到/发出的礼物
+      produces:
+        - application/json
+      parameters:
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+          default: 53aa707a11fd597b3e1be260
+        - name: direction
+          description: 收到/发出
+          required: true
+          type: string
+          in: path
+          enum:
+            - send
+            - receive
+          default: send
+      responses:
+        "200":
+          description: 获取的礼物
+          schema:
+            type: array
+            items:
+              $ref: Gift
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /gifts:
+    post:
+      tags:
+        - gifts
+      summary: 送礼
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          schema:
+            $ref: PostGift
+          in: body
+          required: true
+          description: 礼物所需body
+      responses:
+        "200":
+          description: 成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+definitions:
+  Error:
+    title: Error
+    description: Error
+    type: object
+    properties:
+      msg:
+        type: string
+  PostGift:
+    title: PostGift
+    type: object
+    required:
+     - senderId
+     - receiverId
+     - gift
+     - addition
+     - reply_gift
+    properties:
+      senderId:
+        type: string
+        description: 发礼物人ID
+        default: 53aa707a11fd597b3e1be260
+      receiverId:
+        description: 收礼物人ID
+        type: string
+        default: 53d79a8e38cf9def07d1ca25
+      gift:
+        description: 礼物的编号
+        type: number
+        default: 1
+      addition:
+        description: 附言
+        type: string
+      reply_gift:
+        description: 回复某礼物的Id
+        type: string
+  Gift:
+    title: Gift
+    type: object
+    required:
+      - _id
+    properties:
+      _id:
+        description: giftid
+        type: string

@@ -14,17 +14,19 @@ var Gift = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User'
   },
-  //送的礼物,以数字
+  //送的礼物,以数字代表
   gift: {
     type: Number,
-    enum: [1,2,3,4,5] //
+    enum: [1,2,3,4,5] //1鲜花 2咖啡 3拥抱 4爱心 5蛋糕
   },
   //送礼时间
   create_time: {
     type: Date,
     default: Date.now
   },
-  //是否已接受
+  //附言
+  addition: String,
+  //是否已接收
   received: {
     type: Boolean,
     default: false
@@ -34,7 +36,7 @@ var Gift = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Company'
   },
-  replyGift: {
+  reply_gift: {
     type: Schema.Types.ObjectId,
     ref: 'Gift'
   }
