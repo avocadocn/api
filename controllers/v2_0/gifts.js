@@ -8,6 +8,16 @@ module.exports = function (app) {
     getUserGifts: function (req, res) {
       
     },
+    //先验证是否能发
+    validateGiftRemain: function (req, res, next) {
+      var canSend = true;
+      if(canSend) {
+        next();
+      }
+      else {
+        return res.status(403);
+      }
+    },
     sendGift: function (req, res) {
       
     },
