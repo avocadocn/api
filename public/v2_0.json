@@ -123,7 +123,44 @@
         ],
         "responses": {
           "200": {
-            "description": "成功"
+            "description": "成功",
+            "schema": {
+              "$ref": "GiftResponse"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/gifts/{giftId}": {
+      "get": {
+        "tags": [
+          "gifts"
+        ],
+        "summary": "获取某礼物详情",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "giftId",
+            "description": "礼物id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "GiftResponse"
+            }
           },
           "default": {
             "description": "error",
@@ -203,28 +240,32 @@
         }
       }
     },
+    "GiftResponse": {
+      "title": "PostGiftResponse",
+      "type": "object",
+      "properties": {
+        "gift": {
+          "type": "object",
+          "$ref": "Gift"
+        }
+      }
+    },
     "PostGift": {
       "title": "PostGift",
       "type": "object",
       "required": [
-        "senderId",
         "receiverId",
         "gift",
         "addition",
         "reply_gift"
       ],
       "properties": {
-        "senderId": {
-          "type": "string",
-          "description": "发礼物人ID",
-          "default": "53aa707a11fd597b3e1be260"
-        },
         "receiverId": {
           "description": "收礼物人ID",
           "type": "string",
           "default": "53d79a8e38cf9def07d1ca25"
         },
-        "gift": {
+        "giftIndex": {
           "description": "礼物的编号",
           "type": "number",
           "default": 1
@@ -233,7 +274,7 @@
           "description": "附言",
           "type": "string"
         },
-        "reply_gift": {
+        "replyGift": {
           "description": "回复某礼物的Id",
           "type": "string"
         }

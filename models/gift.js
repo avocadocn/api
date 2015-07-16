@@ -7,16 +7,19 @@ var Gift = new Schema({
   // 发送者id
   sender: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    required: true
   },
   // 接受者id
   receiver: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    required: true
   },
   //送的礼物,以数字代表
-  gift: {
+  gift_index: {
     type: Number,
+    required: true,
     enum: [1,2,3,4,5] //1鲜花 2咖啡 3拥抱 4爱心 5蛋糕
   },
   //送礼时间
@@ -34,7 +37,8 @@ var Gift = new Schema({
   //礼物所属公司
   cid: {
     type: Schema.Types.ObjectId,
-    ref: 'Company'
+    ref: 'Company',
+    required: true
   },
   reply_gift: {
     type: Schema.Types.ObjectId,
