@@ -56,7 +56,7 @@
         "tags": [
           "gifts"
         ],
-        "summary": "获取用户收到/发出的礼物",
+        "summary": "获取当前用户收到/发出的礼物",
         "produces": [
           "application/json"
         ],
@@ -80,6 +80,20 @@
               "receive"
             ],
             "default": "send"
+          },
+          {
+            "name": "lastTime",
+            "description": "上一条时间,若无则取最新",
+            "required": false,
+            "type": "date-time",
+            "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "一次取几条",
+            "required": false,
+            "type": "number",
+            "in": "query"
           }
         ],
         "responses": {

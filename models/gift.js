@@ -17,13 +17,13 @@ var Gift = new Schema({
     required: true
   },
   //送的礼物,以数字代表
-  gift_index: {
+  giftIndex: {
     type: Number,
     required: true,
     enum: [1,2,3,4,5] //1鲜花 2咖啡 3拥抱 4爱心 5蛋糕
   },
   //送礼时间
-  create_time: {
+  createTime: {
     type: Date,
     default: Date.now
   },
@@ -40,7 +40,7 @@ var Gift = new Schema({
     ref: 'Company',
     required: true
   },
-  reply_gift: {
+  replyGift: {
     type: Schema.Types.ObjectId,
     ref: 'Gift'
   }
