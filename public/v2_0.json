@@ -14,6 +14,43 @@
     "text/plain"
   ],
   "paths": {
+    "/users/login": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "用户登录",
+        "operationId": "userLogin",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "LoginForm"
+            },
+            "in": "body",
+            "required": true,
+            "description": "登录邮箱和密码"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "登录成功后返回的数据",
+            "schema": {
+              "$ref": "LoginSuccess"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/gifts/{userId}/{direction}": {
       "get": {
         "tags": [
@@ -140,6 +177,29 @@
       "properties": {
         "msg": {
           "type": "string"
+        }
+      }
+    },
+    "LoginForm": {
+      "title": "LoginForm",
+      "type": "object",
+      "required": [
+        "email",
+        "password",
+        "pushInfo"
+      ],
+      "properties": {
+        "email": {
+          "description": "用户邮箱",
+          "type": "string"
+        },
+        "password": {
+          "description": "密码",
+          "type": "string"
+        },
+        "pushInfo": {
+          "description": "push信息，ios包含ios_token,android包含user_id,channel_id",
+          "$ref": "pushInfo"
         }
       }
     },
