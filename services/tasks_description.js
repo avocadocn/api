@@ -303,6 +303,14 @@ var registeredTasks = {
   deleteCircleComment: {
     user: ['self']
   },
+  
+  updateGroup: {
+    user: ['self']
+  },
+
+  inviteMemberToGroup: {
+    group: ['member']
+  },
 
   publishCompanyCircle: function(role) {
     if (role.user == 'self' && role.company == 'member') {
