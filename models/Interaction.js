@@ -11,7 +11,10 @@ var _member = {
 }
 var Interaction = new Schema({
   //公共属性
-  cid: Schema.Types.ObjectId,
+  cid:{
+    type: Schema.Types.ObjectId,
+    required: true
+  },
   //互动类型 1:'活动',2:'投票',3:'求助'
   type:{
     type: Number,
@@ -25,15 +28,18 @@ var Interaction = new Schema({
     default: 2
   },
   //目标
-  target:Schema.Types.ObjectId,
-  create_time:{
+  target:{
+    type: Schema.Types.ObjectId,
+    required: true
+  },
+  createTime:{
     type: Date,
     default: Date.now
   },
   //参与人员
   member: [_member],
   //评论数
-  comment_count: Number,
+  commentCount: Number,
   //状态 1:'正常',2:'结束',3:'删除'
   status:{
     type: Number,
@@ -43,11 +49,23 @@ var Interaction = new Schema({
   //发布者
   poster: _member,
 
-  //对应内容的id Activity Poll Question
-  content: Schema.Types.ObjectId,
-
+  //对应内容的id Activity
+  activity: {
+    type: Schema.Types.ObjectId,
+    ref: 'Activity'
+  },
+  //对应内容的id Poll
+  poll: {
+    type: Schema.Types.ObjectId,
+    ref: 'Poll'
+  },
+  //对应内容的id Question
+  question: {
+    type: Schema.Types.ObjectId,
+    ref: 'Question'
+  },
   //修改时间
-  update_time: Date
+  updateTime: Date
 });
 
 mongoose.model('Interaction', Interaction);

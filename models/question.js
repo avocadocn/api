@@ -20,7 +20,7 @@ var Question = new Schema({
   content: {//简介
     type: String
   },
-  end_time: Date,
+  endTime: Date,
   select: {
     type: Schema.Types.ObjectId,
     ref: 'Comment'

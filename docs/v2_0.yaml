@@ -3,7 +3,8 @@ info:
   title: Donler API v2
   description: Donler API v2
   version: 2.0.0
-host: "localhost:3002/v2_0"
+host: localhost:3002
+basePath: /v2_0
 schemes:
   - http
 produces:
@@ -123,6 +124,25 @@ paths:
           description: error
           schema:
             $ref: Error
+  /interaction:
+    get:
+      tags:
+        - interaction
+      summary: 获取互动列表
+      operationId: getInteraction
+      consumes:
+        - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: Interaction
+        default:
+          description: error
+          schema:
+            $ref: Error
   /interaction/activity:
     post:
       tags:
@@ -145,6 +165,183 @@ paths:
           description: error
           schema:
             $ref: Error
+    get:
+      tags:
+        - interaction
+      summary: 获取活动列表
+      operationId: getActivity
+      consumes:
+        - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: ActivityForm
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /interaction/poll:
+    post:
+      tags:
+        - interaction
+      summary: 发投票
+      operationId: postPoll
+      consumes:
+        - application/json
+      parameters:
+        - name: body
+          description: 投票信息
+          required: true
+          schema:
+            $ref: PollForm
+          in: body
+      responses:
+        '200':
+          description: 成功
+          schema:
+              $ref: PollForm
+        default:
+          description: error
+          schema:
+            $ref: Error
+    get:
+      tags:
+        - interaction
+      summary: 获取投票列表
+      operationId: getPoll
+      consumes:
+        - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: PollForm
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /interaction/question:
+    post:
+      tags:
+        - interaction
+      summary: 发求助
+      operationId: postQuestion
+      consumes:
+        - application/json
+      parameters:
+        - name: body
+          description: 求助信息
+          required: true
+          schema:
+            $ref: QuestionForm
+          in: body
+      responses:
+        200:
+          description: 成功
+          schema:
+           $ref: '#/definitions/QuestionForm'
+        default:
+          description: error
+          schema:
+            $ref: Error
+    get:
+      tags:
+        - interaction
+      summary: 获取求助列表
+      operationId: getQuestion
+      consumes:
+        - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: QuestionForm
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/interaction/activity/{interactionId}":
+    get:
+      tags:
+        - interaction
+      summary: 获取活动详情
+      operationId: getActivityDetail
+      consumes:
+        - application/json
+      parameters:
+        - name: interactionId
+          description: 活动id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: ActivityForm
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/interaction/poll/{interactionId}":
+    get:
+      tags:
+        - interaction
+      summary: 获取投票详情
+      operationId: getpollDetail
+      consumes:
+        - application/json
+      parameters:
+        - name: interactionId
+          description: 投票id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: PollForm
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/interaction/question/{interactionId}":
+    get:
+      tags:
+        - interaction
+      summary: 获取求助详情
+      operationId: getQuestionDetail
+      consumes:
+        - application/json
+      parameters:
+        - name: interactionId
+          description: 求助id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: QuestionForm
+        default:
+          description: error
+          schema:
+            $ref: Error
 definitions:
   Error:
     title: Error
@@ -152,6 +349,19 @@ definitions:
     type: object
     properties:
       msg:
+        type: string
+  pushInfo:
+    title: pushInfo
+    type: object
+    properties:
+      ios_token:
+        description: ios的设备token
+        type: string
+      user_id:
+        description: 百度云的userID
+        type: string
+      channel_id:
+        description: 百度云的channelID
         type: string
   LoginForm:
     title: LoginForm
@@ -177,6 +387,18 @@ definitions:
       gift:
         type: object
         $ref: Gift
+  LoginSuccess:
+    title: LoginSuccess
+    type: object
+    required:
+      - token
+    properties:
+      token:
+        type: string
+        description: "access token, 有效期7天"
+      id:
+        type: string
+        description: 用户id
   PostGift:
     title: PostGift
     type: object
@@ -209,31 +431,120 @@ definitions:
       _id:
         description: giftid
         type: string
+  Location:
+    title: Location
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        description: 地点名称
+      coordinate:
+        type: array
+        description: 地点坐标
+        items:
+          type: number
+          format: double
   ActivityForm:
     title: ActivityForm
     type: object
     properties:
-      cid:
-        description: cid
-        type: string
       target:
         description: 目标id
         type: string
-      target_type:
+      targetType:
         description: 目标类型
-        type: number
+        type: integer
+        format: int32
       theme:
         description: 主题
         type: string
-      start_time:
+      content:
+        description: 内容
+        type: string
+      startTime:
         description: 开始时间
-        type: date-time
-      end_time:
+        type: string
+        format: date-time
+      endTime:
         description: 结束时间
-        type: date-time
+        type: string
+        format: date-time
       deadline:
         description: 截止时间
-        type: date-time
-      activity_mold:
+        type: string
+        format: date-time
+      activityMold:
         description: 活动类型
         type: string
+      location:
+        $ref: Location
+  PollForm:
+    title: PollForm
+    type: object
+    properties:
+      target:
+        description: 目标id
+        type: string
+      targetType:
+        description: 目标类型
+        type: integer
+        format: int32
+      theme:
+        description: 主题
+        type: string
+      content:
+        description: 内容
+        type: string
+      endTime:
+        description: 结束时间
+        type: string
+        format: date-time
+      option:
+        description: 选项
+        type: array
+        items:
+          type: string
+
+  QuestionForm:
+    title: QuestionForm
+    type: object
+    properties:
+      target:
+        description: 目标id
+        type: string
+      targetType:
+        description: 目标类型
+        type: integer
+        format: int32
+      theme:
+        description: 主题
+        type: string
+      content:
+        description: 内容
+        type: string
+      endTime:
+        description: 结束时间
+        type: string
+        format: date-time
+  Interaction:
+    title: Interaction
+    type: object
+    properties:
+      target:
+        description: 目标id
+        type: string
+      targetType:
+        description: 目标类型
+        type: integer
+        format: int32
+      theme:
+        description: 主题
+        type: string
+      content:
+        description: 内容
+        type: string
+      endTime:
+        description: 结束时间
+        type: string
+        format: date-time

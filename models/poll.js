@@ -25,7 +25,7 @@ var Poll = new Schema({
   content: {//简介
     type: String
   },
-  end_time: Date,
+  endTime: Date,
   option: [_option]
 });
 

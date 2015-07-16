@@ -14,11 +14,11 @@ var Activity = new Schema({
   content: {//简介
     type: String
   },
-  member_min: {//最少人数
+  memberMin: {//最少人数
     type: Number,
     default: 0
   },
-  member_max: {//人数上限
+  memberMax: {//人数上限
     type: Number,
     default: 0
   },
@@ -32,11 +32,11 @@ var Activity = new Schema({
     },
     name: String
   },
-  start_time: Date,
-  end_time: Date,
+  startTime: Date,
+  endTime: Date,
   deadline: Date,
   //活动类型,篮球等
-  activity_mold: String
+  activityMold: String
 });
 
 
