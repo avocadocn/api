@@ -653,6 +653,10 @@ module.exports = function(app) {
     },
     /**
      * 搜索群组
+     * body {
+     *   regex: String
+     * }
+     * TODO: 需要验证
      * @param  {[type]} req [description]
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
@@ -664,30 +668,29 @@ module.exports = function(app) {
         });
       }
 
-      // Groups.find({
-      //   'cid': req.user.cid,
-      //   'active': true,
-      //   'open': true,
-      //   $or: [{
-      //     'name': {
-      //       $regex: {
-      //       }
-      //     }
-      //   }, {
-      //     'brief': {
-      //       $regex: {
+      var regex = '/' + req.body.regex + '/';
 
-      //       }
-      //     }
-      //   }]
-      // }, function(err, docs) {
-      //   if (err) {
-      //     log(err);
-      //     return res.sendStatus(500);
-      //   } else {
+      Groups.find({
+        'cid': req.user.cid,
+        'active': true,
+        'open': true,
+        $or: [{
+          'name': {
+            $regex: regex
+          }
+        }, {
+          'brief': {
+            $regex: regex
+          }
+        }]
+      }, function(err, docs) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        } else {
 
-      //   }
-      // });
+        }
+      });
     },
     /**
      * 获取个人群组列表
