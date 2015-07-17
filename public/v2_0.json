@@ -186,35 +186,6 @@
         }
       }
     },
-    "/interaction": {
-      "get": {
-        "tags": [
-          "interaction"
-        ],
-        "summary": "获取互动列表",
-        "operationId": "getInteraction",
-        "consumes": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "成功",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "Interaction"
-              }
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
     "/interaction/{interactionType}": {
       "post": {
         "tags": [
@@ -311,8 +282,8 @@
         "tags": [
           "interaction"
         ],
-        "summary": "获取投票详情",
-        "operationId": "getpollDetail",
+        "summary": "获取互动详情",
+        "operationId": "getInteractionDetail",
         "consumes": [
           "application/json"
         ],
@@ -383,10 +354,10 @@
           },
           {
             "name": "body",
-            "description": "求助信息",
+            "description": "投票信息",
             "required": true,
             "schema": {
-              "$ref": "doPollForm"
+              "$ref": "DoPollForm"
             },
             "in": "body"
           }
@@ -407,502 +378,50 @@
         }
       }
     },
-    "/groups": {
+    "/interaction/question/{interactionId}/users/{userId}": {
       "post": {
         "tags": [
-          "group"
+          "interaction"
         ],
-        "summary": "发新群组",
-        "operationId": "postNewGroup",
+        "summary": "回答求助",
+        "operationId": "poll",
         "consumes": [
-          "multipart/form-data"
+          "application/json"
         ],
         "parameters": [
           {
-            "name": "groupName",
-            "description": "群组名称",
-            "required": true,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "themeColor",
-            "description": "群组主题颜色",
-            "required": true,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "logo",
-            "description": "群组封面",
-            "required": true,
-            "type": "file",
-            "in": "formData"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/groups/{groupId}": {
-      "put": {
-        "tags": [
-          "group"
-        ],
-        "summary": "编辑群组",
-        "operationId": "editGroup",
-        "consumes": [
-          "multipart/form-data"
-        ],
-        "parameters": [
-          {
-            "name": "groupId",
-            "description": "群组id",
+            "name": "interactionId",
+            "description": "求助id",
             "required": true,
             "type": "string",
             "in": "path"
           },
           {
-            "name": "groupName",
-            "description": "群组名称",
-            "required": false,
+            "name": "userId",
+            "description": "用户id",
+            "required": true,
             "type": "string",
-            "in": "formData"
+            "in": "path"
           },
           {
-            "name": "themeColor",
-            "description": "群组主题颜色",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "logo",
-            "description": "群组封面",
-            "required": false,
-            "type": "file",
-            "in": "formData"
-          },
-          {
-            "name": "brief",
-            "description": "群组简介",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "open",
-            "description": "群组是否公开",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "validate",
-            "description": "群组是否需要验证",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
+            "name": "body",
+            "description": "求助的评论信息",
+            "required": true,
             "schema": {
-              "$ref": "Error"
-            }
+              "$ref": "QuestionCommentForm"
+            },
+            "in": "body"
           }
-        }
-      },
-      "get": {
-        "tags": [
-          "group"
         ],
-        "summary": "获取群组详情",
-        "operationId": "getGroupInfo",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [{
-          "name": "groupId",
-          "description": "群组id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        }],
         "responses": {
           "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
+            "description": "成功",
             "schema": {
-              "$ref": "Error"
+              "$ref": "QuestionComment"
             }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "group"
-        ],
-        "summary": "删除群组",
-        "operationId": "deleteGroup",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [{
-          "name": "groupId",
-          "description": "群组id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        }],
-        "responses": {
-          "200": {
-            "description": "成功"
           },
           "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/groups/{groupId}/invitation/{userId}": {
-      "put": {
-        "tags": [
-          "group"
-        ],
-        "summary": "app内群组邀请",
-        "operationId": "inviteMemberToGroup",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [{
-          "name": "groupId",
-          "description": "群组id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        }, {
-          "name": "userId",
-          "description": "受邀人id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        }],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/groups/{groupId}/invitation": {
-      "get": {
-        "tags": [
-          "group"
-        ],
-        "summary": "app外群组邀请(获取邀请链接)",
-        "operationId": "getInviteCodeForGroup",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [{
-          "name": "groupId",
-          "description": "群组id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        }],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "group"
-        ],
-        "summary": "处理群组邀请",
-        "operationId": "handleInvitationFromGroup",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [{
-          "name": "groupId",
-          "description": "群组id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        }],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/groups/{groupId}/user": {
-      "put": {
-        "tags": [
-          "group"
-        ],
-        "summary": "加入群组",
-        "operationId": "joinGroup",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [{
-          "name": "groupId",
-          "description": "群组id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        }],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "group"
-        ],
-        "summary": "退出群组",
-        "operationId": "quitGroup",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [{
-          "name": "groupId",
-          "description": "群组id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        }],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/groups/{groupId}/user/{userId}": {
-      "delete": {
-        "tags": [
-          "group"
-        ],
-        "summary": "移除群组",
-        "operationId": "removeMemberFromGroup",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [{
-          "name": "groupId",
-          "description": "群组id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        },{
-          "name": "userId",
-          "description": "用户id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        }],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "group"
-        ],
-        "summary": "指定新群主",
-        "operationId": "reassignLeaderForGroup",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [{
-          "name": "groupId",
-          "description": "群组id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        },{
-          "name": "userId",
-          "description": "用户id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        }],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/groups/search": {
-      "get": {
-        "tags": [
-          "group"
-        ],
-        "summary": "搜索群组",
-        "operationId": "searchGroup",
-        "consumes": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/groups/list/user": {
-      "get": {
-        "tags": [
-          "group"
-        ],
-        "summary": "获取个人群组列表",
-        "operationId": "getGroupListOfUser",
-        "consumes": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/groups/list/company": {
-      "get": {
-        "tags": [
-          "group"
-        ],
-        "summary": "获取公司群组列表",
-        "operationId": "getGroupListOfCompany",
-        "consumes": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/groups/{groupId}/applicant/{userId}": {
-      "put": {
-        "tags": [
-          "group"
-        ],
-        "summary": "处理用户申请",
-        "operationId": "handleApplication",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [{
-          "name": "groupId",
-          "description": "群组id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        },{
-          "name": "userId",
-          "description": "用户id",
-          "required": true,
-          "type": "string",
-          "in": "path"
-        }],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "错误",
+            "description": "error",
             "schema": {
               "$ref": "Error"
             }
@@ -1263,7 +782,7 @@
         }
       }
     },
-    "doPollForm": {
+    "DoPollForm": {
       "title": "doPollForm",
       "type": "object",
       "properties": {
@@ -1271,6 +790,75 @@
           "description": "index",
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "QuestionCommentForm": {
+      "title": "answerForm",
+      "type": "object",
+      "properties": {
+        "content": {
+          "description": "content",
+          "type": "string"
+        },
+        "type": {
+          "description": "类型，1为评论，2为赞",
+          "type": "integer",
+          "format": "int32",
+          "enum": [
+            1,
+            2
+          ]
+        }
+      }
+    },
+    "QuestionComment": {
+      "title": "QuestionComment",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "类型，1为评论，2为赞",
+          "type": "integer",
+          "format": "int32",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "content": {
+          "description": "content",
+          "type": "string"
+        },
+        "questionId": {
+          "description": "questionId",
+          "type": "string"
+        },
+        "commentId": {
+          "description": "评论一个评论时该评论的id",
+          "type": "string"
+        },
+        "postCid": {
+          "description": "评论人的公司id",
+          "type": "string"
+        },
+        "postId": {
+          "description": "评论人的id",
+          "type": "string"
+        },
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "description": "状态//1:正常，2:删除，3:内容删除",
+          "type": "integer",
+          "format": "int32",
+          "enum": [
+            1,
+            2,
+            3
+          ]
         }
       }
     }

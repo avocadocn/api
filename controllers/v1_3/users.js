@@ -628,6 +628,7 @@ module.exports = function (app) {
     },
 
     login: function (req, res) {
+      console.log(111);
       if (!req.body || !req.body.email || !req.body.password) {
         return res.status(400).send({ msg: '缺少邮箱或密码' });
       }

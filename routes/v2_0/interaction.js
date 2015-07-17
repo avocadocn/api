@@ -3,10 +3,11 @@
 var token = require('../../services/token');
 
 module.exports = function (router, ctrl) {
-
+  router.use('/interaction', token.needToken)
   router.route('/interaction/:interactionType')
-    .post(token.needToken, ctrl.v2_0.createInteractionValidate, ctrl.v2_0.createInteraction)
-    .get(token.needToken, ctrl.v2_0.getInteraction);
-  router.get('/interaction/:interactionType/:interactionId', token.needToken, ctrl.v2_0.getInteractionDetail);
-  router.post('/interaction/poll/:interactionId/users/:userId', token.needToken, ctrl.v2_0.poll);
+    .post(ctrl.v2_0.createInteractionValidate, ctrl.v2_0.createInteraction)
+    .get(ctrl.v2_0.getInteraction);
+  router.get('/interaction/:interactionType/:interactionId', ctrl.v2_0.getInteractionDetail);
+  router.post('/interaction/poll/:interactionId/users/:userId', ctrl.v2_0.poll.poll); //投票
+  router.post('/interaction/question/:interactionId/users/:userId', ctrl.v2_0.question.comment); //回答求助或点赞
 };

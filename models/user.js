@@ -369,7 +369,13 @@ UserSchema.methods = {
   getCid: function() {
     return this.cid;
   },
-
+  getTids: function() {
+    var tids = []
+    for (var i = 0; i < this.team.length; i++) {
+      tids.push(this.team[i]._id);
+    }
+    return tids;
+  },
   /**
    * 添加设备信息到用户的设备记录中
    * @param {Object} headers req.headers

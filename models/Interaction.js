@@ -22,7 +22,7 @@ var Interaction = new Schema({
     default: 1
   },
   //目标类型 1:'个人',2:'群',3:'公司'
-  target_type:{
+  targetType:{
     type: Number,
     enum: [1,2,3],
     default: 2

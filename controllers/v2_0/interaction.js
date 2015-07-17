@@ -8,7 +8,7 @@ var User = mongoose.model('User'),
   Activity = mongoose.model('Activity'),
   Poll = mongoose.model('Poll'),
   Question = mongoose.model('Question'),
-  CompanyGroup = mongoose.model('CompanyGroup');
+  QuestionComment = mongoose.model('QuestionComment');
 
 var log = require('../../services/error_log.js'),
     auth = require('../../services/auth.js'),
@@ -59,6 +59,7 @@ module.exports = function (app) {
   return {
     createInteractionValidate: function (req, res, next) {
       var locationValidator = function(name, value, callback) {
+        if(!value) return callback(true);
         if(!value.name) return callback(false,"没有地址")
         if(value.coordinate && (!value.coordinate instanceof Array || value.coordinate.length !=2 || typeof value.coordinate[0] !=="number" || typeof value.coordinate[1] !=="number")) return callback(false,"坐标格式错误");
         return callback(true);
@@ -196,7 +197,7 @@ module.exports = function (app) {
       function(err, results){
         if(err) {
           log(err);
-          res.status(500).send({msg:"服务器发送错误"});
+          res.status(500).send({msg:"服务器发生错误"});
         }
         else{
           res.send({interactionId:interaction.id});
@@ -206,7 +207,7 @@ module.exports = function (app) {
     getInteraction: function (req, res) {
       var interactionType = req.params.interactionType;
       var populateType;
-      var option ={cid:req.user.cid};
+      var option ={cid:req.user.cid, "$or":[{"type":1,target:req.user._id},{"type":2,target:{"$in":req.user.getTids()}},{"type":3,target:req.user.cid}]};
       switch(interactionType) {
         case 'activity':
           option.type =1;
@@ -231,7 +232,7 @@ module.exports = function (app) {
       })
       .then(null,function (error) {
         log(error);
-        res.status(500).send({msg:"服务器发送错误"});
+        res.status(500).send({msg:"服务器发生错误"});
       });
     },
     getInteractionDetail: function (req, res) {
@@ -246,40 +247,92 @@ module.exports = function (app) {
         })
         .then(null,function (error) {
           log(error);
-          res.status(500).send({msg:"服务器发送错误"});
+          res.status(500).send({msg:"服务器发生错误"});
         });
     },
-    poll: function (req, res) {
-      Interaction.findById(req.params.interactionId)
-        .populate("poll")
-        .exec()
-        .then(function (interaction) {
-          var index = tools.arrayObjectIndexOf(interaction.poll.option, req.body.index, 'index');
-          interaction.poll.option[index].voters.push(req.params.userId);
-          interaction.member.push(req.params.userId);
-          async.parallel([
-            function(callback){
-              interaction.save(callback)
-            },
-            function(callback){
-              interaction.poll.save(callback)
+    poll: {
+      poll: function (req, res) {
+        Interaction.findById(req.params.interactionId)
+          .populate("poll")
+          .exec()
+          .then(function (interaction) {
+            var index = tools.arrayObjectIndexOf(interaction.poll.option, req.body.index, 'index');
+            if(interaction.poll.option[index].voters.indexOf(req.params.userId)>-1){
+              return res.status(400).send({msg:"您已经进行了投票"})
             }
-          ],
-          // optional callback
-          function(err, results){
-            if(!err){
-              return res.send(interaction);
-            }
-            else{
-              log(err)
-              return res.status(500).send({msg:"服务器发送错误"});
-            }
+            interaction.poll.option[index].voters.push(req.params.userId);
+            interaction.member.push(req.params.userId);
+            async.parallel([
+              function(callback){
+                interaction.save(callback)
+              },
+              function(callback){
+                interaction.poll.save(callback)
+              }
+            ],
+            // optional callback
+            function(err, results){
+              if(!err){
+                return res.send(interaction);
+              }
+              else{
+                log(err)
+                return res.status(500).send({msg:"服务器发生错误"});
+              }
+            });
+          })
+          .then(null,function (error) {
+            log(error);
+            res.status(500).send({msg:"服务器发生错误"});
           });
-        })
-        .then(null,function (error) {
-          log(error);
-          res.status(500).send({msg:"服务器发送错误"});
-        });
+      }
+    },
+    question: {
+      comment: function (req, res) {
+        var userId = req.user._id;
+        if(req.params.userId.toString()!==userId.toString()){
+          return res.status(403).send({msg:"您没有权限进行回答"})
+        }
+        Interaction.findById(req.params.interactionId)
+          .exec()
+          .then(function (interaction) {
+            if(interaction.cid.toString()!==req.user.cid.toString()){
+              return res.status(403).send({msg:"您没有权限进行回答"})
+            }
+            var questionComment = new QuestionComment({
+              type: req.body.type,
+              questionId: interaction._id,
+              postCid: interaction.cid,
+              postId: userId
+            })
+            if(req.body.type===1){
+              questionComment.content = req.body.content;
+            }
+            async.parallel([
+              function(callback){
+                questionComment.save(callback)
+              },
+              function(callback){
+                interaction.member.push(userId);
+                interaction.save(callback)
+              }
+            ],
+            // optional callback
+            function(err, results){
+              if(!err){
+                return res.send(questionComment);
+              }
+              else{
+                log(err)
+                return res.status(500).send({msg:"服务器发生错误"});
+              }
+            });
+          })
+          .then(null,function (error) {
+            log(error);
+            res.status(500).send({msg:"服务器发生错误"});
+          });
+      }
     }
   };
 };
