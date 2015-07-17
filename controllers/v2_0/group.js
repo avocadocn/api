@@ -7,6 +7,7 @@ var path = require('path'),
 var mongoose = require('mongoose');
 var Groups = mongoose.model('Groups');
 var User = mongoose.model('User');
+var GroupInviteCode = mongoose.model('GroupInviteCode');
 
 var auth = require('../../services/auth.js'),
   log = require('../../services/error_log.js'),
@@ -338,15 +339,20 @@ module.exports = function(app) {
         // TODO 修改邀请链接网址生成
         // uuid or guid
         var inviteCode = crypto.createHash('md5').update(Date.now().valueOf().toString()).digest('hex');
+ 
+        var groupInviteCode = new GroupInviteCode({
+          code: inviteCode, // 公司id
 
-        Groups.update({
-          '_id': req.group._id,
-          'active': true
-        }, {
-          $addToSet: {
-            'inviteCode': inviteCode
+          groupId: req.group._id, // 公司名称
+
+          user: {
+            _id: req.user._id,
+            nickname: req.user.nickname,
+            photo: req.user.photo
           }
-        }, function(err, numberAffected) {
+        });
+
+        groupInviteCode.save(function(err) {
           if (err) {
             log(err);
             return res.sendStatus(500);
@@ -356,7 +362,6 @@ module.exports = function(app) {
             });
           }
         });
-
       }
     },
     /**
