@@ -15,6 +15,8 @@ var auth = require('../../services/auth.js'),
   donlerValidator = require('../../services/donler_validator.js'),
   async = require('async');
 
+// TODO: 群组API涉及到权限判断，同时有重复代码，需要
+// 修改原权限判断代码，优化代码。
 module.exports = function(app) {
   return {
     /**
@@ -184,7 +186,7 @@ module.exports = function(app) {
       var allow = auth.auth(role, ['updateGroup']);
       if (!allow.updateGroup) {
         return res.status(403).send({
-          msg: '权限错误'
+          msg: '无权限'
         });
       }
 
@@ -266,7 +268,7 @@ module.exports = function(app) {
       // var allow = auth.auth(role, ['inviteMemberToGroup']);
       if (!isMember) {
         return res.status(403).send({
-          msg: '权限错误'
+          msg: '无权限'
         });
       }
 
@@ -299,8 +301,8 @@ module.exports = function(app) {
             return res.sendStatus(500);
           }
           if (!user) {
-            return res.status(204).send({
-              msg: '该用户不存在'
+            return res.status(400).send({
+              msg: '受邀用户不存在'
             });
           } else {
             // 将邀请记录加入inviteMember
@@ -627,7 +629,7 @@ module.exports = function(app) {
       }
 
       if (req.group.member.length > 1) {
-        return res.status(403).send({
+        return res.status(400).send({
           msg: '只有没有成员时该群组才能删除'
         });
       }
@@ -670,7 +672,7 @@ module.exports = function(app) {
 
       var regex = '/' + req.body.regex + '/';
 
-      Groups.find({
+      var conditions = {
         'cid': req.user.cid,
         'active': true,
         'open': true,
@@ -683,12 +685,23 @@ module.exports = function(app) {
             $regex: regex
           }
         }]
-      }, function(err, docs) {
+      };
+
+      var projection = {
+        'name': 1,
+        'logo': 1,
+        'themeColor': 1,
+        'brief': 1
+      };
+
+      Groups.find(conditions, projection, function(err, docs) {
         if (err) {
           log(err);
           return res.sendStatus(500);
         } else {
-
+          return res.status(200).send({
+            group: docs
+          });
         }
       });
     },
@@ -711,6 +724,7 @@ module.exports = function(app) {
       var projection = {
         'name': 1,
         'logo': 1,
+        'themeColor': 1,
         'brief': 1
       };
 
@@ -742,6 +756,7 @@ module.exports = function(app) {
       var projection = {
         'name': 1,
         'logo': 1,
+        'themeColor': 1,
         'brief': 1
       };
 
@@ -795,6 +810,150 @@ module.exports = function(app) {
         } else {
           return res.status(200).send({
             groups: group
+          });
+        }
+      });
+    },
+    /**
+     * 受邀用户处理邀请
+     * 请求用户已经加入该群组, 则返回400, msg: 已加入该群组
+     * 请求用户未在受邀列表, 则返回400, msg: 请求用户非该群组受邀用户
+     * 请求用户在受邀列表
+     *    如果拒绝邀请, 则返回200, msg: 拒绝加入受邀群组成功
+     *    如果接受邀请, 则返回200, msg: 加入受邀群组成功
+     * @param  {[type]} req [description]
+     * body:
+     * {
+     *    accept: Boolean
+     * }
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    handleInvitationFromGroup: function(req, res) {
+      var isMember = req.group.member.some(function(member) {
+        return member._id.toString() === req.user._id.toString()
+      });
+
+      if (isMember) {
+        return res.status(400).send({
+          msg: '用户已加入该群组'
+        });
+      }
+
+      var isInvitedMember = req.group.inviteMember.some(function(member) {
+        return member.inviteMemberId.toString() === req.user._id.toString()
+      });
+
+      if (!isInvitedMember) {
+        return res.status(400).send({
+          msg: '请求用户不在受邀列表'
+        });
+      }
+
+      var doc = {
+        $pull: {
+          'inviteMember': {
+            'inviteMemberId': req.user._id
+          }
+        }
+      };
+      var msg = '拒绝加入受邀群组成功';
+
+      if (req.body.accept) {
+        doc.$addToSet = {
+          'member': {
+            _id: req.user._id, // 成员id
+            nickname: req.user.nickname, // 成员昵称
+            photo: req.user.photo, // 成员头像
+          }
+        };
+        msg = '加入受邀群组成功';
+      }
+      //TODO: 或许加入拒绝记录
+      Groups.update({
+        '_id': req.group._id,
+        'active': true
+      }, doc, function(err, numberAffected) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        } else {
+          return res.status(200).send({
+            msg: msg
+          });
+        }
+      });
+    },
+    /**
+     * 群主处理申请记录
+     * 请求用户非该群组的群主, 则返回403, msg: 无权限
+     * 申请用户已经加入该群组, 则返回400, msg: 申请用户已加入该群组
+     * 申请用户未在受邀列表, 则返回400, msg: 申请用户不在申请列表
+     * 请求用户在受邀列表
+     *    如果拒绝邀请, 则返回200, msg: 拒绝该申请
+     *    如果接受邀请, 则返回200, msg: 同意该申请
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    handleApplication: function(req, res) {
+      if (req.user._id.toString() === req.group.leader._id.toString()) {
+        return res.status(200).send({
+          msg: '无权限'
+        });
+      }
+
+      var isMember = req.group.member.some(function(member) {
+        return member._id.toString() === req.user._id.toString()
+      });
+
+      if (isMember) {
+        return res.status(400).send({
+          msg: '申请用户已加入该群组'
+        });
+      }
+      var user;
+      var isApplyMember = req.group.applyMember.some(function(member) {
+        user = member;
+        return member._id.toString() === req.user._id.toString()
+      });
+
+      if (!isApplyMember) {
+        return res.status(400).send({
+          msg: '申请用户不在申请列表'
+        });
+      }
+
+      var doc = {
+        $pull: {
+          'applyMember': {
+            '_id': req.user._id
+          }
+        }
+      };
+      var msg = '拒绝该申请';
+
+      if (req.body.accept) {
+        doc.$addToSet = {
+          'member': {
+            _id: user._id, // 成员id
+            nickname: user.nickname, // 成员昵称
+            photo: user.photo, // 成员头像
+          }
+        };
+        msg = '同意该申请';
+      }
+      //TODO: 或许加入拒绝记录
+      Groups.update({
+        '_id': req.group._id,
+        'active': true
+      }, doc, function(err, numberAffected) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        } else {
+          return res.status(200).send({
+            msg: msg
           });
         }
       });

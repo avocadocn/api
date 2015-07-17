@@ -56,15 +56,23 @@ var GroupModel = new Schema({
     nickname: String,
     photo: String
   },
-  // app外邀请，链接网址邀请(TODO:加入邀请人部分信息)
+  // app外邀请，链接网址邀请(TODO:加入邀请人部分信息 (待考虑))
   inviteCode: [{ // 邀请码
     type: String,
-    _id: Schema.Types.ObjectId // 邀请人id
+    _id: Schema.Types.ObjectId, // 邀请人id
+    time: {
+      type: Date,
+      default: Date.now
+    }
   }],
-  // app内邀请(TODO:加入邀请人部分信息)
+  // app内邀请(TODO:加入邀请人部分信息 (待考虑))
   inviteMember: [{ // 被邀请成员
     inviteMemberId: Schema.Types.ObjectId, //被邀请人id
-    _id: Schema.Types.ObjectId //邀请人id
+    _id: Schema.Types.ObjectId, //邀请人id
+    time: {
+      type: Date,
+      default: Date.now
+    }
   }],
 
   applyMember: [_member], // 申请加入该群组的人(group_type.validate === true)
