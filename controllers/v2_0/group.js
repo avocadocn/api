@@ -245,12 +245,8 @@ module.exports = function(app) {
       });
     },
     /**
-     * 邀请成员加入群组
-     * 邀请分：app内邀请、app外邀请(邀请链接)
+     * app内群组邀请
      * @param  {[type]} req [description]
-     * body: {
-     *   invitedMemberId: String // 存在, app内邀请; 不存在, app外邀请
-     * }
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
@@ -272,97 +268,115 @@ module.exports = function(app) {
           msg: '无权限'
         });
       }
+      // 判断该用户是否已经是该群组成员
+      var isMember = req.group.member.some(function(member) {
+        return member._id.toString() === req.body.invitedMemberId.toString()
+      });
 
-
-      if (req.body.invitedMemberId) {
-        // 判断该用户是否已经是该群组成员
-        var isMember = req.group.member.some(function(member) {
-          return member._id.toString() === req.body.invitedMemberId.toString()
-        });
-
-        if(isMember) {
-          return res.status(400).send({
-            msg: '用户已经加入该群组'
-          });
-        }
-        // 判断该该用户是否已被邀请
-        var isInvited = req.inviteMember.some(function(inviteMember) {
-          return inviteMember.inviteMemberId.toString() === req.body.invitedMemberId.toString()
-        });
-
-        if(isInvited) {
-          return res.status(400).send({
-            msg: '用户已邀请'
-          });
-        }
-
-        User.findById(req.body.invitedMemberId, function(err, user) {
-          if (err) {
-            log(err);
-            return res.sendStatus(500);
-          }
-          if (!user) {
-            return res.status(400).send({
-              msg: '受邀用户不存在'
-            });
-          } else {
-            // 将邀请记录加入inviteMember
-            Groups.update({
-              '_id': req.group._id,
-              'active': true
-            }, {
-              $addToSet: {
-                'inviteMember': {
-                  inviteMemberId: req.body.invitedMemberId, //被邀请人id
-                  _id: req.user._id, //邀请人id
-                }
-              }
-            }, function(err, numberAffected) {
-              if (err) {
-                log(err);
-                return res.sendStatus(500);
-              }
-              // TODO:
-              // 更新用户邀请列表
-              // 邀请列表包括 邀请人、邀请加入的群组等信息
-              
-              return res.status(200).send({
-                msg: '邀请成功'
-              });
-            });
-
-            
-
-          }
-        });
-      } else {
-        // TODO 修改邀请链接网址生成
-        // uuid or guid
-        var inviteCode = crypto.createHash('md5').update(Date.now().valueOf().toString()).digest('hex');
- 
-        var groupInviteCode = new GroupInviteCode({
-          code: inviteCode, // 公司id
-
-          groupId: req.group._id, // 公司名称
-
-          user: {
-            _id: req.user._id,
-            nickname: req.user.nickname,
-            photo: req.user.photo
-          }
-        });
-
-        groupInviteCode.save(function(err) {
-          if (err) {
-            log(err);
-            return res.sendStatus(500);
-          } else {
-            return res.status(200).send({
-              inviteCode: inviteCode
-            });
-          }
+      if (isMember) {
+        return res.status(400).send({
+          msg: '用户已经加入该群组'
         });
       }
+      // 判断该该用户是否已被邀请
+      var isInvited = req.inviteMember.some(function(inviteMember) {
+        return inviteMember.inviteMemberId.toString() === req.params.userId.toString()
+      });
+
+      if (isInvited) {
+        return res.status(400).send({
+          msg: '用户已邀请'
+        });
+      }
+      // TODO: findById -> findOne 判断用户是否存在
+      User.findById(req.params.userId, function(err, user) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        }
+        if (!user) {
+          return res.status(400).send({
+            msg: '受邀用户不存在'
+          });
+        } else {
+          // 将邀请记录加入inviteMember
+          Groups.update({
+            '_id': req.group._id,
+            'active': true
+          }, {
+            $addToSet: {
+              'inviteMember': {
+                inviteMemberId: req.params.userId, //被邀请人id
+                _id: req.user._id, //邀请人id
+              }
+            }
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+              return res.sendStatus(500);
+            }
+            // TODO:
+            // 更新用户邀请列表
+            // 邀请列表包括 邀请人、邀请加入的群组等信息
+
+            return res.status(200).send({
+              msg: '邀请成功'
+            });
+          });
+        }
+      });
+    },
+    /**
+     * app外群组邀请(邀请链接)
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    getInviteCodeForGroup: function(req, res) {
+      // 判断权限
+      // TODO: update auth code
+      var isMember = req.group.member.some(function(member) {
+        return member._id.toString() === req.user._id.toString()
+      }); // TODO: check it
+      // if (isMember) {
+      //   role.group = 'member';
+      // }
+      // var role = auth.getRole(req.user, {
+      //   users: users
+      // });
+      // var allow = auth.auth(role, ['inviteMemberToGroup']);
+      if (!isMember) {
+        return res.status(403).send({
+          msg: '无权限'
+        });
+      }
+
+      // TODO 修改邀请链接网址生成
+      // uuid or guid
+      var inviteCode = crypto.createHash('md5').update(Date.now().valueOf().toString()).digest('hex');
+
+      var groupInviteCode = new GroupInviteCode({
+        code: inviteCode, // 公司id
+
+        groupId: req.group._id, // 公司名称
+
+        user: {
+          _id: req.user._id,
+          nickname: req.user.nickname,
+          photo: req.user.photo
+        }
+      });
+
+      groupInviteCode.save(function(err) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        } else {
+          return res.status(200).send({
+            inviteCode: inviteCode
+          });
+        }
+      });
     },
     /**
      * 加入群组
