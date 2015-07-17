@@ -143,97 +143,24 @@ paths:
           description: error
           schema:
             $ref: Error
-  /interaction/activity:
+  "/interaction/{interactionType}":
     post:
       tags:
         - interaction
-      summary: 发活动
-      operationId: postActivity
+      summary: 发互动
+      operationId: postInteraction
       consumes:
         - application/json
       parameters:
-        - name: body
-          description: 活动信息
+        - name: interactionType
+          description: 互动类型
           required: true
-          schema:
-            $ref: ActivityForm
-          in: body
-      responses:
-        "200":
-          description: 成功
-        default:
-          description: error
-          schema:
-            $ref: Error
-    get:
-      tags:
-        - interaction
-      summary: 获取活动列表
-      operationId: getActivity
-      consumes:
-        - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            type: array
-            items:
-              $ref: ActivityForm
-        default:
-          description: error
-          schema:
-            $ref: Error
-  /interaction/poll:
-    post:
-      tags:
-        - interaction
-      summary: 发投票
-      operationId: postPoll
-      consumes:
-        - application/json
-      parameters:
-        - name: body
-          description: 投票信息
-          required: true
-          schema:
-            $ref: PollForm
-          in: body
-      responses:
-        '200':
-          description: 成功
-          schema:
-              $ref: PollForm
-        default:
-          description: error
-          schema:
-            $ref: Error
-    get:
-      tags:
-        - interaction
-      summary: 获取投票列表
-      operationId: getPoll
-      consumes:
-        - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            type: array
-            items:
-              $ref: PollForm
-        default:
-          description: error
-          schema:
-            $ref: Error
-  /interaction/question:
-    post:
-      tags:
-        - interaction
-      summary: 发求助
-      operationId: postQuestion
-      consumes:
-        - application/json
-      parameters:
+          type: string
+          in: path
+          enum:
+            - activity
+            - poll
+            - question
         - name: body
           description: 求助信息
           required: true
@@ -244,7 +171,7 @@ paths:
         200:
           description: 成功
           schema:
-           $ref: '#/definitions/QuestionForm'
+           $ref: InteractionForm
         default:
           description: error
           schema:
@@ -252,47 +179,33 @@ paths:
     get:
       tags:
         - interaction
-      summary: 获取求助列表
+      summary: 获取互动列表
       operationId: getQuestion
       consumes:
         - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            type: array
-            items:
-              $ref: QuestionForm
-        default:
-          description: error
-          schema:
-            $ref: Error
-  "/interaction/activity/{interactionId}":
-    get:
-      tags:
-        - interaction
-      summary: 获取活动详情
-      operationId: getActivityDetail
-      consumes:
-        - application/json
       parameters:
-        - name: interactionId
-          description: 活动id
+        - name: interactionType
+          description: 互动类型
           required: true
           type: string
           in: path
+          enum:
+            - activity
+            - poll
+            - question
+            - all
       responses:
         "200":
           description: 成功
           schema:
             type: array
             items:
-              $ref: ActivityForm
+              $ref: InteractionForm
         default:
           description: error
           schema:
             $ref: Error
-  "/interaction/poll/{interactionId}":
+  "/interaction/{interactionType}/{interactionId}":
     get:
       tags:
         - interaction
@@ -301,43 +214,61 @@ paths:
       consumes:
         - application/json
       parameters:
+        - name: interactionType
+          description: 互动类型
+          required: true
+          type: string
+          in: path
+          enum:
+            - activity
+            - poll
+            - question
+        - name: interactionId
+          description: 互动id
+          required: true
+          type: string
+          in: path
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: InteractionForm
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/interaction/poll/{interactionId}/users/{userId}":
+    post:
+      tags:
+        - interaction
+      summary: 进行投票
+      operationId: poll
+      consumes:
+        - application/json
+      parameters:
         - name: interactionId
           description: 投票id
           required: true
           type: string
           in: path
-      responses:
-        "200":
-          description: 成功
-          schema:
-            type: array
-            items:
-              $ref: PollForm
-        default:
-          description: error
-          schema:
-            $ref: Error
-  "/interaction/question/{interactionId}":
-    get:
-      tags:
-        - interaction
-      summary: 获取求助详情
-      operationId: getQuestionDetail
-      consumes:
-        - application/json
-      parameters:
-        - name: interactionId
-          description: 求助id
+        - name: userId
+          description: 用户id
           required: true
           type: string
           in: path
+        - name: body
+          description: 求助信息
+          required: true
+          schema:
+            $ref: doPollForm
+          in: body
       responses:
-        "200":
+        200:
           description: 成功
           schema:
-            type: array
-            items:
-              $ref: QuestionForm
+           $ref: InteractionForm
         default:
           description: error
           schema:
@@ -527,6 +458,64 @@ definitions:
         description: 结束时间
         type: string
         format: date-time
+  InteractionForm:
+    title: InteractionForm
+    type: object
+    required:
+      - target
+      - targetType
+      - theme
+      - content
+      - endTime
+
+    properties:
+      target:
+        description: 目标id
+        type: string
+      targetType:
+        description: 目标类型
+        type: integer
+        format: int32
+        enum:
+          - 1
+          - 2
+          - 3
+      theme:
+        description: 主题
+        type: string
+      content:
+        description: 内容
+        type: string
+      endTime:
+        description: 结束时间
+        type: string
+        format: date-time
+      startTime:
+        description: 开始时间
+        type: string
+        format: date-time
+      deadline:
+        description: 截止时间
+        type: string
+        format: date-time
+      activityMold:
+        description: 活动类型
+        type: string
+      loaction:
+        $ref: Location
+      memberMax:
+        description: 最大人数
+        type: integer,
+        format: int32
+      memberMin:
+        description: 最小人数
+        type: integer
+        format: int32
+      option:
+        description: 选项
+        type: array
+        items:
+          type: string
   Interaction:
     title: Interaction
     type: object
@@ -548,3 +537,11 @@ definitions:
         description: 结束时间
         type: string
         format: date-time
+  doPollForm:
+    title: doPollForm
+    type: object
+    properties:
+      index:
+        description: index
+        type: integer
+        format: int32
