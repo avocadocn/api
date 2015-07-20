@@ -674,7 +674,7 @@ module.exports = function(app) {
     },
     /**
      * 搜索群组
-     * body {
+     * query {
      *   regex: String
      * }
      * TODO: 需要验证
@@ -683,13 +683,13 @@ module.exports = function(app) {
      * @return {[type]}     [description]
      */
     searchGroup: function(req, res) {
-      if (!req.body.regex) {
+      if (!req.query.regex) {
         return res.status(400).send({
           msg: '参数错误'
         });
       }
 
-      var regex = '/' + req.body.regex + '/';
+      var regex = '/' + req.query.regex + '/';
 
       var conditions = {
         'cid': req.user.cid,

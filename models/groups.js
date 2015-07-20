@@ -69,7 +69,7 @@ var GroupModel = new Schema({
   inviteMember: [{ // 被邀请成员
     inviteMemberId: Schema.Types.ObjectId, //被邀请人id
     _id: Schema.Types.ObjectId, //邀请人id
-    time: {
+    time: { // 邀请时间
       type: Date,
       default: Date.now
     }
