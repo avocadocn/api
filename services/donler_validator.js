@@ -6,7 +6,8 @@ var async = require('async');
 var moment = require('moment');
 
 var mongoose = require('mongoose');
-var Region = mongoose.model('Region');
+var Region = mongoose.model('Region'),
+    User = mongoose.model('User');
 
 // 常用的验证方法可添加到此对象中，特殊的（如验证公司邮箱是否已被使用）请不要添加
 var validators = {};
@@ -218,6 +219,25 @@ donlerValidator.enum = function (enums, customMsg) {
       } else {
         callback(true);
       }
+    }
+  };
+};
+
+
+donlerValidator.inDatabase = function(modelName, customMsg) {
+  return function(name , value, callback) {
+    if(!value) {
+      callback(true);
+    }
+    else {
+      mongoose.model(modelName).findOne({_id:value}, function(err, data) {
+        if(err||!data) {
+          callback(false, customMsg || '数据库中查无此数据');
+        }
+        else {
+          callback(true);
+        }
+      })
     }
   };
 };

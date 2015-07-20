@@ -1110,7 +1110,7 @@
         "receiverId": {
           "description": "收礼物人ID",
           "type": "string",
-          "default": "53d79a8e38cf9def07d1ca25"
+          "default": "53aa7a0c6b2836fd41ba41d7"
         },
         "giftIndex": {
           "description": "礼物的编号",

@@ -1,9 +1,10 @@
 'use strict';
-var mongoose = require('mongoose');
-var async = require('async');
+var mongoose = require('mongoose'),
+    async = require('async');
 var Gift = mongoose.model('Gift'),
     User = mongoose.model('User');
-var log = require('../../services/error_log.js');
+var log = require('../../services/error_log.js'),
+    donlerValidator = require('../../services/donler_validator.js');
 
 var maxGifts = 3; //最多3个
 var recoveryHour = 3; //恢复时间3小时
@@ -40,7 +41,7 @@ var getRemain = function(gifts, nowTime) {
   };
 
   if(gifts.length === 0 || (nowTime - gifts[gifts.length-1].createTime)>recoveryTime*maxGifts) {//9小时内没送过，必满
-    return {remainNumber:maxGifts, remainRecoveryTime: 0};
+    return {remainGift:maxGifts, remainTime: 0};
   }
   else {
     var lastRemain = getLastRemain(gifts.length - 1); //获取上次送完的余量和恢复时间
@@ -109,15 +110,49 @@ module.exports = function (app) {
     },
     //先验证是否能发
     validateGiftRemain: function (req, res, next) {
-      var canSend = true;
-      if(canSend) {
+      var remainGiftValidator = function(name, value, callback) {
+        getGiftRemain(value, req.user._id, function(err, remains) {
+          req.remains = remains;
+          if(remains.remainGift===0) {
+            callback(false, '礼物剩余不足');
+          }
+          else {
+            callback(true);
+          }
+        })
+      }
+      donlerValidator({
+        receiver: {
+          name: '接收者',
+          value: req.body.receiverId,
+          validators: ['required',donlerValidator.inDatabase('User', '接收者数据有误')]
+        },
+        giftIndex: {
+          name: '礼物编号',
+          value: req.body.giftIndex,
+          validators: [donlerValidator.enum([1,2,3,4,5], '礼物编号错误')]
+        },
+        replyGift: {
+          name: '回复礼物',
+          value: req.body.replyGift,
+          validators: req.body.replyGift ? [donlerValidator.inDatabase('Gift', '回复的礼物参数有误')]: []
+        },
+        hasRemainGift: {
+          name: '剩余礼物',
+          value: req.body.giftIndex,
+          validators: [remainGiftValidator]
+        }
+      }, 'complete', function (pass, msg) {
+        if(!pass) {
+          var returnData = {msg: donlerValidator.combineMsg(msg)}
+          if(!req.remains.remainGift) {
+            returnData.remainTime = req.remains.remainTime;
+          }
+          return res.status(400).send(returnData);
+        }
         next();
-      }
-      else {
-        return res.status(403);
-      }
+      })
     },
-    //缺少一步验证数据正确性
     sendGift: function (req, res) {
       var gift = new Gift({
         sender: req.user._id,
@@ -134,11 +169,13 @@ module.exports = function (app) {
           return res.status(500).send({msg:'保存礼物失败'});
         }
         else {
-          return res.status(200).send({gift:gift});
+          req.remains.remainGift --;
+          return res.status(200).send({gift:gift, remain:req.remains});
         }
       })
     },
     //根据id取礼物详情
+    //是否需要验证谁能看这个礼物详情?
     getGift: function (req, res) {
       Gift.findOne({_id:req.params.giftId})
       .populate('replyGift')
