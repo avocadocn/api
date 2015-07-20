@@ -6,7 +6,7 @@ var path = require('path'),
   multiparty = require('multiparty');
 
 var mongoose = require('mongoose');
-var Groups = mongoose.model('Groups');
+var Team = mongoose.model('Team');
 var User = mongoose.model('User');
 var GroupInviteCode = mongoose.model('GroupInviteCode');
 
@@ -114,7 +114,7 @@ module.exports = function(app) {
      */
     createGroup: function(req, res) {
 
-      var group = new Groups({
+      var team = new Team({
         cid: req.user.cid, // 公司id
 
         cname: req.user.cname, // 公司名称
@@ -138,7 +138,7 @@ module.exports = function(app) {
         }]
       });
 
-      group.save(function(err) {
+      team.save(function(err) {
         if (err) {
           log(err);
           return res.sendStatus(500);
@@ -156,7 +156,7 @@ module.exports = function(app) {
      *    
      */
     getGroupById: function(req, res, next) {
-      Groups.findOne({
+      Team.findOne({
           '_id': req.params.groupId,
           'active': true
           // TODO(加入公司关闭属性)
@@ -230,7 +230,7 @@ module.exports = function(app) {
         }
       }
 
-      Groups.update({
+      Team.update({
         '_id': req.group._id,
         'active': true
       }, {
@@ -302,7 +302,7 @@ module.exports = function(app) {
           });
         } else {
           // 将邀请记录加入inviteMember
-          Groups.update({
+          Team.update({
             '_id': req.group._id,
             'active': true
           }, {
@@ -422,7 +422,7 @@ module.exports = function(app) {
           });
         }
 
-        Groups.update({
+        Team.update({
           '_id': req.group._id,
           'active': true
         }, {
@@ -444,7 +444,7 @@ module.exports = function(app) {
           }
         });
       } else {
-        Groups.update({
+        Team.update({
           '_id': req.group._id,
           'active': true
         }, {
@@ -502,7 +502,7 @@ module.exports = function(app) {
           });
         }
       } else {
-        Groups.update({
+        Team.update({
           '_id': req.group._id,
           'active': true
         }, {
@@ -558,7 +558,7 @@ module.exports = function(app) {
           msg: '群主无法移除该群'
         });
       } else {
-        Groups.update({
+        Team.update({
           '_id': req.group._id,
           'active': true
         }, {
@@ -609,7 +609,7 @@ module.exports = function(app) {
         });
       }
 
-      Groups.update({
+      Team.update({
         '_id': req.group._id,
         'active': true
       }, {
@@ -655,7 +655,7 @@ module.exports = function(app) {
         });
       }
 
-      Groups.update({
+      Team.update({
         '_id': req.group._id,
         'active': true
       }, {
@@ -713,7 +713,7 @@ module.exports = function(app) {
         'brief': 1
       };
 
-      Groups.find(conditions, projection, function(err, docs) {
+      Team.find(conditions, projection, function(err, docs) {
         if (err) {
           log(err);
           return res.sendStatus(500);
@@ -747,7 +747,7 @@ module.exports = function(app) {
         'brief': 1
       };
 
-      Groups.find(conditions, projection, function(err, docs) {
+      Team.find(conditions, projection, function(err, docs) {
         if (err) {
           log(err);
           return res.sendStatus(500);
@@ -779,7 +779,7 @@ module.exports = function(app) {
         'brief': 1
       };
 
-      Groups.find(conditions, projection, function(err, docs) {
+      Team.find(conditions, projection, function(err, docs) {
         if (err) {
           log(err);
           return res.sendStatus(500);
@@ -822,7 +822,7 @@ module.exports = function(app) {
         projection = {};
       }
 
-      Groups.findOne(conditions, projection, function(err, group) {
+      Team.findOne(conditions, projection, function(err, group) {
         if (err) {
           log(err);
           return res.sendStatus(500);
@@ -889,7 +889,7 @@ module.exports = function(app) {
         msg = '加入受邀群组成功';
       }
       //TODO: 或许加入拒绝记录
-      Groups.update({
+      Team.update({
         '_id': req.group._id,
         'active': true
       }, doc, function(err, numberAffected) {
@@ -965,7 +965,7 @@ module.exports = function(app) {
         msg = '同意该申请';
       }
       //TODO: 或许加入拒绝记录
-      Groups.update({
+      Team.update({
         '_id': req.group._id,
         'active': true
       }, doc, function(err, numberAffected) {

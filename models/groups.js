@@ -24,7 +24,7 @@ var _member = new Schema({ // 群组成员组件
 /**
  * 群组数据模型
  */
-var GroupModel = new Schema({
+var TeamModel = new Schema({
   cid: { // 公司id
     type: Schema.Types.ObjectId,
     ref: 'Company'
@@ -102,11 +102,11 @@ var GroupModel = new Schema({
 /**
  * 群组方法
  */
-GroupModel.methods = {
+TeamModel.methods = {
   // 群组所有成员id
   memberIds: function() {
     return this.member.map(function(obj) { return obj._id});
   }
 };
 
-mongoose.model('Groups', GroupModel);
+mongoose.model('Team', TeamModel);
