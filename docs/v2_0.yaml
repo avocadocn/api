@@ -158,15 +158,6 @@ paths:
       consumes:
         - application/json
       parameters:
-        - name: interactionType
-          description: 互动类型
-          required: true
-          type: string
-          in: path
-          enum:
-            - activity
-            - poll
-            - question
         - name: body
           description: 互动信息
           required: true
@@ -194,7 +185,7 @@ paths:
           description: 互动类型
           required: true
           type: string
-          in: path
+          in: query
           enum:
             - activity
             - poll

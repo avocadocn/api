@@ -216,7 +216,7 @@ module.exports = function (app) {
       // body...
     },
     getInteraction: function (req, res) {
-      var interactionType = req.params.interactionType;
+      var interactionType = req.query.interactionType;
       var populateType;
       var option ={cid:req.user.cid, "$or":[{"type":1,target:req.user._id},{"type":2,target:{"$in":req.user.getTids()}},{"type":3,target:req.user.cid}]};
       if(req.query.createTime) {
