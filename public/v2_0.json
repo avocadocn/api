@@ -695,12 +695,9 @@
         ],
         "summary": "处理群组邀请",
         "operationId": "handleInvitationFromGroup",
-<<<<<<< HEAD
         "consumes": [
           "application/x-www-form-urlencoded"
         ],
-=======
->>>>>>> 修改swagger的consumes配置，增加发活动模板逻辑
         "parameters": [
           {
             "name": "groupId",
@@ -935,12 +932,9 @@
         ],
         "summary": "处理用户申请",
         "operationId": "handleApplication",
-<<<<<<< HEAD
         "consumes": [
           "application/x-www-form-urlencoded"
         ],
-=======
->>>>>>> 修改swagger的consumes配置，增加发活动模板逻辑
         "parameters": [
           {
             "name": "groupId",
