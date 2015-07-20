@@ -23,7 +23,7 @@ var Question = new Schema({
   endTime: Date,
   select: {
     type: Schema.Types.ObjectId,
-    ref: 'Comment'
+    ref: 'QuestionComment'
   }
 });
 

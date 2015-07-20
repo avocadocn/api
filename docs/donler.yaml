@@ -3460,6 +3460,19 @@ definitions:
       id:
         type: string
         description: 用户id
+      cid:
+        type: string
+        description: cid
+      role:
+        type: string
+        description: 角色
+        enum:
+          - LEADER
+          - MEMBER
+      guide_step:
+        type: integer
+        format: int32
+        description: 是否已经看过引导
   User:
     title: User
     type: object

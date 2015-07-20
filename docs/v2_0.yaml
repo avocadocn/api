@@ -149,7 +149,7 @@ paths:
           description: error
           schema:
             $ref: Error
-  "/interaction/{interactionType}":
+  "/interaction":
     post:
       tags:
         - interaction
@@ -168,10 +168,10 @@ paths:
             - poll
             - question
         - name: body
-          description: 求助信息
+          description: 互动信息
           required: true
           schema:
-            $ref: QuestionForm
+            $ref: InteractionForm
           in: body
       responses:
         200:
@@ -200,6 +200,18 @@ paths:
             - poll
             - question
             - all
+        - name: createTime
+          description: 创建时间，分页用
+          required: false
+          type: number
+          format: float
+          in: query
+        - name: limit
+          description: 每页数目，默认10
+          required: false
+          type: integer
+          format: int32
+          in: query
       responses:
         "200":
           description: 成功
@@ -309,6 +321,30 @@ paths:
           description: 成功
           schema:
            $ref: QuestionComment
+        default:
+          description: error
+          schema:
+            $ref: Error
+    put:
+      tags:
+        - interaction
+      summary: 采纳答案
+      operationId: poll
+      consumes:
+        - application/json
+      parameters:
+        - name: interactionId
+          description: 求助id
+        - name: body
+          description: 求助的评论信息
+          required: true
+          schema:
+            $ref: AdoptQuestionForm
+      responses:
+        200:
+          description: 成功
+          schema:
+           $ref: Interaction
         default:
           description: error
           schema:
@@ -738,6 +774,19 @@ definitions:
       id:
         type: string
         description: 用户id
+      cid:
+        type: string
+        description: cid
+      role:
+        type: string
+        description: 角色
+        enum:
+          - LEADER
+          - MEMBER
+      guide_step:
+        type: integer
+        format: int32
+        description: 是否已经看过引导
   PostGift:
     title: PostGift
     type: object
@@ -900,20 +949,32 @@ definitions:
     title: InteractionForm
     type: object
     required:
+      - type
       - target
       - targetType
       - theme
       - content
       - endTime
-
     properties:
+      type:
+        description: "互动类型 1:'活动',2:'投票',3:'求助',4:'转发活动'"
+        type: integer
+        format: int32
+        default: 1
+        enum:
+          - 1
+          - 2
+          - 3
+          - 4
       target:
         description: 目标id
         type: string
+        default: 53aa6fc011fd597b3e1be250
       targetType:
-        description: 目标类型
+        description: "目标类型 1:'个人',2:'群',3:'公司'"
         type: integer
         format: int32
+        default: 3
         enum:
           - 1
           - 2
@@ -1035,3 +1096,10 @@ definitions:
           - 1
           - 2
           - 3
+  AdoptQuestionForm:
+    title: AdoptQuestionForm
+    type: object
+    properties:
+      commentId:
+        description: 要采纳的评论Id
+        type: string

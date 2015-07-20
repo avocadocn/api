@@ -47,7 +47,14 @@ var Interaction = new Schema({
     default: 1
   },
   //发布者
-  poster: _member,
+  poster: {
+    _id: Schema.Types.ObjectId,
+    role: {
+      type:String,
+      enum: ['user','leader','hr'],
+      default:'user'
+    }
+  },
 
   //对应内容的id Activity
   activity: {

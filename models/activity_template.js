@@ -1,26 +1,15 @@
 'use strict';
-
+//活动模板
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema;
 
-/**
- * 活动
- */
-var Activity = new Schema({
+var ActivityTemplate = new Schema({
   theme: {//主题
     type: String,
     required: true
   },
   content: {//简介
     type: String
-  },
-  memberMin: {//最少人数
-    type: Number,
-    default: 0
-  },
-  memberMax: {//人数上限
-    type: Number,
-    default: 0
   },
   location: {
     loc: {
@@ -34,16 +23,12 @@ var Activity = new Schema({
   },
   startTime: Date,
   endTime: Date,
-  deadline: Date,
   //活动类型,篮球等
   activityMold: String,
-  template:{
-    type: Schema.Types.ObjectId,
-    ref: 'ActivityTemplate'
+  create_time: {
+    type: Date,
+    default: Date.now
   }
 });
 
-
-mongoose.model('Activity', Activity);
-
-
+mongoose.model('ActivityTemplate', ActivityTemplate);

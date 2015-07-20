@@ -16,6 +16,7 @@ var log = require('../../services/error_log.js'),
     tools = require('../../tools/tools.js'),
     async = require('async');
 var interactionTypes = ['activity','poll','question'];
+var perPageNum = 10;
 var createActivity = function (data) {
   var activity = new Activity({
     theme: data.theme,
@@ -76,10 +77,15 @@ module.exports = function (app) {
           interactionType = "activity";
       }
       donlerValidator({
+        type: {
+          name: 'targetType',
+          value: req.body.type,
+          validators: [donlerValidator.enum([1, 2, 3],"互动类型错误"), 'required']
+        },
         targetType: {
           name: 'targetType',
           value: req.body.targetType,
-          validators: [donlerValidator.enum([1, 2, 3]), 'required']
+          validators: [donlerValidator.enum([1, 2, 3],"目标类型错误"), 'required']
         },
         target: {
           name: 'target',
@@ -160,12 +166,14 @@ module.exports = function (app) {
     },
     createInteraction: function (req, res) {
       var data = req.body;
-      var interactionType = req.params.interactionType;
+      var interactionType = data.type;
       var interaction = new Interaction({
         cid: req.user.cid,
         targetType: data.targetType,
         target: data.target,
-        poster: req.user._id,
+        poster: {
+          _id:req.user._id
+        }
       });
       var interactionContent;
       switch(interactionType) {
@@ -204,10 +212,17 @@ module.exports = function (app) {
         }
       });
     },
+    createActivityTemplate: function (argument) {
+      // body...
+    },
     getInteraction: function (req, res) {
       var interactionType = req.params.interactionType;
       var populateType;
       var option ={cid:req.user.cid, "$or":[{"type":1,target:req.user._id},{"type":2,target:{"$in":req.user.getTids()}},{"type":3,target:req.user.cid}]};
+      if(req.query.createTime) {
+        option.createTime ={"$lt":req.query.createTime}
+      }
+      var _perPageNum = req.query.limit || perPageNum;
       switch(interactionType) {
         case 'activity':
           option.type =1;
@@ -226,6 +241,8 @@ module.exports = function (app) {
       }
       Interaction.find(option)
       .populate(populateType)
+      .sort({ createTime: -1 })
+      .limit(_perPageNum)
       .exec()
       .then(function (interactions) {
         return res.send(interactions);
@@ -291,13 +308,13 @@ module.exports = function (app) {
       comment: function (req, res) {
         var userId = req.user._id;
         if(req.params.userId.toString()!==userId.toString()){
-          return res.status(403).send({msg:"您没有权限进行回答"})
+          return res.status(403).send({msg:"您没有权限进行回答和点赞"})
         }
         Interaction.findById(req.params.interactionId)
           .exec()
           .then(function (interaction) {
             if(interaction.cid.toString()!==req.user.cid.toString()){
-              return res.status(403).send({msg:"您没有权限进行回答"})
+              return res.status(403).send({msg:"您没有权限进行回答和点赞"})
             }
             var questionComment = new QuestionComment({
               type: req.body.type,
@@ -321,6 +338,52 @@ module.exports = function (app) {
             function(err, results){
               if(!err){
                 return res.send(questionComment);
+              }
+              else{
+                log(err)
+                return res.status(500).send({msg:"服务器发生错误"});
+              }
+            });
+          })
+          .then(null,function (error) {
+            log(error);
+            res.status(500).send({msg:"服务器发生错误"});
+          });
+      },
+      adopt: function (req, res) {
+        var userId = req.user._id;
+        if(req.params.userId.toString()!==userId.toString()){
+          return res.status(403).send({msg:"您没有权限采纳回答"})
+        }
+        Interaction.findById(req.params.interactionId)
+          .populate('question')
+          .exec()
+          .then(function (interaction) {
+            if(interaction.cid.toString()!==req.user.cid.toString() || interaction.poster._id.toString()!==userId.toString()){
+              return res.status(403).send({msg:"您没有权限采纳回答"})
+            }
+            if(interaction.question.select){
+              return res.status(400).send({msg:"您已经采纳过回答"})
+            }
+            async.waterfall([
+              function(callback){
+                QuestionComment.findById(req.body.commentId)
+                  .exec()
+                  .then(function(questionComment){
+                    if(questionComment)
+                      callback(null)
+                  })
+                  .then(null,callback);
+              },
+              function(callback){
+                interaction.question.select = req.body.commentId;
+                interaction.question.save(callback)
+              }
+            ],
+            // optional callback
+            function(err, results){
+              if(!err){
+                return res.send(interaction);
               }
               else{
                 log(err)
