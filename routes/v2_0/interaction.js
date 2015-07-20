@@ -9,7 +9,7 @@ module.exports = function (router, ctrl) {
     .get(ctrl.v2_0.getInteraction);                                                              //获取互动列表
 
   router.route('/interaction/activityTemplate')
-    .post(ctrl.v2_0.createActivityTemplate);                      //发起活动模板
+    .post(ctrl.v2_0.createActivityTemplate);                                                     //发起活动模板
   router.get('/interaction/:interactionType/:interactionId', ctrl.v2_0.getInteractionDetail);    //获取互动详情
   router.post('/interaction/poll/:interactionId/users/:userId', ctrl.v2_0.poll.poll);            //进行投票
   router.route('/interaction/question/:interactionId/users/:userId')

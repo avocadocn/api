@@ -8,8 +8,8 @@ var User = mongoose.model('User'),
   Activity = mongoose.model('Activity'),
   Poll = mongoose.model('Poll'),
   Question = mongoose.model('Question'),
-  QuestionComment = mongoose.model('QuestionComment');
-
+  QuestionComment = mongoose.model('QuestionComment'),
+  ActivityTemplate= mongoose.model('ActivityTemplate');
 var log = require('../../services/error_log.js'),
     auth = require('../../services/auth.js'),
     donlerValidator = require('../../services/donler_validator.js'),
@@ -212,13 +212,31 @@ module.exports = function (app) {
         }
       });
     },
-    createActivityTemplate: function (argument) {
-      // body...
+    createActivityTemplate: function (req, res) {
+      var data = req.body;
+      var activityTemplate = new ActivityTemplate({
+        theme: data.theme,
+        content:data.content,
+        location: data.location,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        activityMold: data.activityMold
+      });
+      activityTemplate.save(function (error) {
+        if(error) {
+          res.status(500).send({msg:error});
+        }
+        else {
+          res.send(activityTemplate);
+        }
+
+      })
     },
     getInteraction: function (req, res) {
       var interactionType = req.query.interactionType;
       var populateType;
-      var option ={cid:req.user.cid, "$or":[{"type":1,target:req.user._id},{"type":2,target:{"$in":req.user.getTids()}},{"type":3,target:req.user.cid}]};
+      var userId = req.query.userId || req.user._id;
+      var option ={cid:req.user.cid, "$or":[{"type":1,target:userId},{"type":2,target:{"$in":req.user.getTids()}},{"type":3,target:req.user.cid}]};
       if(req.query.createTime) {
         option.createTime ={"$lt":req.query.createTime}
       }
@@ -355,46 +373,54 @@ module.exports = function (app) {
         if(req.params.userId.toString()!==userId.toString()){
           return res.status(403).send({msg:"您没有权限采纳回答"})
         }
-        Interaction.findById(req.params.interactionId)
-          .populate('question')
-          .exec()
-          .then(function (interaction) {
-            if(interaction.cid.toString()!==req.user.cid.toString() || interaction.poster._id.toString()!==userId.toString()){
-              return res.status(403).send({msg:"您没有权限采纳回答"})
-            }
-            if(interaction.question.select){
-              return res.status(400).send({msg:"您已经采纳过回答"})
-            }
-            async.waterfall([
-              function(callback){
-                QuestionComment.findById(req.body.commentId)
-                  .exec()
-                  .then(function(questionComment){
-                    if(questionComment)
-                      callback(null)
-                  })
-                  .then(null,callback);
-              },
-              function(callback){
-                interaction.question.select = req.body.commentId;
-                interaction.question.save(callback)
-              }
-            ],
-            // optional callback
-            function(err, results){
-              if(!err){
-                return res.send(interaction);
-              }
-              else{
-                log(err)
-                return res.status(500).send({msg:"服务器发生错误"});
-              }
-            });
-          })
-          .then(null,function (error) {
-            log(error);
-            res.status(500).send({msg:"服务器发生错误"});
-          });
+        async.waterfall([
+          function(callback){
+            QuestionComment.findById(req.body.commentId)
+              .exec()
+              .then(function(questionComment){
+                if(questionComment)
+                  callback(null)
+              })
+              .then(null,callback);
+          },
+          function(callback){
+            Interaction.findById(req.params.interactionId)
+              .populate('question')
+              .exec()
+              .then(function (interaction) {
+                if(interaction.cid.toString()!==req.user.cid.toString() || interaction.poster._id.toString()!==userId.toString()){
+                  callback(403)
+                }
+                else if(interaction.question.select){
+                  callback(400)
+                }
+                else{
+                  callback(null, interaction);
+                }
+              })
+              .then(null,callback);
+          },
+          
+          function(interaction, callback){
+            interaction.question.select = req.body.commentId;
+            interaction.question.save(function(error){
+              callback(error,interaction);
+            })
+          }
+        ],
+        // optional callback
+        function(err, results){
+          console.log(err)
+          // return res.status(403).send({msg:"您没有权限采纳回答"})
+          if(!err){
+            return res.send(results);
+          }
+          else{
+            log(err)
+            return res.status(500).send({msg:"服务器发生错误"});
+          }
+        });
+        
       }
     }
   };

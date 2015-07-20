@@ -10,6 +10,8 @@ schemes:
 produces:
   - application/json
   - text/plain
+consumes:
+  - application/json
 paths:
   /users/login:
     post:
@@ -17,8 +19,6 @@ paths:
         - users
       summary: 用户登录
       operationId: userLogin
-      consumes:
-        - application/json
       parameters:
         - name: body
           schema:
@@ -40,8 +40,6 @@ paths:
       tags:
         - gifts
       summary: 获取当前用户收到/发出的礼物
-      produces:
-        - application/json
       parameters:
         - name: userId
           description: 用户id
@@ -84,8 +82,6 @@ paths:
       tags:
         - gifts
       summary: 送礼
-      produces:
-        - application/json
       parameters:
         - name: body
           schema:
@@ -107,8 +103,6 @@ paths:
       tags:
         - gifts
       summary: 获取某礼物详情
-      produces:
-        - application/json
       parameters:
         - name: giftId
           description: 礼物id
@@ -129,8 +123,6 @@ paths:
       tags:
         - gifts
       summary: 获取礼物余量
-      produces:
-        - application/json
       parameters:
         - name: content
           description: 哪类礼物
@@ -149,14 +141,12 @@ paths:
           description: error
           schema:
             $ref: Error
-  "/interaction":
+  /interaction:
     post:
       tags:
         - interaction
       summary: 发互动
       operationId: postInteraction
-      consumes:
-        - application/json
       parameters:
         - name: body
           description: 互动信息
@@ -178,8 +168,6 @@ paths:
         - interaction
       summary: 获取互动列表
       operationId: getQuestion
-      consumes:
-        - application/json
       parameters:
         - name: interactionType
           description: 互动类型
@@ -214,14 +202,34 @@ paths:
           description: error
           schema:
             $ref: Error
+  /interaction/activityTemplate:
+    post:
+      tags:
+        - interaction
+      summary: 发活动模板
+      operationId: postActivityTemplate
+      parameters:
+        - name: body
+          description: 模板信息
+          required: true
+          schema:
+            $ref: ActivityTemplate
+          in: body
+      responses:
+        200:
+          description: 成功
+          schema:
+           $ref: ActivityTemplate
+        default:
+          description: error
+          schema:
+            $ref: Error
   "/interaction/{interactionType}/{interactionId}":
     get:
       tags:
         - interaction
       summary: 获取互动详情
       operationId: getInteractionDetail
-      consumes:
-        - application/json
       parameters:
         - name: interactionType
           description: 互动类型
@@ -254,8 +262,6 @@ paths:
         - interaction
       summary: 进行投票
       operationId: poll
-      consumes:
-        - application/json
       parameters:
         - name: interactionId
           description: 投票id
@@ -288,8 +294,6 @@ paths:
         - interaction
       summary: 回答求助
       operationId: poll
-      consumes:
-        - application/json
       parameters:
         - name: interactionId
           description: 求助id
@@ -321,12 +325,11 @@ paths:
         - interaction
       summary: 采纳答案
       operationId: poll
-      consumes:
-        - application/json
       parameters:
         - name: interactionId
           description: 求助id
-        - name: body
+        - name: commentId
+          in: body
           description: 求助的评论信息
           required: true
           schema:
@@ -379,8 +382,6 @@ paths:
         - group
       summary: 获取群组信息
       operationId: getGroupInfo
-      consumes:
-        - application/json
       parameters:
         - name: groupId
           description: 群组id
@@ -404,8 +405,6 @@ paths:
         - group
       summary: 删除群组
       operationId: deleteGroup
-      consumes:
-        - application/json
       parameters:
         - name: groupId
           description: 群组id
@@ -425,8 +424,6 @@ paths:
         - group
       summary: app内群组邀请
       operationId: inviteMemberToGroup
-      consumes:
-        - application/json
       parameters:
         - name: groupId
           description: 群组id
@@ -451,8 +448,6 @@ paths:
         - group
       summary: app外群组邀请(获取邀请链接)
       operationId: getInviteCodeForGroup
-      consumes:
-        - application/json
       parameters:
         - name: groupId
           description: 群组id
@@ -497,8 +492,6 @@ paths:
         - group
       summary: 加入群组
       operationId: joinGroup
-      consumes:
-        - application/json
       parameters:
         - name: groupId
           description: 群组id
@@ -517,8 +510,6 @@ paths:
         - group
       summary: 退出群组
       operationId: quitGroup
-      consumes:
-        - application/json
       parameters:
         - name: groupId
           description: 群组id
@@ -538,8 +529,6 @@ paths:
         - group
       summary: 指定新群主
       operationId: reassignLeaderForGroup
-      consumes:
-        - application/json
       parameters:
         - name: groupId
           description: 群组id
@@ -563,8 +552,6 @@ paths:
         - group
       summary: 移除群组
       operationId: removeMemberFromGroup
-      consumes:
-        - application/json
       parameters:
         - name: groupId
           description: 群组id
@@ -610,8 +597,6 @@ paths:
         - group
       summary: 获取个人群组列表
       operationId: getGroupListOfUser
-      consumes:
-        - application/json
       responses:
         200:
           description: 成功
@@ -625,8 +610,6 @@ paths:
         - group
       summary: 获取公司群组列表
       operationId: getGroupListOfCompany
-      consumes:
-        - application/json
       responses:
         200:
           description: 成功
@@ -1051,3 +1034,31 @@ definitions:
       commentId:
         description: 要采纳的评论Id
         type: string
+  ActivityTemplate:
+    title: ActivityTemplate
+    type: object
+    required:
+      - theme
+      - content
+      - endTime
+      - location
+    properties:
+      theme:
+        description: 主题
+        type: string
+      content:
+        description: 内容
+        type: string
+      endTime:
+        description: 结束时间
+        type: string
+        format: date-time
+      startTime:
+        description: 开始时间
+        type: string
+        format: date-time
+      activityMold:
+        description: 活动类型
+        type: string
+      loaction:
+        $ref: Location
