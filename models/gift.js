@@ -40,10 +40,12 @@ var Gift = new Schema({
     ref: 'Company',
     required: true
   },
+  //是回复哪个礼物的
   replyGift: {
     type: Schema.Types.ObjectId,
     ref: 'Gift'
   }
+  //以后可增加匿名与否
 });
 
 mongoose.model('Gift', Gift);

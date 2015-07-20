@@ -2,7 +2,7 @@
 var token = require('../../services/token');
 module.exports = function (app, ctrl) {
   //获取用户收到/发出的礼物
-  app.get('/gifts/:userId/:direction', token.needToken, ctrl.v2_0.getUserGifts);
+  app.get('/gifts/history/:userId/:direction', token.needToken, ctrl.v2_0.getUserGifts);
   //送礼
   app.post('/gifts', token.needToken, ctrl.v2_0.validateGiftRemain, ctrl.v2_0.sendGift);
   //获取当前礼物详情

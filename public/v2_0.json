@@ -52,7 +52,7 @@
         }
       }
     },
-    "/gifts/{userId}/{direction}": {
+    "/gifts/history/{userId}/{direction}": {
       "get": {
         "tags": [
           "gifts"
@@ -175,6 +175,44 @@
             "description": "成功",
             "schema": {
               "$ref": "GiftResponse"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/gifts/remain/{content}": {
+      "get": {
+        "tags": [
+          "gifts"
+        ],
+        "summary": "获取礼物余量",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "content",
+            "description": "哪类礼物",
+            "required": true,
+            "type": "string",
+            "in": "path",
+            "enum": [
+              "concern",
+              "heart"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "GiftRemain"
             }
           },
           "default": {
@@ -1119,6 +1157,46 @@
             "type": "number",
             "format": "double"
           }
+        }
+      }
+    },
+    "GiftRemain": {
+      "title": "GiftRemain",
+      "type": "object",
+      "properties": {
+        "heart": {
+          "description": "爱心数量",
+          "type": "object",
+          "$ref": "Remain"
+        },
+        "flower": {
+          "description": "鲜花",
+          "type": "object",
+          "$ref": "Remain"
+        },
+        "coffee": {
+          "description": "咖啡",
+          "type": "object",
+          "$ref": "Remain"
+        },
+        "hug": {
+          "description": "拥抱",
+          "type": "object",
+          "$ref": "Remain"
+        }
+      }
+    },
+    "Remain": {
+      "title": "Remain",
+      "type": "object",
+      "properties": {
+        "remainGift": {
+          "description": "数量",
+          "type": "number"
+        },
+        "remainTime": {
+          "description": "剩余恢复时间",
+          "type": "date-time"
         }
       }
     },
