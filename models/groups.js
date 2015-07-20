@@ -41,7 +41,7 @@ var GroupModel = new Schema({
     type: Boolean,
     default: false
   },
-  validate: { // 群组是否需要验证
+  hasValidate: { // 群组是否需要验证
     type: Boolean,
     default: false
   },

@@ -99,6 +99,28 @@
     <input class="js_companyId" type="text" name="companyId" placeholder="companyId"/>
     <button class="js_submit">提交</button>
   </div>
+  <div id="GroupCreateWithPhotoTest">
+    <h1>群组创建测试</h1>
+    <form id="GroupCreateWithPhotoForm" enctype="multipart/form-data">
+      <input type="text" name="name" placeholder="群组名称" required/>
+      <input type="text" name="themeColor" placeholder="群组主题颜色" required/>
+      <input type="file" name="photo" required/>
+    </form>
+    <button class="js_submit">提交</button>
+  </div>
+  <div id="GroupUpdateWithPhotoTest">
+    <h1>群组更新测试</h1>
+    <form id="GroupUpdateWithPhotoForm" enctype="multipart/form-data">
+      <input type="text" name="name" placeholder="群组名称" />
+      <input type="text" name="themeColor" placeholder="群组主题颜色" />
+      <input type="file" name="photo" />
+      <input type="text" name="brief" placeholder="群组简介" />
+      <input type="text" name="open" value="false" /> <label>群组是否公开</label>
+      <input type="text" name="hasValidate" value="false" /> <label>群组是否需要验证</label>
+    </form>
+    <input class="js_groupId" type="text" placeholder="群组id" required/>
+    <button class="js_submit">提交</button>
+  </div>
   <script src="./jquery-2.1.1.min.js"></script>
   <script src="./upload.js"></script>
 </body>

@@ -237,4 +237,51 @@
     });
 
   })();
+
+  (function () {
+    var GroupCreateWithPhotoTestEle = $('#GroupCreateWithPhotoTest');
+    var submit = GroupCreateWithPhotoTestEle.find('.js_submit');
+    submit.click(function () {
+      var fd = new FormData($('#GroupCreateWithPhotoForm')[0]);
+      $.ajax({
+        url: baseUrl + '/v2_0/groups',
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        headers: getCommonHeaders(),
+        success: function (data, status) {
+          alert('success');
+          console.log(data, status);
+        },
+        error: function (data, status) {
+          console.log(data, status);
+        }
+      });
+    });
+  })();
+
+  (function () {
+    var GroupUpdateWithPhotoTestEle = $('#GroupUpdateWithPhotoTest');
+    var submit = GroupUpdateWithPhotoTestEle.find('.js_submit');
+    var groupId = GroupUpdateWithPhotoTestEle.find('.js_groupId');
+    submit.click(function () {
+      var fd = new FormData($('#GroupUpdateWithPhotoForm')[0]);
+      $.ajax({
+        url: baseUrl + '/v2_0/groups/' + groupId.val(),
+        type: 'PUT',
+        data: fd,
+        processData: false,
+        contentType: false,
+        headers: getCommonHeaders(),
+        success: function (data, status) {
+          alert('success');
+          console.log(data, status);
+        },
+        error: function (data, status) {
+          console.log(data, status);
+        }
+      });
+    });
+  })();
 })(jQuery);

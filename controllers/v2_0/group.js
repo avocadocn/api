@@ -2,6 +2,7 @@
 
 var path = require('path'),
   fs = require('fs'),
+  crypto = require('crypto'),
   multiparty = require('multiparty');
 
 var mongoose = require('mongoose');
@@ -51,7 +52,7 @@ module.exports = function(app) {
           },
           logo: {
             name: '封面',
-            value: fields[fieldName],
+            value: files[fieldName],
             validators: ['required']
           }
         }, 'complete', function(pass, msg) {
@@ -64,6 +65,7 @@ module.exports = function(app) {
             next();
           } else {
             var resMsg = donlerValidator.combineMsg(msg);
+            console.log(resMsg);
             res.status(400).send({
               msg: resMsg
             });
@@ -87,7 +89,7 @@ module.exports = function(app) {
         return;
       }
 
-      uploader.uploadImage(req.groupLogoFile, {
+      uploader.uploadImage(req.groupLogoFile[0], {
         targetDir: '/public/img/groups',
         subDir: req.user.getCid().toString(),
         saveOrigin: true,
@@ -153,7 +155,7 @@ module.exports = function(app) {
      * 根据群组的id获取群组的信息, 若无相应群组数据，返回204, msg: 未找到该群组；否则，下一步
      *    
      */
-    getGroupById: function(req, res) {
+    getGroupById: function(req, res, next) {
       Groups.findOne({
           '_id': req.params.groupId,
           'active': true
@@ -204,13 +206,13 @@ module.exports = function(app) {
         
         req.groupInfo = {};
         // 基本群组设置
-        req.groupInfo.name = fields['name'];
-        req.groupInfo.themeColor = fields['themeColor'];
-        req.groupLogoFile = files[fieldName];
+        req.groupInfo.name = (fields['name'] && fields['name'][0]) ? fields['name'][0] : undefined;
+        req.groupInfo.themeColor = (fields['themeColor'] && fields['themeColor'][0]) ? fields['themeColor'][0] : undefined;
+        req.groupLogoFile = (files[fieldName] && files[fieldName][0].originalFilename) ? files[fieldName][0] : undefined;
         // 额外群组设置
-        req.groupInfo.brief = files['brief'];
-        req.groupInfo.open = files['open'];
-        req.groupInfo.validate = files['validate'];
+        req.groupInfo.brief = (fields['brief'] && fields['brief'][0]) ? fields['brief'][0] : undefined;
+        req.groupInfo.open = (fields['open'] && fields['open'][0]) ? fields['open'][0] : undefined;
+        req.groupInfo.hasValidate = (fields['hasValidate'] && fields['hasValidate'][0]) ? fields['hasValidate'][0] : undefined;
 
         next();
       });
@@ -222,7 +224,7 @@ module.exports = function(app) {
      */
     updateGroup: function(req, res) {
       var doc = {};
-      for (o in req.groupInfo) {
+      for (var o in req.groupInfo) {
         if (req.groupInfo[o] !== undefined) {
           doc[o] = req.groupInfo[o];
         }
@@ -270,7 +272,7 @@ module.exports = function(app) {
       }
       // 判断该用户是否已经是该群组成员
       var isMember = req.group.member.some(function(member) {
-        return member._id.toString() === req.body.invitedMemberId.toString()
+        return member._id.toString() === req.params.userId.toString()
       });
 
       if (isMember) {
@@ -279,7 +281,7 @@ module.exports = function(app) {
         });
       }
       // 判断该该用户是否已被邀请
-      var isInvited = req.inviteMember.some(function(inviteMember) {
+      var isInvited = req.group.inviteMember.some(function(inviteMember) {
         return inviteMember.inviteMemberId.toString() === req.params.userId.toString()
       });
 
@@ -389,10 +391,10 @@ module.exports = function(app) {
      * @param  req 
      * group {
      *         ....
-     *         validate: Boolean
+     *         hasValidate: Boolean
      *         ....
      *       }
-     * 如果group.validate的值为true, 那么用户加入群组需要验证信息;否则，直接加入群组。
+     * 如果group.hasValidate的值为true, 那么用户加入群组需要验证信息;否则，直接加入群组。
      * 
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
@@ -409,8 +411,8 @@ module.exports = function(app) {
         });
       }
 
-      if(req.group.validate) {
-        var hasApply = applyMember.some(function(member) {
+      if(req.group.hasValidate) {
+        var hasApply = req.group.applyMember.some(function(member) {
           return member._id.toString() === req.user._id.toString()
         });
 
@@ -492,11 +494,11 @@ module.exports = function(app) {
       if (req.group.leader._id.toString() === req.user._id.toString()) {
         if (req.group.member.length > 1) {
           return res.status(200).send({
-            msg: '没有成员，群组会删除'
+            msg: '指定新群主'
           });
         } else {
           return res.status(200).send({
-            msg: '指定新群主'
+            msg: '没有成员，群组会删除'
           });
         }
       } else {
@@ -612,7 +614,7 @@ module.exports = function(app) {
         'active': true
       }, {
         $set: {
-          'member': {
+          'leader': {
             '_id': user._id,
             'nickname': user.nickname,
             'photo': user.photo
@@ -688,20 +690,18 @@ module.exports = function(app) {
           msg: '参数错误'
         });
       }
-
-      var regex = '/' + req.query.regex + '/';
-
+      
       var conditions = {
         'cid': req.user.cid,
         'active': true,
         'open': true,
         $or: [{
           'name': {
-            $regex: regex
+            $regex: req.query.regex
           }
         }, {
           'brief': {
-            $regex: regex
+            $regex: req.query.regex
           }
         }]
       };
@@ -792,7 +792,7 @@ module.exports = function(app) {
     },
     /**
      * 获取群组详细信息
-     * body {
+     * query {
      *   allInfo: Boolean,
      * }
      * 若allInfo的值为true, 请求用户必须是群组成员;
@@ -813,7 +813,7 @@ module.exports = function(app) {
         'brief': 1
       };
 
-      if (req.body.allInfo) {
+      if (req.query.allInfo) {
         conditions.member = {
           $elemMatch: {
             '_id': req.user._id
@@ -828,7 +828,7 @@ module.exports = function(app) {
           return res.sendStatus(500);
         } else {
           return res.status(200).send({
-            groups: group
+            group: group
           });
         }
       });
@@ -916,14 +916,15 @@ module.exports = function(app) {
      * @return {[type]}     [description]
      */
     handleApplication: function(req, res) {
-      if (req.user._id.toString() === req.group.leader._id.toString()) {
-        return res.status(200).send({
+      if (req.user._id.toString() !== req.group.leader._id.toString()) {
+        return res.status(403).send({
           msg: '无权限'
         });
       }
+      console.log(req.query.accept);
 
       var isMember = req.group.member.some(function(member) {
-        return member._id.toString() === req.user._id.toString()
+        return member._id.toString() === req.params.userId.toString()
       });
 
       if (isMember) {
@@ -931,10 +932,11 @@ module.exports = function(app) {
           msg: '申请用户已加入该群组'
         });
       }
+
       var user;
       var isApplyMember = req.group.applyMember.some(function(member) {
         user = member;
-        return member._id.toString() === req.user._id.toString()
+        return member._id.toString() === req.params.userId.toString()
       });
 
       if (!isApplyMember) {
@@ -946,13 +948,13 @@ module.exports = function(app) {
       var doc = {
         $pull: {
           'applyMember': {
-            '_id': req.user._id
+            '_id': req.params.userId
           }
         }
       };
       var msg = '拒绝该申请';
 
-      if (req.body.accept) {
+      if (req.query.accept) {
         doc.$addToSet = {
           'member': {
             _id: user._id, // 成员id

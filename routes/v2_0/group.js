@@ -13,9 +13,11 @@ module.exports = function(app, ctrl) {
   app.put('/groups/:groupId/user/:userId', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.reassignLeaderForGroup); // 指定新群主
   app.delete('/groups/:groupId', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.deleteGroup); // 删除群组
   app.get('/groups/search', token.needToken, ctrl.v2_0.searchGroup); // 搜索群组
+  // 获取群组列表暂不合并，同时获取群组详情还需要根据项目实际情况进行改动
   app.get('/groups/list/user', token.needToken, ctrl.v2_0.getGroupListOfUser); // 获取个人群组列表
   app.get('/groups/list/company', token.needToken, ctrl.v2_0.getGroupListOfCompany); // 获取公司群组列表
-  app.get('/groups/:groupId', token.needToken, ctrl.v2_0.getGroupInfo); // 获取群组详情
+  app.get('/groups/:groupId', token.needToken, ctrl.v2_0.getGroupInfo); // 获取群组信息
+
   app.put('/groups/:groupId/invitation', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.handleInvitationFromGroup); // 处理群组邀请
   app.put('/groups/:groupId/applicant/:userId', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.handleApplication); // 处理用户申请
 };

@@ -519,29 +519,8 @@
         "consumes": [
           "multipart/form-data"
         ],
-        "parameters": [
-          {
-            "name": "groupName",
-            "description": "群组名称",
-            "required": true,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "themeColor",
-            "description": "群组主题颜色",
-            "required": true,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "logo",
-            "description": "群组封面",
-            "required": true,
-            "type": "file",
-            "in": "formData"
-          }
-        ],
+        "description": "此功能测试移动到upload_test",
+        "parameters": null,
         "responses": {
           "200": {
             "description": "成功"
@@ -565,57 +544,8 @@
         "consumes": [
           "multipart/form-data"
         ],
-        "parameters": [
-          {
-            "name": "groupId",
-            "description": "群组id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          },
-          {
-            "name": "groupName",
-            "description": "群组名称",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "themeColor",
-            "description": "群组主题颜色",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "logo",
-            "description": "群组封面",
-            "required": false,
-            "type": "file",
-            "in": "formData"
-          },
-          {
-            "name": "brief",
-            "description": "群组简介",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "open",
-            "description": "群组是否公开",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "validate",
-            "description": "群组是否需要验证",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          }
-        ],
+        "description": "此功能测试移动到upload_test",
+        "parameters": null,
         "responses": {
           "200": {
             "description": "成功"
@@ -632,7 +562,7 @@
         "tags": [
           "group"
         ],
-        "summary": "获取群组详情",
+        "summary": "获取群组信息",
         "operationId": "getGroupInfo",
         "consumes": [
           "application/json"
@@ -644,6 +574,13 @@
             "required": true,
             "type": "string",
             "in": "path"
+          },
+          {
+            "name": "allInfo",
+            "description": "是否所有信息",
+            "required": false,
+            "type": "boolean",
+            "in": "query"
           }
         ],
         "responses": {
@@ -766,7 +703,7 @@
         "summary": "处理群组邀请",
         "operationId": "handleInvitationFromGroup",
         "consumes": [
-          "application/json"
+          "application/x-www-form-urlencoded"
         ],
         "parameters": [
           {
@@ -781,7 +718,7 @@
             "description": "是否接受邀请",
             "required": true,
             "type": "boolean",
-            "in": "body"
+            "in": "query"
           }
         ],
         "responses": {
@@ -936,7 +873,7 @@
       }
     },
     "/groups/search": {
-      "put": {
+      "get": {
         "tags": [
           "group"
         ],
@@ -968,7 +905,7 @@
       }
     },
     "/groups/list/user": {
-      "put": {
+      "get": {
         "tags": [
           "group"
         ],
@@ -991,7 +928,7 @@
       }
     },
     "/groups/list/company": {
-      "put": {
+      "get": {
         "tags": [
           "group"
         ],
@@ -1021,7 +958,7 @@
         "summary": "处理用户申请",
         "operationId": "handleApplication",
         "consumes": [
-          "application/json"
+          "application/x-www-form-urlencoded"
         ],
         "parameters": [
           {
@@ -1043,7 +980,7 @@
             "description": "群主是否同意",
             "required": true,
             "type": "boolean",
-            "in": "body"
+            "in": "query"
           }
         ],
         "responses": {
