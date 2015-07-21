@@ -2,18 +2,20 @@
 
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema;
-
+var _member = {
+  _id:{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  createTime: {
+    type: Date,
+    default: Date.now
+  }
+}
 /**
  * 活动
  */
 var Activity = new Schema({
-  theme: {//主题
-    type: String,
-    required: true
-  },
-  content: {//简介
-    type: String
-  },
   memberMin: {//最少人数
     type: Number,
     default: 0
@@ -32,8 +34,9 @@ var Activity = new Schema({
     },
     name: String
   },
+  members: [_member],
+  quitMembers: [_member],
   startTime: Date,
-  endTime: Date,
   deadline: Date,
   //活动类型,篮球等
   activityMold: String,

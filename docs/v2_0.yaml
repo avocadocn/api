@@ -228,13 +228,14 @@ paths:
         - name: interactionType
           description: 互动类型
           required: true
-          type: string
+          type: integer
+          format: int32
           in: query
           enum:
-            - activity
-            - poll
-            - question
-            - all
+            - 1
+            - 2
+            - 3
+            - 4
         - name: createTime
           description: 创建时间，分页用
           required: false
@@ -258,24 +259,24 @@ paths:
           description: error
           schema:
             $ref: Error
-  /interaction/activityTemplate:
+  "/interaction/template":
     post:
       tags:
         - interaction
-      summary: 发活动模板
-      operationId: postActivityTemplate
+      summary: 发互动模板
+      operationId: postTemplate
       parameters:
         - name: body
           description: 模板信息
           required: true
           schema:
-            $ref: ActivityTemplate
+            $ref: InteractionTemplate
           in: body
       responses:
         200:
           description: 成功
           schema:
-           $ref: ActivityTemplate
+           $ref: InteractionTemplate
         default:
           description: error
           schema:
@@ -283,9 +284,19 @@ paths:
     get:
       tags:
         - interaction
-      summary: 获取活动模板列表
-      operationId: getActivityTemplate
+      summary: 获取模板列表
+      operationId: getInteractionTemplate
       parameters:
+        - name: templateType
+          description: 模板类型
+          required: true
+          type: integer
+          format: int32
+          in: query
+          enum:
+            - 1
+            - 2
+            - 3
         - name: limt
           description: 每页数目，默认10
           required: false
@@ -304,28 +315,38 @@ paths:
           schema:
             type: array
             items:
-              $ref: ActivityTemplate
+              $ref: InteractionTemplate
         default:
           description: error
           schema:
             $ref: Error
-  "/interaction/activityTemplate/{activityTemplateId}":
+  "/interaction/template/{templateType}/{templateId}":
     get:
       tags:
         - interaction
-      summary: 获取活动模板列表
+      summary: 获取模板详情
       operationId: getActivityTemplate
       parameters:
-        - name: activityTemplateId
+        - name: templateType
+          description: 模板类型
+          required: true
+          type: integer
+          format: int32
+          in: path
+          enum:
+            - 1
+            - 2
+            - 3
+        - name: templateId
           description: 模板Id
-          required: false
+          required: true
           type: string
           in: path
       responses:
         200:
           description: 成功
           schema:
-           $ref: ActivityTemplate
+           $ref: InteractionTemplate
         default:
           description: error
           schema:
@@ -343,9 +364,9 @@ paths:
           type: string
           in: path
           enum:
-            - activity
-            - poll
-            - question
+            - 1
+            - 2
+            - 3
         - name: interactionId
           description: 互动id
           required: true
@@ -1007,25 +1028,8 @@ definitions:
     title: ActivityForm
     type: object
     properties:
-      target:
-        description: 目标id
-        type: string
-      targetType:
-        description: 目标类型
-        type: integer
-        format: int32
-      theme:
-        description: 主题
-        type: string
-      content:
-        description: 内容
-        type: string
       startTime:
         description: 开始时间
-        type: string
-        format: date-time
-      endTime:
-        description: 结束时间
         type: string
         format: date-time
       deadline:
@@ -1041,23 +1045,6 @@ definitions:
     title: PollForm
     type: object
     properties:
-      target:
-        description: 目标id
-        type: string
-      targetType:
-        description: 目标类型
-        type: integer
-        format: int32
-      theme:
-        description: 主题
-        type: string
-      content:
-        description: 内容
-        type: string
-      endTime:
-        description: 结束时间
-        type: string
-        format: date-time
       option:
         description: 选项
         type: array
@@ -1068,23 +1055,8 @@ definitions:
     title: QuestionForm
     type: object
     properties:
-      target:
-        description: 目标id
+      select:
         type: string
-      targetType:
-        description: 目标类型
-        type: integer
-        format: int32
-      theme:
-        description: 主题
-        type: string
-      content:
-        description: 内容
-        type: string
-      endTime:
-        description: 结束时间
-        type: string
-        format: date-time
   InteractionForm:
     title: InteractionForm
     type: object
@@ -1143,7 +1115,7 @@ definitions:
         $ref: Location
       memberMax:
         description: 最大人数
-        type: integer,
+        type: integer
         format: int32
       memberMin:
         description: 最小人数
@@ -1151,6 +1123,11 @@ definitions:
         format: int32
       option:
         description: 选项
+        type: array
+        items:
+          type: string
+      tags:
+        description: 标签
         type: array
         items:
           type: string
@@ -1254,15 +1231,23 @@ definitions:
       commentId:
         description: 要采纳的评论Id
         type: string
-  ActivityTemplate:
+  InteractionTemplate:
     title: ActivityTemplate
     type: object
     required:
       - theme
       - content
       - endTime
-      - location
     properties:
+      templateType:
+        description: 模板类型
+        type: integer
+        format: int32
+        enum:
+          - 1
+          - 2
+          - 3
+        default: 1
       theme:
         description: 主题
         type: string
@@ -1277,8 +1262,30 @@ definitions:
         description: 开始时间
         type: string
         format: date-time
+      deadline:
+        description: 截止时间
+        type: string
+        format: date-time
       activityMold:
         description: 活动类型
         type: string
       loaction:
         $ref: Location
+      memberMax:
+        description: 最大人数
+        type: integer
+        format: int32
+      memberMin:
+        description: 最小人数
+        type: integer
+        format: int32
+      option:
+        description: 选项
+        type: array
+        items:
+          type: string
+      tags:
+        description: 标签
+        type: array
+        items:
+          type: string

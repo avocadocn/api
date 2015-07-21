@@ -6,8 +6,14 @@
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema;
 var _member = {
-  type: Schema.Types.ObjectId,
-  ref: 'User'
+  _id:{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  createTime: {
+    type: Date,
+    default: Date.now
+  }
 }
 var _option = {
   index: Number,
@@ -18,14 +24,6 @@ var _option = {
  * 投票
  */
 var Poll = new Schema({
-  theme: {//主题
-    type: String,
-    required: true
-  },
-  content: {//简介
-    type: String
-  },
-  endTime: Date,
   option: [_option]
 });
 

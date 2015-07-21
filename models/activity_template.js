@@ -11,6 +11,14 @@ var ActivityTemplate = new Schema({
   content: {//简介
     type: String
   },
+  memberMin: {//最少人数
+    type: Number,
+    default: 0
+  },
+  memberMax: {//人数上限
+    type: Number,
+    default: 0
+  },
   location: {
     loc: {
       type: {
@@ -23,12 +31,14 @@ var ActivityTemplate = new Schema({
   },
   startTime: Date,
   endTime: Date,
+  deadline: Date,
   //活动类型,篮球等
   activityMold: String,
-  create_time: {
+  createTime: {
     type: Date,
     default: Date.now
-  }
+  },
+  tags: [String]
 });
 
 mongoose.model('ActivityTemplate', ActivityTemplate);

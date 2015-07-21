@@ -314,6 +314,18 @@ validators.date = function (name, value, callback) {
     callback(true);
   }
 };
+validators.array = function (name, value, callback) {
+  if (!value) {
+    callback(true);
+    return;
+  }
+  if (!value instanceof Array) {
+    var msg = util.format('%s不是数组', name);
+    callback(false, msg);
+  } else {
+    callback(true);
+  }
+};
 
 /**
  * 验证省市区是否合法

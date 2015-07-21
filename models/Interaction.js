@@ -55,7 +55,18 @@ var Interaction = new Schema({
       default:'user'
     }
   },
-
+  theme: {//主题
+    type: String,
+    required: true
+  },
+  content: {//简介
+    type: String
+  },
+  endTime: {
+    type: Date,
+    require: true
+  },
+  tags: [String],
   //对应内容的id Activity
   activity: {
     type: Schema.Types.ObjectId,
