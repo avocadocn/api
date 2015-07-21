@@ -111,6 +111,9 @@ module.exports = function (app) {
     //先验证是否能发
     validateGiftRemain: function (req, res, next) {
       var remainGiftValidator = function(name, value, callback) {
+        if(value===5) { // 蛋糕无限送
+          callback(true)
+        }
         getGiftRemain(value, req.user._id, function(err, remains) {
           req.remains = remains;
           if(remains.remainGift===0) {
@@ -120,12 +123,24 @@ module.exports = function (app) {
             callback(true);
           }
         })
+      };
+      var receiverValidator = function(name ,value, callback) {
+        //是否需要验证receiver是否是一个公司?
+        User.findOne({_id:value}, function(err, user) {
+          if(err || !user) {
+            callback(false, '接收者有误');
+          }
+          else {
+            req.receiver = user;
+            callback(true);
+          }
+        });
       }
       donlerValidator({
         receiver: {
           name: '接收者',
           value: req.body.receiverId,
-          validators: ['required',donlerValidator.inDatabase('User', '接收者数据有误')]
+          validators: [receiverValidator]
         },
         giftIndex: {
           name: '礼物编号',
@@ -145,7 +160,7 @@ module.exports = function (app) {
       }, 'complete', function (pass, msg) {
         if(!pass) {
           var returnData = {msg: donlerValidator.combineMsg(msg)}
-          if(!req.remains.remainGift) {
+          if(req.remains && !req.remains.remainGift) {
             returnData.remainTime = req.remains.remainTime;
           }
           return res.status(400).send(returnData);
@@ -159,7 +174,8 @@ module.exports = function (app) {
         receiver: req.body.receiverId,
         giftIndex: req.body.giftIndex,
         addition: req.body.addition,
-        cid: req.user.cid
+        cid: req.user.cid,
+        receiverGender: req.receiver.sex === '男' ? 1:2 
       });
       if(req.body.replyGift) {
         gift.replyGift = req.body.replyGift;
@@ -169,7 +185,7 @@ module.exports = function (app) {
           return res.status(500).send({msg:'保存礼物失败'});
         }
         else {
-          req.remains.remainGift --;
+          req.remains && req.remains.remainGift --;
           return res.status(200).send({gift:gift, remain:req.remains});
         }
       })

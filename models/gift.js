@@ -10,11 +10,16 @@ var Gift = new Schema({
     ref: 'User',
     required: true
   },
-  // 接受者id
+  // 接收者id
   receiver: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  //接收者性别
+  receiverGender: {
+    type: Number,
+    enum: [1,2] //1为男 2为女
   },
   //送的礼物,以数字代表
   giftIndex: {

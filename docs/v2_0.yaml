@@ -31,10 +31,65 @@ paths:
           description: error
           schema:
             $ref: Error
-        "200":
+        200:
           description: 登录成功后返回的数据
           schema:
             $ref: LoginSuccess
+  /users/concern/{userId}:
+    get:
+      tags:
+        - users
+      summary: 获取xx的关注列表
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: userId
+          default: 53aa707a11fd597b3e1be260
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        200:
+          description: 关注列表
+          type: array
+          items:
+            $ref: Concern
+    post:
+      tags:
+        - users
+      summary: 对xx增加关注
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: userId
+          default: 53aa91a76b2836fd41ba422b
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        200:
+          description: 增加关注成功
+    delete:
+      tags:
+        - users
+      summary: 将xx从自己的关注列表中删除
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: userId
+          default: 53aa91a76b2836fd41ba422b
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        200:
+          description: 删除关注成功
   /gifts/history/{userId}/{direction}:
     get:
       tags:
@@ -67,7 +122,7 @@ paths:
           type: number
           in: query
       responses:
-        "200":
+        200:
           description: 获取的礼物
           schema:
             type: array
@@ -90,7 +145,7 @@ paths:
           required: true
           description: 礼物所需body
       responses:
-        "200":
+        200:
           description: 成功
           schema:
             $ref: GiftResponse
@@ -110,7 +165,7 @@ paths:
           type: string
           in: path
       responses:
-        "200":
+        200:
           description: 成功
           schema:
             $ref: GiftResponse
@@ -133,7 +188,7 @@ paths:
             - concern
             - heart
       responses:
-        "200":
+        200:
           description: 成功
           schema:
             $ref: GiftRemain
@@ -686,6 +741,20 @@ definitions:
       pushInfo:
         description: "push信息，ios包含ios_token,android包含user_id,channel_id"
         $ref: pushInfo
+  Concern:
+    title: Concern
+    type: object
+    required:
+      - user
+      - createTime
+    properties:
+      user:
+        description: 用户id 
+        type: string
+      createTime:
+        description: 关注时间
+        type: string
+        format: date-time
   GiftResponse:
     title: PostGiftResponse
     type: object
@@ -746,9 +815,48 @@ definitions:
     type: object
     required:
       - _id
+      - sender
+      - receiver
+      - receiverGender
+      - giftIndex
+      - createTime
+      - addition
+      - received
+      - cid
     properties:
       _id:
         description: giftid
+        type: string
+      sender:
+        description: 发送者id
+        type: string
+      receiver:
+        description: 接收者id
+        type: string
+      receiverGender:
+        description: 接收者性别
+        type: number
+        enum:
+          - 1
+          - 2
+      giftIndex:
+        description: 送的礼物，以数字代表 1鲜花 2咖啡 3拥抱 4爱心 5蛋糕
+        type: Number
+      createTime:
+        description: 送礼时间
+        type: string
+        format: date-time
+      addition:
+        description: 附言
+        type: string
+      received:
+        description: 是否接收
+        type: boolean
+      cid:
+        description: 所属公司
+        type: string
+      replyGift:
+        description: 回复哪个礼物
         type: string
   Location:
     title: Location

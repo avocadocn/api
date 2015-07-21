@@ -27,8 +27,8 @@ module.exports = function (app, ctrl) {
 
   app.post('/users/resend/activeEmail', ctrl.v1_3.resendActiveEmail); // 重发激活邮件
 
-  app.get('/users/concern/:userId',token.needToken, ctrl.v2_0.validateConcern ,ctrl.v2_0.getConcern); //获取xx的关注列表
-  app.post('/users/concern/:userId',token.needToken, ctrl.v2_0.addConcern); //对xx增加关注 
-  app.delete('users/concern/:userId',token.needToken, ctrl.v2_0.deleteConcern); //将xx从自己的关注列表中删除
+  app.get('/users/concern/:userId', token.needToken, ctrl.v2_0.validateConcern ,ctrl.v2_0.getConcern); //获取我的关注列表
+  app.post('/users/concern/:userId', token.needToken, ctrl.v2_0.addConcern); //对xx增加关注 
+  app.delete('/users/concern/:userId', token.needToken, ctrl.v2_0.deleteConcern); //将xx从自己的关注列表中删除
 
 };

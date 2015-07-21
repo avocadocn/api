@@ -256,7 +256,7 @@ var UserSchema = new Schema({
       type: Schema.Types.ObjectId,
       ref: 'User'
     },
-    create_time: {
+    createTime: {
       type: Date,
       default: Date.now
     }
