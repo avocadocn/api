@@ -53,9 +53,10 @@ paths:
             $ref: Error
         200:
           description: 关注列表
-          type: array
-          items:
-            $ref: Concern
+          schema:
+            type: array
+            items:
+              $ref: Concern
     post:
       tags:
         - users
