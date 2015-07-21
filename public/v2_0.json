@@ -1056,6 +1056,35 @@
           }
         }
       }
+    },
+    "/billboard": {
+      "get": {
+        "tags": [
+          "billboard"
+        ],
+        "summary": "获取公司内、公司外排行榜",
+        "operationId": "getBillboard",
+        "parameters": [
+          {
+            "name": "cid",
+            "description": "群主是否同意",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
