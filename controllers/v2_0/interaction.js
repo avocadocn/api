@@ -17,28 +17,31 @@ var log = require('../../services/error_log.js'),
     async = require('async');
 var interactionTypes = ['activity','poll','question'];
 var perPageNum = 10;
-var createActivity = function (data) {
-  var activity = new Activity({
-    theme: data.theme,
-    content: data.content,
-    memberMin: data.memberMin,
-    memberMax: data.memberMax,
-    location: data.location,
-    startTime: data.startTime,
-    endTime: data.endTime,
-    deadline: data.deadline,
-    activityMold: data.activityMold
-  });
-  return activity;
+var createActivity = function (data,template) {
+  template = template || {}
+  var  _activity = {
+    theme: data.theme || template.theme,
+    content: data.content || template.content,
+    memberMin: data.memberMin || template.memberMin,
+    memberMax: data.memberMax || template.memberMax,
+    location: data.location || template.location,
+    startTime: data.startTime || template.startTime,
+    endTime: data.endTime || template.endTime,
+    deadline: data.deadline || template.deadline,
+    activityMold: data.activityMold || template.activityMold
+  };
+  return new Activity(_activity);
 }
-var createPoll = function (data) {
+var createPoll = function (data,template) {
+  template = template || {}
   var poll = new Poll({
-    theme: data.theme,
-    content: data.content,
-    endTime: data.endTime,
+    theme: data.theme || template.theme,
+    content: data.content || template.content,
+    endTime: data.endTime || template.endTime,
   });
   var option = [];
-  data.option.forEach(function(_option, index){
+  var options = data.option || template.option || [];
+  options.forEach(function(_option, index){
     option.push({
       index:index,
       value:_option
@@ -47,11 +50,12 @@ var createPoll = function (data) {
   poll.option = option;
   return poll;
 }
-var createQuestion= function (data) {
+var createQuestion= function (data,template) {
+  template = template || {}
   var question = new Question({
-    theme: data.theme,
-    content: data.content,
-    endTime: data.endTime
+    theme: data.theme || template.theme,
+    content: data.content || template.content,
+    endTime: data.endTime || template.endTime,
   });
   return question;
 }
@@ -65,82 +69,77 @@ module.exports = function (app) {
         if(value.coordinate && (!value.coordinate instanceof Array || value.coordinate.length !=2 || typeof value.coordinate[0] !=="number" || typeof value.coordinate[1] !=="number")) return callback(false,"坐标格式错误");
         return callback(true);
       };
-      var interactionType;
-      switch(req.url) {
-        case '/interaction/poll':
-          interactionType = "poll";
-          break;
-        case '/interaction/question':
-          interactionType = "question";
-          break;
-        default:
-          interactionType = "activity";
-      }
+      var interactionType =req.body.type;
       donlerValidator({
         type: {
-          name: 'targetType',
-          value: req.body.type,
-          validators: [donlerValidator.enum([1, 2, 3],"互动类型错误"), 'required']
+          name: '互动类型',
+          value: interactionType,
+          validators: ['required', donlerValidator.enum([1, 2, 3, 4],"互动类型错误")]
         },
         targetType: {
-          name: 'targetType',
+          name: '目标类型',
           value: req.body.targetType,
           validators: [donlerValidator.enum([1, 2, 3],"目标类型错误"), 'required']
         },
         target: {
-          name: 'target',
+          name: '目标ID',
           value: req.body.target,
           validators: ['required', 'objectId']
         },
+        templateId: {
+          name: '模板ID',
+          value: req.body.templateId,
+          validators: ['objectId']
+        },
         theme: {
-          name: 'theme',
+          name: '主题',
           value: req.body.theme,
-          validators: ['required']
+          validators: !req.body.templateId ? ['required'] :[]
         },
         content: {
-          name: 'content',
+          name: '内容',
           value: req.body.content,
-          validators: ['required']
+          validators: !req.body.templateId ? ['required'] :[]
         },
         endTime: {
-          name: 'endTime',
+          name: '结束时间',
           value: req.body.endTime,
-          validators: interactionType==='activity' ? ['required','date',donlerValidator.after(req.body.startTime)] : ['required','date']
+          validators: !req.body.templateId ? ['required','date',donlerValidator.after(req.body.startTime)] : ['date']
         },
         startTime: {
-          name: 'startTime',
+          name: '开始时间',
           value: req.body.startTime,
-          validators: interactionType==='activity' ? ['required','date',donlerValidator.after(new Date())] : ['date']
+          validators: interactionType===1 && !req.body.templateId ? ['required','date',donlerValidator.after(new Date())] : ['date']
         },
         memberMin:{
-          name: 'memberMin',
+          name: '最小人数',
           value: req.body.memberMin,
           validators: ['number']
         },
         memberMax: {
-          name: 'memberMax',
+          name: '最大人数',
           value: req.body.memberMax,
           validators: ['number']
         },
         location:{
-          name: 'location',
+          name: '地点',
           value: req.body.location,
-          validators: interactionType==='activity' ? ['required',locationValidator] : []
+          validators: interactionType===1 && !req.body.templateId ? ['required',locationValidator] : []
         },
         deadline: {
-          name: 'deadline',
+          name: '截止时间',
           value: req.body.deadline,
           validators: ['date',donlerValidator.before(req.body.endTime),donlerValidator.after(new Date())]
         },
         activityMold: {
-          name: 'activityMold',
+          name: '活动类型',
           value: req.body.activityMold,
-          validators: interactionType==='activity' ? ['required'] :[]
+          validators: interactionType===1 && !req.body.templateId ? ['required'] :[]
         },
         option: {
-          name: 'option',
+          name: '选项',
           value: req.body.option,
-          validators: interactionType==='poll' ? ['required',donlerValidator.minLength(2)] :[]
+          validators: interactionType===2 && !req.body.templateId ? ['required',donlerValidator.minLength(2)] :[]
         }
       }, 'fast', function (pass, msg) {
         if (pass) {
@@ -166,38 +165,73 @@ module.exports = function (app) {
     },
     createInteraction: function (req, res) {
       var data = req.body;
-      var interactionType = data.type;
+      var interactionType;
+      var templateModel;
+      switch(data.type) {
+        case 1:
+          interactionType = "activity";
+          templateModel = "ActivityTemplate";
+          break;
+        case 2:
+          interactionType = "poll";
+          templateModel = "PollTemplate";
+          break;
+        case 3:
+          interactionType = "question";
+          templateModel = "QuestionTemplate";
+          break;
+        default:
+          return res.status(400).send({msg:"互动类型错误"});
+      }
       var interaction = new Interaction({
         cid: req.user.cid,
         targetType: data.targetType,
         target: data.target,
         poster: {
           _id:req.user._id
-        }
-      });
-      var interactionContent;
-      switch(interactionType) {
-        case 'activity':
-          interaction.type = 1;
-          interactionContent = createActivity(data);
-          break;
-        case 'poll':
-          interaction.type = 2;
-          interactionContent = createPoll(data);
-          break;
-        case 'question':
-          interaction.type = 3;
-          interactionContent = createQuestion(data);
-          break;
-        default:
-          return res.status(400).send({msg:"互动类型错误"});
-      }
-      async.parallel([
-        function(callback){
-          interactionContent.save(callback);
         },
+        type: data.type
+      });
+      
+      async.waterfall([
         function(callback){
-          interaction[interactionType] = interactionContent._id;
+          
+          if(req.body.templateId) {
+            mongoose.model(templateModel).findById(req.body.templateId)
+            .exec()
+            .then(function(template){
+              if(template) {
+                callback(null,template)
+              }
+              else {
+                callback(400)
+              }
+            })
+            .then(null, callback)
+          }
+          else {
+            callback(null,null)
+          }
+        },
+        function(template, callback){
+          var interactionContent;
+          switch(data.type) {
+            case 1:
+              interactionContent = createActivity(data,template);
+              break;
+            case 2:
+              interactionContent = createPoll(data,template);
+              break;
+            case 3:
+              interactionContent = createQuestion(data,template);
+              break;
+          }
+          interactionContent.save(function (error) {
+            callback(error,interactionContent._id)
+          });
+        },
+        function(id,callback){
+          interaction[interactionType] = id;
           interaction.save(callback)
         }
       ],
@@ -212,31 +246,11 @@ module.exports = function (app) {
         }
       });
     },
-    createActivityTemplate: function (req, res) {
-      var data = req.body;
-      var activityTemplate = new ActivityTemplate({
-        theme: data.theme,
-        content:data.content,
-        location: data.location,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        activityMold: data.activityMold
-      });
-      activityTemplate.save(function (error) {
-        if(error) {
-          res.status(500).send({msg:error});
-        }
-        else {
-          res.send(activityTemplate);
-        }
-
-      })
-    },
     getInteraction: function (req, res) {
       var interactionType = req.query.interactionType;
       var populateType;
       var userId = req.query.userId || req.user._id;
-      var option ={cid:req.user.cid, "$or":[{"type":1,target:userId},{"type":2,target:{"$in":req.user.getTids()}},{"type":3,target:req.user.cid}]};
+      var option ={cid:req.user.cid, "$or":[{"targetType":1,target:userId},{"targetType":2,target:{"$in":req.user.getTids()}},{"targetType":3,target:req.user.cid}]};
       if(req.query.createTime) {
         option.createTime ={"$lt":req.query.createTime}
       }
@@ -287,16 +301,17 @@ module.exports = function (app) {
     },
     poll: {
       poll: function (req, res) {
+        var userId = req.params.userId;
         Interaction.findById(req.params.interactionId)
           .populate("poll")
           .exec()
           .then(function (interaction) {
             var index = tools.arrayObjectIndexOf(interaction.poll.option, req.body.index, 'index');
-            if(interaction.poll.option[index].voters.indexOf(req.params.userId)>-1){
+            if(interaction.member.indexOf(userId)>-1){
               return res.status(400).send({msg:"您已经进行了投票"})
             }
-            interaction.poll.option[index].voters.push(req.params.userId);
-            interaction.member.push(req.params.userId);
+            interaction.poll.option[index].voters.push(userId);
+            interaction.member.push(userId);
             async.parallel([
               function(callback){
                 interaction.save(callback)
@@ -328,58 +343,104 @@ module.exports = function (app) {
         if(req.params.userId.toString()!==userId.toString()){
           return res.status(403).send({msg:"您没有权限进行回答和点赞"})
         }
-        Interaction.findById(req.params.interactionId)
-          .exec()
-          .then(function (interaction) {
-            if(interaction.cid.toString()!==req.user.cid.toString()){
-              return res.status(403).send({msg:"您没有权限进行回答和点赞"})
+        if(!mongoose.Types.ObjectId.isValid(req.params.interactionId) || req.body.commentId && !mongoose.Types.ObjectId.isValid(req.body.commentId)){
+          return res.status(400).send({msg:"数据格式错误"})
+        }
+        async.waterfall([
+          function(callback){
+            if(req.body.commentId) {
+              QuestionComment.findById(req.body.commentId)
+                .exec()
+                .then(function (comment) {
+                  callback(comment? null:400)
+                })
+                .then(null,function (error) {
+                  callback(500)
+                });
             }
+            else {
+              callback(null)
+            }
+          },
+          function(callback){
+            Interaction.findById(req.params.interactionId)
+              .exec()
+              .then(function (interaction) {
+                if(interaction.cid.toString()!==req.user.cid.toString()){
+                  return callback(403)
+                }
+                else {
+                  callback(null,interaction)
+                }
+              })
+              .then(null,function (error) {
+                callback(500)
+              });
+          },
+          function(interaction, callback){
             var questionComment = new QuestionComment({
               type: req.body.type,
               questionId: interaction._id,
               postCid: interaction.cid,
               postId: userId
             })
+            if(req.body.commentId) {
+               questionComment.commentId = req.body.commentId;
+            }
             if(req.body.type===1){
               questionComment.content = req.body.content;
             }
-            async.parallel([
-              function(callback){
-                questionComment.save(callback)
-              },
-              function(callback){
-                interaction.member.push(userId);
-                interaction.save(callback)
-              }
-            ],
-            // optional callback
-            function(err, results){
-              if(!err){
-                return res.send(questionComment);
-              }
-              else{
-                log(err)
-                return res.status(500).send({msg:"服务器发生错误"});
-              }
-            });
-          })
-          .then(null,function (error) {
-            log(error);
-            res.status(500).send({msg:"服务器发生错误"});
-          });
+            questionComment.save(function (error) {
+              callback(error,interaction,questionComment)
+            })
+          },
+          function(interaction, questionComment, callback){
+            if(interaction.member.indexOf(userId)===-1) {
+              interaction.member.push(userId);
+              interaction.save(function (error) {
+                callback(error,questionComment)
+              })
+            }
+            else {
+              callback(null,questionComment);
+            }
+          }
+        ],
+        // optional callback
+        function(err, results){
+          if(!err){
+            return res.send(results);
+          }
+          else{
+            log(err)
+            if(err===403) {
+               return res.status(403).send({msg:"您没有权限采纳回答"})
+            }
+            else if(err===400) {
+              return res.status(400).send({msg:"您提交的参数错误"});
+            }
+            else {
+              return res.status(500).send({msg:"服务器发生错误"});
+            }
+          }
+        });
+        
       },
       adopt: function (req, res) {
         var userId = req.user._id;
-        if(req.params.userId.toString()!==userId.toString()){
-          return res.status(403).send({msg:"您没有权限采纳回答"})
-        }
         async.waterfall([
           function(callback){
+            if (!mongoose.Types.ObjectId.isValid(req.body.commentId)) {
+              return callback(400)
+            }
             QuestionComment.findById(req.body.commentId)
               .exec()
               .then(function(questionComment){
                 if(questionComment)
                   callback(null)
+                else {
+                  callback(400)
+                }
               })
               .then(null,callback);
           },
@@ -391,7 +452,7 @@ module.exports = function (app) {
                 if(interaction.cid.toString()!==req.user.cid.toString() || interaction.poster._id.toString()!==userId.toString()){
                   callback(403)
                 }
-                else if(interaction.question.select){
+                else if(!interaction.question || interaction.question.select){
                   callback(400)
                 }
                 else{
@@ -410,17 +471,100 @@ module.exports = function (app) {
         ],
         // optional callback
         function(err, results){
-          console.log(err)
-          // return res.status(403).send({msg:"您没有权限采纳回答"})
           if(!err){
             return res.send(results);
           }
           else{
             log(err)
-            return res.status(500).send({msg:"服务器发生错误"});
+            if(err===403) {
+               return res.status(403).send({msg:"您没有权限采纳回答"})
+            }
+            else if(err===400) {
+              return res.status(400).send({msg:"您提交的参数错误"});
+            }
+            else {
+              return res.status(500).send({msg:"服务器发生错误"});
+            }
+            
           }
         });
-        
+      },
+      getComments: function (req, res) {
+        var option ={questionId:req.params.interactionId};
+        if(req.query.createTime) {
+          option.createTime ={"$lt":req.query.createTime}
+        }
+        if(req.query.commentId) {
+          option.commentId = req.query.commentId
+        }
+        else {
+          option.commentId ={"$exists":false}
+        }
+        var _perPageNum = req.query.limit || perPageNum;
+        QuestionComment.find(option)
+        .sort({ createTime: -1 })
+        .limit(_perPageNum)
+        .exec()
+        .then(function (comments) {
+          return res.send(comments);
+        })
+        .then(null,function (error) {
+          log(error);
+          res.status(500).send({msg:"服务器发生错误"});
+        });
+      }
+    },
+    activityTemplate: {
+      getActivityTemplateList: function (req, res) {
+        var option;
+        if(req.query.createTime) {
+          option.createTime ={"$lt":req.query.createTime}
+        }
+        var _perPageNum = req.query.limit || perPageNum;
+        ActivityTemplate.find(option)
+        .sort({ createTime: -1 })
+        .limit(_perPageNum)
+        .exec()
+        .then(function (activityTemplates) {
+          return res.send(activityTemplates);
+        })
+        .then(null,function (error) {
+          log(error);
+          res.status(500).send({msg:"服务器发生错误"});
+        });
+      },
+      createActivityTemplate: function (req, res) {
+        var data = req.body;
+        var activityTemplate = new ActivityTemplate({
+          theme: data.theme,
+          content:data.content,
+          location: data.location,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          activityMold: data.activityMold
+        });
+        activityTemplate.save(function (error) {
+          if(error) {
+            res.status(500).send({msg:error});
+          }
+          else {
+            res.send(activityTemplate);
+          }
+        })
+      },
+      getActivityTemplateDetail: function (req, res) {
+        if (!mongoose.Types.ObjectId.isValid(req.params.activityTemplateId)) {
+          return res.status(400).send({msg:"数据格式错误"});
+        }
+        ActivityTemplate.findById(req.params.activityTemplateId)
+          .exec()
+          .then(function (activityTemplate) {
+            return res.send(activityTemplate);
+          })
+          .then(null,function (error) {
+            log(error);
+            res.status(500).send({msg:"服务器发生错误"});
+          });
       }
     }
   };

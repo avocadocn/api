@@ -320,7 +320,7 @@
           "200": {
             "description": "成功",
             "schema": {
-              "$ref": "InteractionForm"
+              "$ref": "Interaction"
             }
           },
           "default": {
@@ -374,7 +374,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "InteractionForm"
+                "$ref": "Interaction"
               }
             }
           },
@@ -403,6 +403,80 @@
               "$ref": "ActivityTemplate"
             },
             "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "ActivityTemplate"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "interaction"
+        ],
+        "summary": "获取活动模板列表",
+        "operationId": "getActivityTemplate",
+        "parameters": [
+          {
+            "name": "limt",
+            "description": "每页数目，默认10",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "in": "query"
+          },
+          {
+            "name": "createTime",
+            "description": "创建时间，分页用",
+            "required": false,
+            "type": "number",
+            "format": "float",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "ActivityTemplate"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/interaction/activityTemplate/{activityTemplateId}": {
+      "get": {
+        "tags": [
+          "interaction"
+        ],
+        "summary": "获取活动模板列表",
+        "operationId": "getActivityTemplate",
+        "parameters": [
+          {
+            "name": "activityTemplateId",
+            "description": "模板Id",
+            "required": false,
+            "type": "string",
+            "in": "path"
           }
         ],
         "responses": {
@@ -455,7 +529,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "InteractionForm"
+                "$ref": "Interaction"
               }
             }
           },
@@ -504,7 +578,7 @@
           "200": {
             "description": "成功",
             "schema": {
-              "$ref": "InteractionForm"
+              "$ref": "Interaction"
             }
           },
           "default": {
@@ -572,7 +646,10 @@
         "parameters": [
           {
             "name": "interactionId",
-            "description": "求助id"
+            "description": "求助id",
+            "required": true,
+            "type": "string",
+            "in": "path"
           },
           {
             "name": "commentId",
@@ -589,6 +666,48 @@
             "description": "成功",
             "schema": {
               "$ref": "Interaction"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/interaction/question/{interactionId}/comment": {
+      "get": {
+        "tags": [
+          "interaction"
+        ],
+        "summary": "获取求助评论列表",
+        "operationId": "getQuestionComment",
+        "parameters": [
+          {
+            "name": "interactionId",
+            "description": "求助id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "commentId",
+            "description": "评论Id,存在则为获取评论的评论列表，否则为求助的评论列表",
+            "required": false,
+            "type": "string",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "QuestionComment"
+              }
             }
           },
           "default": {
@@ -1468,22 +1587,18 @@
       "required": [
         "type",
         "target",
-        "targetType",
-        "theme",
-        "content",
-        "endTime"
+        "targetType"
       ],
       "properties": {
         "type": {
-          "description": "互动类型 1:'活动',2:'投票',3:'求助',4:'转发活动'",
+          "description": "互动类型 1:'活动',2:'投票',3:'求助'",
           "type": "integer",
           "format": "int32",
           "default": 1,
           "enum": [
             1,
             2,
-            3,
-            4
+            3
           ]
         },
         "target": {
@@ -1501,6 +1616,10 @@
             2,
             3
           ]
+        },
+        "templateId": {
+          "description": "模板Id",
+          "type": "string"
         },
         "theme": {
           "description": "主题",
@@ -1576,6 +1695,15 @@
           "description": "结束时间",
           "type": "string",
           "format": "date-time"
+        },
+        "activity": {
+          "$ref": "ActivityForm"
+        },
+        "poll": {
+          "$ref": "PollForm"
+        },
+        "question": {
+          "$ref": "QuestionForm"
         }
       }
     },
@@ -1593,15 +1721,23 @@
     "QuestionCommentForm": {
       "title": "answerForm",
       "type": "object",
+      "required": [
+        "type"
+      ],
       "properties": {
         "content": {
           "description": "content",
+          "type": "string"
+        },
+        "commentId": {
+          "description": "评论的Id",
           "type": "string"
         },
         "type": {
           "description": "类型，1为评论，2为赞",
           "type": "integer",
           "format": "int32",
+          "default": 1,
           "enum": [
             1,
             2

@@ -9,10 +9,15 @@ module.exports = function (router, ctrl) {
     .get(ctrl.v2_0.getInteraction);                                                              //获取互动列表
 
   router.route('/interaction/activityTemplate')
-    .post(ctrl.v2_0.createActivityTemplate);                                                     //发起活动模板
+    .post(ctrl.v2_0.activityTemplate.createActivityTemplate)                                     //发起活动模板
+    .get(ctrl.v2_0.activityTemplate.getActivityTemplateList);                                    //获取活动模板列表
+  router.route('/interaction/activityTemplate/:activityTemplateId')
+    .get(ctrl.v2_0.activityTemplate.getActivityTemplateDetail);                                  //获取活动模板列表
   router.get('/interaction/:interactionType/:interactionId', ctrl.v2_0.getInteractionDetail);    //获取互动详情
   router.post('/interaction/poll/:interactionId/users/:userId', ctrl.v2_0.poll.poll);            //进行投票
   router.route('/interaction/question/:interactionId/users/:userId')
     .post(ctrl.v2_0.question.comment)                                                            //回答求助或点赞
     .put(ctrl.v2_0.question.adopt);                                                              //采纳回答
+  router.route('/interaction/question/:interactionId/comment')
+    .get(ctrl.v2_0.question.getComments)                                                         //获取求助的评论列表
 };
