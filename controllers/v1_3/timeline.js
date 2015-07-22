@@ -216,9 +216,7 @@ var searchCampaign = function(requestType, option, sort, limit, page, user, call
     },{sortBy:sort});
 }
 
-module.exports = function (app) {
-
-  return {
+module.exports = {
 
     getTimelineRecord: function (req, res) {
       var reqModel,
@@ -538,6 +536,5 @@ module.exports = function (app) {
         return res.status(500).send({msg: err });
       });
     }
-  };
 
 };

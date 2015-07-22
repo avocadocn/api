@@ -22,8 +22,7 @@ var auth = require('../../services/auth.js'),
 
 
 
-module.exports = function(app) {
-  return {
+module.exports =  {
 
     singleImgUploadSwitcher: function (req, res, next) {
 
@@ -1604,7 +1603,6 @@ module.exports = function(app) {
       //   });
       // }
     */
-  };
 };
 
 /**
@@ -2067,4 +2065,5 @@ function addInfoToCircleContent(contentDocs, callback) {
     callback(null, resData);
   })
   .then(null, callback);
+  
 }

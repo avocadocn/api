@@ -93,7 +93,7 @@ walk(path.join(rootPath, 'controllers'), function (version, file, path) {
   if(!controllers[ctrlName]) {
     controllers[ctrlName] = {};
   }
-  controllers[ctrlName][version] = require(path)(app);
+  controllers[ctrlName][version] = require(path);
 });
 
 walk(path.join(rootPath, 'routes'), function (version, file, path) {

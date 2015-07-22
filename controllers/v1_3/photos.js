@@ -14,8 +14,7 @@ var userScore = require('../../services/user_score.js');
 var uploader = require('../../services/uploader.js');
 var tools = require('../../tools/tools.js');
 
-module.exports = function (app) {
-  return {
+module.exports = {
 
     getPhotoAlbumById: function (req, res, next) {
       PhotoAlbum.findOne({
@@ -650,6 +649,4 @@ module.exports = function (app) {
         });
 
     }
-
-  };
 };

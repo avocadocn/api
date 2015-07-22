@@ -5,8 +5,7 @@ var User = mongoose.model('User');
 var log = require('../../services/error_log.js'),
     donlerValidator = require('../../services/donler_validator.js'),
     tools = require('../../tools/tools.js');
-module.exports = function (app) {
-  return {
+module.exports = {
     validateConcern: function (req, res, next) {
       donlerValidator({
         concern:{
@@ -78,5 +77,4 @@ module.exports = function (app) {
         return res.status(200).send({msg:'取消关注成功'});
       }
     }
-  }
 };

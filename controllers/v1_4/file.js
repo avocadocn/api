@@ -27,8 +27,7 @@ var mongoose = require('mongoose'),
 var yaliDir = path.join(__dirname, '../../../yali/'); // yali网站目录
 var tempDir = path.join(yaliDir, 'temp_uploads'); // yali网站上传文件的临时目录
 
-module.exports = function (app) {
-  return {
+module.exports = {
 
     /**
      * 上传文件的api对应的控制器
@@ -137,8 +136,6 @@ module.exports = function (app) {
       }
 
     }
-
-  };
 };
 
 /**

@@ -460,9 +460,7 @@ var getCampaignListHandle = function (req, res) {
     });
 };
 
-module.exports = function (app) {
-
-  return {
+module.exports = {
     updateCampaign: function (req, res) {
       var campaign = req.campaign;
       if (!campaign) {
@@ -984,7 +982,5 @@ module.exports = function (app) {
         });
       }
     }
-
-  };
 
 };

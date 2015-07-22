@@ -5,9 +5,7 @@ var Report = mongoose.model('Report'),
     donlerValidator = require('../../services/donler_validator.js'),
     log = require('../../services/error_log.js'),
     auth = require('../../services/auth.js');
-module.exports = function (app) {
-
-  return {
+module.exports = {
     pushReport: function(req, res){
       donlerValidator({
         hostType: {
@@ -181,5 +179,4 @@ module.exports = function (app) {
         return res.sendStatus(200);
       }
     }
-  }
 };

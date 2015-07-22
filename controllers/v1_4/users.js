@@ -21,9 +21,7 @@ var syncData = require('../../services/sync_data.js');
 var async = require('async');
 var publicDomain = require('../../services/public_domain.js');
 var easemob = require('../../services/easemob.js');
-module.exports = function (app) {
-
-  return {
+module.exports = {
     //屏蔽
     close: function (req, res) {
       var role = auth.getRole(req.user, {
@@ -147,7 +145,7 @@ module.exports = function (app) {
           return;
         }
         if(req.body.did && (!user.department || !user.department._id || user.department._id.toString()!= req.body.did)) {
-          departmentController(app).joinDepartment(user,req.body.did,function (err) {
+          departmentController.joinDepartment(user,req.body.did,function (err) {
             if (err) {
               log(err);
               res.sendStatus(500);
@@ -255,7 +253,6 @@ module.exports = function (app) {
       }
 
     }
-  };
 };
 
 

@@ -22,9 +22,7 @@ var log = require('../../services/error_log.js'),
 var easemob = require('../../services/easemob.js');
 var personalTeamScoreLimit = 100;
 var perPageNum = 4;
-module.exports = function (app) {
-
-  return {
+module.exports = {
 
     getTeamsValidate: function (req, res, next) {
       donlerValidator({
@@ -707,7 +705,6 @@ module.exports = function (app) {
         }
       });
     }
-  };
 };
 
 

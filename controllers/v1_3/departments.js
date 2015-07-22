@@ -10,9 +10,7 @@ var Department = mongoose.model('Department'),
   auth = require('../../services/auth.js'),
   StackAndQueue = require('../../tools/stack.js');
 
-module.exports = function (app) {
-
-  return {
+module.exports = {
     getDepartmentTree: function(req, res) {
       Company.findOne({
         _id: req.params.companyId,
@@ -291,8 +289,6 @@ module.exports = function (app) {
         managerUpdate(did, operate, req.body.member, res);
       }
     }
-
-  }
 };
 
 

@@ -15,8 +15,7 @@ var timeLimit = 7 * 24 * 60 * 60 * 1000;
 var forwardTeamNum = 2;
 var backwardTeamNum = 2;
 var rankTeamNum =5;
-module.exports = function (app) {
-  return {
+module.exports = {
     getRank: function (req, res) {
       donlerValidator({
         province: {
@@ -229,7 +228,6 @@ module.exports = function (app) {
         res.status(403).send({msg:'您没有权限进行该操作'})
       }
     }
-  };
 };
 
 

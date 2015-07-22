@@ -17,9 +17,7 @@ var log = require('../../services/error_log.js'),
 
 var time_out = 72*24*3600;
 
-module.exports = function (app) {
-
-  return {
+module.exports = {
     //private
     _sendMessage: __sendMessage,
     sendMessage: function(req, res, next) {
@@ -308,8 +306,6 @@ module.exports = function (app) {
         }
       });
     }
-      
-  }
 };
 
 

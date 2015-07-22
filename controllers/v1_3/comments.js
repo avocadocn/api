@@ -125,9 +125,7 @@ var setDeleteAuth = function setDeleteAuth(data, callback) {
   }
 };
 
-module.exports = function (app) {
-
-  return {
+module.exports = {
 
     canPublishComment: function (req, res, next) {
       var hostId = req.params.hostId;
@@ -617,5 +615,4 @@ module.exports = function (app) {
         return res.status(500).send({msg: 'Comment not found'});
       });
     }
-  };
 };

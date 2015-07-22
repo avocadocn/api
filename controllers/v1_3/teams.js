@@ -22,9 +22,7 @@ var log = require('../../services/error_log.js'),
 var easemob = require('../../services/easemob.js');
 var personalTeamScoreLimit = 100;
 var perPageNum = 4;
-module.exports = function (app) {
-
-  return {
+module.exports = {
    
     createTeams : function(req, res) {
       //权限判断
@@ -1240,7 +1238,6 @@ module.exports = function (app) {
         }
       },{columns:{'logo':1,'name':1,'cname':1,'score_rank':1,'score.total':1}, sortBy:{'score_rank.score':-1,'score.total':-1}});
     }
-  };
 };
 
 

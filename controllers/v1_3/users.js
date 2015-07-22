@@ -22,9 +22,7 @@ var departmentController = require('./departments');
 var async = require('async');
 var publicDomain = require('../../services/public_domain.js');
 var easemob = require('../../services/easemob.js');
-module.exports = function (app) {
-
-  return {
+module.exports = {
 
     getCompanyByCid: function (req, res, next) {
       if (!req.body || !req.body.cid || req.body.cid === '') {
@@ -603,7 +601,7 @@ module.exports = function (app) {
           return;
         }
         if(req.body.did && (!user.department || !user.department._id || user.department._id.toString()!= req.body.did)) {
-          departmentController(app).joinDepartment(user,req.body.did,function (err) {
+          departmentController.joinDepartment(user,req.body.did,function (err) {
             if (err) {
               log(err);
               res.sendStatus(500);
@@ -661,9 +659,9 @@ module.exports = function (app) {
           var payload = {
             type: "user",
             id: user._id.toString(),
-            exp: app.get('tokenExpires') + Date.now()
+            exp: req.app.get('tokenExpires') + Date.now()
           };
-          var token = jwt.sign(payload, app.get('tokenSecret'));
+          var token = jwt.sign(payload, req.app.get('tokenSecret'));
           var pushInfo = req.body.pushInfo ||{};
           user.addDevice(req.headers, token, pushInfo);
           user.save(function (err) {
@@ -704,8 +702,8 @@ module.exports = function (app) {
           var newToken = jwt.sign({
             type: "user",
             id: req.user._id.toString(),
-            exp: app.get('tokenExpires') + Date.now()
-          }, app.get('tokenSecret'));
+            exp: req.app.get('tokenExpires') + Date.now()
+          }, req.app.get('tokenSecret'));
           req.user.updateDeviceToken(req.headers['x-access-token'], newToken);
           req.user.save(function(err) {
             if (err) next(err);
@@ -1179,7 +1177,6 @@ module.exports = function (app) {
       });
       
     }
-  };
 };
 
 

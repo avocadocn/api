@@ -15,9 +15,7 @@ var auth = require('../../services/auth.js'),
   tools = require('../../tools/tools.js'),
   chatsBusiness = require('../../business/chats');
 var shieldTip = "该评论已经被系统屏蔽";
-module.exports = function (app) {
-
-  return {
+module.exports = {
     canPublishChat: function (req, res, next) {
       if (!req.params.chatroomId) {
         return res.status(422).send({msg: '参数不合法'});
@@ -437,8 +435,6 @@ module.exports = function (app) {
           });
       }
     }
-  };
-
 };
 
 /**

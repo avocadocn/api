@@ -456,9 +456,7 @@ var getCampaignListHandle = function (req, res) {
     });
 };
 
-module.exports = function (app) {
-
-  return {
+module.exports =  {
 
     postCampaign: function (req, res) {
       var _campaign_type;
@@ -1189,7 +1187,7 @@ module.exports = function (app) {
                 '_id':opposite_team.leader.length? opposite_team.leader[0]._id:''
               }
               param.team = [param.own_team,param.receive_team];
-              messageController(app)._sendMessage(param);
+              messageController._sendMessage(param);
             }
           });
           //若接受,则发动态、加积分
@@ -1519,7 +1517,5 @@ module.exports = function (app) {
         });
       }
     }
-
-  };
 
 };

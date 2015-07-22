@@ -74,8 +74,7 @@ var getGiftRemain = function(giftIndex, userId, callback) {
 };
 
 
-module.exports = function (app) {
-  return {
+module.exports = {
     getUserGifts: function (req, res) {
       //暂时只能看自己的
       if(req.user._id.toString() != req.params.userId) {
@@ -252,5 +251,4 @@ module.exports = function (app) {
       // }
       // return res.status(200).send(remains);
     }
-  }
 }

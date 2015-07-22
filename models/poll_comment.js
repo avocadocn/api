@@ -2,7 +2,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var QuestionComment = new Schema({
+var PollComment = new Schema({
 
   // 类型，1:评论,2:赞
   type: {
@@ -12,7 +12,7 @@ var QuestionComment = new Schema({
   },
   content: String,
 
-  // 评论所属的求助Id
+  // 评论所属的投票Id
   interactionId: {
     type: Schema.Types.ObjectId,
     required: true
@@ -42,4 +42,4 @@ var QuestionComment = new Schema({
   }
 });
 
-mongoose.model('QuestionComment', QuestionComment);
+mongoose.model('PollComment', PollComment);

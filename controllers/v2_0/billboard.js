@@ -14,8 +14,7 @@ var auth = require('../../services/auth.js'),
   donlerValidator = require('../../services/donler_validator.js'),
   async = require('async');
 
-module.exports = function(app) {
-  return {
+module.exports = {
     /**
      * 获取榜单
      * 
@@ -126,5 +125,4 @@ module.exports = function(app) {
         });
       });
     }
-  };
 };

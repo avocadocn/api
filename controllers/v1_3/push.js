@@ -6,8 +6,7 @@ var Campaign = mongoose.model('Campaign');
 var log = require('../../services/error_log.js');
 var auth = require('../../services/auth.js');
 
-module.exports = function (app) {
-  return {
+module.exports = {
     //这里未用到，与users重复
     getPushStatus: function(req, res){
       User.findById(req.params.userId).exec()
@@ -62,5 +61,4 @@ module.exports = function (app) {
           res.sendStatus(500);
         });
     }
-  }
 };

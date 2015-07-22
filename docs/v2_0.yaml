@@ -415,38 +415,7 @@ paths:
           description: error
           schema:
             $ref: Error
-  "/interaction/question/{interactionId}/users/{userId}":
-    post:
-      tags:
-        - interaction
-      summary: 回答求助
-      operationId: poll
-      parameters:
-        - name: interactionId
-          description: 求助id
-          required: true
-          type: string
-          in: path
-        - name: userId
-          description: 用户id
-          required: true
-          type: string
-          in: path
-        - name: body
-          description: 求助的评论信息
-          required: true
-          schema:
-            $ref: QuestionCommentForm
-          in: body
-      responses:
-        200:
-          description: 成功
-          schema:
-           $ref: QuestionComment
-        default:
-          description: error
-          schema:
-            $ref: Error
+  "/interaction/{question}/{interactionId}/users/{userId}":
     put:
       tags:
         - interaction
@@ -473,20 +442,68 @@ paths:
           description: error
           schema:
             $ref: Error
-  "/interaction/question/{interactionId}/comment":
-    get:
+  "/interaction/{interactionType}/{interactionId}/comment":
+    post:
       tags:
         - interaction
-      summary: 获取求助评论列表
-      operationId: getQuestionComment
+      summary: 评论(点赞)互动
+      operationId: poll
       parameters:
+        - name: interactionType
+          description: 互动类型
+          required: true
+          type: integer
+          format: int32
+          in: path
+          enum:
+            - 1
+            - 2
+            - 3
+        - name: interactionId
+          description: 互动id
+          required: true
+          type: string
+          in: path
+        - name: body
+          description: 互动的评论信息
+          required: true
+          schema:
+            $ref: InteractionCommentForm
+          in: body
+      responses:
+        200:
+          description: 成功
+          schema:
+           $ref: InteractionComment
+        default:
+          description: error
+          schema:
+            $ref: Error
+    get:
+      tags:
+
+
+        - interaction
+      summary: 获取互动评论列表
+      operationId: getInteractionComment
+      parameters:
+        - name: interactionType
+          description: 互动类型
+          required: true
+          type: integer
+          format: int32
+          in: path
+          enum:
+            - 1
+            - 2
+            - 3
         - name: interactionId
           description: 求助id
           required: true
           type: string
           in: path
         - name: commentId
-          description: "评论Id,存在则为获取评论的评论列表，否则为求助的评论列表"
+          description: "评论Id,存在则为获取评论的评论列表，否则为互动的评论列表"
           required: false
           type: string
           in: query
@@ -496,7 +513,38 @@ paths:
           schema:
             type: array
             items:
-              $ref: QuestionComment
+              $ref: InteractionComment
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/interaction/{interactionType}/comment/{commentId}":
+    delete:
+      tags:
+        - interaction
+      summary: 删除评论/取消赞
+      operationId: poll
+      parameters:
+        - name: interactionType
+          description: 互动类型
+          required: true
+          type: integer
+          format: int32
+          in: path
+          enum:
+            - 1
+            - 2
+            - 3
+        - name: commentId
+          description: 评论id
+          required: true
+          type: string
+          in: path
+      responses:
+        200:
+          description: 成功
+          schema:
+           $ref: InteractionComment
         default:
           description: error
           schema:
@@ -1186,7 +1234,7 @@ definitions:
         description: index
         type: integer
         format: int32
-  QuestionCommentForm:
+  InteractionCommentForm:
     title: answerForm
     type: object
     required:
@@ -1206,8 +1254,8 @@ definitions:
         enum:
           - 1
           - 2
-  QuestionComment:
-    title: QuestionComment
+  InteractionComment:
+    title: InteractionComment
     type: object
     properties:
       type:
@@ -1220,7 +1268,7 @@ definitions:
       content:
         description: content
         type: string
-      questionId:
+      interactionId:
         description: questionId
         type: string
       commentId:
@@ -1237,7 +1285,7 @@ definitions:
         type: string
         format: date-time
       status:
-        description: 状态//1:正常，2:删除，3:内容删除
+        description: 状态1:正常，2:删除，3:内容删除
         type: integer
         format: int32
         enum:

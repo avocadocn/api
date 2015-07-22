@@ -30,9 +30,7 @@ var qrcodeService = require('../../services/qrcode');
 var easemob = require('../../services/easemob.js');
 
 
-module.exports = function (app) {
-
-  return {
+module.exports = {
     getCompanyById: function (req, res, next) {
       Company.findOne({
         _id: req.params.companyId,
@@ -1477,9 +1475,9 @@ module.exports = function (app) {
           var payload = {
             type: "company",
             id: company._id.toString(),
-            exp: app.get('tokenExpires') + Date.now()
+            exp: req.app.get('tokenExpires') + Date.now()
           };
-          var token = jwt.sign(payload, app.get('tokenSecret'));
+          var token = jwt.sign(payload, req.app.get('tokenSecret'));
           company.addDevice(req.headers, token);
           company.save(function (err) {
             if (err) {
@@ -1517,8 +1515,8 @@ module.exports = function (app) {
           var newToken = jwt.sign({
             type: "company",
             id: req.user._id.toString(),
-            exp: app.get('tokenExpires') + Date.now()
-          }, app.get('tokenSecret'));
+            exp: req.app.get('tokenExpires') + Date.now()
+          }, req.app.get('tokenSecret'));
           req.user.updateDeviceToken(req.headers['x-access-token'], newToken);
           req.user.save(function(err) {
             if (err) next(err);
@@ -1569,7 +1567,5 @@ module.exports = function (app) {
         })
         .then(null, next);
     }
-
-  };
 
 };

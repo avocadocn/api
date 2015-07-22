@@ -5,8 +5,7 @@ var CompanyRegisterInviteCode = mongoose.model('CompanyRegisterInviteCode');
 
 var log = require('../../services/error_log.js');
 
-module.exports = function (app) {
-  return {
+module.exports = {
     checkInviteCode: function (req, res) {
       CompanyRegisterInviteCode.findOne({
         'code': req.query.invite_code
@@ -22,5 +21,4 @@ module.exports = function (app) {
         }
       });
     }
-  }
 }

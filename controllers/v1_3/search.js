@@ -6,9 +6,7 @@ var CompanyGroup = mongoose.model('CompanyGroup');
 var User = mongoose.model('User');
 
 // var blockWords = ['中国','上海','北京','公司'];
-module.exports = function (app) {
-
-  return {
+module.exports = {
     searchCompanies: function(req, res){
       var options = {};
       var companies_rst = [];
@@ -98,5 +96,4 @@ module.exports = function (app) {
         });
 
     }
-  }
 };

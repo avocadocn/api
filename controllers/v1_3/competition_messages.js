@@ -50,9 +50,7 @@ var formatCompetitionStatus = function (message) {
   }
   return status;
 }
-module.exports = function (app) {
-  
-  return {
+module.exports = {
     //验证前端来的数据是否符合要求 用户发挑战信
     sendMessageValidate: function (req, res, next) {
       //验证两个队是不是一个类型或者一个公司
@@ -367,5 +365,4 @@ module.exports = function (app) {
         }
       })
     }
-  };
 };

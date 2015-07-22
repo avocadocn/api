@@ -19,8 +19,7 @@ var auth = require('../../services/auth.js'),
 
 // TODO: 群组API涉及到权限判断，同时有重复代码，需要
 // 修改原权限判断代码，优化代码。
-module.exports = function(app) {
-  return {
+module.exports = {
     /**
      * 验证创建群组的数据
      * 解析form数据，验证必需数据是否存在
@@ -980,5 +979,4 @@ module.exports = function(app) {
         }
       });
     }
-  };
 };

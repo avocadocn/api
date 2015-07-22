@@ -27,26 +27,24 @@ function getCityJSON(cities) {
   return rst;
 }
 
-module.exports = function (app) {
-  return {
-    getRegions: function(req, res) {
-      var rst = {
-        "data":[]
-      }
-      Region.find(null,function (err, regions) {
-        if(err || !regions) {
-          return res.send([]);
-        } else {
-          for(var i = 0; i < regions.length; i ++) {
-            rst.data.push({
-              "label":regions[i].name,
-              "value":regions[i].name,
-              "data":getCityJSON(regions[i].city)
-            });
-          }
-          return res.status(200).send(rst);
-        }
-      });
+module.exports = {
+  getRegions: function(req, res) {
+    var rst = {
+      "data":[]
     }
+    Region.find(null,function (err, regions) {
+      if(err || !regions) {
+        return res.send([]);
+      } else {
+        for(var i = 0; i < regions.length; i ++) {
+          rst.data.push({
+            "label":regions[i].name,
+            "value":regions[i].name,
+            "data":getCityJSON(regions[i].city)
+          });
+        }
+        return res.status(200).send(rst);
+      }
+    });
   }
 };

@@ -99,10 +99,8 @@ var addTeamScore = function (scoreBoard) {
     
   });
 }
-module.exports = function (app) {
-
-  return {
-    ScoreBoard : {
+module.exports = {
+    ScoreBoard: {
       setScoreValidate: function (req, res, next) {
         donlerValidator({
           data: {
@@ -515,7 +513,6 @@ module.exports = function (app) {
       }
 
     }
-  }
 }
 
 

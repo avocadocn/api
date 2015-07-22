@@ -63,8 +63,7 @@ var Interaction = new Schema({
     type: String
   },
   endTime: {
-    type: Date,
-    require: true
+    type: Date
   },
   tags: [String],
   //对应内容的id Activity
