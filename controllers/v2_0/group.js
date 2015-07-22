@@ -679,7 +679,6 @@ module.exports = {
      * query {
      *   regex: String
      * }
-     * TODO: 需要验证
      * @param  {[type]} req [description]
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
@@ -690,7 +689,10 @@ module.exports = {
           msg: '参数错误'
         });
       }
-      
+      // 从swagger传送过来的中文必须使用unescape解析才能成功,
+      // 其他方式或许不同。同时, js将来或许不再支持unescape。
+      req.query.regex = unescape(req.query.regex);
+
       var conditions = {
         'cid': req.user.cid,
         'active': true,

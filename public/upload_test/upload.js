@@ -168,7 +168,7 @@
     submit.click(function () {
       var fd = new FormData($('#circleContentForm')[0]);
       $.ajax({
-        url: baseUrl + '/circle_contents',
+        url: baseUrl + '/v2_0/circle_contents',
         type: 'POST',
         data: fd,
         processData: false,
@@ -194,7 +194,7 @@
     submit.click(function () {
       var fd = new FormData($('#circleContentFormWithPhoto')[0]);
       $.ajax({
-        url: baseUrl + '/circle_contents',
+        url: baseUrl + '/v2_0/circle_contents',
         type: 'POST',
         data: fd,
         processData: false,
