@@ -2,7 +2,7 @@
 
 var path = require('path'),
   fs = require('fs'),
-  crypto = require('crypto'),
+  shortid = require('shortid'),
   multiparty = require('multiparty');
 
 var mongoose = require('mongoose');
@@ -353,9 +353,10 @@ module.exports = function(app) {
         });
       }
 
-      // TODO 修改邀请链接网址生成
-      // uuid or guid
-      var inviteCode = crypto.createHash('md5').update(Date.now().valueOf().toString()).digest('hex');
+      // 邀请链接网址生成
+      shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_#');
+
+      var inviteCode = shortid.generate();
 
       var groupInviteCode = new GroupInviteCode({
         code: inviteCode, // 公司id
