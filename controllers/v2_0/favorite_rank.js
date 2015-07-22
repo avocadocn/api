@@ -36,7 +36,7 @@ module.exports = {
      * ]
      * @return {[type]}     [description]
      */
-    getBillboard: function(req, res) {
+    getFavoriteRank: function(req, res) {
       // 本周查询时间的设定
       var m =  moment();
       if (moment().day === 0) {
@@ -112,7 +112,7 @@ module.exports = {
         });
       }
 
-      Gift.aggregate(aggregateOptions).exec(function(err, billboard) {
+      Gift.aggregate(aggregateOptions).exec(function(err, favoriteRank) {
         if (err) {
           log(err);
           return res.status(500).send({
@@ -121,7 +121,7 @@ module.exports = {
         }
         // 用户基本信息可以通过sqlite在前端获取，这样效率或许更好点
         res.status(200).send({
-          billBoard: billboard
+          favoriteRank: favoriteRank
         });
       });
     }

@@ -912,12 +912,12 @@ paths:
           description: error
           schema:
             $ref: Error
-  "/billboard":
+  "/favorite_rank":
     get:
       tags:
-        - billboard
+        - favorite_rank
       summary: 获取公司内、公司外排行榜 
-      operationId: getBillboard
+      operationId: getFavoriteRank
       parameters:
         - name: cid
           description: 公司id
@@ -951,6 +951,58 @@ paths:
           description: error
           schema:
             $ref: Error
+  "/circle_contents":
+    post:
+      tags:
+        - circles
+      summary: 创建新同事圈内容
+      operationId: createCircleContent
+      consumes:
+        - multipart/form-data
+      description: 此功能测试移动到upload_test
+      parameters:
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+  "/circle/company":
+    get:
+      tags:
+        - circles
+      summary: 获取公司同事圈内容
+      operationId: getCompanyCircle
+      parameters:
+        - name: latest_content_date
+          description: 最新一个消息发布时间
+          required: false
+          type: string
+          format: date-time
+          in: query
+        - name: last_content_date
+          description: 最后一个消息发布时间
+          required: false
+          type: string
+          format: date-time
+          in: query
+        - name: limit
+          description: 数量限制
+          required: false
+          type: number
+          in: query
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: ResCircle
 definitions:
   Error:
     title: Error
@@ -1400,3 +1452,99 @@ definitions:
         type: array
         items:
           type: string
+  ResCircle:
+    title: ResCircle
+    required:
+      - content
+      - comments
+    properties:
+      content:
+        type: CircleContent
+        description: 消息相关信息
+      comments:
+        type: array
+        description: 消息相关评论数组
+        items:
+          type: CircleComment
+  CircleContent:
+    title: Content
+    required:
+      - _id
+      - cid
+      - post_user_id
+      - post_date
+      - status
+    properties:
+      _id:
+        type: string
+        description: 消息id
+      cid:
+        type: string
+        description: 公司id
+      content:
+        type: string
+        description: 消息内容
+      photos:
+        type: array
+        description: 消息图片
+        items:
+          $ref: ContentPhoto
+      post_user_id:
+        type: string
+        description: 消息发布者id
+      post_date:
+        type: string
+        description: 消息时间
+        format: date-time
+      status:
+        type: string
+        description: 消息状态
+      comment_users:
+        type: array
+        description: 参与过评论的用户id数组
+        items:
+          type: string
+  CircleComment:
+    title: CircleComment
+    required:
+      - _id
+      - kind
+      - is_only_to_content
+      - target_content_id
+      - target_user_id
+      - post_user_cid
+      - post_user_id
+      - post_date
+      - status
+    properties:
+      _id:
+        type: string
+        description: 评论id
+      kind:
+        type: string
+        description: 类型
+      content:
+        type: string
+        description: 评论内容
+      is_only_to_content:
+        type: boolean
+        description: 回复对象
+      target_content_id:
+        type: string
+        description: 评论目标消息的id
+      target_user_id:
+        type: string
+        description: 评论目标用户的id
+      post_user_cid:
+        type: string
+        description: 发评论或赞的用户的公司id
+      post_user_id:
+        type: string
+        description: 发评论或赞的用户的id
+      post_date:
+        type: string
+        description: 发评论时间
+        format: date-time
+      status:
+        type: string
+        description: 消息状态

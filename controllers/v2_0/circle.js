@@ -49,6 +49,11 @@ module.exports = {
     /**
      * 解析formData
      * To parse the form data from the fore-end
+     * 
+     * content和photo信息都不存在，则返回400, msg: 文字和图片至少包含一种
+     * photo信息出错, 则返回400, msg: 图片信息出错
+     * content和photo信息至少存在一个，则下一步
+     * 
      * @param  {[type]}   req  [description]
      * formData
      * {
@@ -77,18 +82,21 @@ module.exports = {
         }
 
         // Send error(400) when don't have content and images
-        var hasErrorInFiles = files[fieldName].some(function(fileInfo) { return !fileInfo.originalFilename});
-
-        if ((fields['content'] == undefined || !fields['content'][0]) && hasErrorInFiles) {
+        if ((fields['content'] == undefined || !fields['content'][0]) && !files[fieldName]) {
           return res.status(400).send({
-            msg: '参数错误'
+            msg: '文字和图片至少包含一种'
+          });
+        }
+
+        if (files[fieldName] && files[fieldName].some(function(fileInfo) { return !fileInfo.originalFilename})) {
+          return res.status(400).send({
+            msg: '图片信息出错'
           });
         }
 
         req.content = (fields['content'] && fields['content'][0]) ? fields['content'][0] : undefined;
         req.imgFiles = files[fieldName] ? files[fieldName] : undefined;
 
-        return res.sendStatus(500);
         next();
       });
     },
@@ -133,6 +141,7 @@ module.exports = {
 
     },
     /**
+     * 创建新同事圈消息
      * Create circle content
      * @param  {[type]} req [description]
      * @param  {[type]} res [description]
@@ -154,19 +163,11 @@ module.exports = {
       var circleContent = new CircleContent({
         cid: req.user.getCid(), // 所属公司id
 
-        tid: req.tid, // 关联的小队id(可选，不是必要的)
-
-        campaign_id: req.campaign_id, // 关联的活动id(可选，不是必要的)
-
         content: req.content, // 文本内容(content和photos至少要有一个)
 
         photos: photos, // 照片列表
 
-        post_user_id: req.user._id, // 发消息的用户的id（头像和昵称再次查询）
-
-        post_user_tid: req.post_user_tid,
-
-        relative_cids: req.relative_cids // 参加同事圈消息所属的活动的所有公司id
+        post_user_id: req.user._id // 发消息的用户的id（头像和昵称再次查询）
       });
 
       circleContent.save(function(err) {
@@ -178,37 +179,38 @@ module.exports = {
             // 'msg': '同事圈消息发送成功',
             'circleContent': circleContent // this field is used for test
           });
-          Campaign.update({
-            _id: circleContent.campaign_id
-          }, {
-            $inc: {
-              circle_content_sum: 1
-            }
-          }, function(err, numberAffected) {
-            if (err) {
-              log(err);
-            }
-          });
-          //socket
-          var poster = {
-            _id: req.user._id,
-            nickname: req.user.nickname,
-            photo: req.user.photo
-          };
-          socketClient.pushCircleContent(circleContent.cid, poster);
+
+          //socket(消息通知暂时去掉)
+          // var poster = {
+          //   _id: req.user._id,
+          //   nickname: req.user.nickname,
+          //   photo: req.user.photo
+          // };
+          // socketClient.pushCircleContent(circleContent.cid, poster);
         }
       });
     },
     /**
-     * get the circle contents for user
+     * 获取公司消息及评论
+     * get the circle contents
+     *
+     * last_content_date和latest_content_date都存在(两者存其一), 则返回400, msg: 参数错误
+     * latest_content_date存在, 查询该时间点之后的同事圈消息
+     * last_content_date存在, 查询该时间点之前的同事圈消息
+     * 注：除查询最新同事圈消息外, 均要设置limit
+     * 
      * @param  {[type]} req [description]
+     * query
+     * {
+     *   last_content_date: Date, // 最后一条同事圈消息创建时间
+     *   latest_content_date: Date, // 最新一条同事圈消息创建时间
+     *   limit: Number // 刷早些同事圈消息时，页面返回消息条数
+     * }
      * @param  {[type]} res [description]
      * @return [
      *           {
      *             content: {
      *               cid // 所属公司id
-     *               tid: [Schema.Types.ObjectId], // 关联的小队id(可选，不是必要的)
-     *               campaign_id: Schema.Types.ObjectId, // 关联的活动id(可选，不是必要的)
      *               content: String, // 文本内容(content和photos至少要有一个)
      *               photos: [], // 照片列表
      *               post_user_id: Schema.Types.ObjectId, // 发消息的用户的id（头像和昵称再次查询）
@@ -225,6 +227,7 @@ module.exports = {
      *         ]
      */
     getCompanyCircle: function(req, res, next) {
+      // 暂留判断用户是否为HR
       if (req.user.provider === 'company') {
         return res.status(403).send({
           msg: '公司账号暂无同事圈功能'
@@ -236,12 +239,14 @@ module.exports = {
           msg: '参数错误'
         });
       }
-
+      console.log(Date.now().valueOf());
       var conditions = {
         'cid': req.user.cid,
         'status': 'show'
       };
+
       var options = {};
+
       if (req.query.last_content_date) { //如果带此属性来，则查找比它更早的limit条
         conditions.post_date = {
           '$lt': req.query.last_content_date
@@ -253,7 +258,8 @@ module.exports = {
           '$gt': req.query.latest_content_date
         };
       } else {
-        options.limit = req.query.limit || 20;
+        // 除查询最新同事圈消息外, 均要设置limit
+        options.limit = req.query.limit || 10;
       }
 
       CircleContent.find(conditions, null, options)
@@ -279,199 +285,9 @@ module.exports = {
         })
         .then(null, next);
     },
-    /**
-     * get the campaign circle for user
-     * @param  {[type]} req [description]
-     * @param  {[type]} res [description]
-     * @return (Reference getCampaignCircle)
-     */
-    getCampaignCircle: function(req, res) {
-      if (req.user.provider === 'company') {
-        return res.status(403).send({
-          msg: '公司账号暂无同事圈功能'
-        });
-      }
-
-      var conditions = {
-        'campaign_id': req.params.campaignId,
-        'relative_cids': req.user.getCid(), // 该活动必须属于该用户所属公司
-        'status': 'show'
-      };
-
-      CircleContent.find(conditions, null, {limit: req.query.limit || 20})
-        .sort('-post_date')
-        .exec()
-        .then(function(contentDocs) {
-          if (contentDocs.length == 0) {
-            return res.status(404).send({
-              msg: '未找到该活动同事圈消息'
-            });
-          } else {
-            /**
-             * 响应返回数据，形式为：
-             *  [{
-             *    content: contentDoc,
-             *    comments: [commentDoc]
-             *  }]
-             */
-            var resData = [];
-
-            // 转换为简单对象，以解除mongoose文档的约束，便于修改属性写入响应
-            var docToObject = function(doc) {
-              return doc.toObject();
-            };
-
-            var contents = contentDocs.map(docToObject);
-
-            var contentIdsForQuery = contents.map(function(content) {
-              return content._id;
-            });
-            var userIdsForQuery = []; // 元素为String类型
-
-            // 向用户id数组不重复地添加用户id
-            var pushUserIdToUniqueArray = function(userId, array) {
-              var resultIndex = array.indexOf(userId);
-              if (resultIndex === -1) {
-                array.push(userId.toString());
-              }
-            };
-            contents.forEach(function(content) {
-              pushUserIdToUniqueArray(content.post_user_id, userIdsForQuery);
-            });
-
-            CircleComment.find({
-              target_content_id: {$in: contentIdsForQuery},
-              status: 'show'
-            }).sort('+post_date').exec()
-            .then(function(commentDocs) {
-              var comments = commentDocs.map(docToObject);
-
-              comments.forEach(function(comment) {
-                pushUserIdToUniqueArray(comment.post_user_id, userIdsForQuery);
-                pushUserIdToUniqueArray(comment.target_user_id, userIdsForQuery);
-              });
-
-              User.find({
-                _id: {$in: userIdsForQuery}
-              }, {
-                _id: 1,
-                nickname: 1,
-                photo: 1,
-                cid: 1,
-                company_official_name: 1
-              }).exec()
-              .then(function(users) {
-
-                // 向CircleContent和CircleComment对象添加发布者的详细信息
-                var addPosterInfoToObj = function(obj) {
-                  for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-                    if (users[i]._id.toString() === obj.post_user_id.toString()) {
-                      obj.poster = users[i];
-                      break;
-                    }
-                  }
-                };
-
-                var addTargetInfoToComment = function(comment) {
-                  for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-                    if (users[i]._id.toString() === comment.target_user_id.toString()) {
-                      comment.target = users[i];
-                      break;
-                    }
-                  }
-                };
-
-                comments.forEach(function(comment) {
-                  addPosterInfoToObj(comment);
-                  addTargetInfoToComment(comment);
-                });
-
-                contents.forEach(function(content) {
-                  addPosterInfoToObj(content);
-
-                  // 将comments添加到对应的contents中
-                  var contentComments = comments.filter(function(comment) {
-                    return comment.target_content_id.toString() === content._id.toString();
-                  });
-                  resData.push({
-                    content: content,
-                    comments: contentComments
-                  });
-                });
-
-                res.send(resData);
-              })
-              .then(null, function(err) {
-                log(err);
-                return res.sendStatus(500);
-              })
-            })
-            .then(null, function(err) {
-              log(err);
-              return res.sendStatus(500);
-            });
-          }
-        })
-        .then(null, function(err) {
-          log(err);
-          return res.sendStatus(500);
-        });
-    },
-
-    getTeamCircle: function(req, res, next) {
-      if (req.user.provider === 'company') {
-        res.status(403).send({
-          msg: '公司账号暂无同事圈功能'
-        });
-        return;
-      }
-
-      var conditions = {
-        'tid': req.params.teamId,
-        'status': 'show'
-      };
-
-      var options = {};
-      if (req.query.last_content_date) { //如果带此属性来，则查找比它更早的limit条
-        conditions.post_date = {
-          '$lt': req.query.last_content_date
-        };
-      }
-
-      if (req.query.latest_content_date) { //如果带此属性来，则查找比它新的消息
-        conditions.post_date = {
-          '$gt': req.query.latest_content_date
-        };
-      } else {
-        options.limit = req.query.limit || 20;
-      }
-
-      CircleContent.find(conditions, null, options)
-        .sort('-post_date')
-        .exec()
-        .then(function(contentDocs) {
-          if (contentDocs.length === 0) {
-            res.status(404).send({
-              msg: '未找到该小队的精彩瞬间数据'
-            });
-            return;
-          }
-
-          addInfoToCircleContent(contentDocs, function(err, resContents) {
-            if (err) {
-              next(err);
-            }
-            else {
-              res.send(resContents);
-            }
-          });
-
-        })
-        .then(null, next);
-
-    },
 
     /**
+     * 获取个人消息及评论
      * get the team circle for user
      * @param  {[type]} req [description]
      * @param  {[type]} res [description]
@@ -509,7 +325,7 @@ module.exports = {
         .exec()
         .then(function(contentDocs) {
           if (contentDocs.length == 0) {
-            return res.status(404).send({
+            return res.status(204).send({
               msg: '未找到该用户的精彩瞬间数据'
             });
           } else {
@@ -738,6 +554,7 @@ module.exports = {
         });
     },
     /**
+     * 获取同事圈消息(by id)
      * Get the circle-contents by id for further use.
      * @param  {[type]}   req  [description]
      * @param  {[type]}   res  [description]
@@ -757,7 +574,7 @@ module.exports = {
         }).exec()
         .then(function(circleContent) {
           if (!circleContent) {
-            return res.status(404).send({
+            return res.status(204).send({
               msg: '未找到同事圈消息'
             });
           } else {
@@ -770,7 +587,12 @@ module.exports = {
         });
     },
     /**
+     * 删除同事圈消息
      * Delete the circle-contents
+     * 
+     * 请求用户不是该条消息的所有者, 返回403, msg: 权限错误
+     * 请求用户是该条消息的所有者, 删除该消息以及与该消息有关的评论, 返回200, msg: 同事圈消息删除成功
+     * 
      * @param  {[type]} req [description]
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
@@ -799,7 +621,7 @@ module.exports = {
           res.status(200).send({
             msg: '同事圈消息删除成功'
           });
-
+          // 删除与该消息有关的评论
           CircleComment.update({
             target_content_id: req.params.contentId,
             status: 'show'
@@ -815,32 +637,31 @@ module.exports = {
               return res.sendStatus(500);
             }
           });
-
-          Campaign.update({
-            '_id': circleContent.campaign_id,
-            'circle_content_sum': {
-              $gt: 0
-            }
-          }, {
-            $inc: {
-              'circle_content_sum': -1
-            }
-          }, function(err, numberAffected) {
-            if (err) {
-              log(err);
-            }
-          });
-
         }
       });
     },
     /**
+     * 发同事圈评论或者赞
      * Create circle comment
+     *
+     * 请求用户与该条消息的所有者不在同一家公司, 返回403, msg: 权限错误
+     * 请求用户与该条消息的所有者在同一家公司
+     *   若(1)is_only_to_content不是boolean类型
+     *     (2)kind 不是'comment'也不是'appreciate'
+     *     (3)kind是'appreciate'但content有值
+     *     (4)kind是'comment'但content为空
+     *     (5)target_user_id是true, 但target_user_id有值
+     *     (6)target_user_id是false, 但target_user_id为空
+     *      上述6种情况发生, 则返回400, msg: 参数错误
+     *   若target_user_id与请求用户id相同, 则返回400, msg: 不可以回复自己的评论
+     *   若请求用户重复点赞, 则返回403, msg: 已点赞
+     *   请求用户发评论成功, 更新与该评论相关的同事圈消息的comment_users以及latest_comment_date, 返回200, msg: 评论成功
+     * 
      * @param req {
-     *          "kind": "string", (required)
-     *          "content": "string",
-     *          "is_only_to_content": true, (required)
-     *          "target_user_id": "string"
+     *          "kind": "string", (required) // 评论种类: 赞或者评论
+     *          "content": "string", // 评论内容(若评论种类是赞, 则该属性不存在)
+     *          "is_only_to_content": true, (required) // 评论对象: 若此值为true, 该评论针对消息; 若此值为false, 该评论针对其他用户所发评论
+     *          "target_user_id": "string" // 评论对象所有者的id: 当is_only_to_content为false时，此值才不为空。
      * }
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
@@ -848,26 +669,22 @@ module.exports = {
     createCircleComment: function(req, res, next) {
       var circleContent = req.circleContent;
 
-      // Judge authority
-      var role = auth.getRole(req.user, {
-        companies: circleContent.relative_cids
-      });
-      var allow = auth.auth(role, ['createCircleComment']);
-      if (!allow.createCircleComment) {
+      // 判断请求用户与该条消息的所有者是否在同一家公司
+      if (req.user.cid.toString() !== circleContent.cid.toString()) {
         return res.status(403).send({
           msg: '权限错误'
         });
       }
       /**
        * parameters limit:
-       * 1. is_only_to_content is not null(or undefined) and must be true or false(see definition)
+       * 1. is_only_to_content must be true or false(see definition)
        * 2. kind must be 'comment' or 'appreciate'
        * 3. content is null(or undefined) when kind is 'appreciate'
        * 4. content is not null(or undefined) when kind is 'comment'
        * 5. target_user_id is null(or undefined) when is_only_to_content is true
        * 6. target_user_id is not null(or undefined) when is_only_to_content is false
        */
-      if (req.body.is_only_to_content === undefined || req.body.is_only_to_content === null || (req.body.kind != 'comment' && req.body.kind != 'appreciate') || (req.body.content && req.body.kind == 'appreciate') || (!req.body.content && req.body.kind == 'comment') || (req.body.is_only_to_content == true && req.body.target_user_id) ||
+      if (typeof(req.body.is_only_to_content) !== 'undefined' || (req.body.kind != 'comment' && req.body.kind != 'appreciate') || (req.body.content && req.body.kind == 'appreciate') || (!req.body.content && req.body.kind == 'comment') || (req.body.is_only_to_content == true && req.body.target_user_id) ||
         (req.body.is_only_to_content == false && !req.body.target_user_id)) {
         return res.status(400).send({
           msg: '参数错误'
@@ -882,12 +699,13 @@ module.exports = {
       }
 
       if (req.body.kind == 'appreciate') {
-        var isAppreciate = false;
-        circleContent.comment_users.forEach(function(user) {
-          if (req.user._id.toString() == user._id.toString() && user.appreciated == true) {
-            isAppreciate = true;
-          }
-        });
+        var isAppreciate = circleContent.comment_users.some(function(member){ return (req.user._id.toString() === member._id.toString() && member.appreciated === true); });
+        // var isAppreciate = false;
+        // circleContent.comment_users.forEach(function(user) {
+        //   if (req.user._id.toString() == user._id.toString() && user.appreciated == true) {
+        //     isAppreciate = true;
+        //   }
+        // });
         if (isAppreciate) {
           return res.status(403).send({
             msg: '已点赞'
@@ -898,7 +716,7 @@ module.exports = {
       var circleComment = new CircleComment({
         kind: req.body.kind, // 类型，评论或赞
 
-        content: req.body.content,
+        content: req.body.content, // 评论内容
 
         is_only_to_content: req.body.is_only_to_content, // 是否仅仅是回复消息，而不是对用户
 
@@ -1104,109 +922,137 @@ module.exports = {
         }
       });
     },
-
+    /**
+     * 获取某个消息的内容及其评论
+     * 
+     * 若查询的同事圈消息不存在, 返回204, msg: 找不到该消息
+     * 若查询的同事圈消息存在, 返回200, 
+     * circle: 
+     * {
+     *   "content": {},
+     *   "comments": [
+     *     {}
+     *   ]
+     * }
+     * 
+     * @param  {[type]}   req  [description]
+     * @param  {[type]}   res  [description]
+     * @param  {Function} next [description]
+     * @return {[type]}        [description]
+     */
     getCircleContent: function(req, res, next) {
       if (req.user.provider === 'company') {
-        res.status(403).send({msg: '公司账号暂无朋友圈功能'});
+        res.status(403).send({
+          msg: '公司账号暂无朋友圈功能'
+        });
         return;
       }
 
       var docs = {}, data = {};
-      CircleContent.findById(req.params.contentId).exec()
-      .then(function(circleContent) {
-        if (!circleContent) {
-          res.status(404).send({msg: '找不到该消息'});// TODO:提示文字需要改善
-          return;
-        }
 
-        data.circleContent = circleContent.toObject();
+      var conditions = {
+        '_id': req.params.contentId,
+        'status': 'show'
+      };
 
-        return Campaign.findById(circleContent.campaign_id, {
-          _id: 1,
-          theme: 1
-        }).exec()
-        .then(function(campaign) {
-          if (campaign && campaign.theme) {
-            data.circleContent.campaignTheme = campaign.theme;
+      CircleContent.findOne(conditions).exec()
+        .then(function(circleContent) {
+          if (!circleContent) {
+            res.status(204).send({
+              msg: '找不到该消息'
+            }); // TODO:提示文字需要改善
+            return;
           }
 
-          return CircleComment.find({
-            target_content_id: circleContent._id,
-            status: 'show'
-          }).sort('+post_date').exec();
-        })
-        .then(function(circleComments) {
-          docs.circleComments = circleComments;
+          data.circleContent = circleContent.toObject();
 
-          var userIdsForQuery = [];
-          // 向用户id数组不重复地添加用户id
-          var pushUserIdToQueryIds = function(userId) {
-            var resultIndex = userIdsForQuery.indexOf(userId);
-            if (resultIndex === -1) {
-              userIdsForQuery.push(userId.toString());
-            }
-          };
-          pushUserIdToQueryIds(data.circleContent.post_user_id);
-          circleComments.forEach(function(comment) {
-            pushUserIdToQueryIds(comment.post_user_id);
-            pushUserIdToQueryIds(comment.target_user_id);
-          });
+          CircleComment.find({
+              target_content_id: circleContent._id,
+              status: 'show'
+            }).sort('+post_date').exec()
+            .then(function(circleComments) {
+              docs.circleComments = circleComments;
 
-          return User.find({
-            _id: {$in: userIdsForQuery}
-          }, {
-            _id: 1,
-            nickname: 1,
-            photo: 1
-          }).exec();
+              var userIdsForQuery = [];
+              // 向用户id数组不重复地添加用户id
+              var pushUserIdToQueryIds = function(userId) {
+                var resultIndex = userIdsForQuery.indexOf(userId);
+                if (resultIndex === -1) {
+                  userIdsForQuery.push(userId.toString());
+                }
+              };
+              pushUserIdToQueryIds(data.circleContent.post_user_id);
+              circleComments.forEach(function(comment) {
+                pushUserIdToQueryIds(comment.post_user_id);
+                pushUserIdToQueryIds(comment.target_user_id);
+              });
 
-        })
-        .then(function(users) {
+              return User.find({
+                _id: {
+                  $in: userIdsForQuery
+                }
+              }, {
+                _id: 1,
+                nickname: 1,
+                photo: 1
+              }).exec();
 
-          // 向CircleContent和CircleComment对象添加发布者的详细信息
-          var addPosterInfoToObj = function(obj) {
-            for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-              if (users[i]._id.toString() === obj.post_user_id.toString()) {
-                obj.poster = users[i];
-                break;
-              }
-            }
-          };
-
-          var addTargetInfoToComment = function(comment) {
-            for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-              if (users[i]._id.toString() === comment.target_user_id.toString()) {
-                comment.target = users[i];
-                break;
-              }
-            }
-          };
-
-          var resData = {
-            content: data.circleContent,
-            comments: docs.circleComments.map(function(doc) {
-              return doc.toObject();
             })
-          };
+            .then(function(users) {
 
-          resData.comments.forEach(function(comment) {
-            addPosterInfoToObj(comment);
-            addTargetInfoToComment(comment);
-          });
-          addPosterInfoToObj(resData.content);
+              // 向CircleContent和CircleComment对象添加发布者的详细信息
+              var addPosterInfoToObj = function(obj) {
+                for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                  if (users[i]._id.toString() === obj.post_user_id.toString()) {
+                    obj.poster = users[i];
+                    break;
+                  }
+                }
+              };
 
-          res.send({circle: resData});
+              var addTargetInfoToComment = function(comment) {
+                for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+                  if (users[i]._id.toString() === comment.target_user_id.toString()) {
+                    comment.target = users[i];
+                    break;
+                  }
+                }
+              };
 
-        });
+              var resData = {
+                content: data.circleContent,
+                comments: docs.circleComments.map(function(doc) {
+                  return doc.toObject();
+                })
+              };
 
-      })
-      .then(null, next);
+              resData.comments.forEach(function(comment) {
+                addPosterInfoToObj(comment);
+                addTargetInfoToComment(comment);
+              });
+              addPosterInfoToObj(resData.content);
+
+              res.send({
+                circle: resData
+              });
+
+            });
+
+        })
+        .then(null, next);
     },
 
 
     /**
+     * 删除同事圈评论
      * Delete circle comment
      *
+     * 若查询的评论不存在, 则返回204, msg: 无法找到评论
+     * 若请求用户不是该评论的所有者, 则返回403, msg: 权限错误
+     * 若请求用户是该评论的所有者, 
+     *    若重复删除评论, 返回400, msg: 评论已删除
+     *    若无重复删除, 更新与之相关的消息的comment_users, 返回200, msg: 评论删除成功
+     *    
      * @param  {[type]} req [description]
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
@@ -1224,7 +1070,7 @@ module.exports = {
           return res.sendStatus(500);
         }
         if (!comment) {
-          return res.status(404).send({
+          return res.status(204).send({
             msg: '无法找到评论'
           });
         }
@@ -1361,108 +1207,6 @@ module.exports = {
           .then(null, next);
       });
     },
-    // getCircleComments: function(req, res) {
-    //   if (req.user.provider === 'company') {
-    //     return res.status(403).send({
-    //       msg: '公司账号暂无提醒功能'
-    //     });
-    //   }
-    //   var options = {
-    //     'post_user_cid': req.user.cid,
-    //     'relative_user': {'_id':req.user._id,'list_status':'show'}
-    //   };
-    //   if (req.query.last_comment_date) { //如果带此属性来，则查找比它更早的limit条
-    //     options.post_date = {
-    //       '$lt': req.query.last_comment_date
-    //     };
-    //   }
-    //   var limit = req.query.limit || 20;
-    //   //先查出所有的评论
-    //   CircleComment.find(options)
-    //     .sort('-post_date')
-    //     .limit(limit)
-    //     .exec()
-    //     .then(function(comments) {
-    //       //再聚合所有的post_user、target_content_id
-    //       var uids = [];
-    //       var targetIds = [];
-    //       var comments_length = comments.length;
-    //       for (var i = 0; i < comments_length; i++) {
-    //         uids.push(comments[i].post_user_id);
-    //         targetIds.push(comments[i].target_content_id);
-    //       };
-    //       async.parallel({
-    //         users: function(callback) { //获取所有人的昵称和头像
-    //           User.find({
-    //             'cid': req.user.cid,
-    //             '_id': {
-    //               '$in': uids
-    //             }
-    //           }, {
-    //             'nickname': 1,
-    //             'photo': 1
-    //           }, function(err, users) {
-    //             if (err) callback(err);
-    //             else callback(null, users);
-    //           })
-    //         },
-    //         contents: function(callback) {//获取所有的circlecontent
-    //           CircleContent.find({
-    //             'cid': req.user.cid,
-    //             '_id': {
-    //               '$in': targetIds
-    //             },
-    //             'status': 'show'
-    //           }, {
-    //             'content': 1,
-    //             'photos': 1
-    //           }, function(err, contents) {
-    //             if (err) callback(err);
-    //             else callback(null, contents);
-    //           })
-    //         }
-    //       }, function(err, results) {
-    //         if (err) {
-    //           log(err);
-    //           return res.status(500).send({
-    //             msg: 'database err'
-    //           });
-    //         } else {
-    //           //一个个赋值回去
-    //           async.map(comments, function(comment, callback) {
-    //             var posterIndex = tools.arrayObjectIndexOf(results.users, comment.post_user_id, '_id');
-    //             var circleContentIndex = tools.arrayObjectIndexOf(results.contents, comment.target_content_id, '_id');
-    //             var circle_comment = {
-    //               '_id': comment._id,
-    //               'kind': comment.kind,
-    //               'content': comment.content,
-    //               'targetContent': results.contents[circleContentIndex], //{_id,conent,photos}
-    //               'targetUserId': comment.target_user_id,
-    //               'poster': results.users[posterIndex], //{_id, nickname,photo}
-    //               'postDate': comment.post_date
-    //             }
-    //             callback(null,circle_comment);
-    //           }, function(err, circleComments) {
-    //             if (err) {
-    //               log(err);
-    //               return res.status(500).send({
-    //                 msg: 'output err'
-    //               });
-    //             } else {
-    //               return res.status(200).send(circleComments);
-    //             }
-    //           });
-    //         }
-    //       });
-    //     })
-    //     .then(null, function(err) {
-    //       log(err);
-    //       return res.status(500).send({
-    //         msg: 'circleComments not found.'
-    //       })
-    //     });
-    // },
-
     /**
      * 员工用户获取是否有新评论、新朋友圈内容&消息(包括最新消息人的头像)
      * @param  {Object} req:{
@@ -1510,51 +1254,7 @@ module.exports = {
         }
       })
 
-    },
-    /**
-     * 删除消息列表
-     * @param  {[type]} req [description]
-     * @param  {[type]} res [description]
-     * @return {[type]}     [description]
-     */
-    /**
-      // deleteRemindComment: function(req, res) {
-      //   if (req.user.provider === 'company') {
-      //     return res.status(403).send({
-      //       msg: '公司账号暂无提醒功能'
-      //     });
-      //   }
-
-      //   var options = {
-      //     'relative_user._id': req.user._id,
-      //     'relative_user.list_status': 'show'
-      //   };
-
-      //   if (req.query.commentId) {
-      //     options._id = req.query.commentId;
-      //   }
-
-      //   CircleComment.update(options, {
-      //     $set: {
-      //       'relative_user.$.list_status': 'delete'
-      //     }
-      //   }, function(err, num) {
-      //     if (err) {
-      //       log(err);
-      //       return res.sendStatus(500);
-      //     }
-      //     if (num) {
-      //       return res.status(200).send({
-      //         msg: '消息列表删除成功'
-      //       });
-
-      //     }
-      //     return res.status(404).send({
-      //       msg: '未找到该消息'
-      //     });
-      //   });
-      // }
-    */
+    }
 };
 
 /**
@@ -1914,107 +1614,85 @@ function addInfoToCircleContent(contentDocs, callback) {
     }
   };
 
-  var campaignIds = [];
-  contents.forEach(function(content) {
-    pushIdToUniqueArray(content.campaign_id, campaignIds);
+  var contentIdsForQuery = contents.map(function(content) {
+    return content._id;
   });
 
-  // 查询content对应的活动，获取活动数据
-  Campaign.find({
-    _id: {$in: campaignIds}
-  }, {
-    _id: 1,
-    theme: 1
-  }).exec()
-  .then(function(campaigns) {
-
-    // 设置相应的活动主题
-    contents.forEach(function(content) {
-      for (var i = 0, campaignsLen = campaigns.length; i < campaignsLen; i++) {
-        if (content.campaign_id && campaigns[i].id === content.campaign_id.toString()) {
-          content.campaignTheme = campaigns[i].theme;
-          break;
-        }
-      }
-    });
-
-    var contentIdsForQuery = contents.map(function(content) {
-      return content._id;
-    });
-
-    return CircleComment.find({
-      target_content_id: {$in: contentIdsForQuery},
+  CircleComment.find({
+      target_content_id: {
+        $in: contentIdsForQuery
+      },
       status: 'show'
-    }).sort('+post_date').exec();
+    }).sort('+post_date').exec()
+    .then(function(commentDocs) {
+      var comments = commentDocs.map(docToObject);
 
-  })
-  .then(function(commentDocs) {
-    var comments = commentDocs.map(docToObject);
+      var userIdsForQuery = []; // 元素为String类型
 
-    var userIdsForQuery = []; // 元素为String类型
-
-    contents.forEach(function(content) {
-      pushIdToUniqueArray(content.post_user_id, userIdsForQuery);
-    });
-
-    comments.forEach(function(comment) {
-      pushIdToUniqueArray(comment.post_user_id, userIdsForQuery);
-      pushIdToUniqueArray(comment.target_user_id, userIdsForQuery);
-    });
-
-    queryData.comments = comments;
-
-    return User.find({
-      _id: {$in: userIdsForQuery}
-    }, {
-      _id: 1,
-      nickname: 1,
-      photo: 1,
-      cid: 1,
-      company_official_name: 1
-    }).exec();
-
-  })
-  .then(function(users) {
-
-    // 向CircleContent和CircleComment对象添加发布者的详细信息
-    var addPosterInfoToObj = function(obj) {
-      for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-        if (users[i]._id.toString() === obj.post_user_id.toString()) {
-          obj.poster = users[i];
-          break;
-        }
-      }
-    };
-
-    var addTargetInfoToComment = function(comment) {
-      for (var i = 0, usersLen = users.length; i < usersLen; i++) {
-        if (users[i]._id.toString() === comment.target_user_id.toString()) {
-          comment.target = users[i];
-          break;
-        }
-      }
-    };
-
-    queryData.comments.forEach(function(comment) {
-      addPosterInfoToObj(comment);
-      addTargetInfoToComment(comment);
-    });
-
-    contents.forEach(function(content) {
-      addPosterInfoToObj(content);
-
-      // 将comments添加到对应的contents中
-      var contentComments = queryData.comments.filter(function(comment) {
-        return comment.target_content_id.toString() === content._id.toString();
+      contents.forEach(function(content) {
+        pushIdToUniqueArray(content.post_user_id, userIdsForQuery);
       });
-      resData.push({
-        content: content,
-        comments: contentComments
-      });
-    });
 
-    callback(null, resData);
-  })
-  .then(null, callback);
+      comments.forEach(function(comment) {
+        pushIdToUniqueArray(comment.post_user_id, userIdsForQuery);
+        pushIdToUniqueArray(comment.target_user_id, userIdsForQuery);
+      });
+
+      queryData.comments = comments;
+
+      return User.find({
+        _id: {
+          $in: userIdsForQuery
+        }
+      }, {
+        _id: 1,
+        nickname: 1,
+        photo: 1,
+        cid: 1,
+        company_official_name: 1
+      }).exec();
+
+    })
+    .then(function(users) {
+
+      // 向CircleContent和CircleComment对象添加发布者的详细信息
+      var addPosterInfoToObj = function(obj) {
+        for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+          if (users[i]._id.toString() === obj.post_user_id.toString()) {
+            obj.poster = users[i];
+            break;
+          }
+        }
+      };
+
+      var addTargetInfoToComment = function(comment) {
+        for (var i = 0, usersLen = users.length; i < usersLen; i++) {
+          if (users[i]._id.toString() === comment.target_user_id.toString()) {
+            comment.target = users[i];
+            break;
+          }
+        }
+      };
+
+      queryData.comments.forEach(function(comment) {
+        addPosterInfoToObj(comment);
+        addTargetInfoToComment(comment);
+      });
+
+      contents.forEach(function(content) {
+        addPosterInfoToObj(content);
+
+        // 将comments添加到对应的contents中
+        var contentComments = queryData.comments.filter(function(comment) {
+          return comment.target_content_id.toString() === content._id.toString();
+        });
+        resData.push({
+          content: content,
+          comments: contentComments
+        });
+      });
+
+      callback(null, resData);
+    })
+    .then(null, callback);
 }
