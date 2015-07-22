@@ -302,6 +302,7 @@ module.exports = {
 
       var conditions = {
         'post_user_id': req.params.userId,
+        'cid': req.user.cid,
         'status': 'show'
       };
 
@@ -684,7 +685,7 @@ module.exports = {
        * 5. target_user_id is null(or undefined) when is_only_to_content is true
        * 6. target_user_id is not null(or undefined) when is_only_to_content is false
        */
-      if (typeof(req.body.is_only_to_content) !== 'undefined' || (req.body.kind != 'comment' && req.body.kind != 'appreciate') || (req.body.content && req.body.kind == 'appreciate') || (!req.body.content && req.body.kind == 'comment') || (req.body.is_only_to_content == true && req.body.target_user_id) ||
+      if (typeof(req.body.is_only_to_content) !== 'boolean' || (req.body.kind != 'comment' && req.body.kind != 'appreciate') || (req.body.content && req.body.kind == 'appreciate') || (!req.body.content && req.body.kind == 'comment') || (req.body.is_only_to_content == true && req.body.target_user_id) ||
         (req.body.is_only_to_content == false && !req.body.target_user_id)) {
         return res.status(400).send({
           msg: '参数错误'
@@ -952,6 +953,7 @@ module.exports = {
 
       var conditions = {
         '_id': req.params.contentId,
+        'cid': req.user.cid,
         'status': 'show'
       };
 

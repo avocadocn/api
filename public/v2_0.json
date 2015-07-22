@@ -1486,6 +1486,277 @@
           }
         }
       }
+    },
+    "/circle/user/{userId}": {
+      "get": {
+        "tags": [
+          "circles"
+        ],
+        "summary": "获取个人同事圈内容",
+        "operationId": "getCampaignCircle",
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "用户id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "latest_content_date",
+            "description": "最新一个消息发布时间",
+            "required": false,
+            "type": "string",
+            "format": "date-time",
+            "in": "query"
+          },
+          {
+            "name": "last_content_date",
+            "description": "最后一个消息发布时间",
+            "required": false,
+            "type": "string",
+            "format": "date-time",
+            "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "数量限制",
+            "required": false,
+            "type": "number",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "ResCircle"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/circle_contents/{contentId}": {
+      "get": {
+        "tags": [
+          "circles"
+        ],
+        "summary": "获取同事圈内容详情",
+        "operationId": "getCircleContent",
+        "parameters": [
+          {
+            "name": "contentId",
+            "description": "消息id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "ResCircle"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "circles"
+        ],
+        "summary": "删除已发同事圈",
+        "operationId": "deleteCircleContent",
+        "parameters": [
+          {
+            "name": "contentId",
+            "description": "消息id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/circle_contents/{contentId}/comments": {
+      "post": {
+        "tags": [
+          "circles"
+        ],
+        "summary": "发表同事圈评论或赞",
+        "operationId": "createCircleComment",
+        "parameters": [
+          {
+            "name": "contentId",
+            "description": "消息id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "CommentForm"
+            },
+            "in": "body",
+            "required": true,
+            "description": "评论"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/circle_comments/{commentId}": {
+      "delete": {
+        "tags": [
+          "circles"
+        ],
+        "summary": "删除同事圈评论或取消赞",
+        "operationId": "deleteCircleComment",
+        "parameters": [
+          {
+            "name": "contentId",
+            "description": "消息id",
+            "required": false,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "commentId",
+            "description": "评论id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/circle_reminds": {
+      "get": {
+        "tags": [
+          "circles"
+        ],
+        "summary": "获取是否有新评论、新朋友圈内容、消息(包括最新消息人的头像)",
+        "operationId": "getReminds",
+        "parameters": [
+          {
+            "name": "last_read_time",
+            "description": "上次查询朋友圈的时间",
+            "required": true,
+            "type": "string",
+            "format": "date-time",
+            "in": "query"
+          },
+          {
+            "name": "last_comment_date",
+            "description": "上次查询朋友评论的时间",
+            "required": true,
+            "type": "string",
+            "format": "date-time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "NewReminds"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/circle_reminds/comments": {
+      "get": {
+        "tags": [
+          "circles"
+        ],
+        "summary": "获取同事圈提醒",
+        "operationId": "getCircleComments",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "last_comment_date",
+            "description": "上一次查询评论的时间",
+            "required": false,
+            "type": "string",
+            "format": "date-time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "CircleCommentRespond"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -2102,6 +2373,32 @@
         }
       }
     },
+    "CommentForm": {
+      "title": "CommentForm",
+      "type": "object",
+      "required": [
+        "kind",
+        "is_only_to_content"
+      ],
+      "properties": {
+        "kind": {
+          "description": "类型，评论或赞",
+          "type": "string"
+        },
+        "content": {
+          "description": "评论内容",
+          "type": "string"
+        },
+        "is_only_to_content": {
+          "description": "回复对象",
+          "type": "boolean"
+        },
+        "target_user_id": {
+          "description": "评论用户的id",
+          "type": "string"
+        }
+      }
+    },
     "ResCircle": {
       "title": "ResCircle",
       "required": [
@@ -2227,6 +2524,90 @@
         "status": {
           "type": "string",
           "description": "消息状态"
+        }
+      }
+    },
+    "NewReminds": {
+      "title": "NewReminds",
+      "properties": {
+        "newChat": {
+          "type": "boolean"
+        },
+        "newDiscover": {
+          "type": "boolean"
+        },
+        "newCircleContent": {
+          "type": "object",
+          "$ref": "NewCircleContent"
+        },
+        "newCircleComment": {
+          "type": "number"
+        }
+      }
+    },
+    "NewCircleContent": {
+      "title": "NewCircleContent",
+      "properties": {
+        "post_user_id": {
+          "type": "object",
+          "$ref": "Member"
+        }
+      }
+    },
+    "CircleCommentRespond": {
+      "title": "CircleCommentRespond",
+      "required": [
+        "_id",
+        "kind",
+        "content",
+        "targetContent",
+        "targetUserId",
+        "poster",
+        "postDate"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "comment",
+            "appreciate"
+          ]
+        },
+        "content": {
+          "type": "string"
+        },
+        "targetContent": {
+          "$ref": "TargetContent"
+        },
+        "targetUserId": {
+          "type": "string"
+        },
+        "poster": {
+          "$ref": "Member"
+        },
+        "postDate": {
+          "type": "string",
+          "formData": "date-time"
+        }
+      }
+    },
+    "TargetContent": {
+      "title": "TargetContent",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "photos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }
