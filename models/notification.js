@@ -5,14 +5,14 @@ var mongoose = require('mongoose'),
 
 //通知
 var Notification = new Schema({
-  //通知类型 1:互动 2:礼物 3:系统
+  //通知类型 1: 互动 2: 通知(礼物、入群、系统)
   noticeType: {
     type: Number,
-    enum: [1,2,3],
+    enum: [1,2],
     required: true
   },
-  //评论与互动才有的属性 1: 活动 2: 投票 3: 求助
-  interactionType : {
+  //互动(包括评论)才有的属性 1: 活动 2: 投票 3: 求助
+  interactionType: {
     type: Number,
     enum:[1,2,3]
   },
@@ -38,20 +38,22 @@ var Notification = new Schema({
   //互动的动作
   //  1: 活动有人参加了、投票有人参与了、求助有人回答了
   //  2: 被邀请参加活动、投票、求助
-  //  2: 求助被采纳了
-  //  3: 评论有回复
-  //  4: 评论被赞了
-  //  5: 被邀请进小队
-  //  6: 入群申请被通过
+  //  3: 求助被采纳了
+  //  4: 评论有回复
+  //  5: 评论被赞了
+  //  6: 被邀请进小队
+  //  7: 入群申请被通过
+  //  8: XX申请入X群，待处理(群主)
+  //  9: 活动被关闭了
   //送礼及系统无此属性
   action: {
     type: Number,
-    enum: [1,2,3,4,5,6]
+    enum: [1,2,3,4,5,6,7,8,9]
   },
-  //若是自己的评论有回复了则有此属性
+  //若是自己的评论有回复了则有此属性(action为4、5)
   replyId: Schema.Types.ObjectId,
   
-  //可能很多人回答、参加 只有互动1、4 有此属性
+  //可能很多人回答、参加 (action为1、5)
   relativeCount: {
     type: Number
   }, 
