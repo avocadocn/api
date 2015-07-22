@@ -26,7 +26,7 @@ var _member = new Schema({ // 榜单成员组件
 /**
  * 榜单数据模型
  */
-var BillBoardModel = new Schema({
+var FavoriteRankModel = new Schema({
   cid: { // 公司id
     type: Schema.Types.ObjectId,
     ref: 'Company',
@@ -48,4 +48,4 @@ var BillBoardModel = new Schema({
   }
 });
 
-mongoose.model('BillBoard', BillBoardModel);
+mongoose.model('FavoriteRankModel', FavoriteRankModel);

@@ -4,7 +4,7 @@ var path = require('path'),
   moment = require('moment');
 
 var mongoose = require('mongoose');
-var BillBoard = mongoose.model('BillBoard');
+var FavoriteRankModel = mongoose.model('FavoriteRankModel');
 var User = mongoose.model('User');
 var Gift = mongoose.model('Gift');
 
