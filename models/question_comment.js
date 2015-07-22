@@ -4,14 +4,7 @@ var Schema = mongoose.Schema;
 
 var QuestionComment = new Schema({
 
-  // 类型，1:评论,2:赞
-  type: {
-    type: Number,
-    enum: [1,2],
-    required: true
-  },
   content: String,
-
   // 评论所属的求助Id
   interactionId: {
     type: Schema.Types.ObjectId,
@@ -30,7 +23,8 @@ var QuestionComment = new Schema({
     ref: "User",
     required: true
   },
-  
+  approveCount: Number,
+
   createTime: {
     type: Date,
     default: Date.now

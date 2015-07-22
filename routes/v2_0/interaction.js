@@ -20,10 +20,13 @@ module.exports = function (router, ctrl) {
     .delete(ctrl.v2_0.activity.quit);                                                                        //退出活动
   router.post('/interaction/poll/:interactionId/users/:userId', ctrl.v2_0.poll.poll);                        //进行投票
 
-  router.route('/interaction/question/:interactionId/users/:userId')
+  router.route('/interaction/question/:interactionId/adopt')
     .put(ctrl.v2_0.question.adopt);                                                                          //采纳回答
+  router.route('/interaction/question/:interactionId/approve')
+    .post(ctrl.v2_0.question.approve)
+    .delete(ctrl.v2_0.question.cancelApprove);                                                                        //点赞
   router.route('/interaction/:interactionType/:interactionId/comment')
     .get(ctrl.v2_0.interaction.getComments)                                                                  //获取互动的评论列表
-    .post(ctrl.v2_0.interaction.commentValidate, ctrl.v2_0.interaction.comment)                              //评论或点赞
-  router.delete('/interaction/:interactionType/comment/:commentId', ctrl.v2_0.interaction.deleteComment);
+    .post(ctrl.v2_0.interaction.commentValidate, ctrl.v2_0.interaction.comment)                              //评论
+    .delete(ctrl.v2_0.interaction.deleteComment);
 };

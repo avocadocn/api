@@ -8,12 +8,11 @@ var User = mongoose.model('User'),
   Activity = mongoose.model('Activity'),
   Poll = mongoose.model('Poll'),
   Question = mongoose.model('Question'),
-  ActivityComment = mongoose.model('ActivityComment'),
-  PollComment = mongoose.model('PollComment'),
   QuestionComment = mongoose.model('QuestionComment'),
   ActivityTemplate= mongoose.model('ActivityTemplate'),
   PollTemplate= mongoose.model('PollTemplate'),
-  QuestionTemplate= mongoose.model('QuestionTemplate');
+  QuestionTemplate= mongoose.model('QuestionTemplate'),
+  QuestionApprove= mongoose.model('QuestionApprove');
 var log = require('../../services/error_log.js'),
     auth = require('../../services/auth.js'),
     donlerValidator = require('../../services/donler_validator.js'),
@@ -261,8 +260,7 @@ module.exports = {
     getInteraction: function (req, res) {
       var interactionType = req.query.interactionType;
       var populateType;
-      var userId = req.query.userId || req.user._id;
-      var option ={cid:req.user.cid, status:{"$lt":3}, "$or":[{"targetType":1,target:userId},{"targetType":2,target:{"$in":req.user.getTids()}},{"targetType":3,target:req.user.cid}]};
+      var option ={cid:req.user.cid, status:{"$lt":3}, "$or":[{"targetType":1,target:req.user._id},{"targetType":2,target:{"$in":req.user.getTids()}},{"targetType":3,target:req.user.cid}]};
       if(req.query.createTime) {
         option.createTime ={"$lt":req.query.createTime}
       }
@@ -321,17 +319,12 @@ module.exports = {
         interactionId: {
           name: '互动Id',
           value: req.params.interactionId,
-          validators: ['objectId']
-        },
-        type: {
-          name: '类型',
-          value: req.body.type,
-          validators: ['required', donlerValidator.enum([1, 2],"类型错误")]
+          validators: ['required', 'objectId']
         },
         content: {
           name: '内容',
-          value: req.body.type,
-          validators: req.body.type==1 ? ['required']:[]
+          value: req.body.content,
+          validators: ['required']
         },
         commentId: {
           name: '评论Id',
@@ -348,14 +341,15 @@ module.exports = {
     },
     comment: function (req, res) {
       var userId = req.user._id;
-      var commentModel =commentModelTypes[parseInt(req.params.interactionType)-1];
+      var interactionType = parseInt(req.params.interactionType);
+      var commentModel = commentModelTypes[interactionType-1];
       async.waterfall([
-        function(callback){
+        function(callback) {
           if(req.body.commentId) {
-            mongoose.model(commentModel).findOne({_id:req.body.commentId,type:1})
+            mongoose.model(commentModel).findById(req.body.commentId)
               .exec()
               .then(function (comment) {
-                callback(comment? null:400)
+                callback(comment ? null: 400)
               })
               .then(null,function (error) {
                 callback(500)
@@ -366,10 +360,13 @@ module.exports = {
           }
         },
         function(callback){
-          Interaction.findById(req.params.interactionId)
+          Interaction.findOne({_id:req.params.interactionId, type: interactionType})
             .exec()
             .then(function (interaction) {
-              if(interaction.cid.toString()!==req.user.cid.toString()){
+              if(!interaction) {
+                callback(400)
+              }
+              else if(interaction.cid.toString()!==req.user.cid.toString()){
                 return callback(403)
               }
               else {
@@ -377,28 +374,26 @@ module.exports = {
               }
             })
             .then(null,function (error) {
+              log(error)
               callback(500)
             });
         },
         function(interaction, callback){
           var _comment = {
-            type: req.body.type,
             interactionId: interaction._id,
             postCid: interaction.cid,
-            postId: userId
+            postId: userId,
+            content: req.body.content
           }
           if(req.body.commentId) {
-             _comment.commentId = req.body.commentId;
-          }
-          if(req.body.type===1){
-            _comment.content = req.body.content;
+            _comment.commentId = req.body.commentId;
           }
           mongoose.model(commentModel).create(_comment, function (error,comment) {
             callback(error,interaction,comment)
           })
         },
         function(interaction, comment, callback){
-          if(interaction.member.indexOf(userId)===-1) {
+          if(interactionType===3 && interaction.member.indexOf(userId)===-1) {
             interaction.member.push(userId);
             interaction.save(function (error) {
               callback(error,comment)
@@ -415,9 +410,8 @@ module.exports = {
           return res.send(results);
         }
         else{
-          log(err)
           if(err===403) {
-             return res.status(403).send({msg:"您没有权限采纳回答"})
+             return res.status(403).send({msg:"您没有权限进行评论"})
           }
           else if(err===400) {
             return res.status(400).send({msg:"您提交的参数错误"});
@@ -461,19 +455,21 @@ module.exports = {
       if([1,2,3].indexOf(interactionType)===-1)
         return res.status(400).send({ msg: "参数错误" });
       var commentModel =commentModelTypes[interactionType-1];
-      async.waterfall([function (callback) {
-        var option ={_id: req.params.commentId, postId: req.user._id, status: 1};
-        var update ={status: 2};
-        mongoose.model(commentModel).findOneAndUpdate(option,update,{"new":true}, callback);
-      },
-      function (comment, callback) {
-        if(!comment) return callback(400);
-        var option ={commentId: req.params.commentId, status: 1};
-        var update ={status: 3};
-        mongoose.model(commentModel).update(option,update,{ multi: true }, function (error, count) {
-          callback(error,{comment: comment,subCount: count})
-        });
-      }],
+      async.waterfall([
+        function (callback) {
+          var option ={_id: req.body.commentId, interactionId: req.params.interactionId, postId: req.user._id, status: 1};
+          var update ={status: 2};
+          mongoose.model(commentModel).findOneAndUpdate(option,update,{"new":true}, callback);
+        },
+        function (comment, callback) {
+          if(!comment) return callback(400);
+          var option ={commentId: req.body.commentId, status: 1};
+          var update ={status: 3};
+          mongoose.model(commentModel).update(option,update,{ multi: true }, function (error, count) {
+            callback(error,{comment: comment,subCount: count})
+          });
+        }
+      ],
       function (error, results) {
         if(error) {
           switch(error) {
@@ -488,7 +484,6 @@ module.exports = {
           return res.send(results)
         }
       });
-      
     }
   },
   activity: {
@@ -548,7 +543,7 @@ module.exports = {
           QuestionComment.findById(req.body.commentId)
             .exec()
             .then(function(questionComment){
-              if(questionComment)
+              if(questionComment && questionComment.interactionId.toString()===req.params.interactionId)
                 callback(null)
               else {
                 callback(400)
@@ -578,6 +573,112 @@ module.exports = {
           interaction.question.save(function(error){
             callback(error,interaction);
           })
+        }
+      ],
+      // optional callback
+      function(err, results){
+        if(!err){
+          return res.send(results);
+        }
+        else{
+          log(err)
+          if(err===403) {
+             return res.status(403).send({msg:"您没有权限采纳回答"})
+          }
+          else if(err===400) {
+            return res.status(400).send({msg:"您提交的参数错误"});
+          }
+          else {
+            return res.status(500).send({msg:"服务器发生错误"});
+          }
+          
+        }
+      });
+    },
+    approve: function (req, res) {
+      var userId = req.user._id;
+      async.waterfall([
+        function(callback){
+          if (!mongoose.Types.ObjectId.isValid(req.body.commentId)) {
+            return callback(400)
+          }
+          QuestionComment.findOne({_id:req.body.commentId,commentId:{"$exists":false}})
+            .exec()
+            .then(function(questionComment){
+              if(questionComment)
+                callback(null,questionComment)
+              else {
+                callback(400)
+              }
+            })
+            .then(null,callback);
+        },
+        function(questionComment, callback){
+          if (questionComment.postCid!==req.user.cid) {
+            return callback(403)
+          }
+          var questionApprove = new QuestionApprove({
+            interactionId: req.params.interactionId,
+            commentId: req.body.commentId,
+            postCid: req.user.cid,
+            postId: userId
+          });
+          questionApprove.save(function (error) {
+            callback(error,questionComment)
+          });
+        }
+      ],
+      // optional callback
+      function(err, results){
+        if(!err){
+          return res.send(results);
+        }
+        else{
+          log(err)
+          if(err===403) {
+             return res.status(403).send({msg:"您没有权限采纳回答"})
+          }
+          else if(err===400) {
+            return res.status(400).send({msg:"您提交的参数错误"});
+          }
+          else {
+            return res.status(500).send({msg:"服务器发生错误"});
+          }
+          
+        }
+      });
+    },
+    cancelApprove: function (req, res) {
+      var userId = req.user._id;
+      async.waterfall([
+        function(callback){
+          if (!mongoose.Types.ObjectId.isValid(req.body.commentId)) {
+            return callback(400)
+          }
+          QuestionComment.findOne({_id:req.body.commentId,commentId:{"$exists":false}})
+            .exec()
+            .then(function(questionComment){
+              if(questionComment)
+                callback(null,questionComment)
+              else {
+                callback(400)
+              }
+            })
+            .then(null,callback);
+        },
+        function(questionComment, callback){
+          if (questionComment.postCid!==req.user.cid) {
+            return callback(403)
+          }
+          var questionApprove = new QuestionApprove({
+            interactionId: req.params.interactionId,
+            commentId: req.body.commentId,
+            postCid: req.user.cid,
+            postId: userId
+          });
+          questionApprove.save(function (error) {
+            callback(error,questionComment)
+          });
         }
       ],
       // optional callback
@@ -730,7 +831,6 @@ module.exports = {
             endTime: data.endTime,
           });
           var option =[];
-          console.log(data.option)
           data.option.forEach(function(_option, index){
             console.log(_option, index)
             option.push({

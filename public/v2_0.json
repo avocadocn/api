@@ -617,13 +617,13 @@
         }
       }
     },
-    "/interaction/{question}/{interactionId}/users/{userId}": {
-      "put": {
+    "/interaction/question/{interactionId}/approve": {
+      "post": {
         "tags": [
           "interaction"
         ],
-        "summary": "采纳答案",
-        "operationId": "poll",
+        "summary": "赞同回答",
+        "operationId": "approveAnswer",
         "parameters": [
           {
             "name": "interactionId",
@@ -633,9 +633,89 @@
             "in": "path"
           },
           {
-            "name": "commentId",
+            "name": "body",
             "in": "body",
-            "description": "求助的评论信息",
+            "description": "点赞的信息",
+            "required": true,
+            "schema": {
+              "$ref": "AdoptQuestionForm"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "InteractionComment"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "interaction"
+        ],
+        "summary": "取消赞同",
+        "operationId": "cancelApproveAnswer",
+        "parameters": [
+          {
+            "name": "interactionId",
+            "description": "求助id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "点赞的信息",
+            "required": true,
+            "schema": {
+              "$ref": "AdoptQuestionForm"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "InteractionComment"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/interaction/question/{interactionId}/adopt": {
+      "put": {
+        "tags": [
+          "interaction"
+        ],
+        "summary": "采纳答案",
+        "operationId": "adoptAnswer",
+        "parameters": [
+          {
+            "name": "interactionId",
+            "description": "求助id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "求助的采纳信息",
             "required": true,
             "schema": {
               "$ref": "AdoptQuestionForm"
@@ -663,7 +743,7 @@
         "tags": [
           "interaction"
         ],
-        "summary": "评论(点赞)互动",
+        "summary": "评论",
         "operationId": "poll",
         "parameters": [
           {
@@ -763,14 +843,12 @@
             }
           }
         }
-      }
-    },
-    "/interaction/{interactionType}/comment/{commentId}": {
+      },
       "delete": {
         "tags": [
           "interaction"
         ],
-        "summary": "删除评论/取消赞",
+        "summary": "删除评论",
         "operationId": "poll",
         "parameters": [
           {
@@ -787,11 +865,20 @@
             ]
           },
           {
-            "name": "commentId",
-            "description": "评论id",
+            "name": "interactionId",
+            "description": "求助id",
             "required": true,
             "type": "string",
             "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "评论Id",
+            "required": true,
+            "in": "body",
+            "schema": {
+              "$ref": "AdoptQuestionForm"
+            }
           }
         ],
         "responses": {
@@ -1795,16 +1882,6 @@
         "commentId": {
           "description": "评论的Id",
           "type": "string"
-        },
-        "type": {
-          "description": "类型，1为评论，2为赞",
-          "type": "integer",
-          "format": "int32",
-          "default": 1,
-          "enum": [
-            1,
-            2
-          ]
         }
       }
     },
@@ -1812,15 +1889,6 @@
       "title": "InteractionComment",
       "type": "object",
       "properties": {
-        "type": {
-          "description": "类型，1为评论，2为赞",
-          "type": "integer",
-          "format": "int32",
-          "enum": [
-            1,
-            2
-          ]
-        },
         "content": {
           "description": "content",
           "type": "string"

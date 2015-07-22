@@ -4,12 +4,6 @@ var Schema = mongoose.Schema;
 
 var ActivityComment = new Schema({
 
-  // 类型，1:评论,2:赞
-  type: {
-    type: Number,
-    enum: [1,2],
-    required: true
-  },
   content: String,
 
   // 评论所属的活动Id
