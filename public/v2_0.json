@@ -677,7 +677,7 @@
             "description": "点赞的信息",
             "required": true,
             "schema": {
-              "$ref": "AdoptQuestionForm"
+              "$ref": "approveAnswerForm"
             }
           }
         ],
@@ -2008,6 +2008,20 @@
       "properties": {
         "commentId": {
           "description": "要采纳的评论Id",
+          "type": "string"
+        }
+      }
+    },
+    "approveAnswerForm": {
+      "title": "approveAnswerForm",
+      "type": "object",
+      "properties": {
+        "commentId": {
+          "description": "评论Id",
+          "type": "string"
+        },
+        "approveId": {
+          "description": "赞的Id",
           "type": "string"
         }
       }

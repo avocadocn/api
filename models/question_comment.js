@@ -23,8 +23,10 @@ var QuestionComment = new Schema({
     ref: "User",
     required: true
   },
-  approveCount: Number,
-
+  approveCount: {
+    type:Number,
+    default: 0
+  },
   createTime: {
     type: Date,
     default: Date.now

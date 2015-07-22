@@ -19,7 +19,7 @@ var log = require('../../services/error_log.js'),
     tools = require('../../tools/tools.js'),
     async = require('async');
 var interactionTypes = ['activity','poll','question'];
-var commentModelTypes = ['ActivityComment','PollComment','ActivityTemplate'];
+var commentModelTypes = ['ActivityComment','PollComment','QuestionComment'];
 var perPageNum = 10;
 var createActivity = function (data,template) {
   template = template || {}
@@ -265,16 +265,17 @@ module.exports = {
         option.createTime ={"$lt":req.query.createTime}
       }
       var _perPageNum = req.query.limit || perPageNum;
+      console.log(interactionType, typeof interactionType)
       switch(interactionType) {
-        case 1:
+        case '1':
           option.type =1;
           populateType = interactionTypes[0];
           break;
-        case 2:
+        case '2':
           option.type =2;
           populateType = interactionTypes[1];
           break;
-        case 3:
+        case '3':
           option.type =3;
           populateType = interactionTypes[2];
           break;
@@ -352,7 +353,7 @@ module.exports = {
                 callback(comment ? null: 400)
               })
               .then(null,function (error) {
-                callback(500)
+                callback(error)
               });
           }
           else {
@@ -374,8 +375,7 @@ module.exports = {
               }
             })
             .then(null,function (error) {
-              log(error)
-              callback(500)
+              callback(error)
             });
         },
         function(interaction, callback){
@@ -405,8 +405,8 @@ module.exports = {
         }
       ],
       // optional callback
-      function(err, results){
-        if(!err){
+      function(error, results){
+        if(!error){
           return res.send(results);
         }
         else{
@@ -417,6 +417,7 @@ module.exports = {
             return res.status(400).send({msg:"您提交的参数错误"});
           }
           else {
+            log(error)
             return res.status(500).send({msg:"服务器发生错误"});
           }
         }
@@ -599,58 +600,13 @@ module.exports = {
       var userId = req.user._id;
       async.waterfall([
         function(callback){
-          if (!mongoose.Types.ObjectId.isValid(req.body.commentId)) {
-            return callback(400)
-          }
-          QuestionComment.findOne({_id:req.body.commentId,commentId:{"$exists":false}})
+          QuestionApprove.count({interactionId:req.params.interactionId,commentId:req.body.commentId,postId:userId})
             .exec()
-            .then(function(questionComment){
-              if(questionComment)
-                callback(null,questionComment)
-              else {
-                callback(400)
-              }
+            .then(function(count){
+              callback(count>0 ? 400 :null)
             })
             .then(null,callback);
         },
-        function(questionComment, callback){
-          if (questionComment.postCid!==req.user.cid) {
-            return callback(403)
-          }
-          var questionApprove = new QuestionApprove({
-            interactionId: req.params.interactionId,
-            commentId: req.body.commentId,
-            postCid: req.user.cid,
-            postId: userId
-          });
-          questionApprove.save(function (error) {
-            callback(error,questionComment)
-          });
-        }
-      ],
-      // optional callback
-      function(err, results){
-        if(!err){
-          return res.send(results);
-        }
-        else{
-          log(err)
-          if(err===403) {
-             return res.status(403).send({msg:"您没有权限采纳回答"})
-          }
-          else if(err===400) {
-            return res.status(400).send({msg:"您提交的参数错误"});
-          }
-          else {
-            return res.status(500).send({msg:"服务器发生错误"});
-          }
-          
-        }
-      });
-    },
-    cancelApprove: function (req, res) {
-      var userId = req.user._id;
-      async.waterfall([
         function(callback){
           if (!mongoose.Types.ObjectId.isValid(req.body.commentId)) {
             return callback(400)
@@ -667,7 +623,7 @@ module.exports = {
             .then(null,callback);
         },
         function(questionComment, callback){
-          if (questionComment.postCid!==req.user.cid) {
+          if (questionComment.postCid.toString()!==req.user.cid.toString()) {
             return callback(403)
           }
           var questionApprove = new QuestionApprove({
@@ -677,8 +633,64 @@ module.exports = {
             postId: userId
           });
           questionApprove.save(function (error) {
-            callback(error,questionComment)
+            callback(error, questionApprove, questionComment)
           });
+        },
+        function(questionApprove, questionComment, callback){
+          questionComment.approveCount++;
+          questionComment.save(function (error) {
+            callback(error,{questionApprove:questionApprove,questionComment:questionComment})
+          });
+        }
+      ],
+      // optional callback
+      function(err, results){
+        if(!err){
+          return res.send(results);
+        }
+        else{
+          if(err===403) {
+             return res.status(403).send({msg:"您没有权限点赞"})
+          }
+          else if(err===400) {
+            return res.status(400).send({msg:"您提交的参数错误"});
+          }
+          else {
+            log(err)
+            return res.status(500).send({msg:"服务器发生错误"});
+          }
+          
+        }
+      });
+    },
+    cancelApprove: function (req, res) {
+      var userId = req.user._id;
+      async.waterfall([
+        function(callback){
+          QuestionApprove.findOneAndRemove({
+            _id: req.body.approveId,
+            interactionId: req.params.interactionId,
+            commentId: req.body.commentId,
+            postId:req.user._id
+          },null,function (err, questionApprove) {
+            callback(err || questionApprove ? null :400, questionApprove)
+          })
+        },
+        function(questionApprove, callback){
+          QuestionComment.findOne({_id:req.body.commentId,commentId:{"$exists":false}})
+            .exec()
+            .then(function(questionComment){
+              if(questionComment &&questionComment.approveCount>0) {
+                questionComment.approveCount--;
+                questionComment.save(function (error) {
+                  callback(error,questionComment)
+                })
+              }
+              else {
+                callback(400)
+              }
+            })
+            .then(null,callback);
         }
       ],
       // optional callback
@@ -689,7 +701,7 @@ module.exports = {
         else{
           log(err)
           if(err===403) {
-             return res.status(403).send({msg:"您没有权限采纳回答"})
+             return res.status(403).send({msg:"您没有权限取消该点赞"})
           }
           else if(err===400) {
             return res.status(400).send({msg:"您提交的参数错误"});

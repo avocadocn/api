@@ -29,10 +29,6 @@ var QuestionApprove = new Schema({
   createTime: {
     type: Date,
     default: Date.now
-  },
-  deleted: {
-    type: Boolean,
-    default: false
   }
 });
 
