@@ -1553,7 +1553,7 @@
         "operationId": "getCompanyCircle",
         "parameters": [
           {
-            "name": "latest_content_date",
+            "name": "latestContentDate",
             "description": "最新一个消息发布时间",
             "required": false,
             "type": "string",
@@ -1561,7 +1561,7 @@
             "in": "query"
           },
           {
-            "name": "last_content_date",
+            "name": "lastContentDate",
             "description": "最后一个消息发布时间",
             "required": false,
             "type": "string",
@@ -1611,7 +1611,7 @@
             "in": "path"
           },
           {
-            "name": "latest_content_date",
+            "name": "latestContentDate",
             "description": "最新一个消息发布时间",
             "required": false,
             "type": "string",
@@ -1619,7 +1619,7 @@
             "in": "query"
           },
           {
-            "name": "last_content_date",
+            "name": "lastContentDate",
             "description": "最后一个消息发布时间",
             "required": false,
             "type": "string",
@@ -1795,7 +1795,7 @@
         "operationId": "getReminds",
         "parameters": [
           {
-            "name": "last_read_time",
+            "name": "lastReadTime",
             "description": "上次查询朋友圈的时间",
             "required": true,
             "type": "string",
@@ -1803,7 +1803,7 @@
             "in": "query"
           },
           {
-            "name": "last_comment_date",
+            "name": "lastCommentDate",
             "description": "上次查询朋友评论的时间",
             "required": true,
             "type": "string",
@@ -1839,7 +1839,7 @@
         ],
         "parameters": [
           {
-            "name": "last_comment_date",
+            "name": "lastCommentDate",
             "description": "上一次查询评论的时间",
             "required": false,
             "type": "string",
@@ -2486,7 +2486,7 @@
       "type": "object",
       "required": [
         "kind",
-        "is_only_to_content"
+        "isOnlyToContent"
       ],
       "properties": {
         "kind": {
@@ -2497,11 +2497,11 @@
           "description": "评论内容",
           "type": "string"
         },
-        "is_only_to_content": {
+        "isOnlyToContent": {
           "description": "回复对象",
           "type": "boolean"
         },
-        "target_user_id": {
+        "targetUserId": {
           "description": "评论用户的id",
           "type": "string"
         }
@@ -2532,8 +2532,8 @@
       "required": [
         "_id",
         "cid",
-        "post_user_id",
-        "post_date",
+        "postUserId",
+        "postDate",
         "status"
       ],
       "properties": {
@@ -2556,11 +2556,11 @@
             "$ref": "ContentPhoto"
           }
         },
-        "post_user_id": {
+        "postUserId": {
           "type": "string",
           "description": "消息发布者id"
         },
-        "post_date": {
+        "postDate": {
           "type": "string",
           "description": "消息时间",
           "format": "date-time"
@@ -2569,7 +2569,7 @@
           "type": "string",
           "description": "消息状态"
         },
-        "comment_users": {
+        "commentUsers": {
           "type": "array",
           "description": "参与过评论的用户id数组",
           "items": {
@@ -2583,12 +2583,12 @@
       "required": [
         "_id",
         "kind",
-        "is_only_to_content",
-        "target_content_id",
-        "target_user_id",
-        "post_user_cid",
-        "post_user_id",
-        "post_date",
+        "isOnlyToContent",
+        "targetContentId",
+        "targetUserId",
+        "postUserCid",
+        "postUserId",
+        "postDate",
         "status"
       ],
       "properties": {
@@ -2604,27 +2604,27 @@
           "type": "string",
           "description": "评论内容"
         },
-        "is_only_to_content": {
+        "isOnlyToContent": {
           "type": "boolean",
           "description": "回复对象"
         },
-        "target_content_id": {
+        "targetContentId": {
           "type": "string",
           "description": "评论目标消息的id"
         },
-        "target_user_id": {
+        "targetUserId": {
           "type": "string",
           "description": "评论目标用户的id"
         },
-        "post_user_cid": {
+        "postUserCid": {
           "type": "string",
           "description": "发评论或赞的用户的公司id"
         },
-        "post_user_id": {
+        "postUserId": {
           "type": "string",
           "description": "发评论或赞的用户的id"
         },
-        "post_date": {
+        "postDate": {
           "type": "string",
           "description": "发评论时间",
           "format": "date-time"
@@ -2656,7 +2656,7 @@
     "NewCircleContent": {
       "title": "NewCircleContent",
       "properties": {
-        "post_user_id": {
+        "postUserId": {
           "type": "object",
           "$ref": "Member"
         }

@@ -12,7 +12,7 @@ var user = { //同事圈评论、点赞的成员组件
     type: Schema.Types.ObjectId,
     required: true
   },
-  comment_num: {
+  commentNum: {
     type: Number,
     required: true
   },
@@ -31,7 +31,7 @@ var CircleContent = new Schema({
   },
 
   tid: [Schema.Types.ObjectId], // 关联的小队id(无用)
-  campaign_id: Schema.Types.ObjectId, // 关联的活动id(无用)
+  campaignId: Schema.Types.ObjectId, // 关联的活动id(无用)
 
   content: String, // 文本内容(content和photos至少要有一个)
 
@@ -41,16 +41,16 @@ var CircleContent = new Schema({
     height: Number
   }],
 
-  post_user_id: { // 发消息的用户的id（头像和昵称再次查询）
+  postUserId: { // 发消息的用户的id（头像和昵称再次查询）
     type: Schema.Types.ObjectId,
     required: true,
     ref: 'User'
   },
 
   // 发消息用户所属小队id，若为空，则该消息属于公司活动(无用)
-  post_user_tid: Schema.Types.ObjectId,
+  postUserTid: Schema.Types.ObjectId,
 
-  post_date: { // 同事圈发送时间
+  postDate: { // 同事圈发送时间
     type: Date,
     default: Date.now,
     required: true
@@ -68,13 +68,13 @@ var CircleContent = new Schema({
     default: 'show'
   },
   // 最新评论时间
-  latest_comment_date: {
+  latestCommentDate: {
     type: Date,
     default: Date.now,
     required: true
   },
-  comment_users: [user], // 参与过评论的用户
-  relative_cids: [Schema.Types.ObjectId] // 参加同事圈消息所属的活动的所有公司id(无用)
+  commentUsers: [user], // 参与过评论的用户
+  relativeCids: [Schema.Types.ObjectId] // 参加同事圈消息所属的活动的所有公司id(无用)
 });
 
 CircleContent.pre('save', function (next) {
