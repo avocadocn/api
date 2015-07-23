@@ -16,12 +16,12 @@ var QuestionApprove = new Schema({
     required: true
   },
   // 赞的用户的公司id
-  postCid: {
+  posterCid: {
     type: Schema.Types.ObjectId,
     required: true
   },
   // 赞的用户的id（头像和昵称再次查询）
-  postId: {
+  posterId: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true

@@ -13,12 +13,12 @@ var QuestionComment = new Schema({
   // 评论一个评论时的评论Id,直接评论投票时为空
   commentId: Schema.Types.ObjectId,
   // 发评论或赞的用户的公司id
-  postCid: {
+  posterCid: {
     type: Schema.Types.ObjectId,
     required: true
   },
   // 发评论或赞的用户的id（头像和昵称再次查询）
-  postId: {
+  posterId: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true

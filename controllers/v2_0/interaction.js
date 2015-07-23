@@ -17,7 +17,8 @@ var log = require('../../services/error_log.js'),
     auth = require('../../services/auth.js'),
     donlerValidator = require('../../services/donler_validator.js'),
     tools = require('../../tools/tools.js'),
-    async = require('async');
+    async = require('async'),
+    notificationController = require('./notifications.js');
 var interactionTypes = ['activity','poll','question'];
 var commentModelTypes = ['ActivityComment','PollComment','QuestionComment'];
 var perPageNum = 10;
@@ -476,8 +477,8 @@ module.exports = {
         function(interaction, callback){
           var _comment = {
             interactionId: interaction._id,
-            postCid: interaction.cid,
-            postId: userId,
+            posterCid: interaction.cid,
+            posterId: userId,
             content: req.body.content
           }
           if(req.body.commentId) {
@@ -488,7 +489,7 @@ module.exports = {
           })
         },
         function(interaction, comment, callback){
-          if(interactionType===3 && interaction.members.indexOf(userId)===-1) {
+          if(interactionType===3 && !req.body.commentId && interaction.members.indexOf(userId)===-1) {
             interaction.members.push(userId);
             interaction.save(function (error) {
               callback(error,comment)
@@ -496,6 +497,12 @@ module.exports = {
           }
           else {
             callback(null,comment);
+          }
+          if(req.body.commentId) { //如果是评论回答 发通知
+            notificationController.sendInteractionNfct(4, interaction, req.user._id, interaction.poster._id, comment);
+          }
+          else if(interactionType === 3 ) { //若是回答求助，发通知
+            notificationController.sendInteractionNfct(1, interaction, req.user._id, interaction.poster._id);
           }
         }
       ],
@@ -564,7 +571,7 @@ module.exports = {
       var commentModel =commentModelTypes[interactionType-1];
       async.waterfall([
         function (callback) {
-          var option ={_id: req.body.commentId, interactionId: req.params.interactionId, postId: req.user._id, status: 1};
+          var option ={_id: req.body.commentId, interactionId: req.params.interactionId, posterId: req.user._id, status: 1};
           var update ={status: 2};
           mongoose.model(commentModel).findOneAndUpdate(option,update,{"new":true}, callback);
         },
@@ -631,7 +638,10 @@ module.exports = {
           // optional callback
           function(err, results){
             if(!err){
-              return res.send(interaction);
+              res.send(interaction);
+              //给组织者发通知
+              notificationController.sendInteractionNfct(1, interaction, req.user._id, interaction.poster._id);
+              return;
             }
             else{
               log(err,err.stack)
@@ -725,7 +735,9 @@ module.exports = {
           ],
           function(err, results){
             if(!err){
-              return res.send(interaction);
+              res.send(interaction);
+              notificationController.sendInteractionNfct(1, interaction, req.user._id, interaction.poster._id);
+              return;
             }
             else{
               log(err)
@@ -757,14 +769,14 @@ module.exports = {
             .exec()
             .then(function(questionComment){
               if(questionComment && questionComment.interactionId.toString()===req.params.interactionId)
-                callback(null)
+                callback(null, questionComment)
               else {
                 callback(400)
               }
             })
             .then(null,callback);
         },
-        function(callback){
+        function(questionComment, callback){
           Interaction.findById(req.params.interactionId)
             .populate('question')
             .exec()
@@ -777,6 +789,8 @@ module.exports = {
               }
               else{
                 callback(null, interaction);
+                //发通知给被选中的回答者
+                notificationController.sendInteractionNfct(3, interaction, req.user._id, questionComment.posterId);
               }
             })
             .then(null,callback);
@@ -784,13 +798,14 @@ module.exports = {
         function(interaction, callback){
           interaction.question.select = req.body.commentId;
           interaction.question.save(function(error){
-            callback(error,interaction);
+            callback(error, interaction);
           })
         }
       ],
-      function(err, results){
+
+      function(err, interaction){
         if(!err){
-          return res.send(results);
+          return res.send(interaction);
         }
         else{
           log(err)
@@ -818,7 +833,7 @@ module.exports = {
       async.waterfall([
         function(callback){
           //判断是否已经点过赞
-          QuestionApprove.count({interactionId:req.params.interactionId,commentId:req.body.commentId,postId:userId})
+          QuestionApprove.count({interactionId:req.params.interactionId,commentId:req.body.commentId,posterId:userId})
             .exec()
             .then(function(count){
               callback(count>0 ? 400 :null)
@@ -841,14 +856,14 @@ module.exports = {
             .then(null,callback);
         },
         function(questionComment, callback){
-          if (questionComment.postCid.toString()!==req.user.cid.toString()) {
+          if (questionComment.posterCid.toString()!==req.user.cid.toString()) {
             return callback(403)
           }
           var questionApprove = new QuestionApprove({
             interactionId: req.params.interactionId,
             commentId: req.body.commentId,
-            postCid: req.user.cid,
-            postId: userId
+            posterCid: req.user.cid,
+            posterId: userId
           });
           questionApprove.save(function (error) {
             callback(error, questionApprove, questionComment)
@@ -857,13 +872,15 @@ module.exports = {
         function(questionApprove, questionComment, callback){
           questionComment.approveCount++;
           questionComment.save(function (error) {
-            callback(error,{questionApprove:questionApprove,questionComment:questionComment})
+            callback(error,{questionApprove:questionApprove,questionComment:questionComment});
           });
         }
       ],
       function(err, results){
         if(!err){
-          return res.send(results);
+          res.send(results);
+          var tempInteraction = {_id: req.params.interactionId, type:3};
+          notificationController.sendInteractionNfct(5, tempInteraction, req.user._id, results.questionComment.posterId, results.questionComment.questionComment);
         }
         else{
           if(err===403) {
@@ -876,7 +893,6 @@ module.exports = {
             log(err)
             return res.status(500).send({msg:"服务器发生错误"});
           }
-          
         }
       });
     },
@@ -895,7 +911,7 @@ module.exports = {
             _id: req.body.approveId,
             interactionId: req.params.interactionId,
             commentId: req.body.commentId,
-            postId:req.user._id
+            posterId:req.user._id
           },null,function (err, questionApprove) {
             callback(err || questionApprove ? null :400, questionApprove)
           })

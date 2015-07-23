@@ -33,9 +33,11 @@ module.exports = {
         interaction: interaction._id,
         action: action,
         sender: senderId,
-        receiver: receiverId,
-        content:  comment ? comment.content : interaction.theme
+        receiver: receiverId
       });
+      if(action !==5) {
+        notification.content = comment ? comment.content : interaction.theme
+      }
       if(action === 4 || action === 5) {
         notification.reply = comment._id;
       }
