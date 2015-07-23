@@ -25,21 +25,13 @@ var _device = new Schema({
   }
 });
 
-var _team = new Schema({
-  gid: {
-    type: String,
-    ref: 'Group'
-  },
-  _id: Schema.Types.ObjectId,
-  group_type: String,
-  entity_type: String, //对应的增强组件名字
-  name: String,
-  leader: { //该员工是不是这个小队的队长
+var _team = new Schema({ // 群组组件
+  _id: Schema.Types.ObjectId, //群组id
+  leader: { //该员工是不是这个群组的队长
     type: Boolean,
     default: false
   },
-  logo: String,
-  active: { //小队是否关闭(true: 正常 false: 关闭)
+  public: { // 是否公开
     type: Boolean,
     default: true
   }

@@ -8,7 +8,6 @@ var CircleContent = mongoose.model('CircleContent'),
   CircleComment = mongoose.model('CircleComment'),
   File = mongoose.model('File'),
   User = mongoose.model('User'),
-  Campaign = mongoose.model('Campaign'),
   Company = mongoose.model('Company'),
   CompanyGroup = mongoose.model('CompanyGroup'),
   Chat = mongoose.model('Chat'),
@@ -291,7 +290,7 @@ module.exports = {
      * get the team circle for user
      * @param  {[type]} req [description]
      * @param  {[type]} res [description]
-     * @return (Reference getCampaignCircle)
+     * @return (Reference)
      */
     getUserCircle: function(req, res) {
       if (req.user.provider === 'company') {
