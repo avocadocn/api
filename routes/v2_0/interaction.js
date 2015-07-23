@@ -15,7 +15,7 @@ module.exports = function (router, ctrl) {
   router.route('/interaction/template/:templateType/:templateId')
     .get(ctrl.v2_0.template.getTemplateDetail);                                                              //获取模板详情
   
-  router.route('/interaction/acitvity/:interactionId/users/:userId')
+  router.route('/interaction/activity/:interactionId/users/:userId')
     .post(ctrl.v2_0.activity.join)                                                                           //参加活动
     .delete(ctrl.v2_0.activity.quit);                                                                        //退出活动
   router.post('/interaction/poll/:interactionId/users/:userId', ctrl.v2_0.poll.poll);                        //进行投票

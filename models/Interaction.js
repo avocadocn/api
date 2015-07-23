@@ -37,7 +37,7 @@ var Interaction = new Schema({
     default: Date.now
   },
   //参与人员
-  member: [_member],
+  members: [_member],
   //评论数
   // commentCount: Number,
   //状态 1:'正常',2:'结束',3:'删除'

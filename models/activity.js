@@ -10,7 +10,8 @@ var _member = {
   createTime: {
     type: Date,
     default: Date.now
-  }
+  },
+  updateTime: Date
 }
 /**
  * 活动

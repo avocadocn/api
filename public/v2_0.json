@@ -569,6 +569,82 @@
         }
       }
     },
+    "/interaction/activity/{interactionId}/users/{userId}": {
+      "post": {
+        "tags": [
+          "interaction"
+        ],
+        "summary": "参加活动",
+        "operationId": "poll",
+        "parameters": [
+          {
+            "name": "interactionId",
+            "description": "互动id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "userId",
+            "description": "用户id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "Interaction"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "interaction"
+        ],
+        "summary": "退出活动",
+        "operationId": "poll",
+        "parameters": [
+          {
+            "name": "interactionId",
+            "description": "互动id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "userId",
+            "description": "用户id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "Interaction"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/interaction/poll/{interactionId}/users/{userId}": {
       "post": {
         "tags": [
@@ -2138,7 +2214,7 @@
           "description": "活动类型",
           "type": "string"
         },
-        "loaction": {
+        "location": {
           "$ref": "Location"
         },
         "memberMax": {

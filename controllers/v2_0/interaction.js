@@ -124,7 +124,7 @@ module.exports = {
         deadline: {
           name: '截止时间',
           value: req.body.deadline,
-          validators: ['date',donlerValidator.before(req.body.endTime),donlerValidator.after(new Date())]
+          validators: ['date',donlerValidator.notAfter(req.body.endTime),donlerValidator.after(new Date())]
         },
         activityMold: {
           name: '活动类型',
@@ -393,8 +393,8 @@ module.exports = {
           })
         },
         function(interaction, comment, callback){
-          if(interactionType===3 && interaction.member.indexOf(userId)===-1) {
-            interaction.member.push(userId);
+          if(interactionType===3 && interaction.members.indexOf(userId)===-1) {
+            interaction.members.push(userId);
             interaction.save(function (error) {
               callback(error,comment)
             })
@@ -489,10 +489,94 @@ module.exports = {
   },
   activity: {
     join: function (req, res) {
-      // body...
+      var userId = req.params.userId;
+      Interaction.findById(req.params.interactionId)
+        .populate("activity")
+        .exec()
+        .then(function (interaction) {
+          if(interaction.members.indexOf(userId)>-1){
+            return res.status(400).send({msg:"您已经参加了该活动"})
+          }
+          var quitMemberIndex = tools.arrayObjectIndexOf(interaction.activity.quitMembers,userId, '_id');
+          quitMemberIndex > -1 && interaction.activity.quitMembers.splice(quitMemberIndex,1);
+          var memberIndex = tools.arrayObjectIndexOf(interaction.activity.members,userId, '_id');
+          memberIndex === -1 && interaction.activity.members.push({_id:userId});
+          interaction.members.push(userId);
+          async.parallel([
+            function(callback){
+              interaction.save(function (argument) {
+                console.log(1,interaction, argument)
+                callback(argument)
+              })
+            },
+            function(callback){
+              interaction.activity.save(function (argument) {
+                console.log(2,argument)
+                callback(argument)
+              })
+            }
+          ],
+          // optional callback
+          function(err, results){
+            if(!err){
+              return res.send(interaction);
+            }
+            else{
+              log(err,err.stack)
+              return res.status(500).send({msg:"服务器发生错误"});
+            }
+          });
+        })
+        .then(null,function (error) {
+          log(error);
+          res.status(500).send({msg:"服务器发生错误"});
+        });
     },
     quit: function (req, res) {
-      // body...
+      var userId = req.params.userId;
+      Interaction.findById(req.params.interactionId)
+        .populate("activity")
+        .exec()
+        .then(function (interaction) {
+          if(!interaction)
+            return res.status(404).send({msg:"不存在该活动"})
+          var memberIndex = interaction.members.indexOf(userId);
+          if(memberIndex===-1){
+            return res.status(400).send({msg:"您还没有参加该活动"})
+          }
+          interaction.members.splice(memberIndex,1);
+          var activityMemberIndex = tools.arrayObjectIndexOf(interaction.activity.members,userId, '_id');
+          if(activityMemberIndex>-1){
+            var member = interaction.activity.members.splice(activityMemberIndex,1);
+            interaction.activity.quitMembers.push({
+              _id: member[0]._id,
+              createTime: member[0].createTime,
+              updateTime: new Date()
+            });
+          }
+          async.parallel([
+            function(callback){
+              interaction.save(callback)
+            },
+            function(callback){
+              interaction.activity.save(callback)
+            }
+          ],
+          // optional callback
+          function(err, results){
+            if(!err){
+              return res.send(interaction);
+            }
+            else{
+              log(err)
+              return res.status(500).send({msg:"服务器发生错误"});
+            }
+          });
+        })
+        .then(null,function (error) {
+          log(error);
+          res.status(500).send({msg:"服务器发生错误"});
+        });
     }
   },
   poll: {
@@ -502,12 +586,12 @@ module.exports = {
         .populate("poll")
         .exec()
         .then(function (interaction) {
-          var index = tools.arrayObjectIndexOf(interaction.poll.option, req.body.index, 'index');
-          if(interaction.member.indexOf(userId)>-1){
+          if(interaction.members.indexOf(userId)>-1){
             return res.status(400).send({msg:"您已经进行了投票"})
           }
+          var index = tools.arrayObjectIndexOf(interaction.poll.option, req.body.index, 'index');
           interaction.poll.option[index].voters.push(userId);
-          interaction.member.push(userId);
+          interaction.members.push(userId);
           async.parallel([
             function(callback){
               interaction.save(callback)

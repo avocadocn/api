@@ -180,7 +180,23 @@ donlerValidator.after = function (date) {
       } else {
         formatDate = '现在';
       }
-      var msg = util.format('%s不能早于%s', name, formatDate);
+      var msg = util.format('%s必须晚于%s', name, formatDate);
+      callback(false, msg);
+    }
+  };
+};
+donlerValidator.notAfter = function (date) {
+  return function (name, value, callback) {
+    if (!value || !validatorModule.isAfter(value, date)) {
+      callback(true);
+    } else {
+      var formatDate;
+      if (date) {
+        formatDate = moment(date).format('YYYY年M月D日');
+      } else {
+        formatDate = '现在';
+      }
+      var msg = util.format('%s不能晚于%s', name, formatDate);
       callback(false, msg);
     }
   };
@@ -197,12 +213,27 @@ donlerValidator.before = function (date) {
       } else {
         formatDate = '现在';
       }
-      var msg = util.format('%s不能晚于%s', name, formatDate);
+      var msg = util.format('%s必须早于%s', name, formatDate);
       callback(false, msg);
     }
   };
 };
-
+donlerValidator.notBefore = function (date) {
+  return function (name, value, callback) {
+    if (!value || !validatorModule.isBefore(value, date)) {
+      callback(true);
+    } else {
+      var formatDate;
+      if (date) {
+        formatDate = moment(date).format('YYYY年M月D日');
+      } else {
+        formatDate = '现在';
+      }
+      var msg = util.format('%s不能早于%s', name, formatDate);
+      callback(false, msg);
+    }
+  };
+};
 donlerValidator.enum = function (enums, customMsg) {
   return function (name, value, callback) {
     if (!value) {
