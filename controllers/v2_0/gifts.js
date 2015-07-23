@@ -4,7 +4,8 @@ var mongoose = require('mongoose'),
 var Gift = mongoose.model('Gift'),
     User = mongoose.model('User');
 var log = require('../../services/error_log.js'),
-    donlerValidator = require('../../services/donler_validator.js');
+    donlerValidator = require('../../services/donler_validator.js'),
+    notificationController = require('./notifications.js');
 
 var maxGifts = 3; //最多3个
 var recoveryHour = 3; //恢复时间3小时
@@ -185,18 +186,37 @@ module.exports = {
         }
         else {
           req.remains && req.remains.remainGift --;
-          return res.status(200).send({gift:gift, remain:req.remains});
+          res.status(200).send({gift:gift, remain:req.remains});
+          notificationController.sendGiftNfct(gift, 1);
+          return;
         }
       })
     },
     //根据id取礼物详情
-    //是否需要验证谁能看这个礼物详情?
     getGift: function (req, res) {
       Gift.findOne({_id:req.params.giftId})
       .populate('replyGift')
       .exec()
       .then(function (gift) {
-        return res.status(200).send({gift:gift});
+        var myId = req.user._id.toString();
+        //验证是否能拆
+        if(gift.receiver.toString() === myId || gift.sender.toString() === myId) {
+          res.status(200).send({gift:gift});
+          //如果是接收人拆的，就更新是否已接收属性
+          if(!gift.received && gift.receiver.toString() === myId) {
+            gift.received = true;
+            gift.save(function(err) {
+              if(err) {
+                log(err);
+                return;
+              }
+            });
+            notificationController.sendGiftNfct(gift, 2);
+          }
+        }
+        else {
+          return res.status(403).send({msg:'权限不足'});
+        }
       })
       .then(null, function (err){
         log(err);

@@ -58,7 +58,7 @@ var Notification = new Schema({
   //若是赞，保存被赞的评论id(action为5)
   replyTo: Schema.Types.ObjectId,
   
-  //可能很多人回答、参加 (action为1、5、8)
+  //相关人数,可能很多人回答、参加 (action为1、5、8)
   relativeCount: {
     type: Number
   }, 

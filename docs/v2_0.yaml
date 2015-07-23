@@ -963,6 +963,27 @@ paths:
           description: error
           schema:
             $ref: Error
+  /notifications/{noticeType}:
+    get:
+      tags:
+        - notifications
+      summary: 获取获取自己的通知列表
+      parameters:
+        - name: noticeType
+          description: 通知类型
+          required: true
+          type: string
+          in: path
+          enum:
+            - interaction
+            - notice
+      responses:
+        200:
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: Notification
   "/favoriteRank":
     get:
       tags:
@@ -1380,7 +1401,7 @@ definitions:
           - 2
       giftIndex:
         description: 送的礼物，以数字代表 1鲜花 2咖啡 3拥抱 4爱心 5蛋糕
-        type: Number
+        type: number
       createTime:
         description: 送礼时间
         type: string
@@ -1877,3 +1898,56 @@ definitions:
         type: array
         items:
           type: string
+  Notification:
+    title: Notification
+    required:
+      - _id
+      - noticeType
+      - content
+      - createTime
+    properties:
+      _id:
+        type: string
+      noticeType:
+        type: number
+        description: "通知类型 1: 互动 2: 通知(礼物、入群、系统)"
+      interactionType:
+        type: number
+        description: "互动(包括评论)才有的属性 1: 活动 2: 投票 3: 求助"
+      interaction:
+        type: string
+        description: Interaction的id
+      gift:
+        type: string
+        description: 礼物id
+      team:
+        type: string
+        description: 小队id
+      action:
+        type: number
+        description: 互动的动作
+      content:
+        type: string
+        description: 提醒中要显示的内容(活动、投票、求助的主题名, 若是评论则为他评论的内容，若是群则为群名)
+      reply:
+        type: string
+        description: 若是自己的评论有回复了则有此属性(action为4、5),此为新回复的id
+      replyTo:
+        type: string
+        description: 若是赞，保存被赞的评论id(action为5)
+      relativeCount:
+        type: number
+        description: 相关人数,可能很多人回答、参加 (action为1、5、8)
+      giftDirection:
+        type: number
+        description: "礼物才有的属性 1: 送出 2: 拆开"
+      sender:
+        type: string
+        description: "发消息者 最新的那个人 若无则为系统"
+      receiver:
+        type: string
+        description: "接收者 若是系统则没有"
+      createTime:
+        type: string
+        format: date-time
+        description: 通知时间

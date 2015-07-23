@@ -114,7 +114,7 @@ module.exports = {
         action: action,
         sender: senderId,
         receiver: receiverId,
-        content:  team.name
+        content: team.name
       }, function(err) {
         if(err) {
           log(err);
@@ -141,7 +141,29 @@ module.exports = {
     }
   },
   getNotifications: function(req, res) {
-    
+    var options = {receiver:{$in:[req.user._id, null]}};
+    switch(req.params.noticeType) {
+      case 'interaction':
+        options.noticeType = 1;
+        break;
+      case 'notice':
+        options.noticeType = 2;
+        break;
+      default:
+        return res.status(400).send({msg:'参数错误'});
+    }
+    Notification.find(options)
+    .sort('-createTime')
+    .exec()
+    .then(function(notifications) {
+      res.status(200).send(notifications);
+      //删除通知todo
+      return;
+    })
+    .then(null, function(err) {
+      log(err);
+      return res.status(500).send({msg:'查找通知出错'});
+    })
   }
 
 };
