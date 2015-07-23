@@ -82,7 +82,11 @@ var Interaction = new Schema({
     ref: 'Question'
   },
   //修改时间
-  updateTime: Date
+  updateTime: Date,
+  public: {
+    type: Boolean,
+    default: true
+  },
 });
 
 mongoose.model('Interaction', Interaction);

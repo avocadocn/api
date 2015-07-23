@@ -265,7 +265,6 @@ module.exports = {
         option.createTime ={"$lt":req.query.createTime}
       }
       var _perPageNum = req.query.limit || perPageNum;
-      console.log(interactionType, typeof interactionType)
       switch(interactionType) {
         case '1':
           option.type =1;
@@ -505,13 +504,11 @@ module.exports = {
           async.parallel([
             function(callback){
               interaction.save(function (argument) {
-                console.log(1,interaction, argument)
                 callback(argument)
               })
             },
             function(callback){
               interaction.activity.save(function (argument) {
-                console.log(2,argument)
                 callback(argument)
               })
             }
@@ -928,7 +925,6 @@ module.exports = {
           });
           var option =[];
           data.option.forEach(function(_option, index){
-            console.log(_option, index)
             option.push({
               index:index,
               value:_option
