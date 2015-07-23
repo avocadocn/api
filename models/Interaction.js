@@ -21,7 +21,7 @@ var Interaction = new Schema({
     enum:[1,2,3],
     default: 1
   },
-  //目标类型 1:'个人',2:'群',3:'公司'
+  //目标类型 1:'个人'（暂无）,2:'群',3:'公司'
   targetType:{
     type: Number,
     enum: [1,2,3],
@@ -38,6 +38,8 @@ var Interaction = new Schema({
   },
   //参与人员
   members: [_member],
+  //参与人员
+  inviters: [_member],
   //评论数
   // commentCount: Number,
   //状态 1:'正常',2:'结束',3:'删除'

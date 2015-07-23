@@ -248,6 +248,11 @@ paths:
           type: integer
           format: int32
           in: query
+        - name: userId
+          description: 用户Id
+          required: false
+          type: string
+          in: query
       responses:
         "200":
           description: 成功
@@ -1528,6 +1533,11 @@ definitions:
       templateId:
         description: 模板Id
         type: string
+      inviters:
+        description: 邀请人列表
+        type: array
+        items:
+          type: string
       theme:
         description: 主题
         type: string
@@ -1624,7 +1634,7 @@ definitions:
         description: content
         type: string
       interactionId:
-        description: questionId
+        description: 互动id
         type: string
       commentId:
         description: 评论一个评论时该评论的id

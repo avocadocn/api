@@ -272,7 +272,28 @@ UserSchema.plugin(mongoosePaginate);
 var validatePresenceOf = function(value) {
   return value && value.length;
 };
-
+var filterTeam = function (teamType) {
+  var _filterTeam;
+  switch(teamType) {
+    case 1:
+      _filterTeam = function (team) {
+        if(team.public)
+          return team._id;
+      }
+      break;
+    case 2:
+      _filterTeam = function (team) {
+        if(!team.public)
+          return team._id;
+      }
+      break;
+    default:
+      _filterTeam = function (team) {
+          return team._id;
+      }
+  }
+  return _filterTeam;
+}
 
 /**
  * Pre-save hook
@@ -361,10 +382,16 @@ UserSchema.methods = {
   getCid: function() {
     return this.cid;
   },
-  getTids: function() {
-    var tids = []
+  /**
+   * 获取tid
+   * @param  {[type]} teamType 0:所有，1：公开，2：私有
+   * @return {[type]}          [description]
+   */
+  getTids: function(teamType) {
+    var tids = [];
+    var _filterTeam = filterTeam(teamType);
     for (var i = 0; i < this.team.length; i++) {
-      tids.push(this.team[i]._id);
+      tids.push(_filterTeam(this.team[i]));
     }
     return tids;
   },

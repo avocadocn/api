@@ -12,6 +12,7 @@ exports.arrayObjectIndexOf = function (myArray, searchTerm, property) {
     }
   }
   catch (e){
+    console.log(e)
     return -1;
   }
   return -1;

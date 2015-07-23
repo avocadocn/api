@@ -21,6 +21,12 @@ var log = require('../../services/error_log.js'),
 var interactionTypes = ['activity','poll','question'];
 var commentModelTypes = ['ActivityComment','PollComment','QuestionComment'];
 var perPageNum = 10;
+/**
+ * 创建活动,如果data中存在的使用data,否则使用template中的
+ * @param  {Object} data      活动数据
+ * @param  {Object} template  模板数据
+ * @return {Activity}         活动Entity
+ */
 var createActivity = function (data,template) {
   template = template || {}
   var  _activity = {
@@ -33,6 +39,12 @@ var createActivity = function (data,template) {
   };
   return new Activity(_activity);
 }
+/**
+ * 创建投票,如果data中存在的使用data,否则使用template中的
+ * @param  {Object} data      投票数据
+ * @param  {Object} template  模板数据
+ * @return {Activity}         投票Entity
+ */
 var createPoll = function (data,template) {
   template = template || {}
   var option = [];
@@ -46,12 +58,25 @@ var createPoll = function (data,template) {
   var poll = new Poll({option:option});
   return poll;
 }
+/**
+ * 创建求助 (目前没有属性需要创建)
+ * @param  {Object} data      求助数据
+ * @param  {Object} template  模板数据
+ * @return {Activity}         求助Entity
+ */
 var createQuestion= function (data,template) {
   var question = new Question();
   return question;
 }
 module.exports = {
   interaction: {
+    /**
+     * 发互动的验证（三种类型）
+     * @param  {[type]}   req  [description]
+     * @param  {[type]}   res  [description]
+     * @param  {Function} next [description]
+     * @return {[type]}        [description]
+     */
     createInteractionValidate: function (req, res, next) {
       var locationValidator = function(name, value, callback) {
         if(!value) return callback(true);
@@ -69,7 +94,7 @@ module.exports = {
         targetType: {
           name: '目标类型',
           value: req.body.targetType,
-          validators: [donlerValidator.enum([1, 2, 3],"目标类型错误"), 'required']
+          validators: ['required', donlerValidator.enum([1, 2, 3],"目标类型错误")]
         },
         target: {
           name: '目标ID',
@@ -80,6 +105,11 @@ module.exports = {
           name: '模板ID',
           value: req.body.templateId,
           validators: ['objectId']
+        },
+        inviters: {
+          name: '邀请人',
+          value: req.body.inviters,
+          validators: ['array']
         },
         theme: {
           name: '主题',
@@ -150,7 +180,6 @@ module.exports = {
                 return res.status(403).send({ msg: "您不能与未参加的群组进行互动" });
               break;
             default:
-
           }
           next();
         } else {
@@ -158,6 +187,12 @@ module.exports = {
         }
       });
     },
+    /**
+     * 创建互动
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     createInteraction: function (req, res) {
       var data = req.body;
       var interactionType;
@@ -178,6 +213,7 @@ module.exports = {
         default:
           return res.status(400).send({msg:"互动类型错误"});
       }
+      //目前未区分poster的身份，均为user
       var interaction = new Interaction({
         cid: req.user.cid,
         targetType: data.targetType,
@@ -194,9 +230,28 @@ module.exports = {
       
       async.waterfall([
         function(callback){
-          
-          if(req.body.templateId) {
-            mongoose.model(templateModel).findById(req.body.templateId)
+          //邀请查看
+          if(data.inviters) {
+            User.find({cid:req.user.cid, _id:{"$in":data.inviters}})
+            .exec()
+            .then(function(users){
+              var inviters = []
+              users.forEach(function (user) {
+                inviters.push(user._id);
+              })
+              interaction.inviters = inviters;
+              callback(null)
+            })
+            .then(null, callback)
+          }
+          else {
+            callback(null)
+          }
+        },
+        function(callback){
+          //模板
+          if(data.templateId) {
+            mongoose.model(templateModel).findById(data.templateId)
             .exec()
             .then(function(template){
               if(template) {
@@ -227,12 +282,15 @@ module.exports = {
         function(template, callback){
           var interactionContent;
           switch(data.type) {
+            //活动
             case 1:
               interactionContent = createActivity(data,template);
               break;
+            //投票
             case 2:
               interactionContent = createPoll(data,template);
               break;
+            //求助
             case 3:
               interactionContent = createQuestion(data,template);
               break;
@@ -246,7 +304,6 @@ module.exports = {
           interaction.save(callback)
         }
       ],
-      // optional callback
       function(err, results){
         if(err) {
           log(err);
@@ -257,23 +314,42 @@ module.exports = {
         }
       });
     },
+    /**
+     * 获取互动列表，包括自己和其他人的,分三种类型,按照创建时间分页
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     getInteraction: function (req, res) {
       var interactionType = req.query.interactionType;
       var populateType;
-      var option ={cid:req.user.cid, status:{"$lt":3}, "$or":[{"targetType":1,target:req.user._id},{"targetType":2,target:{"$in":req.user.getTids()}},{"targetType":3,target:req.user.cid}]};
+      var userId = req.query.userId || req.user._id;
+      var option;
+      //自己
+      if(userId===req.user._id) {
+        option ={cid:req.user.cid, status:{"$lt":3}, "$or":[{"targetType":2,target:{"$in":req.user.getTids()}},{"targetType":3,target:req.user.cid}]};
+      }
+      //其他人
+      else {
+        option ={cid:req.user.cid, status:{"$lt":3}, "$and":[{"$or":[{"members":userId},{"poster._id":userId}]},{"$or":[{"public":true},{"target":{"$in":req.user.getTids(2)}}]}]};
+      }
+      //分页
       if(req.query.createTime) {
         option.createTime ={"$lt":req.query.createTime}
       }
       var _perPageNum = req.query.limit || perPageNum;
       switch(interactionType) {
+        //活动
         case '1':
           option.type =1;
           populateType = interactionTypes[0];
           break;
+        //投票
         case '2':
           option.type =2;
           populateType = interactionTypes[1];
           break;
+        //求助
         case '3':
           option.type =3;
           populateType = interactionTypes[2];
@@ -294,6 +370,12 @@ module.exports = {
         res.status(500).send({msg:"服务器发生错误"});
       });
     },
+    /**
+     * 根据Id获取互动详情
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     getInteractionDetail: function (req, res) {
       var interactionType = req.params.interactionType;
       if(interactionType<1 || interactionType>interactionTypes.length)
@@ -309,6 +391,13 @@ module.exports = {
           res.status(500).send({msg:"服务器发生错误"});
         });
     },
+    /**
+     * 发评论的验证
+     * @param  {[type]}   req  [description]
+     * @param  {[type]}   res  [description]
+     * @param  {Function} next [description]
+     * @return {[type]}        [description]
+     */
     commentValidate: function (req, res, next) {
       donlerValidator({
         interactionType: {
@@ -339,12 +428,19 @@ module.exports = {
         }
       });
     },
+    /**
+     * 发评论,三种类型互动分别对应不同的model
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     comment: function (req, res) {
       var userId = req.user._id;
       var interactionType = parseInt(req.params.interactionType);
       var commentModel = commentModelTypes[interactionType-1];
       async.waterfall([
         function(callback) {
+          //对评论的评论验证
           if(req.body.commentId) {
             mongoose.model(commentModel).findById(req.body.commentId)
               .exec()
@@ -403,7 +499,6 @@ module.exports = {
           }
         }
       ],
-      // optional callback
       function(error, results){
         if(!error){
           return res.send(results);
@@ -422,6 +517,12 @@ module.exports = {
         }
       });
     },
+    /**
+     * 获取评论列表，分三种类型,按照创建时间分页，当存在req.body.commentId时为针对互动的评论，否则为对评论的评论列表
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     getComments: function (req, res) {
       var interactionType = parseInt(req.params.interactionType)
       if([1,2,3].indexOf(interactionType)===-1)
@@ -450,6 +551,12 @@ module.exports = {
         res.status(500).send({msg:"服务器发生错误"});
       });
     },
+    /**
+     * 删除评论，设置status为2,针对该评论的评论status设置为3
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     deleteComment: function (req, res) {
       var interactionType = parseInt(req.params.interactionType)
       if([1,2,3].indexOf(interactionType)===-1)
@@ -487,12 +594,20 @@ module.exports = {
     }
   },
   activity: {
+    /**
+     * 参加活动,判断如果以前退出过则删除掉quitMembers中信息，在Interaction和activity（有时间信息）中均存入member信息
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     join: function (req, res) {
       var userId = req.params.userId;
       Interaction.findById(req.params.interactionId)
         .populate("activity")
         .exec()
         .then(function (interaction) {
+          if(!interaction)
+            return res.status(404).send({msg:"该活动不存在"})
           if(interaction.members.indexOf(userId)>-1){
             return res.status(400).send({msg:"您已经参加了该活动"})
           }
@@ -529,6 +644,12 @@ module.exports = {
           res.status(500).send({msg:"服务器发生错误"});
         });
     },
+    /**
+     * 退出活动，将信息加入quitMembers中，Interaction和activity（有时间信息）中member信息删除
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     quit: function (req, res) {
       var userId = req.params.userId;
       Interaction.findById(req.params.interactionId)
@@ -536,7 +657,7 @@ module.exports = {
         .exec()
         .then(function (interaction) {
           if(!interaction)
-            return res.status(404).send({msg:"不存在该活动"})
+            return res.status(404).send({msg:"该活动不存在"})
           var memberIndex = interaction.members.indexOf(userId);
           if(memberIndex===-1){
             return res.status(400).send({msg:"您还没有参加该活动"})
@@ -559,7 +680,6 @@ module.exports = {
               interaction.activity.save(callback)
             }
           ],
-          // optional callback
           function(err, results){
             if(!err){
               return res.send(interaction);
@@ -577,6 +697,12 @@ module.exports = {
     }
   },
   poll: {
+    /**
+     * 投票，仅可以投一次，不可取消
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     poll: function (req, res) {
       var userId = req.params.userId;
       Interaction.findById(req.params.interactionId)
@@ -597,7 +723,6 @@ module.exports = {
               interaction.poll.save(callback)
             }
           ],
-          // optional callback
           function(err, results){
             if(!err){
               return res.send(interaction);
@@ -615,6 +740,12 @@ module.exports = {
     }
   },
   question: {
+    /**
+     * 采纳最佳答案
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     adopt: function (req, res) {
       var userId = req.user._id;
       async.waterfall([
@@ -657,7 +788,6 @@ module.exports = {
           })
         }
       ],
-      // optional callback
       function(err, results){
         if(!err){
           return res.send(results);
@@ -677,10 +807,17 @@ module.exports = {
         }
       });
     },
+    /**
+     * 点赞
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     approve: function (req, res) {
       var userId = req.user._id;
       async.waterfall([
         function(callback){
+          //判断是否已经点过赞
           QuestionApprove.count({interactionId:req.params.interactionId,commentId:req.body.commentId,postId:userId})
             .exec()
             .then(function(count){
@@ -724,7 +861,6 @@ module.exports = {
           });
         }
       ],
-      // optional callback
       function(err, results){
         if(!err){
           return res.send(results);
@@ -744,10 +880,17 @@ module.exports = {
         }
       });
     },
+    /**
+     * 取消点赞
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     cancelApprove: function (req, res) {
       var userId = req.user._id;
       async.waterfall([
         function(callback){
+          //点过赞的删除，否则400
           QuestionApprove.findOneAndRemove({
             _id: req.body.approveId,
             interactionId: req.params.interactionId,
@@ -774,7 +917,6 @@ module.exports = {
             .then(null,callback);
         }
       ],
-      // optional callback
       function(err, results){
         if(!err){
           return res.send(results);
@@ -796,6 +938,13 @@ module.exports = {
     }
   },
   template: {
+    /**
+     * 发互动的模板的验证
+     * @param  {[type]}   req  [description]
+     * @param  {[type]}   res  [description]
+     * @param  {Function} next [description]
+     * @return {[type]}        [description]
+     */
     createTemplateValidate: function (req, res, next) {
       var locationValidator = function(name, value, callback) {
         if(!value) return callback(true);
@@ -868,6 +1017,12 @@ module.exports = {
         }
       });
     },
+    /**
+     * 获取模板列表,分三种类型,按照创建时间分页
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     getTemplateList: function (req, res) {
       var option,templateModel;
       switch(req.query.templateType) {
@@ -899,6 +1054,12 @@ module.exports = {
         return res.status(500).send({msg:"服务器发生错误"});
       });
     },
+    /**
+     * 创建模板，三种类型
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     createTemplate: function (req, res) {
       var data = req.body;
       var template;
@@ -949,6 +1110,12 @@ module.exports = {
         }
       })
     },
+    /**
+     * 获取模板详情，根据templateId
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
     getTemplateDetail: function (req, res) {
       if (!mongoose.Types.ObjectId.isValid(req.params.templateId)) {
         return res.status(400).send({msg:"数据格式错误"});

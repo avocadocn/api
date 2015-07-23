@@ -367,6 +367,13 @@
             "type": "integer",
             "format": "int32",
             "in": "query"
+          },
+          {
+            "name": "userId",
+            "description": "用户Id",
+            "required": false,
+            "type": "string",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2219,6 +2226,13 @@
           "description": "模板Id",
           "type": "string"
         },
+        "inviters": {
+          "description": "邀请人列表",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "theme": {
           "description": "主题",
           "type": "string"
@@ -2349,7 +2363,7 @@
           "type": "string"
         },
         "interactionId": {
-          "description": "questionId",
+          "description": "互动id",
           "type": "string"
         },
         "commentId": {
