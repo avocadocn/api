@@ -1366,85 +1366,25 @@ function singleUpload(req, res, next) {
 
 // 创建同事圈的内容
 function createCircleContent(req, res, next) {
-
-  // filter
-  if (!req.body.campaign_id) {
-    res.status(400).send({
-      msg: '参数不足'
-    });
-    return;
+  // create
+  var circleContent = new CircleContent({
+    cid: req.user.getCid(), // 所属公司id
+    post_user_id: req.user._id, // 发消息的用户的id（头像和昵称再次查询）
+    status: 'wait'
+  });
+  if (req.body.content) {
+    circleContent.content = req.body.content;
   }
-
-  // auth
-  Campaign.findById(req.body.campaign_id).exec()
-    .then(function(campaign) {
-      if (!campaign) {
-        res.status(403).send({
-          msg: '您没有权限'
-        });
-        return;
-      }
-
-      var role = auth.getRole(req.user, {
-        companies: campaign.cid,
-        teams: campaign.tid,
-        users: campaign.relativeMemberIds
+  circleContent.save(function(err) {
+    if (err) {
+      next(err);
+    } else {
+      res.send({
+        msg: '创建成功，等待文件上传',
+        id: circleContent.id
       });
-
-      var taskName = campaign.campaign_type == 1 ? 'publishCompanyCircle' : 'publishTeamCircle';
-      var allow = auth.auth(role, [taskName]);
-      if (!allow[taskName]) {
-        res.status(403).send({
-          msg: '您没有权限'
-        });
-        return;
-      }
-
-      var tid = campaign.campaign_type == 1 ? [] : campaign.tid;
-      var relative_cids = campaign.cid;
-      // 发消息用户所属小队id， 若为null, 则该消息为公司活动消息
-      var post_user_tid = null;
-      var campaign_unit = campaign.campaign_unit;
-      var findUserTeam = false;
-      for (var i = 0; i < campaign_unit.length && !findUserTeam; i++) {
-        var members = campaign_unit[i].member;
-        for (var j = 0; j < members.length; j++) {
-          if (members[j]._id.toString() == req.user.id&&campaign_unit[i].team&&campaign_unit[i].team._id) {
-            post_user_tid = campaign_unit[i].team._id.toString();
-            findUserTeam = true;
-            break;
-          }
-        }
-      }
-      // console.log(post_user_tid);
-      // create
-      var circleContent = new CircleContent({
-        cid: req.user.getCid(), // 所属公司id
-        tid: tid, // 关联的小队id(可选，不是必要的)
-        campaign_id: campaign._id, // 关联的活动id(可选，不是必要的)
-        post_user_id: req.user._id, // 发消息的用户的id（头像和昵称再次查询）
-        post_user_tid: post_user_tid, // 发消息用户所属小队id
-        relative_cids: relative_cids, // 参加同事圈消息所属的活动的所有公司id
-        status: 'wait'
-      });
-      if (req.body.content) {
-        circleContent.content = req.body.content;
-      }
-      circleContent.save(function(err) {
-        if (err) {
-          next(err);
-        } else {
-          res.send({
-            msg: '创建成功，等待文件上传',
-            id: circleContent.id
-          });
-
-        }
-      });
-
-    })
-    .then(null, next);
-
+    }
+  });
 }
 
 // 激活
@@ -1485,18 +1425,6 @@ function activeCircleContent(req, res, next) {
               res.send({
                 msg: '发表成功',
                 circleContent: circleContent
-              });
-              // 更新活动精彩瞬间数目
-              Campaign.update({
-                _id: circleContent.campaign_id
-              }, {
-                $inc: {
-                  circle_content_sum: 1
-                }
-              }, function(err, numberAffected) {
-                if(err) {
-                  log(err);
-                }
               });
 
               var poster = {

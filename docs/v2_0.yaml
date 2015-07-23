@@ -912,10 +912,10 @@ paths:
           description: error
           schema:
             $ref: Error
-  "/favorite_rank":
+  "/favoriteRank":
     get:
       tags:
-        - favorite_rank
+        - favoriteRank
       summary: 获取公司内、公司外排行榜 
       operationId: getFavoriteRank
       parameters:
@@ -951,7 +951,7 @@ paths:
           description: error
           schema:
             $ref: Error
-  "/circle_contents":
+  "/circle/contents":
     post:
       tags:
         - circles
@@ -1043,7 +1043,7 @@ paths:
             type: array
             items:
               $ref: ResCircle
-  "/circle_contents/{contentId}":
+  "/circle/contents/{contentId}":
     get:
       tags:
         - circles
@@ -1082,7 +1082,7 @@ paths:
             $ref: Error
         "200":
           description: 成功
-  "/circle_contents/{contentId}/comments":
+  "/circle/contents/{contentId}/comments":
     post:
       tags:
         - circles
@@ -1107,7 +1107,7 @@ paths:
             $ref: Error
         "200":
           description: 成功
-  "/circle_comments/{commentId}":
+  "/circle/comments/{commentId}":
     delete:
       tags:
         - circles
@@ -1131,7 +1131,7 @@ paths:
             $ref: Error
         "200":
           description: 成功
-  "/circle_reminds":
+  "/circle/reminds":
     get:
       tags:
         - circles
@@ -1159,7 +1159,7 @@ paths:
           description: 成功
           schema:
             $ref: NewReminds
-  "/circle_reminds/comments":
+  "/circle/reminds/comments":
     get:
       tags:
         - circles

@@ -1354,10 +1354,10 @@
         }
       }
     },
-    "/favorite_rank": {
+    "/favoriteRank": {
       "get": {
         "tags": [
-          "favorite_rank"
+          "favoriteRank"
         ],
         "summary": "获取公司内、公司外排行榜",
         "operationId": "getFavoriteRank",
@@ -1411,7 +1411,7 @@
         }
       }
     },
-    "/circle_contents": {
+    "/circle/contents": {
       "post": {
         "tags": [
           "circles"
@@ -1545,7 +1545,7 @@
         }
       }
     },
-    "/circle_contents/{contentId}": {
+    "/circle/contents/{contentId}": {
       "get": {
         "tags": [
           "circles"
@@ -1604,7 +1604,7 @@
         }
       }
     },
-    "/circle_contents/{contentId}/comments": {
+    "/circle/contents/{contentId}/comments": {
       "post": {
         "tags": [
           "circles"
@@ -1642,7 +1642,7 @@
         }
       }
     },
-    "/circle_comments/{commentId}": {
+    "/circle/comments/{commentId}": {
       "delete": {
         "tags": [
           "circles"
@@ -1678,7 +1678,7 @@
         }
       }
     },
-    "/circle_reminds": {
+    "/circle/reminds": {
       "get": {
         "tags": [
           "circles"
@@ -1719,7 +1719,7 @@
         }
       }
     },
-    "/circle_reminds/comments": {
+    "/circle/reminds/comments": {
       "get": {
         "tags": [
           "circles"
