@@ -145,6 +145,23 @@ module.exports = {
           res.status(200).send({
             msg: '群组创建成功'
           });
+          // 更新user的team属性
+          // TODO: 增加conditions条件
+          User.update({
+            '_id': req.user._id
+          }, {
+            $addToSet: {
+              'team': {
+                _id: team._id, //群组id
+                leader: true, //该员工是不是这个群组的队长
+                public: false
+              }
+            }
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
+          });
         }
       });
     },
@@ -239,9 +256,30 @@ module.exports = {
           log(err);
           return res.sendStatus(500);
         } else {
-          return res.status(200).send({
+          res.status(200).send({
             msg: '编辑群组成功'
           });
+          // 更新user的team属性
+          if (req.groupInfo.open !== undefined) {
+            // TODO: 增加conditions条件
+            User.update({
+              'team': {
+                '$elemMatch': {
+                  '_id': req.group._id
+                }
+              }
+            }, {
+              $set: {
+                'team.$.public': req.groupInfo.open
+              }
+            }, {
+              multi: true
+            }, function(err, numberAffected) {
+              if (err) {
+                log(err);
+              }
+            });
+          }
         }
       });
     },
@@ -438,7 +476,7 @@ module.exports = {
             log(err);
             return res.sendStatus(500);
           } else {
-            return res.status(200).send({
+            res.status(200).send({
               msg: '申请加入该群组成功'
             });
           }
@@ -460,8 +498,26 @@ module.exports = {
             log(err);
             return res.sendStatus(500);
           } else {
-            return res.status(200).send({
+            res.status(200).send({
               msg: '加入群组成功'
+            });
+
+            // 更新user的team属性
+            // TODO: 增加conditions条件
+            User.update({
+              '_id': req.user._id
+            }, {
+              $addToSet: {
+                'team': {
+                  _id: req.group._id, //群组id
+                  leader: false, //该员工是不是这个群组的队长
+                  public: req.group.open
+                }
+              }
+            }, function(err, numberAffected) {
+              if (err) {
+                log(err);
+              }
             });
           }
         });
@@ -516,9 +572,26 @@ module.exports = {
             log(err);
             return res.sendStatus(500);
           } else {
-            return res.status(200).send({
+            res.status(200).send({
               msg: '退出群组成功'
             });
+
+            // 更新user的team属性
+            // TODO: 增加conditions条件
+            User.update({
+              '_id': req.user._id
+            }, {
+              $pull: {
+                'team': {
+                  _id: req.group._id//群组id
+                }
+              }
+            }, function(err, numberAffected) {
+              if (err) {
+                log(err);
+              }
+            });
+
           }
         });
       }
@@ -572,8 +645,24 @@ module.exports = {
             log(err);
             return res.sendStatus(500);
           } else {
-            return res.status(200).send({
+            res.status(200).send({
               msg: '移除成员成功'
+            });
+
+            // 更新user的team属性
+            // TODO: 增加conditions条件
+            User.update({
+              '_id': req.params.userId
+            }, {
+              $pull: {
+                'team': {
+                  _id: req.group._id//群组id
+                }
+              }
+            }, function(err, numberAffected) {
+              if (err) {
+                log(err);
+              }
             });
           }
         });
@@ -625,8 +714,46 @@ module.exports = {
           log(err);
           return res.sendStatus(500);
         } else {
-          return res.status(200).send({
+          res.status(200).send({
             msg: '指定群主成功'
+          });
+
+          // 更新user的team属性
+          // TODO: 增加conditions条件
+          User.update({
+            '_id': req.params.userId,
+            'team': {
+              '$elemMatch': {
+                '_id': req.group._id
+              }
+            }
+          }, {
+            $set: {
+              'team.$.leader': true
+            }
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
+          });
+
+          User.update({
+            '_id': req.user._id,
+            'team': {
+              '$elemMatch': {
+                '_id': req.group._id
+              }
+            }
+          }, {
+            $set: {
+              'team.$.leader': false
+            }
+          }, {
+            multi: true
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
           });
         }
       });
@@ -667,8 +794,24 @@ module.exports = {
           log(err);
           return res.sendStatus(500);
         } else {
-          return res.status(200).send({
+          res.status(200).send({
             msg: '删除群组成功'
+          });
+
+          // 更新user的team属性
+          // TODO: 增加conditions条件
+          User.update({
+            '_id': req.user._id
+          }, {
+            $pull: {
+              'team': {
+                _id: req.group._id //群组id
+              }
+            }
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
           });
         }
       });
@@ -843,7 +986,7 @@ module.exports = {
      *    如果拒绝邀请, 则返回200, msg: 拒绝加入受邀群组成功
      *    如果接受邀请, 则返回200, msg: 加入受邀群组成功
      * @param  {[type]} req [description]
-     * body:
+     * query:
      * {
      *    accept: Boolean
      * }
@@ -880,7 +1023,7 @@ module.exports = {
       };
       var msg = '拒绝加入受邀群组成功';
 
-      if (req.body.accept) {
+      if (req.query.accept) {
         doc.$addToSet = {
           'member': {
             _id: req.user._id, // 成员id
@@ -899,9 +1042,29 @@ module.exports = {
           log(err);
           return res.sendStatus(500);
         } else {
-          return res.status(200).send({
+          res.status(200).send({
             msg: msg
           });
+
+          // 更新user的team属性
+          // TODO: 增加conditions条件
+          if (req.query.accept) {
+            User.update({
+              '_id': req.user._id
+            }, {
+              $addToSet: {
+                'team': {
+                  _id: req.group._id, //群组id
+                  leader: false, //该员工是不是这个群组的队长
+                  public: req.group.open
+                }
+              }
+            }, function(err, numberAffected) {
+              if (err) {
+                log(err);
+              }
+            });
+          }
         }
       });
     },
@@ -975,9 +1138,28 @@ module.exports = {
           log(err);
           return res.sendStatus(500);
         } else {
-          return res.status(200).send({
+          res.status(200).send({
             msg: msg
           });
+          // 更新user的team属性
+          // TODO: 增加conditions条件
+          if (req.query.accept) {
+            User.update({
+              '_id': req.params.userId
+            }, {
+              $addToSet: {
+                'team': {
+                  _id: req.group._id, //群组id
+                  leader: false, //该员工是不是这个群组的队长
+                  public: req.group.open
+                }
+              }
+            }, function(err, numberAffected) {
+              if (err) {
+                log(err);
+              }
+            });
+          }
         }
       });
     }
