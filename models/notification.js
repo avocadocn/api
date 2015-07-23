@@ -18,18 +18,18 @@ var Notification = new Schema({
   },
 
   //非系统通知 以下三者选其一
-  //Interaction
-  inteactionId: {
+  //Interaction的id
+  interaction: {
     type: Schema.Types.ObjectId,
     ref: 'Interaction'
   },
   //礼物的id
-  giftId: {
+  gift: {
     type: Schema.Types.ObjectId,
     ref: 'Gift'
   },
   //小队的id
-  teamId: {
+  team: {
     type: Schema.Types.ObjectId,
     ref: 'Team'
   },
@@ -50,10 +50,15 @@ var Notification = new Schema({
     type: Number,
     enum: [1,2,3,4,5,6,7,8,9]
   },
-  //若是自己的评论有回复了则有此属性(action为4、5)
-  replyId: Schema.Types.ObjectId,
+  //提醒中要显示的内容
+  //活动、投票、求助的主题名, 若是评论则为他评论的内容，若是群则为群名
+  content: String,
+  //若是自己的评论有回复了则有此属性(action为4、5),此为新回复的id
+  reply: Schema.Types.ObjectId,
+  //若是赞，保存被赞的评论id(action为5)
+  replyTo: Schema.Types.ObjectId,
   
-  //可能很多人回答、参加 (action为1、5)
+  //可能很多人回答、参加 (action为1、5、8)
   relativeCount: {
     type: Number
   }, 
