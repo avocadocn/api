@@ -276,20 +276,32 @@ var filterTeam = function (teamType) {
   var _filterTeam;
   switch(teamType) {
     case 1:
-      _filterTeam = function (team) {
-        if(team.public)
-          return team._id;
+      _filterTeam = function (teams) {
+        var tids = [];
+        teams.forEach(function (team) {
+          if(team.public)
+            tids.push(team._id)
+        })
+        return tids;
       }
       break;
     case 2:
-      _filterTeam = function (team) {
-        if(!team.public)
-          return team._id;
+      _filterTeam = function (teams) {
+        var tids = [];
+        teams.forEach(function (team) {
+          if(!team.public)
+            tids.push(team._id)
+        })
+        return tids;
       }
       break;
     default:
-      _filterTeam = function (team) {
-          return team._id;
+      _filterTeam = function (teams) {
+        var tids = [];
+        teams.forEach(function (team) {
+          tids.push(team._id)
+        })
+        return tids;
       }
   }
   return _filterTeam;
@@ -388,12 +400,9 @@ UserSchema.methods = {
    * @return {[type]}          [description]
    */
   getTids: function(teamType) {
-    var tids = [];
+    
     var _filterTeam = filterTeam(teamType);
-    for (var i = 0; i < this.team.length; i++) {
-      tids.push(_filterTeam(this.team[i]));
-    }
-    return tids;
+    return _filterTeam(this.team);
   },
   /**
    * 添加设备信息到用户的设备记录中

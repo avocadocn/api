@@ -177,7 +177,13 @@ module.exports = {
                 return res.status(403).send({ msg: "您不能与其他公司进行互动" });
               break;
             case 2:
-              if(!req.user.isTeamMember(target))
+              for (var i = req.user.team.length - 1; i >= 0; i--) {
+                if(req.user.team[i]._id.toString()===target){
+                  req.body.public = req.user.team[i].public;
+                  break;
+                }
+              };
+              if(i===-1)
                 return res.status(403).send({ msg: "您不能与未参加的群组进行互动" });
               break;
             default:
@@ -226,7 +232,8 @@ module.exports = {
         theme: data.theme,
         content: data.content,
         endTime: data.endTime,
-        tags: data.tags
+        tags: data.tags,
+        public: data.public
       });
       
       async.waterfall([
@@ -322,17 +329,38 @@ module.exports = {
      * @return {[type]}     [description]
      */
     getInteraction: function (req, res) {
+      // console.time("getInteraction")
       var interactionType = req.query.interactionType;
       var populateType;
       var userId = req.query.userId || req.user._id;
       var option;
       //自己
-      if(userId===req.user._id) {
+      if(userId==req.user._id) {
         option ={cid:req.user.cid, status:{"$lt":3}, "$or":[{"targetType":2,target:{"$in":req.user.getTids()}},{"targetType":3,target:req.user.cid}]};
       }
       //其他人
       else {
-        option ={cid:req.user.cid, status:{"$lt":3}, "$and":[{"$or":[{"members":userId},{"poster._id":userId}]},{"$or":[{"public":true},{"target":{"$in":req.user.getTids(2)}}]}]};
+        option ={ cid:req.user.cid,
+                  status:{"$lt":3},
+                  "$and":[
+                    {"$or":[
+                      {"members":userId},
+                      {"poster._id":userId}
+                    ]},
+                    {"$or":[
+                      {"public":true},
+                      {
+                        "$and":[
+                          {"targetType":2},
+                          {
+                            "target":{
+                              "$in":req.user.getTids(2)
+                            }
+                          }
+                        ]}
+                    ]}
+                  ]
+                };
       }
       //分页
       if(req.query.createTime) {
@@ -364,6 +392,7 @@ module.exports = {
       .limit(_perPageNum)
       .exec()
       .then(function (interactions) {
+        // console.timeEnd("getInteraction")
         return res.send(interactions);
       })
       .then(null,function (error) {
@@ -511,10 +540,10 @@ module.exports = {
           return res.send(results);
         }
         else{
-          if(err===403) {
+          if(error===403) {
              return res.status(403).send({msg:"您没有权限进行评论"})
           }
-          else if(err===400) {
+          else if(error===400) {
             return res.status(400).send({msg:"您提交的参数错误"});
           }
           else {
