@@ -319,6 +319,9 @@ module.exports = {
         }
         else{
           res.send({interactionId:interaction.id});
+          if(interaction.inviters) {
+            notificationController.sendInteractionNfct(2, interaction, req.user._id, interaction.inviters);
+          }
         }
       });
     },

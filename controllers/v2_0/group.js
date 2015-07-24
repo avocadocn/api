@@ -15,7 +15,8 @@ var auth = require('../../services/auth.js'),
   uploader = require('../../services/uploader.js'),
   tools = require('../../tools/tools.js'),
   donlerValidator = require('../../services/donler_validator.js'),
-  async = require('async');
+  async = require('async'),
+  notificationController = require('./notifications.js');
 
 // TODO: 群组API涉及到权限判断，同时有重复代码，需要
 // 修改原权限判断代码，优化代码。
@@ -479,6 +480,8 @@ module.exports = {
             res.status(200).send({
               msg: '申请加入该群组成功'
             });
+            //发通知给群主
+            notificationController.sendTeamNtct(8, req.group, req.user._id, req.group.leader._id);
           }
         });
       } else {
@@ -1072,10 +1075,10 @@ module.exports = {
      * 群主处理申请记录
      * 请求用户非该群组的群主, 则返回403, msg: 无权限
      * 申请用户已经加入该群组, 则返回400, msg: 申请用户已加入该群组
-     * 申请用户未在受邀列表, 则返回400, msg: 申请用户不在申请列表
-     * 请求用户在受邀列表
-     *    如果拒绝邀请, 则返回200, msg: 拒绝该申请
-     *    如果接受邀请, 则返回200, msg: 同意该申请
+     * 申请用户未在申请列表, 则返回400, msg: 申请用户不在申请列表
+     * 请求用户在申请列表
+     *    如果拒绝申请, 则返回200, msg: 拒绝该申请
+     *    如果接受申请, 则返回200, msg: 同意该申请
      * @param  {[type]} req [description]
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
@@ -1130,10 +1133,10 @@ module.exports = {
         msg = '同意该申请';
       }
       //TODO: 或许加入拒绝记录
-      Team.update({
+      Team.findOneAndUpdate({
         '_id': req.group._id,
         'active': true
-      }, doc, function(err, numberAffected) {
+      }, doc, function(err, team) {
         if (err) {
           log(err);
           return res.sendStatus(500);
@@ -1159,6 +1162,10 @@ module.exports = {
                 log(err);
               }
             });
+
+            //发通知
+            var _team = {_id: req.group._id, }
+            notificationController.sendTeamNtct(7, team, req.user._id, req.params.userId);
           }
         }
       });
