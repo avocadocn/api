@@ -16,7 +16,8 @@ var auth = require('../../services/auth.js'),
   tools = require('../../tools/tools.js'),
   donlerValidator = require('../../services/donler_validator.js'),
   async = require('async'),
-  notificationController = require('./notifications.js');
+  notificationController = require('./notifications.js'),
+  easemob = require('../../services/easemob.js');
 
 // TODO: 群组API涉及到权限判断，同时有重复代码，需要
 // 修改原权限判断代码，优化代码。
@@ -138,32 +139,49 @@ module.exports = {
         }]
       });
 
-      team.save(function(err) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
+      var groupMembers = team.member.map(function(member){return member._id});
+
+      //创建群聊
+      easemob.group.add({
+        "groupname": team.id,
+        "desc": team.name,
+        "public": true,
+        "owner": req.user.cid,
+        "members": groupMembers
+      }, function(error, data) {
+        if (error) {
+          log(error);
         } else {
-          res.status(200).send({
-            msg: '群组创建成功'
-          });
-          // 更新user的team属性
-          // TODO: 增加conditions条件
-          User.update({
-            '_id': req.user._id
-          }, {
-            $addToSet: {
-              'team': {
-                _id: team._id, //群组id
-                leader: true, //该员工是不是这个群组的队长
-                public: false
-              }
-            }
-          }, function(err, numberAffected) {
-            if (err) {
-              log(err);
-            }
-          });
+          team.easemobId = data.data.groupid;
         }
+
+        team.save(function(err) {
+          if (err) {
+            log(err);
+            return res.sendStatus(500);
+          } else {
+            res.status(200).send({
+              msg: '群组创建成功'
+            });
+            // 更新user的team属性
+            // TODO: 增加conditions条件
+            User.update({
+              '_id': req.user._id
+            }, {
+              $addToSet: {
+                'team': {
+                  _id: team._id, //群组id
+                  leader: true, //该员工是不是这个群组的队长
+                  public: false
+                }
+              }
+            }, function(err, numberAffected) {
+              if (err) {
+                log(err);
+              }
+            });
+          }
+        });
       });
     },
     /**
@@ -326,8 +344,6 @@ module.exports = {
 
         return (!isMember && !isInvited);
       }
-
-      // console.log(invitedUserIds);
 
       User.find({
         '_id': {
@@ -541,6 +557,9 @@ module.exports = {
               msg: '加入群组成功'
             });
 
+            //加入群聊
+            easemob.group.addUser(req.group.easemobId, req.user._id);
+
             // 更新user的team属性
             // TODO: 增加conditions条件
             User.update({
@@ -615,6 +634,9 @@ module.exports = {
               msg: '退出群组成功'
             });
 
+            //从群聊中删除
+            easemob.group.deleteUser(req.group.easemobId, req.user._id);
+
             // 更新user的team属性
             // TODO: 增加conditions条件
             User.update({
@@ -687,6 +709,9 @@ module.exports = {
             res.status(200).send({
               msg: '移除成员成功'
             });
+
+            //从群聊中删除
+            easemob.group.deleteUser(req.group.easemobId, req.params.userId);
 
             // 更新user的team属性
             // TODO: 增加conditions条件
@@ -834,6 +859,11 @@ module.exports = {
         } else {
           res.status(200).send({
             msg: '删除群组成功'
+          });
+
+          //删除群聊
+          easemob.group.delete(req.group.easemobId, function (err, data) {
+            console.log(err);
           });
 
           // 更新user的team属性
@@ -1087,6 +1117,10 @@ module.exports = {
           // 更新user的team属性
           // TODO: 增加conditions条件
           if (req.query.accept) {
+
+            //加入群聊
+            easemob.group.addUser(req.group.easemobId, req.user._id);
+
             User.update({
               '_id': req.user._id
             }, {
@@ -1180,6 +1214,9 @@ module.exports = {
           // 更新user的team属性
           // TODO: 增加conditions条件
           if (req.query.accept) {
+            //加入群聊
+            easemob.group.addUser(req.group.easemobId, req.user._id);
+
             User.update({
               '_id': req.params.userId
             }, {

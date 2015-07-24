@@ -96,7 +96,9 @@ var TeamModel = new Schema({
   createTime: { // 群组建立时间
     type: Date,
     default: Date.now
-  }
+  },
+  // 环信id
+  easemobId: String
 });
 
 /**
