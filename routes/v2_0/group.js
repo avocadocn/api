@@ -5,7 +5,7 @@ var token = require('../../services/token.js');
 module.exports = function(app, ctrl) {
   app.post('/groups', token.needToken, ctrl.v2_0.getFormDataForGroup, ctrl.v2_0.uploadLogoForGroup, ctrl.v2_0.createGroup); // 发新群组 
   app.put('/groups/:groupId', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.getFormDataForUpdateGroup, ctrl.v2_0.uploadLogoForGroup, ctrl.v2_0.updateGroup); // 编辑群组
-  app.put('/groups/:groupId/invitation/:userId', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.inviteMemberToGroup); // app内群组邀请
+  app.post('/groups/:groupId/invitation', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.inviteMemberToGroup); // app内群组邀请
   app.get('/groups/:groupId/invitation', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.getInviteCodeForGroup); // app外群组邀请(获取邀请链接)
   app.put('/groups/:groupId/user', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.joinGroup); // 加入群组
   app.delete('/groups/:groupId/user', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.quitGroup); // 退出群组

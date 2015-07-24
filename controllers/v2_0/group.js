@@ -286,7 +286,15 @@ module.exports = {
     },
     /**
      * app内群组邀请
+     * 判断受邀用户id已经加入或者被邀请以及该用户id不存在, 则不将该受邀用户id加入userIds, 并且不返回前端任何信息
+     * 如果userIds的长度为0, 则返回400, msg: 用户已经加入该群组或者已被邀请
+     * 如果userIds的长度不为0, 则将邀请记录加入inviteMember, 返回200, msg: 邀请成功
+     * 
      * @param  {[type]} req [description]
+     * body
+     * {
+     *   userIds: [] //用户id
+     * }
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
@@ -296,75 +304,96 @@ module.exports = {
       var isMember = req.group.member.some(function(member) {
         return member._id.toString() === req.user._id.toString()
       }); // TODO: check it
-      // if (isMember) {
-      //   role.group = 'member';
-      // }
-      // var role = auth.getRole(req.user, {
-      //   users: users
-      // });
-      // var allow = auth.auth(role, ['inviteMemberToGroup']);
+
       if (!isMember) {
         return res.status(403).send({
           msg: '无权限'
         });
       }
-      // 判断该用户是否已经是该群组成员
-      var isMember = req.group.member.some(function(member) {
-        return member._id.toString() === req.params.userId.toString()
-      });
 
-      if (isMember) {
-        return res.status(400).send({
-          msg: '用户已经加入该群组'
-        });
-      }
-      // 判断该该用户是否已被邀请
-      var isInvited = req.group.inviteMember.some(function(inviteMember) {
-        return inviteMember.inviteMemberId.toString() === req.params.userId.toString()
-      });
+      var invitedUserIds = req.body.userIds.filter(isMemberOrInvited);
 
-      if (isInvited) {
-        return res.status(400).send({
-          msg: '用户已邀请'
+      function isMemberOrInvited(id) {
+        // 判断该用户是否已经是该群组成员
+        var isMember = req.group.member.some(function(member) {
+          return member._id.toString() === id.toString()
         });
+
+        // 判断该该用户是否已被邀请
+        var isInvited = req.group.inviteMember.some(function(inviteMember) {
+          return inviteMember.inviteMemberId.toString() === id.toString()
+        });
+
+        return (!isMember && !isInvited);
       }
-      // TODO: findById -> findOne 判断用户是否存在
-      User.findById(req.params.userId, function(err, user) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
+
+      console.log(invitedUserIds);
+
+      User.find({
+        '_id': {
+          $in: invitedUserIds
         }
-        if (!user) {
+      }, {'_id': 1}, function(err, userDocs) {
+
+        var userIds = userDocs.map(function(user){ return user._id.toString(); });
+
+        if (!invitedUserIds.length) {
           return res.status(400).send({
-            msg: '受邀用户不存在'
-          });
-        } else {
-          // 将邀请记录加入inviteMember
-          Team.update({
-            '_id': req.group._id,
-            'active': true
-          }, {
-            $addToSet: {
-              'inviteMember': {
-                inviteMemberId: req.params.userId, //被邀请人id
-                _id: req.user._id, //邀请人id
-              }
-            }
-          }, function(err, numberAffected) {
-            if (err) {
-              log(err);
-              return res.sendStatus(500);
-            }
-            // TODO:
-            // 更新用户邀请列表
-            // 邀请列表包括 邀请人、邀请加入的群组等信息
-
-            return res.status(200).send({
-              msg: '邀请成功'
-            });
+            msg: '用户已经加入该群组或者已被邀请'
           });
         }
+
+        var invitedUsers = [];
+
+        userIds.map(function(id) {
+          invitedUsers.push({'inviteMemberId': id, '_id': req.user._id});
+        });
+
+        // 将邀请记录加入inviteMember
+        Team.update({
+          '_id': req.group._id,
+          'active': true
+        }, {
+          $addToSet: {
+            'inviteMember': {
+              $each: invitedUsers
+            }
+          }
+        }, function(err, numberAffected) {
+          if (err) {
+            log(err);
+            return res.sendStatus(500);
+          }
+          // TODO:
+          // 更新用户邀请列表
+          // 邀请列表包括 邀请人、邀请加入的群组等信息
+
+          res.status(200).send({
+            msg: '邀请成功'
+          });
+        });
       });
+      // // 判断该用户是否已经是该群组成员
+      // var isMember = req.group.member.some(function(member) {
+      //   return member._id.toString() === req.params.userId.toString()
+      // });
+
+      // if (isMember) {
+      //   return res.status(400).send({
+      //     msg: '用户已经加入该群组'
+      //   });
+      // }
+      // // 判断该该用户是否已被邀请
+      // var isInvited = req.group.inviteMember.some(function(inviteMember) {
+      //   return inviteMember.inviteMemberId.toString() === req.params.userId.toString()
+      // });
+
+      // if (isInvited) {
+      //   return res.status(400).send({
+      //     msg: '用户已邀请'
+      //   });
+      // }
+      // 
     },
     /**
      * app外群组邀请(邀请链接)
@@ -691,8 +720,7 @@ module.exports = {
       var user;
       // 判断移除用户是否已经是该群组成员
       var isMember = req.group.member.some(function(member) {
-        user = member;
-        return member._id.toString() === req.params.userId.toString()
+        return (member._id.toString() === req.params.userId.toString() && (user = member))
       });
 
       if (!isMember) {
@@ -1089,7 +1117,6 @@ module.exports = {
           msg: '无权限'
         });
       }
-      console.log(req.query.accept);
 
       var isMember = req.group.member.some(function(member) {
         return member._id.toString() === req.params.userId.toString()
@@ -1103,8 +1130,7 @@ module.exports = {
 
       var user;
       var isApplyMember = req.group.applyMember.some(function(member) {
-        user = member;
-        return member._id.toString() === req.params.userId.toString()
+        return (member._id.toString() === req.params.userId.toString() && (user = member))
       });
 
       if (!isApplyMember) {

@@ -1091,8 +1091,8 @@
         }
       }
     },
-    "/groups/{groupId}/invitation/{userId}": {
-      "put": {
+    "/groups/{groupId}/invitation": {
+      "post": {
         "tags": [
           "group"
         ],
@@ -1107,11 +1107,13 @@
             "in": "path"
           },
           {
-            "name": "userId",
-            "description": "受邀人id",
+            "name": "body",
+            "description": "body",
             "required": true,
-            "type": "string",
-            "in": "path"
+            "schema": {
+              "$ref": "invitedUserIds"
+            },
+            "in": "body"
           }
         ],
         "responses": {
@@ -1125,9 +1127,7 @@
             }
           }
         }
-      }
-    },
-    "/groups/{groupId}/invitation": {
+      },
       "get": {
         "tags": [
           "group"
@@ -2646,6 +2646,22 @@
         "status": {
           "type": "string",
           "description": "消息状态"
+        }
+      }
+    },
+    "invitedUserIds": {
+      "title": "invitedUserIds",
+      "required": [
+        "userIds"
+      ],
+      "properties": {
+        "userIds": {
+          "type": "array",
+          "description": "用户id",
+          "items": {
+            "type": "string"
+          },
+          "collectionFormat": "ssv"
         }
       }
     },
