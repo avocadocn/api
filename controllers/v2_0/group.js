@@ -327,7 +327,7 @@ module.exports = {
         return (!isMember && !isInvited);
       }
 
-      console.log(invitedUserIds);
+      // console.log(invitedUserIds);
 
       User.find({
         '_id': {
@@ -371,6 +371,13 @@ module.exports = {
           res.status(200).send({
             msg: '邀请成功'
           });
+
+          //发通知给被邀请的
+          if(invitedUsers.length) {
+            for(var i=invitedUsers.length-1; i>=0; i--) {
+              notificationController.sendTeamNtct(6, req.group, req.user._id, invitedUsers[i].inviteMemberId);
+            }
+          }
         });
       });
       // // 判断该用户是否已经是该群组成员

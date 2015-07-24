@@ -159,7 +159,13 @@ module.exports = {
     .exec()
     .then(function(notifications) {
       res.status(200).send(notifications);
-      //删除通知todo
+      //删除通知
+      options.receiver = req.user._id;
+      Notification.remove(options, function(err, number) {
+        if(err) {
+          log(err);
+        }
+      });
       return;
     })
     .then(null, function(err) {
