@@ -90,7 +90,7 @@ module.exports = {
         type: {
           name: '互动类型',
           value: interactionType,
-          validators: ['required', donlerValidator.enum([1, 2, 3, 4],"互动类型错误")]
+          validators: ['required', donlerValidator.enum([1, 2, 3],"互动类型错误")]
         },
         targetType: {
           name: '目标类型',

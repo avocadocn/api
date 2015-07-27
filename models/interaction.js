@@ -24,8 +24,7 @@ var Interaction = new Schema({
   //目标类型 1:'个人'（暂无）,2:'群',3:'公司'
   targetType:{
     type: Number,
-    enum: [1,2,3],
-    default: 2
+    enum: [1,2,3]
   },
   //目标
   target:{

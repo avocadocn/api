@@ -2004,6 +2004,44 @@ definitions:
       msg:
         description: 验证结果描述
         type: string
+  UserRegisterForm:
+    title: UserRegisterForm
+    type: object
+    required:
+      - cid
+      - email
+      - domain
+      - nickname
+      - password
+      - realname
+    properties:
+      cid:
+        description: 公司id
+        type: string
+      email:
+        description: 用户邮箱
+        type: string
+      nickname:
+        description: 昵称
+        type: string
+      password:
+        description: 密码
+        type: string
+      gender:
+        description: 性别
+        type: boolean
+      # department:
+      #   description: 部门
+      #   type: array
+      #   items:
+      #     description: 部门名
+      #     type: string
+      phone:
+        description: 手机号码
+        type: string
+      inviteKey:
+        description: 注册邀请码
+        type: string
   pushInfo:
     title: pushInfo
     type: object

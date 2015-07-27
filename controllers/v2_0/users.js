@@ -5,7 +5,149 @@ var User = mongoose.model('User');
 var log = require('../../services/error_log.js'),
     donlerValidator = require('../../services/donler_validator.js'),
     tools = require('../../tools/tools.js');
+var publicDomain = require('../../services/public_domain.js');
+var emailService = require('../../services/email.js');
 module.exports = {
+    registerValidate: function (req, res, next) {
+      var isUsedEmail = function (name, value, callback) {
+        User.findOne({ email: value }).exec()
+          .then(function (user) {
+            if (user) {
+              callback(false, '该邮箱已被注册');
+              return;
+            }
+            callback(true);
+          })
+          .then(null, function (err) {
+            log(err);
+            callback(false, '服务器错误');
+          });
+      };
+
+      var validateDomain = function (name, value, callback) {
+        if (req.company.email.domain.indexOf(value) === -1) {
+          callback(false, '邮箱后缀与公司允许的后缀不一致');
+        } else {
+          callback(true);
+        }
+      };
+
+
+      // var validateDepartment = function (name, value, callback) {
+      //   if (!value) {
+      //     callback(true);
+      //     return;
+      //   }
+      //   var departments = req.company.department;
+      //   for (var i = 0; i < value.length; i++) {
+      //     var index = tools.arrayObjectIndexOf(departments, value[i], 'name');
+      //     if (index === -1) {
+      //       callback(false, '公司没有开设该部门');
+      //       return;
+      //     } else {
+      //       departments = departments[index].department;
+      //     }
+      //   }
+      //   callback(true);
+      // };
+      var validateInviteKey = function (name, value, callback) {
+        var domain = value.email.split('@')[1];
+        if(!publicDomain.isPublicDomain(domain) || value.company.invite_key === value.inviteKey) {
+          callback(true);
+        }
+        else {
+          callback(false,'激活码错误');
+        }
+      }
+      var email = req.body.email.toLowerCase();
+      console.log(4,req.body);
+      donlerValidator({
+        cid: {
+          name: '公司id',
+          value: req.body.cid,
+          validators: ['required']
+        },
+        email: {
+          name: '企业邮箱',
+          value: email,
+          validators: ['required', 'email', isUsedEmail]
+        },
+        domain: {
+          name: '邮箱后缀',
+          value: email.split('@')[1],
+          validators: [validateDomain]
+        },
+        nickname: {
+          name: '昵称',
+          value: req.body.nickname,
+          validators: ['required', donlerValidator.maxLength(20)]
+        },
+        password: {
+          name: '密码',
+          value: req.body.password,
+          validators: ['required', donlerValidator.minLength(6), donlerValidator.maxLength(30)]
+        },
+        gender: {
+          name: '性别',
+          value: req.body.gender,
+          validators: ['required']
+        },
+        // department: {
+        //   name: '部门',
+        //   value: req.body.department,
+        //   validators: [validateDepartment]
+        // },
+        phone: {
+          name: '手机号码',
+          value: req.body.phone,
+          validators: []
+        }, 
+        invite_key: {
+          name: '邀请码',
+          value: {inviteKey:req.body.inviteKey, email: email, company:req.company},
+          validators: [validateInviteKey]
+        }
+      }, 'complete', function (pass, msg) {
+        if (pass) {
+          next();
+        } else {
+          var resMsg = donlerValidator.combineMsg(msg);
+          console.log(resMsg)
+          res.status(400).send({ msg: resMsg });
+        }
+      });
+    },
+
+    register: function (req, res) {
+      var email = req.body.email.toLowerCase();
+      var user = new User({
+        email: email,
+        username: email,
+        cid: req.company._id,
+        cname: req.company.info.name,
+        nickname: req.body.nickname,
+        password: req.body.password,
+        gender: !!req.body.gender,
+        phone: req.body.phone,
+        role: 'EMPLOYEE'
+      });
+
+      user.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+          return;
+        }
+        emailService.sendStaffActiveMail(user.email, user._id.toString(), user.cid.toString(), function (err) {
+          if (err) {
+            log(err);
+            res.sendStatus(500);
+          } else {
+            res.sendStatus(201);
+          }
+        });
+      });
+    },
     validateConcern: function (req, res, next) {
       donlerValidator({
         concern:{

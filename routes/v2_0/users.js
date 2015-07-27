@@ -5,7 +5,7 @@ var getById = require('../../middlewares/getById.js');
 
 module.exports = function (app, ctrl) {
 
-  app.post('/users', ctrl.v1_3.getCompanyByCid, ctrl.v1_3.registerValidate, ctrl.v1_3.register);
+  app.post('/users', ctrl.v1_3.getCompanyByCid, ctrl.v2_0.registerValidate, ctrl.v2_0.register);
   app.post('/users/validate', ctrl.v1_3.userInfoValidate);
 
   app.get('/users/:userId', token.needToken, ctrl.v1_3.getUserById);

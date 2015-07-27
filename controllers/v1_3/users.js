@@ -29,7 +29,6 @@ module.exports = {
         res.status(400).send({ msg: 'cid不能为空' });
         return;
       }
-
       Company.findById(req.body.cid).exec()
         .then(function (company) {
           if (!company) {
