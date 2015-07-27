@@ -10,7 +10,7 @@ var async = require('async');
 var createCompanies = require('./create_companies.js');
 var createTeams = require('./create_teams.js');
 var createUsers = require('./create_users.js');
-var addUsersToTeams = require('./add_users_to_teams.js');
+var addUsersToGroups = require('./add_users_to_groups.js');
 var createCampaigns = require('./create_campaigns.js');
 
 var createConfig = require('./create_config.js');
@@ -91,7 +91,7 @@ exports.createData = function (callback) {
             teams: function (parallelCallback) {
               // 生成小队数据
               console.log('开始生成小队数据');
-              createTeams(company, parallelCallback);
+              createGroups(company, parallelCallback);
             },
             users: function (parallelCallback) {
               // 生成用户数据
@@ -123,7 +123,7 @@ exports.createData = function (callback) {
           // 用户加入小队
           console.log('让公司的用户加入小队');
           //todo for YT
-          addUsersToTeams(resCompanyData, waterfallCallback);
+          addUsersToGroups(resCompanyData, waterfallCallback);
         },
         function (waterfallCallback) {
           console.log('加入小队成功');
