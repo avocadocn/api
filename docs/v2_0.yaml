@@ -91,6 +91,660 @@ paths:
             $ref: Error
         200:
           description: 删除关注成功
+  /users/logout:
+    post:
+      tags:
+        - users
+      summary: 用户注销
+      operationId: userLogout
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "204":
+          description: 注销成功
+  /users:
+    post:
+      tags:
+        - users
+      summary: 注册用户
+      operationId: registerUser
+      parameters:
+        - name: body
+          schema:
+            $ref: UserRegisterForm
+          in: body
+          required: true
+          description: 用户注册表单数据
+      responses:
+        "201":
+          description: 注册成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/users/{userId}":
+    get:
+      tags:
+        - users
+      summary: 获取用户数据
+      operationId: getUserData
+      parameters:
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+          default: 53aa707a11fd597b3e1be260
+        - name: reponseKey
+          description: 需要返回的key
+          required: false
+          type: string
+          in: query
+          enum:
+            - pushToggle
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 用户数据
+          schema:
+            $ref: User
+    put:
+      tags:
+        - users
+      summary: 修改用户数据
+      operationId: editUserData
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+          default: 53aa707a11fd597b3e1be260
+        - name: nickname
+          description: 昵称
+          required: false
+          type: string
+          in: formData
+        - name: password
+          description: 密码
+          required: false
+          type: string
+          in: formData
+        - name: originPassword
+          description: 原密码
+          required: false
+          type: string
+          in: formData
+        - name: realname
+          description: 真实姓名
+          required: false
+          type: string
+          in: formData
+        - name: intro
+          description: 简介
+          required: false
+          type: string
+          in: formData
+        - name: phone
+          description: 手机号码
+          required: false
+          type: string
+          in: formData
+        - name: qq
+          description: QQ号码
+          required: false
+          type: string
+          in: formData
+        - name: birthday
+          description: 生日
+          required: false
+          type: string
+          in: formData
+          format: date-time
+        - name: pushToggle
+          description: 免打扰
+          required: false
+          type: boolean
+          in: formData
+        - name: tag
+          description: 增加的tag
+          required: false
+          type: string
+          in: formData
+        - name: deleteTag
+          description: 要删除的tag
+          required: false
+          type: string
+          in: formData
+      responses:
+        "200":
+          description: 修改成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/users/list/{companyId}":
+    get:
+      tags:
+        - users
+      operationId: getUserList
+      summary: 获取通讯录
+      produces:
+        - application/json
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+          default: 53aa6fc011fd597b3e1be250
+        - name: reslutType
+          description: 结果类型
+          required: false
+          type: integer
+          in: path
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            type: array
+            $ref: User
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /users/validate:
+    post:
+      tags:
+        - users
+      operationId: userInfoValidate
+      summary: 验证个人邮箱以及邀请码
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: email
+          description: 企业邮箱
+          type: string
+          in: formData
+        - name: cid
+          description: 企业id
+          type: string
+          in: formData
+        - name: inviteKey
+          description: 邀请码
+          type: string
+          in: formData
+      responses:
+        "200":
+          description: 验证完成
+          schema:
+            $ref: UserValidateResult
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/users/forgetPassword":
+    post:
+      tags:
+        - users
+      summary: 用户忘记密码，发送邮件
+      operationId: userForgetPassword
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: email
+          description: 邮件
+          type: string
+          required: true
+          in: formData
+      responses:
+        "201":
+          description: 邮件发送成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/users/sendFeedback":
+    post:
+      tags:
+        - users
+      summary: 用户发送反馈
+      operationId: sendFeedback
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: content
+          description: 反馈内容
+          type: string
+          required: true
+          in: formData
+      responses:
+        "201":
+          description: 邮件发送成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/users/{userId}/close":
+    post:
+      tags:
+        - users
+      summary: 屏蔽用户
+      operationId: deleteUser
+      parameters:
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+          default: 53aa707a11fd597b3e1be260
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "204":
+          description: 屏蔽成功
+  "/users/{userId}/open":
+    post:
+      tags:
+        - users
+      summary: 解除屏蔽
+      operationId: deleteUser
+      parameters:
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+          default: 53aa707a11fd597b3e1be260
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "204":
+          description: 解除屏蔽成功
+  "/users/{userId}/active":
+      post:
+        tags:
+          - users
+        summary: 激活成员
+        operationId: activeUser
+        parameters:
+          - name: userId
+            description: 用户id
+            required: true
+            type: string
+            in: path
+            default: 53aa707a11fd597b3e1be260
+        responses:
+          default:
+            description: error
+            schema:
+              $ref: Error
+          "200":
+            description: 激活成功
+  "/users/{userId}/photos":
+    get:
+      tags:
+        - photoAlbums
+        - users
+      summary: 获取用户上传过的照片
+      parameters:
+        - name: userId
+          description: 用户id
+          required: true
+          type: string
+          in: path
+          default: 53aa707a11fd597b3e1be260
+        - name: start
+          description: 分页的查询时间
+          required: false
+          type: string
+          in: query
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: PhotoListData
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /users/resend/activeEmail:
+    post:
+      tags:
+        - users
+      operationId: resendActiveEamil
+      summary: 重新发送激活邮件
+      consumes:
+        - application/json
+      produces:
+        - text/plain
+      parameters:
+        - name: body
+          description: 重新发送激活的目标邮箱
+          required: true
+          schema:
+            $ref: resendActiveEamilForm
+          in: body
+      responses:
+        "200":
+          description: 重新发送成功
+          schema:
+            $ref: resendActiveEamilResult
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /companies:
+    post:
+      tags:
+        - companies
+      summary: 注册公司账号(todo)
+      operationId: addCompany
+      consumes:
+        - application/json
+      produces:
+        - text/plain
+      parameters:
+        - name: body
+          description: 注册表单数据
+          required: true
+          schema:
+            $ref: CompanyRegisterForm
+          in: body
+      responses:
+        "201":
+          description: 注册成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/companies/{companyId}":
+    get:
+      tags:
+        - companies
+      summary: 获取公司信息
+      operationId: getCompany
+      produces:
+        - application/json
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+          default: 53aa6fc011fd597b3e1be250
+        - name: resonseKey
+          description: 需要返回的key
+          required: false
+          type: string
+          in: query
+      responses:
+        "200":
+          description: 公司数据
+          schema:
+            $ref: Company
+        default:
+          description: error
+          schema:
+            $ref: Error
+    put:
+      tags:
+        - companies
+      summary: 修改公司数据
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+          default: 53aa6fc011fd597b3e1be250
+        - name: name
+          description: 简称
+          required: false
+          type: string
+          in: formData
+        # - name: logo
+        #   description: logo
+        #   required: false
+        #   type: file
+        #   in: formData
+        - name: password
+          description: 密码
+          required: false
+          type: string
+          in: formData
+        - name: domain
+          description: 邮箱后缀(可以是多个，用空格区分)
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: ssv
+          in: formData
+        - name: province
+          description: 省份
+          required: false
+          type: string
+          in: formData
+        - name: city
+          description: 城市
+          required: false
+          type: string
+          in: formData
+        - name: district
+          description: 区
+          required: false
+          type: string
+          in: formData
+        - name: address
+          description: 地址
+          required: false
+          type: string
+          in: formData
+        - name: contacts
+          description: 联系人
+          required: false
+          type: string
+          in: formData
+        - name: areacode
+          description: 区号
+          required: false
+          type: string
+          in: formData
+        - name: tel
+          description: 电话号码
+          required: false
+          type: string
+          in: formData
+        - name: extension
+          description: 分机
+          required: false
+          type: string
+          in: formData
+        - name: intro
+          description: 简介
+          required: false
+          type: string
+          in: formData
+        - name: phone
+          description: 手机号码
+          required: false
+          type: string
+          in: formData
+        - name: email
+          description: 企业邮箱
+          required: false
+          type: string
+          in: formData
+      responses:
+        "200":
+          description: 修改成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /companies/validate:
+    post:
+      tags:
+        - companies
+      summary: 验证某个属性是否已被使用
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: email
+          description: 企业邮箱
+          type: string
+          in: formData
+        - name: name
+          description: 企业官方名（与营业执照一致的）
+          type: string
+          in: formData
+        - name: username
+          description: 用户名（登录用）
+          type: string
+          in: formData
+      responses:
+        "200":
+          description: 验证完成
+          schema:
+            $ref: ValidateResult
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/companies/forgetPassword":
+    post:
+      tags:
+        - companies
+      summary: hr忘记密码，发送邮件
+      operationId: companyForgetPassword
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: email
+          description: 邮件
+          type: string
+          required: true
+          in: formData
+      responses:
+        "201":
+          description: 邮件发送成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/companies/{companyId}/members":
+    get:
+      tags:
+        - companies
+      summary: 获取公司成员
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+          default: 53aa6fc011fd597b3e1be250
+      responses:
+        "200":
+          description: 成员
+          schema:
+            type: array
+            items:
+              $ref: Member
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/companies/{companyId}/departments":
+    get:
+      tags:
+        - companies
+      summary: 获取公司部门数据
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+          default: 53aa6fc011fd597b3e1be250
+      responses:
+        "200":
+          description: 部门数据
+          schema:
+            $ref: DepartmentList
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/companies/{companyId}/tags":
+    get:
+      tags:
+        - companies
+      summary: 获取公司相关标签
+      parameters:
+        - name: companyId
+          description: 公司id
+          required: true
+          type: string
+          in: path
+          default: 53aa6fc011fd597b3e1be250
+      responses:
+        "200":
+          description: tags
+          schema:
+            $ref: Tags
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /companies/login:
+    post:
+      tags:
+        - companies
+      summary: 公司登录
+      parameters:
+        - name: body
+          schema:
+            $ref: CompanyLoginForm
+          in: body
+          required: true
+          description: 登录邮箱和密码
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 登录成功后返回的数据
+          schema:
+            $ref: LoginSuccess
+  /companies/logout:
+    post:
+      tags:
+        - companies
+      summary: 公司注销
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "204":
+          description: 注销成功
+
   /gifts/history/{userId}/{direction}:
     get:
       tags:
@@ -1276,6 +1930,29 @@ definitions:
     properties:
       msg:
         type: string
+  UserValidateResult:
+    title: UserValidateResult
+    type: object
+    properties:
+      active:
+        description: "验证邮箱结果,1为可以注册，2为已注册未激活，3已经注册并激活，4邮箱后缀不符合"
+        type: integer
+        format: int32
+        enum:
+          - 1
+          - 2
+          - 3
+          - 4
+      invitekeyCheck:
+        description: "验证激活码结果,1为正确,2为错误"
+        type: integer
+        format: int32
+        enum:
+          - 1
+          - 2
+      msg:
+        description: 验证结果描述
+        type: string
   pushInfo:
     title: pushInfo
     type: object
@@ -1306,6 +1983,246 @@ definitions:
       pushInfo:
         description: "push信息，ios包含ios_token,android包含user_id,channel_id"
         $ref: pushInfo
+  PhotoForList:
+    title: PhotoForList
+    type: object
+    required:
+      - _id
+      - uri
+    properties:
+      _id:
+        type: string
+        description: 照片id
+      uri:
+        type: string
+        description: 照片uri
+      name:
+        type: string
+        description: 照片名称
+  PhotoListData:
+    title: PhotoListData
+    type: object
+    required:
+      - photos
+      - hasNext
+      - nextDate
+    properties:
+      photos:
+        type: array
+        description: 照片
+        items:
+          $ref: PhotoForList
+      hasNext:
+        type: boolean
+        description: 是否还有照片
+      nextDate:
+        type: string
+        format: date-time
+        description: 下一页照片的查询起始时间
+  resendActiveEamilResult:
+    title: resendActiveEamilResult
+    type: object
+    properties:
+      msg:
+        description: 返回信息
+        type: string
+      hasResend:
+        description: 是否已经发送
+        type: boolean
+      isActive:
+        description: 是否已经激活
+        type: boolean
+  CompanyRegisterForm:
+    title: CompanyRegisterForm
+    type: object
+    required:
+      - name
+      - province
+      - city
+      - district
+      - address
+      - contacts
+      - tel
+      - email
+    properties:
+      name:
+        description: 公司名称，与营业执照注册名保持一致
+        type: string
+      province:
+        description: 省份
+        type: string
+      city:
+        description: 城市
+        type: string
+      district:
+        description: 区
+        type: string
+      address:
+        description: 详细地址
+        type: string
+      contacts:
+        description: 联系人
+        type: string
+      areacode:
+        type: string
+        description: 区号
+      tel:
+        type: string
+        description: 号码
+      extension:
+        type: string
+        description: 分机
+      email:
+        description: 公司邮箱
+        type: string
+      phone:
+        description: 联系人手机号码
+        type: string
+      inviteCode:
+        description: 邀请码
+        type: string
+  Company:
+    title: Company
+    required:
+      - _id
+      - name
+      - short_name
+      - logo
+    properties:
+      _id:
+        description: 公司id
+        type: string
+      username:
+        description: 企业账号登录用的用户名
+        type: string
+      domains:
+        description: 邮箱后缀
+        type: array
+        items:
+          type: string
+      name:
+        description: 公司名称
+        type: string
+      shortName:
+        description: 公司简称
+        type: string
+      logo:
+        description: 公司logo url
+        type: string
+      province:
+        description: 省份
+        type: string
+      city:
+        description: 城市
+        type: string
+      district:
+        description: 区
+        type: string
+      address:
+        description: 详细地址
+        type: string
+      contacts:
+        description: 联系人
+        type: string
+      areacode:
+        description: 联系电话区号
+        type: string
+      number:
+        description: 联系电话
+        type: string
+      extension:
+        description: 分机号
+        type: string
+      email:
+        description: 公司邮箱
+        type: string
+      memberNumber:
+        description: 公司成员数量
+        type: integer
+        format: int64
+      companyInviteCodes:
+        description: 可供其它企业注册时使用的邀请码
+        type: array
+        items:
+          type: string
+      staffInviteCode:
+        description: 给该企业员工使用的邀请码
+        type: string
+  ValidateResult:
+    title: ValidateResult
+    type: object
+    required:
+      - validate
+      - msg
+    properties:
+      validate:
+        description: "验证结果,0为已存在,1为邮箱未激活,2为被屏蔽可使用,3为可以使用"
+        type: integer
+        format: int32
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+      msg:
+        description: 验证结果描述
+        type: string
+  DepartmentList:
+    title: DepartmentList
+    type: object
+    required:
+      - _id
+      - name
+    properties:
+      _id:
+        type: string
+        description: 部门id（如果是根节点，则为公司id）
+      name:
+        type: string
+        description: 部门名（如果是根节点，则为公司名字）
+      tid:
+        type: string
+        description: 对应的team的id
+      manager:
+        type: array
+        items:
+          $ref: Member
+  Tags:
+    title: Tags
+    type: object
+    properties:
+      tags:
+        type: array
+        description: tags
+        items:
+          type: string
+  CompanyLoginForm:
+    title: CompanyLoginForm
+    type: object
+    required:
+      - username
+      - password
+    properties:
+      username:
+        description: 用户名
+        type: string
+      password:
+        description: 密码
+        type: string
+  Member:
+    title: Member
+    required:
+      - _id
+    properties:
+      _id:
+        type: string
+        description: 用户id
+      nickname:
+        type: string
+        description: 用户昵称
+      photo:
+        type: string
+        description: 用户头像
   Concern:
     title: Concern
     type: object
