@@ -11,8 +11,6 @@ var ActivityComment = new Schema({
     type: Schema.Types.ObjectId,
     required: true
   },
-  // 评论一个评论时的评论Id,直接评论投票时为空
-  commentId: Schema.Types.ObjectId,
   // 发评论或赞的用户的公司id
   posterCid: {
     type: Schema.Types.ObjectId,

@@ -3764,11 +3764,15 @@
           "description": "评论一个评论时该评论的id",
           "type": "string"
         },
-        "postCid": {
+        "targetUser": {
+          "description": "评论一个评论时该评论的userID",
+          "type": "string"
+        },
+        "posterCid": {
           "description": "评论人的公司id",
           "type": "string"
         },
-        "postId": {
+        "posterId": {
           "description": "评论人的id",
           "type": "string"
         },

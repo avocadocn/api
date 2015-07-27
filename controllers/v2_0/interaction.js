@@ -471,6 +471,7 @@ module.exports = {
       var userId = req.user._id;
       var interactionType = parseInt(req.params.interactionType);
       var commentModel = commentModelTypes[interactionType-1];
+      var targetComment;
       async.waterfall([
         function(callback) {
           //对评论的评论验证
@@ -478,6 +479,7 @@ module.exports = {
             mongoose.model(commentModel).findById(req.body.commentId)
               .exec()
               .then(function (comment) {
+                targetComment = comment;
                 callback(comment ? null: 400)
               })
               .then(null,function (error) {
@@ -515,6 +517,7 @@ module.exports = {
           }
           if(req.body.commentId) {
             _comment.commentId = req.body.commentId;
+            _comment.targetUser = targetComment.targetUser;
           }
           mongoose.model(commentModel).create(_comment, function (error,comment) {
             callback(error,interaction,comment)
@@ -571,12 +574,15 @@ module.exports = {
       if(req.query.createTime) {
         option.createTime ={"$lt":req.query.createTime}
       }
+      //获取针对评论的评论
       if(req.query.commentId) {
         option.commentId = req.query.commentId
       }
-      else {
+      //求助获取的是直接的评论，而不获取对评论的评论
+      else if(interactionType===3){
         option.commentId ={"$exists":false}
       }
+      //对于活动和投票获取所有的评论，按时间排序
       var _perPageNum = req.query.limit || perPageNum;
       mongoose.model(commentModel).find(option)
       .sort({ createTime: -1 })

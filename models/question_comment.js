@@ -12,6 +12,10 @@ var QuestionComment = new Schema({
   },
   // 评论一个评论时的评论Id,直接评论投票时为空
   commentId: Schema.Types.ObjectId,
+  targetUser: {
+    type: Schema.Types.ObjectId,
+    ref: "User"
+  },
   // 发评论或赞的用户的公司id
   posterCid: {
     type: Schema.Types.ObjectId,
