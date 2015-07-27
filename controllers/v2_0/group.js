@@ -9,6 +9,7 @@ var mongoose = require('mongoose');
 var Team = mongoose.model('Team');
 var User = mongoose.model('User');
 var GroupInviteCode = mongoose.model('GroupInviteCode');
+var Company = mongoose.model('Company');
 
 var auth = require('../../services/auth.js'),
   log = require('../../services/error_log.js'),
@@ -173,6 +174,20 @@ module.exports = {
                   _id: team._id, //群组id
                   leader: true, //该员工是不是这个群组的队长
                   public: false
+                }
+              }
+            }, function(err, numberAffected) {
+              if (err) {
+                log(err);
+              }
+            });
+
+            Company.update({
+              '_id': req.user.cid
+            }, {
+              $addToSet: {
+                'team': {
+                  _id: team._id //群组id
                 }
               }
             }, function(err, numberAffected) {
@@ -870,6 +885,20 @@ module.exports = {
           // TODO: 增加conditions条件
           User.update({
             '_id': req.user._id
+          }, {
+            $pull: {
+              'team': {
+                _id: req.group._id //群组id
+              }
+            }
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
+          });
+
+          Company.update({
+            '_id': req.user.cid
           }, {
             $pull: {
               'team': {

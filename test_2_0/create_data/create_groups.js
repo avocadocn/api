@@ -1,123 +1,70 @@
 'use strict';
 
-var common = require('../support/common.js');
+var Chance = require('chance');
+var common = require('../support/common');
 var mongoose = common.mongoose;
-var Group = mongoose.model('Group');
-
-var _groups = [{
-    '_id': '0',
-    'group_type': '虚拟组',
-    'entity_type': 'virtual',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '1',
-    'group_type': '羽毛球',
-    'entity_type': 'Badminton',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '2',
-    'group_type': '篮球',
-    'entity_type': 'BasketBall',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '3',
-    'group_type': '阅读',
-    'entity_type': 'Reading',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '4',
-    'group_type': '自行车',
-    'entity_type': 'Bicycle',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '5',
-    'group_type': '台球',
-    'entity_type': 'TableTennis',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '6',
-    'group_type': '钓鱼',
-    'entity_type': 'Fishing',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '7',
-    'group_type': '足球',
-    'entity_type': 'FootBall',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '8',
-    'group_type': 'k歌',
-    'entity_type': 'KTV',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '9',
-    'group_type': '户外',
-    'entity_type': 'OutDoor',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '10',
-    'group_type': '乒乓球',
-    'entity_type': 'PingPong',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '11',
-    'group_type': '跑步',
-    'entity_type': 'Running',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}, {
-    '_id': '12',
-    'group_type': '游泳',
-    'entity_type': 'Swimming',
-    'icon': 'default',
-    'active': true,
-    'group_rule': 'default'
-}];
+var Team = mongoose.model('Team');
+var async = require('async');
 
 /**
- * Generate Groups Data
- * @param {Function} callback function(err, groups){}
+ * 为公司生成群组
+ * 生成至少4个群组
+ * 群组序号     公开    需验证
+ *    1       true     true 
+ *    2       true     false
+ *    3       false    true
+ *    4       false    false
+ *    5       true     false
+ *    6       false    false
+ * @param {Object} company
+ * @param {Function} callback 形式为function(err, groups){}
  */
-var createGroups = function(callback) {
-  var groups = []; // groups array storage 
-  _groups.forEach(function(_group) {
-    var group = new Group({
-      _id: _group._id,
-      group_type: _group.group_type,
-      entity_type: _group.entity_type,
-      icon: _group.icon,
-      active: _group.entity_type,
-      group_rule: _group.group_rule
+var createGroups = function(company, callback) {
+  var chance = new Chance();
+  //未激活的公司不需要加群组，被关闭的仍然加。
+  if(!company.status.mail_active)
+    callback(null,[]);
+  else{
+    var groups = [];
+    var _groups = [];
+    // The number of groups that you want to create
+    var num = 6;
+    var openArr = [true, true, false, false, true, false];
+    var publicArr = [true, false, true, false, false, false];
+
+    for (var i = 0; i < num; i++) {
+      var group = new Team({
+        cid: company._id, // 公司id
+        cname: company.cname, // 公司名称
+        name: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),// 群组名称
+        logo: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),// 群组封面
+        themeColor: chance.color(), // 群组主题颜色
+        open: openArr[i], // 群组是否公开
+        hasValidate: publicArr[i] // 群组是否需要验证
+      });
+
+      groups.push(group);
+
+      _groups.push(group._id);
+    }
+
+    company.team = _groups;
+
+    async.parallel({
+      saveGroups: function (parallelCallback) {
+        async.map(groups, function (group, mapCallback) {
+          group.save(mapCallback);
+        }, function (err, results) {
+          parallelCallback(err);
+        });
+      },
+      saveCompany: function (parallelCallback) {
+        company.save(parallelCallback);
+      }
+    }, function (err, results) {
+      callback(err, groups);
     });
-    group.save(function(err) {
-      if(err) console.log(err);
-    });
-    groups.push(group);
-  });
-  callback(null, groups);
+  }
 };
 
 module.exports = createGroups;

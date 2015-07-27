@@ -23,15 +23,9 @@ var _device = new Schema({
 });
 //小队信息
 var _team = new Schema({
-    gid : String,
-    group_type: String,
-    name: String,
-    id: {
+    _id: { // 群组id
         type: Schema.Types.ObjectId
-    },
-    //0：官方小队
-    //1：个人小队
-    group_level: Number
+    }
 });
 
 var _department = new Schema({
