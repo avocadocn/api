@@ -1,0 +1,4 @@
+--require should
+--slow 200
+--growl
+--globals key
