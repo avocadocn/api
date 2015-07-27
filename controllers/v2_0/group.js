@@ -54,7 +54,7 @@ module.exports = {
           },
           logo: {
             name: '封面',
-            value: files[fieldName],
+            value: files[fieldName][0].originalFilename,
             validators: ['required']
           }
         }, 'complete', function(pass, msg) {
@@ -319,9 +319,12 @@ module.exports = {
     },
     /**
      * app内群组邀请
-     * 判断受邀用户id已经加入或者被邀请以及该用户id不存在, 则不将该受邀用户id加入userIds, 并且不返回前端任何信息
-     * 如果userIds的长度为0, 则返回400, msg: 用户已经加入该群组或者已被邀请
-     * 如果userIds的长度不为0, 则将邀请记录加入inviteMember, 返回200, msg: 邀请成功
+     * 判断受邀用户id已经加入或者被邀请以及该用户id不存在, 则不将该受邀用户id加入invitedUserIds, 并且不返回前端任何信息
+     * 如果invitedUserIds的长度为0, 则返回400, msg: 用户已经加入该群组或者已被邀请
+     * 如果invitedUserIds的长度不为0, 
+     *    userDocs的长度为0, 则返回400, msg: 受邀用户不存在
+     *    userDocs的长度不为0,
+     *      则将邀请记录加入inviteMember, 返回200, msg: 邀请成功
      * 
      * @param  {[type]} req [description]
      * body
@@ -360,19 +363,30 @@ module.exports = {
         return (!isMember && !isInvited);
       }
 
+      if (!invitedUserIds.length) {
+        return res.status(400).send({
+          msg: '用户已经加入该群组或者已被邀请'
+        });
+      }
+
+      // TODO: 是否加入cid判断，受邀用户cid与邀请用户cid是否一致, 也就是说受邀用户必须在邀请用户在同一家公司
       User.find({
         '_id': {
           $in: invitedUserIds
         }
       }, {'_id': 1}, function(err, userDocs) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        }
 
-        var userIds = userDocs.map(function(user){ return user._id.toString(); });
-
-        if (!invitedUserIds.length) {
+        if (!userDocs.length) {
           return res.status(400).send({
-            msg: '用户已经加入该群组或者已被邀请'
+            msg: '受邀用户不存在'
           });
         }
+
+        var userIds = userDocs.map(function(user){ return user._id.toString(); });
 
         var invitedUsers = [];
 
@@ -480,7 +494,7 @@ module.exports = {
           log(err);
           return res.sendStatus(500);
         } else {
-          return res.status(200).send({
+          res.status(200).send({
             inviteCode: inviteCode
           });
         }
