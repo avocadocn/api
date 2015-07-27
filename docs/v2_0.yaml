@@ -1922,6 +1922,27 @@ paths:
             type: array
             items:
               $ref: CircleCommentRespond
+  /report:
+    post:
+      tags:
+        - report
+      summary: 举报
+      operationId: checkInviteCode
+      consumes:
+        - application/json
+      parameters:
+        - name: body
+          description: 举报数据
+          schema:
+            $ref: ReportForm
+          in: body
+      responses:
+        "200":
+          description: 举报成功
+        default:
+          description: error
+          schema:
+            $ref: Error
 definitions:
   Error:
     title: Error
@@ -1929,6 +1950,36 @@ definitions:
     type: object
     properties:
       msg:
+        type: string
+  ReportForm:
+    title: ReportForm
+    required:
+      - hostType
+      - hostId
+      - reportType
+      - content
+    properties:
+      hostType:
+        type: string
+        enum:
+          - user
+          - comment
+          - photo
+      hostId:
+        type: string
+      reportType:
+        type: integer
+        format: int32
+        description: "0:淫秽色情, 1:敏感信息,2:垃圾营销,3:诈骗,4:人身攻击,5:泄露我的隐私, 6: 虚假资料"
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+      content:
         type: string
   UserValidateResult:
     title: UserValidateResult
