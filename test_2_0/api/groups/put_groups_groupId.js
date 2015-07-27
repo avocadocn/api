@@ -56,7 +56,7 @@ module.exports = function() {
   });
 
   describe('put /groups/:groupId', function() {
-    describe('公司成员', function() {
+    describe('编辑群组', function() {
       it('用户(leader)应能修改群组的设置', function(done) {
         request.post('/groups/' + data[0].teams[0].model._id.toString())
           .field(

@@ -32,8 +32,8 @@ module.exports = function() {
           });
       },
       function(callback) {
-        //第一个公司的第二个人
-        var user = data[0].users[1];
+        //第一个公司的第五个人
+        var user = data[0].users[4];
         request.post('/users/login')
           .send({
             email: user.email,
@@ -56,15 +56,15 @@ module.exports = function() {
   });
 
   describe('post /groups/:groupId/invitation', function() {
-    describe('公司成员', function() {
-      it('用户(leader)应能邀请公司其他用户加入该群组', function(done) {
+    describe('群组APP内邀请', function() {
+      it('用户(该群组成员)应能邀请公司其他用户加入该群组', function(done) {
         var data = {
           userIds: []
         };
         data.userIds.push(data[0].users[2]._id.toString());
-        data.userIds.push(data[0].users[2]._id.toString());
-        
-        request.post('/groups/' + data[0].teams[0].model._id.toString())
+        data.userIds.push(data[0].users[3]._id.toString());
+
+        request.post('/groups/' + data[0].teams[0].model._id.toString() + '/invitation')
           .send(data)
           .set('x-access-token', userToken)
           .expect(200)
@@ -74,48 +74,52 @@ module.exports = function() {
           })
       });
 
-      it('用户(非leader)不能修改群组的设置', function(done) {
-        request.post('/groups/' + data[0].teams[0].model._id.toString())
-          .field(
-            'name', chance.string({
-              length: 10,
-              pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            })
-          )
+      it('用户(该群组成员)应不能邀请已加入或者已邀请用户加入该群组', function(done) {
+        var data = {
+          userIds: []
+        };
+        data.userIds.push(data[0].users[1]._id.toString());
+        data.userIds.push(data[0].users[2]._id.toString());
+
+        request.post('/groups/' + data[0].teams[0].model._id.toString() + '/invitation')
+          .send(data)
+          .set('x-access-token', userToken)
+          .expect(400)
+          .end(function(err, res) {
+            if (err) return done(err);
+            res.body.msg.should.equal('用户已经加入该群组或者已被邀请');
+            done();
+          })
+      });
+
+      it('用户(该群组成员)应不能邀请不存在用户加入该群组', function(done) {
+        var data = {
+          userIds: []
+        };
+        data.userIds.push('0000c3fcd271b3943b2d44c9');
+
+        request.post('/groups/' + data[0].teams[0].model._id.toString() + '/invitation')
+          .send(data)
+          .set('x-access-token', userToken)
+          .expect(400)
+          .end(function(err, res) {
+            if (err) return done(err);
+            res.body.msg.should.equal('受邀用户不存在');
+            done();
+          })
+      });
+
+      it('用户(非该群组成员)应不能邀请公司其他用户加入该群组', function(done) {
+        var data = {
+          userIds: []
+        };
+        data.userIds.push(data[0].users[1]._id.toString());
+        data.userIds.push(data[0].users[2]._id.toString());
+
+        request.post('/groups/' + data[0].teams[0].model._id.toString() + '/invitation')
+          .send(data)
           .set('x-access-token', userToken1)
           .expect(403)
-          .end(function(err, res) {
-            if (err) return done(err);
-            done();
-          })
-      });
-
-      it('用户不能修改不存在的群组的设置(id长度不够)', function(done) {
-        request.post('/groups/1')
-          .field(
-            'name', chance.string({
-              length: 10,
-              pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            })
-          )
-          .set('x-access-token', userToken)
-          .expect(500)
-          .end(function(err, res) {
-            if (err) return done(err);
-            done();
-          })
-      });
-
-      it('用户不能修改不存在的群组的设置(id不存在)', function(done) {
-        request.post('/groups/0000c3fcd271b3943b2d44c9')
-          .field(
-            'name', chance.string({
-              length: 10,
-              pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            })
-          )
-          .set('x-access-token', userToken)
-          .expect(204)
           .end(function(err, res) {
             if (err) return done(err);
             done();

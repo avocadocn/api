@@ -29,7 +29,7 @@ module.exports = function() {
   });
 
   describe('post /groups', function() {
-    describe('公司用户', function() {
+    describe('新建群组', function() {
       it('用户建立新群组(参数正确)', function(done) {
         request.post('/groups')
           .field(
