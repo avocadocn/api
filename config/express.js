@@ -105,7 +105,13 @@ walk(path.join(rootPath, 'routes'), function (version, file, path) {
   require(path)(routers[version], ctrl);
 });
 
-app.use('/',routers['v1_3']);
+if(config.env === 'test') {
+  app.use('/', routers['v2_0']);
+}
+else {
+  app.use('/', routers['v1_3']);
+}
+
 versions.forEach(function(version) {
   app.use('/'+version, routers[version]);
   // console.log(routers[version]);
