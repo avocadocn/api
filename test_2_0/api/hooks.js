@@ -21,24 +21,25 @@ before(function (done) {
         console.log('开始生成region数据');
         createDataModule.createRegion(parallelCallback);
       },
-      createGroups: function (parallelCallback) {
-        console.log('开始生成groups数据');
-        createDataModule.createGroups(parallelCallback);
-      },
-      createCampaignMold: function (parallelCallback) {
-        console.log('开始生成campaignMold数据');
-        createDataModule.createCampaignMold(parallelCallback);
-      },
+      // createGroups: function (parallelCallback) {
+      //   console.log('开始生成groups数据');
+      //   createDataModule.createGroups(parallelCallback);
+      // },
+      // createCampaignMold: function (parallelCallback) {
+      //   console.log('开始生成campaignMold数据');
+      //   createDataModule.createCampaignMold(parallelCallback);
+      // },
       createCompanyDataList: function (parallelCallback) {
         console.log('开始创建公司及其小队、用户等数据');
         createDataModule.createData(parallelCallback);
       }
+      //todo 增加创建活动模板的数据
     }, function (err, results) {
       if (err) {
         done(err);
         return;
       }
-      createDataModule.createMessages(createDataModule.getData()[0], done);
+      done();
     });
     
   };

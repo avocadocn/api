@@ -71,12 +71,7 @@ var UserSchema = new Schema({
     default: false
   },
   invited: Boolean, // 是否是通过hr发邀请来注册的
-  //已不需要
-  //是否填了公司验证码
-  // invite_active:{
-  //     type:Boolean,
-  //     default: true
-  // },
+
   hashed_password: String,
   //标记是user or company, company也有对应属性
   provider: {
@@ -124,10 +119,10 @@ var UserSchema = new Schema({
   qq: {
     type: String
   },
-  role: {
-    type: String,
-    enum: ['LEADER', 'EMPLOYEE'] //队长 普通员工
-  },
+  // role: {
+  //   type: String,
+  //   enum: ['LEADER', 'EMPLOYEE'] //队长 普通员工
+  // },
   //公司_id
   cid: {
     type: Schema.Types.ObjectId,
@@ -147,77 +142,16 @@ var UserSchema = new Schema({
     type: Boolean,
     default: false
   },
-  //暂时不用,顶置campaign
-  top_campaign: {
-    type: Schema.Types.ObjectId,
-    ref: 'Campaign'
-  },
-  last_comment_time: Date, //个人首页需要用的
-
-  //- 讨论变为小组聊天室
-  chatrooms: [chatroom],
-  // commentCampaigns: [latestCommentCampaign], //参加了的讨论列表
-  // unjoinedCommentCampaigns: [latestCommentCampaign], //未参加的讨论列表
-  
   //todo
   score: {
     // 积分总数
     total: {
       type: Number,
       default: 0
-    },
-
-    // 参加的官方小队活动成功结束
-    officialCampaignSucceded: {
-      type: Number,
-      default: 0
-    },
-
-    // 参加官方小队
-    joinOfficialTeam: {
-      type: Number,
-      default: 0
-    },
-
-    // 退出官方小队
-    quitOfficialTeam: {
-      type: Number,
-      default: 0
-    },
-
-    // 上传照片到官方小队相册
-    uploadPhotoToOfficialTeam: {
-      type: Number,
-      default: 0
     }
   },
   //自己写的标签
   tags: [String],
-  //参加过多少campaign
-  campaignCount: Number,
-
-  // 有没有同事发新消息, 如果已经为true了再有新消息，则不要再写入更新，在查询时设置条件过滤
-  // has_new_content: {
-  //   type: Boolean,
-  //   default: false
-  // },
-
-  // new_content_date: Date, //所有未读新消息中最早的时间
-
-  // new_comment_num: {
-  //   type: Number,
-  //   default: 0
-  // },
-
-  // 发赞或评论的用户
-  // new_comment_user: {
-  //   _id: Schema.Types.ObjectId,
-  //   photo: String,
-  //   nickname: String
-  // }
-  
-  // reminds_clear_date: Date,
-  // list_clear_date: Date // 上次清空提醒列表的时间
   
   // 邀请人id
   invite_person: Schema.Types.ObjectId,
@@ -382,14 +316,14 @@ UserSchema.methods = {
     return false;
   },
 
-  isLeader: function() {
-    for (var i = 0; i < this.team.length; i++) {
-      if (this.team[i].leader) {
-        return true;
-      }
-    }
-    return false;
-  },
+  // isLeader: function() {
+  //   for (var i = 0; i < this.team.length; i++) {
+  //     if (this.team[i].leader) {
+  //       return true;
+  //     }
+  //   }
+  //   return false;
+  // },
 
   getCid: function() {
     return this.cid;

@@ -24,7 +24,6 @@ var createNewUser = function(opts, callback) {
     nickname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     realname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     introduce: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
-    role: 'EMPLOYEE',
     cid: opts.cid,
     cname: opts.cname,
     company_official_name: opts.company_official_name,

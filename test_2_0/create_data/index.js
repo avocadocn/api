@@ -36,15 +36,13 @@ var createCompetitionMessages = require('./create_competition_messages.js');
  *      chats: [doc] // mongoose.model('Chat')
  *    }],
  *    users: [doc], // mongoose.model('User')
- *    campaigns: [doc] // mongoose.model('Campaign')
  *    circles: [
  *                {
  *                  content: //mongoose.model('CircleContent')
  *                  comments: [doc] // mongoose.model('CircleComment')
  *                }
  *              ],
- *     chats: [doc], // mongoose.model('Chat')
- *     competitionMessages: [doc] // mongoose.model('CompetitionMessage')
+ *    
  *     
  *  }]
  * @type {Array}
@@ -79,7 +77,9 @@ exports.createData = function (callback) {
         model: company,
         teams: [],
         users: [],
-        campaigns: [],
+        activities: [],
+        questions: [],
+        polls: [],
         circles: []
       };
       resCompanyDataList.push(resCompanyData);
@@ -110,7 +110,9 @@ exports.createData = function (callback) {
                 model: team,
                 users: [],
                 leaders: [],
-                campaigns: []
+                activities: [],
+                questions: [],
+                polls: []
               });
             });
             resCompanyData.users = results.users;
@@ -120,37 +122,31 @@ exports.createData = function (callback) {
         function (waterfallCallback) {
           // 用户加入小队
           console.log('让公司的用户加入小队');
+          //todo for YT
           addUsersToTeams(resCompanyData, waterfallCallback);
         },
         function (waterfallCallback) {
           console.log('加入小队成功');
-          console.log('开始创建小队全家福照片');
           createFamilyPhotos(resCompanyData, waterfallCallback);
         },
+
         function (waterfallCallback) {
-          console.log('创建小队全家福相册成功');
-          console.log('开始创建小队相册');
-          async.map(resCompanyData.teams, function (team, mapCallback) {
-            createPhotoAlbums(team, mapCallback);
-          }, function (err, results) {
-            waterfallCallback(err);
-          });
+          console.log('开始生成互动');
+          waterfallCallback();
         },
         function (waterfallCallback) {
-          console.log('创建小队相册成功');
-          console.log('开始创建chats');
-          createChats(resCompanyData, waterfallCallback);
+          console.log('生成互动成功');
+          console.log('开始生成回答');
+          waterfallCallback();
         },
         function (waterfallCallback) {
-          // 生成除跨公司挑战外的活动并让部分成员加入
-          console.log('创建chats成功，开始生成除跨公司挑战外的活动');
-          createCampaigns([resCompanyData], function (err, companyData) {
-            waterfallCallback(err, companyData);
-          });
+          console.log('生成回答成功');
+          console.log('开始生成礼物');
+          waterfallCallback();
         }
       ], function (err, result) {
         if (err) {
-          console.error('生成公司', company.info.name, '的活动失败');
+          console.error('生成公司', company.info.name, '的数据失败');
           mapCallback(err);
           return;
         }
@@ -164,39 +160,9 @@ exports.createData = function (callback) {
         callback(err);
         return;
       }
-      // 生成跨公司的挑战数据
-      async.waterfall([
-        function(waterfallCallback) {
-          console.log('开始生成挑战信');
-          createCompetitionMessages(results, function (err, companyDataList) {
-            if(err) {
-              console.log('生成挑战信失败');
-              waterfallCallback(err);
-              return;
-            }
-            waterfallCallback(null, companyDataList);
-          })
-        },
-        function(waterfallResults, waterfallCallback) {
-          console.log('开始生成跨公司挑战的数据');
-          createCampaigns(waterfallResults, function (err, companyDataList) {
-            if (err) {
-              console.log('生成跨公司挑战数据失败');
-              waterfallCallback(err);
-              return;
-            }
-            waterfallCallback(null, companyDataList);
-          });
-        }
-      ], function(err, results) {
-        if(err) {
-          return callback(err);
-        }
-        resCompanyDataList = results;
-        console.log('成功生成所有测试数据');
-        callback();
-        schedule.teamRank();
-      });
+      resCompanyDataList = results;
+      console.log('成功生成所有测试数据');
+      callback();
       
     });
 
