@@ -293,6 +293,8 @@ module.exports = {
             //活动
             case 1:
               interactionContent = createActivity(data,template);
+              if(interactionContent.startTime<new Date())
+                return callback("开始时间不能早于现在");
               break;
             //投票
             case 2:
@@ -309,6 +311,8 @@ module.exports = {
         },
         function(id,callback){
           interaction[interactionType] = id;
+          if(interaction.endTime<new Date())
+            return callback("结束时间不能早于现在");
           interaction.save(callback)
         }
       ],

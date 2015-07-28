@@ -129,7 +129,7 @@ module.exports = function () {
         var msg = util.format('应该在数据%s错误时返回%s', theme, _expectStatus);
         it(msg, function (done) {
           var _interactionData = {
-            cid: interactionData.cid || interactionData.data[1].model.id,
+            cid: interactionData.cid || data[1].model.id,
             type: interactionData.type || 3,
             targetType: interactionData.targetType || 3,
             target: interactionData.target || data[0].model.id,

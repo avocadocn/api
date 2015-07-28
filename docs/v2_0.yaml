@@ -469,6 +469,30 @@ paths:
           description: error
           schema:
             $ref: Error
+  /companies/quickRegister:
+    post:
+      tags:
+        - companies
+      summary: 快速注册公司账号
+      operationId: quickRegisterCompany
+      consumes:
+        - application/json
+      produces:
+        - text/plain
+      parameters:
+        - name: body
+          description: 注册表单数据
+          required: true
+          schema:
+            $ref: CompanyQuickRegisterForm
+          in: body
+      responses:
+        "201":
+          description: 注册成功
+        default:
+          description: error
+          schema:
+            $ref: Error
   "/companies/{companyId}":
     get:
       tags:
@@ -1943,6 +1967,43 @@ paths:
           description: error
           schema:
             $ref: Error
+  /search:
+    get:
+      tags:
+        - search
+      summary: 搜索
+      operationId: search
+      consumes:
+        - application/json
+      responses:
+        "200":
+          description: 成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  /search/companies:
+    post:
+      tags:
+        - search
+      summary: 根据关键词搜索公司
+      operationId: searchCompanies
+      consumes:
+        - application/json
+      parameters:
+        - name: body
+          schema:
+            $ref: Keyword
+          in: body
+          required: true
+          description: 关键词
+      responses:
+        "200":
+          description: 请求成功
+          schema:
+            type: array
+            items:
+              $ref: CompanyBrief
 definitions:
   Error:
     title: Error
@@ -1951,6 +2012,23 @@ definitions:
     properties:
       msg:
         type: string
+  CompanyBrief:
+    title: CompanyBrief
+    required:
+      - _id
+    properties:
+      _id:
+        type: string
+        description: 公司id
+      name:
+        type: string
+        description: 公司名称
+      logo:
+        type: string
+        description: 公司头像
+      mail_active:
+        type: boolean
+        description: 是否邮箱激活
   ReportForm:
     title: ReportForm
     required:
@@ -2121,6 +2199,35 @@ definitions:
       isActive:
         description: 是否已经激活
         type: boolean
+  CompanyQuickRegisterForm:
+    title: CompanyRegisterForm
+    type: object
+    required:
+      - name
+      - province
+      - city
+      - district
+      - email
+      - password
+    properties:
+      name:
+        description: 公司名称，与营业执照注册名保持一致
+        type: string
+      province:
+        description: 省份
+        type: string
+      city:
+        description: 城市
+        type: string
+      district:
+        description: 区
+        type: string
+      email:
+        description: 公司邮箱
+        type: string
+      password:
+        description: 密码
+        type: string
   CompanyRegisterForm:
     title: CompanyRegisterForm
     type: object

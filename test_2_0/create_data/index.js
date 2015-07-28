@@ -15,7 +15,9 @@ var createGifts = require('./create_gifts.js');
 var createConfig = require('./create_config.js');
 var createRegion = require('./create_region.js');
 var createGroups = require('./create_groups.js');
-
+var createInteractionTemplates = require('./create_interaction_templates.js');
+var createInteractions = require('./create_interactions.js');
+var createInteractionComments = require('./create_interaction_comments.js');
 /**
  * 公司数据列表，保存公司及其员工、小队、活动数据
  *  [{
@@ -48,6 +50,7 @@ var resCompanyDataList = [];
 var resConfig;
 var resRegion;
 var resGroups;
+var resTemplate;
 /**
  * 生成测试数据
  * @param {Function} callback 完成后的回调函数，形式为function(err){}
@@ -119,16 +122,25 @@ exports.createData = function (callback) {
         },
         function (waterfallCallback) {
           console.log('加入小队成功');
+          console.log('开始生成互动模板');
+          createInteractionTemplates(function(error, templates) {
+            resTemplate = templates;
+            waterfallCallback();
+          });
+        },
+        function (waterfallCallback) {
+          console.log('加入互动模板成功');
           console.log('开始生成互动');
-          waterfallCallback();
+          createInteractions(resCompanyData, resTemplate, waterfallCallback);
         },
         function (waterfallCallback) {
           console.log('生成互动成功');
-          console.log('开始生成回答');
+          console.log('开始生成评论');
           waterfallCallback();
+          // createInteractionComments(resCompanyData, waterfallCallback);
         },
         function (waterfallCallback) {
-          console.log('生成回答成功');
+          console.log('生成评论成功');
           console.log('开始生成礼物');
           createGifts(resCompanyData, waterfallCallback);
         }
@@ -138,7 +150,7 @@ exports.createData = function (callback) {
           mapCallback(err);
           return;
         }
-        // mapCallback 公司及小队数据，以便生成跨公司挑战
+        // mapCallback 公司及小队数据
         console.log('成功生成公司', company.info.name, '的数据');
         mapCallback(null, resCompanyData);
       });
@@ -152,7 +164,6 @@ exports.createData = function (callback) {
       // console.log(resCompanyDataList);
       console.log('成功生成所有测试数据');
       callback();
-      
     });
 
   });
