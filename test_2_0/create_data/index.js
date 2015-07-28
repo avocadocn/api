@@ -8,20 +8,12 @@ var schedule = require('../../services/schedule.js');
 var async = require('async');
 
 var createCompanies = require('./create_companies.js');
-var createTeams = require('./create_teams.js');
 var createUsers = require('./create_users.js');
 var addUsersToGroups = require('./add_users_to_groups.js');
-var createCampaigns = require('./create_campaigns.js');
 
 var createConfig = require('./create_config.js');
 var createRegion = require('./create_region.js');
 var createGroups = require('./create_groups.js');
-var createCampaignMold = require('./create_mold.js');
-var createFamilyPhotos = require('./create_family_photos.js');
-var createPhotoAlbums = require('./create_photo_albums.js');
-var createMessages = require('./create_messages.js');
-var createChats = require('./create_chats.js');
-var createCompetitionMessages = require('./create_competition_messages.js');
 
 /**
  * 公司数据列表，保存公司及其员工、小队、活动数据
@@ -128,10 +120,6 @@ exports.createData = function (callback) {
         },
         function (waterfallCallback) {
           console.log('加入小队成功');
-          createFamilyPhotos(resCompanyData, waterfallCallback);
-        },
-
-        function (waterfallCallback) {
           console.log('开始生成互动');
           waterfallCallback();
         },
@@ -205,20 +193,6 @@ exports.createRegion = function (callback) {
   });
 };
 
-/**
- * Generate Groups Data
- * @param {Function} callback function(err){}
- */
-exports.createGroups = function (callback) {
-  createGroups(function (err, groups) {
-    if (err) {
-      callback(err);
-    } else {
-      resGroups = groups;
-      callback();
-    }
-  });
-};
 
 exports.createCampaignMold = function (callback) {
   createCampaignMold(function (err) {
@@ -236,9 +210,3 @@ exports.getConfig = function () {
 exports.getRegion = function () {
   return resRegion;
 };
-
-exports.getGroups = function () {
-  return resGroups;
-};
-
-exports.createMessages = createMessages;
