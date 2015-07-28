@@ -30,7 +30,7 @@ var createGroups = function(company, callback) {
     // The number of groups that you want to create
     var num = 6;
     var openArr = [true, true, false, false, true, false];
-    var publicArr = [true, false, true, false, false, false];
+    var validateArr = [true, false, true, false, false, false];
 
     for (var i = 0; i < num; i++) {
       var group = new Team({
@@ -40,7 +40,7 @@ var createGroups = function(company, callback) {
         logo: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),// 群组封面
         themeColor: chance.color(), // 群组主题颜色
         open: openArr[i], // 群组是否公开
-        hasValidate: publicArr[i] // 群组是否需要验证
+        hasValidate: validateArr[i] // 群组是否需要验证
       });
 
       groups.push(group);

@@ -1083,7 +1083,7 @@ module.exports = {
           log(err);
           return res.sendStatus(500);
         } else {
-          return res.status(200).send({
+          res.status(200).send({
             group: group
           });
         }
@@ -1134,7 +1134,7 @@ module.exports = {
       };
       var msg = '拒绝加入受邀群组成功';
 
-      if (req.query.accept) {
+      if (req.query.accept === 'true') {
         doc.$addToSet = {
           'member': {
             _id: req.user._id, // 成员id
@@ -1159,7 +1159,7 @@ module.exports = {
 
           // 更新user的team属性
           // TODO: 增加conditions条件
-          if (req.query.accept) {
+          if (req.query.accept === 'true') {
 
             //加入群聊
             easemob.group.addUser(req.group.easemobId, req.user._id);
@@ -1232,7 +1232,7 @@ module.exports = {
       };
       var msg = '拒绝该申请';
 
-      if (req.query.accept) {
+      if (req.query.accept === 'true') {
         doc.$addToSet = {
           'member': {
             _id: user._id, // 成员id
@@ -1256,7 +1256,7 @@ module.exports = {
           });
           // 更新user的team属性
           // TODO: 增加conditions条件
-          if (req.query.accept) {
+          if (req.query.accept === 'true') {
             //加入群聊
             easemob.group.addUser(req.group.easemobId, req.user._id);
 
