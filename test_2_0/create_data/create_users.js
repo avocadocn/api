@@ -20,7 +20,7 @@ var createNewUser = function(opts, callback) {
     active: opts.active,
     mail_active: opts.mail_active,
     disabled: opts.disabled,
-    sex: chance.character({ pool: '男女' }),
+    gender: chance.bool(),
     nickname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     realname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     introduce: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),

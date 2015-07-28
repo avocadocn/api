@@ -92,7 +92,7 @@ var UserSchema = new Schema({
     _id: Schema.Types.ObjectId
   },
   position: String, //职位？已不用
-  sex: Boolean,//0:女，1：男
+  gender: Boolean,//0:女，1：男
   birthday: {
     type: Date
   },

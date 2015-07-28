@@ -60,7 +60,6 @@ module.exports = {
         }
       }
       var email = req.body.email.toLowerCase();
-      console.log(4,req.body);
       donlerValidator({
         cid: {
           name: '公司id',
