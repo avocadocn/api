@@ -116,6 +116,7 @@ exports.createData = function (callback) {
               });
             });
             resCompanyData.users = results.users;
+            console.log(resCompanyData);
             waterfallCallback();
           });
         },
@@ -152,7 +153,7 @@ exports.createData = function (callback) {
         }
         // mapCallback 公司及小队数据，以便生成跨公司挑战
         console.log('成功生成公司', company.info.name, '的数据');
-        mapCallback(null, result);
+        mapCallback(null, resCompanyData);
       });
     }, function (err, results) {
       if (err) {
@@ -161,6 +162,7 @@ exports.createData = function (callback) {
         return;
       }
       resCompanyDataList = results;
+      console.log(resCompanyDataList);
       console.log('成功生成所有测试数据');
       callback();
       
