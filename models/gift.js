@@ -17,10 +17,7 @@ var Gift = new Schema({
     required: true
   },
   //接收者性别
-  receiverGender: {
-    type: Number,
-    enum: [0,1] //0为女 1为男 
-  },
+  receiverGender: Boolean, //0:女，1：男
   //送的礼物,以数字代表
   giftIndex: {
     type: Number,

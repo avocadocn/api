@@ -130,7 +130,7 @@ exports.createData = function (callback) {
         function (waterfallCallback) {
           console.log('生成回答成功');
           console.log('开始生成礼物');
-          waterfallCallback();
+          createGifts(resCompanyData, waterfallCallback);
         }
       ], function (err, result) {
         if (err) {
@@ -144,7 +144,7 @@ exports.createData = function (callback) {
       });
     }, function (err, results) {
       if (err) {
-        console.error('生成公司', company.info.name, '的数据失败');
+        console.error('生成公司数据失败');
         callback(err);
         return;
       }

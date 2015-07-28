@@ -28,9 +28,11 @@ var createGift = function(opts, callback) {
     createTime: opts.createTime,
     addition: chance.string(),
     received: false,
-    cid: chance.cid
+    cid: opts.cid
   });
-  opts.replyGift && gift.replyGift = opts.replyGift;
+  if(opts.replyGift) {
+    gift.replyGift = opts.replyGift;
+  }
   gift.save(function (err) {
     callback(err, gift);
   });
@@ -38,7 +40,7 @@ var createGift = function(opts, callback) {
 
 var anHour = 3600 * 1000;
 var createGifts = function(company, callback) {
-  if (company.status.mail_active === false) {
+  if (company.model.status.mail_active === false) {
     callback(null, []);
     return;
   }
@@ -63,6 +65,10 @@ var createGifts = function(company, callback) {
             gifts.push(gift);
             cb(err);
           });
+        },
+        function(err) {
+          err && console.log(err);
+          wcb(err);
         }
       )
     },
@@ -86,6 +92,10 @@ var createGifts = function(company, callback) {
             gifts.push(gift);
             cb(err);
           });
+        },
+        function(err) {
+          err && console.log(err);
+          wcb(err);
         }
       )
     }
