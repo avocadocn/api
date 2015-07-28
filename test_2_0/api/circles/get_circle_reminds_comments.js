@@ -182,7 +182,7 @@ module.exports = function() {
       request.get('/circle/reminds/comments')
         .set('x-access-token', userToken)
         .query({
-          last_comment_date: circleComments[0].postDate.toString()
+          lastCommentDate: circleComments[0].postDate.toString()
         })
         .expect(200)
         .end(function(err, res) {

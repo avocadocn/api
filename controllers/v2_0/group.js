@@ -202,7 +202,7 @@ module.exports = {
     /**
      * 获取群组
      * 根据群组的id获取群组的信息, 失败，返回500
-     * 根据群组的id获取群组的信息, 若无相应群组数据，返回204, msg: 未找到该群组；否则，下一步
+     * 根据群组的id获取群组的信息, 若无相应群组数据，返回204；否则，下一步
      *    
      */
     getGroupById: function(req, res, next) {
@@ -213,9 +213,10 @@ module.exports = {
         }).exec()
         .then(function(group) {
           if (!group) {
-            return res.status(204).send({
-              msg: '未找到该群组'
-            });
+            return res.sendStatus(204);
+            // return res.status(204).send({
+            //   msg: '未找到该群组'
+            // });
           } else {
             req.group = group;
             next();

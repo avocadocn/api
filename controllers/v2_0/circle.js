@@ -77,6 +77,7 @@ module.exports = {
       form.parse(req, function(err, fields, files) {
         if (err) {
           log(err);
+          console.log(err);
           return res.sendStatus(500);
         }
 
@@ -266,10 +267,11 @@ module.exports = {
         .exec()
         .then(function(contentDocs) {
           if (contentDocs.length === 0) {
-            res.status(204).send({
-              msg: '未找到同事圈消息'
-            });
-            return;
+            return res.sendStatus(204);
+            // res.status(204).send({
+            //   msg: '未找到同事圈消息'
+            // });
+            // return;
           }
 
           addInfoToCircleContent(contentDocs, function(err, resContents) {
@@ -331,9 +333,10 @@ module.exports = {
         .exec()
         .then(function(contentDocs) {
           if (contentDocs.length == 0) {
-            return res.status(204).send({
-              msg: '未找到该用户的精彩瞬间数据'
-            });
+            return res.sendStatus(204);
+            // return res.status(204).send({
+            //   msg: '未找到该用户的精彩瞬间数据'
+            // });
           } else {
             addInfoToCircleContent(contentDocs, function(err, resContents) {
               if (err) {
@@ -580,9 +583,10 @@ module.exports = {
         }).exec()
         .then(function(circleContent) {
           if (!circleContent) {
-            return res.status(204).send({
-              msg: '未找到同事圈消息'
-            });
+            return res.sendStatus(204);
+            // return res.status(204).send({
+            //   msg: '未找到同事圈消息'
+            // });
           } else {
             req.circleContent = circleContent;
             next();
@@ -931,7 +935,7 @@ module.exports = {
     /**
      * 获取某个消息的内容及其评论
      * 
-     * 若查询的同事圈消息不存在, 返回204, msg: 找不到该消息
+     * 若查询的同事圈消息不存在, 返回204
      * 若查询的同事圈消息存在, 返回200, 
      * circle: 
      * {
@@ -965,10 +969,10 @@ module.exports = {
       CircleContent.findOne(conditions).exec()
         .then(function(circleContent) {
           if (!circleContent) {
-            res.status(204).send({
-              msg: '找不到该消息'
-            }); // TODO:提示文字需要改善
-            return;
+            return res.sendStatus(204);
+            // return res.status(204).send({
+            //   msg: '找不到该消息'
+            // }); // TODO:提示文字需要改善
           }
 
           data.circleContent = circleContent.toObject();
@@ -1054,7 +1058,7 @@ module.exports = {
      * 删除同事圈评论
      * Delete circle comment
      *
-     * 若查询的评论不存在, 则返回204, msg: 无法找到评论
+     * 若查询的评论不存在, 则返回204
      * 若请求用户不是该评论的所有者, 则返回403, msg: 权限错误
      * 若请求用户是该评论的所有者, 
      *    若重复删除评论, 返回400, msg: 评论已删除
@@ -1077,9 +1081,10 @@ module.exports = {
           return res.sendStatus(500);
         }
         if (!comment) {
-          return res.status(204).send({
-            msg: '无法找到评论或已删除'
-          });
+          return res.sendStatus(204);
+          // return res.status(204).send({
+          //   msg: '无法找到评论或已删除'
+          // });
         }
         // Judge authority
         var users = [];

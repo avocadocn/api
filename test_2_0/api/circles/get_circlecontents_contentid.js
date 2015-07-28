@@ -105,25 +105,22 @@ module.exports = function() {
           })
       });
 
-      it('用户不能通过非法id获取同事圈消息详细信息', function(done) {
-        request.get('/circle/contents/1')
-          .set('x-access-token', userToken)
-          .expect(500)
-          .end(function(err, res) {
-            if (err) return done(err);
-            done();
-          })
-      });
+      // it('用户不能通过非法id获取同事圈消息详细信息', function(done) {
+      //   request.get('/circle/contents/1')
+      //     .set('x-access-token', userToken)
+      //     .expect(500)
+      //     .end(function(err, res) {
+      //       if (err) return done(err);
+      //       done();
+      //     })
+      // });
 
       it('用户不能获取外公司某个同事圈消息详细信息', function(done) {
         request.get('/circle/contents/' + circleContentIds[0])
           .set('x-access-token', userToken1)
           .expect(204)
           .end(function(err, res) {
-            res.body.circle.should.be.ok;
             if (err) return done(err);
-            console.log(res.body);
-            // res.body.msg.should.equal('找不到该消息');
             done();
           })
       });

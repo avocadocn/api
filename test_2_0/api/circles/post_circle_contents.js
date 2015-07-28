@@ -76,6 +76,9 @@ module.exports = function() {
 
       it('用户应不能发表无图无字帖子', function(done) {
         request.post('/circle/contents')
+          .field(
+            'content', ''
+          )
           .set('x-access-token', userToken)
           .expect(400)
           .end(function(err, res) {

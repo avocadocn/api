@@ -10,12 +10,12 @@ var async = require('async');
  * 为公司生成群组
  * 生成至少4个群组
  * 群组序号     公开    需验证
- *    1       true     true 
- *    2       true     false
- *    3       false    true
- *    4       false    false
- *    5       true     false
- *    6       false    false
+ *    0       true     true 
+ *    1       true     false
+ *    2       false    true
+ *    3       false    false
+ *    4       true     false
+ *    5       false    false
  * @param {Object} company
  * @param {Function} callback 形式为function(err, groups){}
  */

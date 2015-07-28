@@ -147,8 +147,6 @@ module.exports = function() {
           .expect(204)
           .end(function(err, res) {
             if (err) return done(err);
-            console.log(res.body);
-            // res.body.msg.should.equal('无法找到评论或已删除');
             done();
           })
       });
