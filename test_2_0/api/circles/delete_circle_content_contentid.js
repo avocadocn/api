@@ -7,7 +7,7 @@ var chance = require('chance').Chance();
 var async = require('async');
 
 module.exports = function() {
-  var data, userToken, userToken1, hrToken;
+  var data, userToken, userToken1;
   var circleContentIds = [];
   before(function(done) {
     data = dataService.getData();
@@ -15,6 +15,7 @@ module.exports = function() {
       function(callback) {
         async.parallel([
           function(callback) {
+            //第一个公司的第一个人
             var user = data[0].users[0];
             request.post('/users/login')
               .send({
@@ -24,14 +25,14 @@ module.exports = function() {
               .expect(200)
               .end(function(err, res) {
                 if (err) {
-                  console.log(res.body);
-                  return done(err);
+                  return callback(err);
                 }
                 userToken = res.body.token;
                 callback();
               });
           },
           function(callback) {
+            // //第二个公司的第一个人
             var user = data[1].users[0];
             request.post('/users/login')
               .send({
@@ -41,29 +42,11 @@ module.exports = function() {
               .expect(200)
               .end(function(err, res) {
                 if (err) {
-                  console.log(res.body);
-                  return done(err);
+                  return callback(err);
                 }
                 userToken1 = res.body.token;
                 callback();
               });
-          },
-          function(callback) {
-            var company = data[0].model;
-            request.post('/companies/login')
-              .send({
-                username: company.username,
-                password: '55yali'
-              })
-              .expect(200)
-              .end(function(err, res) {
-                if (err) {
-                  console.log(res.body);
-                  return done(err);
-                }
-                hrToken = res.body.token;
-                callback();
-              })
           }
         ], function(err, results) {
           if (err) {
@@ -71,13 +54,12 @@ module.exports = function() {
           } else {
             callback(null, results);
           }
-
-        })
+        });
       },
       function(callback) {
         // Generate several circle-contents and store these into circleContentIds
         var contents = [];
-        for (var i = 0; i < 6; i++) {
+        for (var i = 0; i < 3; i++) {
           contents.push(chance.string({
             length: 10,
             pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -85,12 +67,9 @@ module.exports = function() {
         }
 
         async.map(contents, function(content, callback) {
-          request.post('/circle_contents')
+          request.post('/circle/contents')
             .field(
               'content', content
-            )
-            .field(
-              'campaign_id', data[0].teams[0].campaigns[0]._id.toString()
             )
             .set('x-access-token', userToken)
             .expect(200)
@@ -110,12 +89,12 @@ module.exports = function() {
       if (err) return done(err);
       else done();
     });
-  })
+  });
 
-  describe('delete /circle_contents', function() {
-    describe('本公司成员', function() {
-      it('本公司用户应能删除自己在同事圈发布的帖子', function(done) {
-        request.delete('/circle_contents/' + circleContentIds[0])
+  describe('delete /circle/contents/:contentId', function() {
+    describe('删除已发消息', function() {
+      it('用户应能删除自己在同事圈发布的消息', function(done) {
+        request.delete('/circle/contents/' + circleContentIds[0])
           .set('x-access-token', userToken)
           .expect(200)
           .end(function(err, res) {
@@ -124,8 +103,8 @@ module.exports = function() {
           })
       });
 
-      it('本公司用户不能删除其他用户在同事圈发布的帖子', function(done) {
-        request.delete('/circle_contents/' + circleContentIds[1])
+      it('用户不能删除其他用户在同事圈发布的消息', function(done) {
+        request.delete('/circle/contents/' + circleContentIds[1])
           .set('x-access-token', userToken1)
           .expect(403)
           .end(function(err, res) {
@@ -133,17 +112,29 @@ module.exports = function() {
             done();
           })
       });
-    });
-    describe('hr', function() {
-      it('hr没有删除同事圈消息功能', function(done) {
-        request.delete('/circle_contents/' + circleContentIds[1])
-          .set('x-access-token', hrToken)
-          .expect(403)
+
+      it('用户不能通过非法id删除在同事圈发布的消息', function(done) {
+        request.delete('/circle/contents/1')
+          .set('x-access-token', userToken)
+          .expect(500)
           .end(function(err, res) {
             if (err) return done(err);
             done();
           })
       });
+
+      it('用户不能删除不存在的同事圈的消息', function(done) {
+        request.delete('/circle/contents/0000c3fcd271b3943b2d44c9')
+          .set('x-access-token', userToken)
+          .expect(204)
+          .end(function(err, res) {
+            if (err) return done(err);
+            console.log(res.body);
+            // res.body.msg.should.equal('未找到同事圈消息');
+            done();
+          })
+      });
     });
+
   })
 }

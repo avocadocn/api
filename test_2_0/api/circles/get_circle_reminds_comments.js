@@ -78,7 +78,7 @@ module.exports = function() {
       function(callback) {
         // Generate several circle-contents and store these into circleContentIds
         var contents = [];
-        for (var i = 0; i < 6; i++) {
+        for (var i = 0; i < 3; i++) {
           contents.push(chance.string({
             length: 10,
             pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -86,17 +86,13 @@ module.exports = function() {
         }
 
         async.map(contents, function(content, callback) {
-          request.post('/circle_contents')
+          request.post('/circle/contents')
             .field(
               'content', content
-            )
-            .field(
-              'campaign_id', data[0].teams[0].campaigns[0]._id.toString()
             )
             .set('x-access-token', userToken)
             .expect(200)
             .end(function(err, res) {
-              console.log(res.body.circleContent);
               circleContentIds.push(res.body.circleContent._id.toString());
               callback();
             })
@@ -117,12 +113,12 @@ module.exports = function() {
                 comments.push({
                   kind: 'comment',
                   content: chance.string(),
-                  is_only_to_content: true,
+                  isOnlyToContent: true,
                   userToken: i % 2 == 0 ? userToken : userToken1
                 });
               }
               async.map(comments, function(comment, callback) {
-                  request.post('/circle_contents/' + circleContentIds[0] + '/comments')
+                  request.post('/circle/contents/' + circleContentIds[0] + '/comments')
                     .send(comment)
                     .set('x-access-token', comment.userToken)
                     .expect(200)
@@ -140,13 +136,13 @@ module.exports = function() {
               for (var i = 0; i < 10; i++) {
                 comments.push({
                   kind: 'appreciate',
-                  is_only_to_content: true,
+                  isOnlyToContent: true,
                   userToken: i % 2 == 0 ? userToken : userToken1
                 });
               }
 
               async.map(comments, function(comment, callback) {
-                  request.post('/circle_contents/' + circleContentIds[0] + '/comments')
+                  request.post('/circle/contents/' + circleContentIds[0] + '/comments')
                     .send(comment)
                     .set('x-access-token', comment.userToken)
                     .expect(200)
@@ -171,9 +167,9 @@ module.exports = function() {
     });
   })
 
-  describe('get /circle_reminds/comments', function() {
+  describe('get /circle/reminds/comments', function() {
     it('用户应不能未带参数获取到公司同事圈提醒', function(done) {
-      request.get('/circle_reminds/comments')
+      request.get('/circle/reminds/comments')
         .set('x-access-token', userToken)
         .expect(400)
         .end(function(err, res) {
@@ -183,10 +179,10 @@ module.exports = function() {
     });
 
     it('用户带参数请求应该可以获取到公司同事圈提醒', function(done) {
-      request.get('/circle_reminds/comments')
+      request.get('/circle/reminds/comments')
         .set('x-access-token', userToken)
         .query({
-          last_comment_date: circleComments[0].post_date.toString()
+          last_comment_date: circleComments[0].postDate.toString()
         })
         .expect(200)
         .end(function(err, res) {
@@ -196,7 +192,7 @@ module.exports = function() {
     });
 
     it('HR应该不能获取到是否有新消息', function(done) {
-      request.get('/circle_reminds/comments')
+      request.get('/circle/reminds/comments')
         .set('x-access-token', hrToken)
         .expect(403)
         .end(function(err, res) {

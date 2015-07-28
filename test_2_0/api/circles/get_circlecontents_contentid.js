@@ -7,7 +7,7 @@ var chance = require('chance').Chance();
 var async = require('async');
 
 module.exports = function() {
-  var data, userToken, userToken1, hrToken;
+  var data, userToken, userToken1;
   var circleContentIds = [];
   before(function(done) {
     data = dataService.getData();
@@ -15,6 +15,7 @@ module.exports = function() {
       function(callback) {
         async.parallel([
           function(callback) {
+            //第一个公司的第一个人
             var user = data[0].users[0];
             request.post('/users/login')
               .send({
@@ -24,14 +25,14 @@ module.exports = function() {
               .expect(200)
               .end(function(err, res) {
                 if (err) {
-                  console.log(res.body);
-                  return done(err);
+                  return callback(err);
                 }
                 userToken = res.body.token;
                 callback();
               });
           },
           function(callback) {
+            // //第二个公司的第一个人
             var user = data[1].users[0];
             request.post('/users/login')
               .send({
@@ -41,29 +42,11 @@ module.exports = function() {
               .expect(200)
               .end(function(err, res) {
                 if (err) {
-                  console.log(res.body);
-                  return done(err);
+                  return callback(err);
                 }
                 userToken1 = res.body.token;
                 callback();
               });
-          },
-          function(callback) {
-            var company = data[0].model;
-            request.post('/companies/login')
-              .send({
-                username: company.username,
-                password: '55yali'
-              })
-              .expect(200)
-              .end(function(err, res) {
-                if (err) {
-                  console.log(res.body);
-                  return done(err);
-                }
-                hrToken = res.body.token;
-                callback();
-              })
           }
         ], function(err, results) {
           if (err) {
@@ -77,7 +60,7 @@ module.exports = function() {
       function(callback) {
         // Generate several circle-contents and store these into circleContentIds
         var contents = [];
-        for (var i = 0; i < 6; i++) {
+        for (var i = 0; i < 3; i++) {
           contents.push(chance.string({
             length: 10,
             pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -85,12 +68,9 @@ module.exports = function() {
         }
 
         async.map(contents, function(content, callback) {
-          request.post('/circle_contents')
+          request.post('/circle/contents')
             .field(
               'content', content
-            )
-            .field(
-              'campaign_id', data[0].teams[0].campaigns[0]._id.toString()
             )
             .set('x-access-token', userToken)
             .expect(200)
@@ -110,12 +90,12 @@ module.exports = function() {
       if (err) return done(err);
       else done();
     });
-  })
+  });
 
-  describe('get /circle_contents/:contentId', function() {
-    describe('本公司成员', function() {
-      it('本公司用户应能获取同事圈的某个内容的详情', function(done) {
-        request.get('/circle_contents/' + circleContentIds[0])
+  describe('get /circle/contents/:contentId', function() {
+    describe('获取某个同事圈消息的内容及其评论', function() {
+      it('用户能获取该公司某个同事圈消息详细信息', function(done) {
+        request.get('/circle/contents/' + circleContentIds[0])
           .set('x-access-token', userToken)
           .expect(200)
           .end(function(err, res) {
@@ -125,17 +105,30 @@ module.exports = function() {
           })
       });
 
-    });
-    describe('hr', function() {
-      it('hr没有获取同事圈消息功能', function(done) {
-        request.get('/circle_contents/' + circleContentIds[1])
-          .set('x-access-token', hrToken)
-          .expect(403)
+      it('用户不能通过非法id获取同事圈消息详细信息', function(done) {
+        request.get('/circle/contents/1')
+          .set('x-access-token', userToken)
+          .expect(500)
           .end(function(err, res) {
             if (err) return done(err);
             done();
           })
       });
+
+      it('用户不能获取外公司某个同事圈消息详细信息', function(done) {
+        request.get('/circle/contents/' + circleContentIds[0])
+          .set('x-access-token', userToken1)
+          .expect(204)
+          .end(function(err, res) {
+            res.body.circle.should.be.ok;
+            if (err) return done(err);
+            console.log(res.body);
+            // res.body.msg.should.equal('找不到该消息');
+            done();
+          })
+      });
     });
+
+
   })
 }

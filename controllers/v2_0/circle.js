@@ -238,7 +238,7 @@ module.exports = {
           msg: '参数错误'
         });
       }
-      console.log(Date.now().valueOf());
+
       var conditions = {
         'cid': req.user.cid,
         'status': 'show'
@@ -296,6 +296,12 @@ module.exports = {
       if (req.user.provider === 'company') {
         return res.status(403).send({
           msg: '公司账号暂无同事圈功能'
+        });
+      }
+      
+      if (req.query.lastContentDate && req.query.latestContentDate) {
+        return res.status(400).send({
+          msg: '参数错误'
         });
       }
 
@@ -707,7 +713,7 @@ module.exports = {
         //   }
         // });
         if (isAppreciate) {
-          return res.status(403).send({
+          return res.status(400).send({
             msg: '已点赞'
           });
         }
@@ -1065,14 +1071,14 @@ module.exports = {
         });
       }
 
-      CircleComment.findById(req.params.commentId, function(err, comment) {
+      CircleComment.findOne({'_id': req.params.commentId, 'status': 'show'}, function(err, comment) {
         if (err) {
           log(err);
           return res.sendStatus(500);
         }
         if (!comment) {
           return res.status(204).send({
-            msg: '无法找到评论'
+            msg: '无法找到评论或已删除'
           });
         }
         // Judge authority
@@ -1100,11 +1106,6 @@ module.exports = {
               log(err);
               return res.sendStatus(500);
             } else {
-              if (!comment) {
-                return res.status(400).send({
-                  msg: '评论已删除'
-                });
-              }
               res.status(200).send({
                 msg: '评论删除成功'
               });

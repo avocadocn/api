@@ -7,7 +7,7 @@ var chance = require('chance').Chance();
 var async = require('async');
 
 module.exports = function() {
-  var data, userToken, userToken1, hrToken;
+  var data, userToken, userToken1;
   var circleContentIds = [];
   var circleCommentIds = [];
 
@@ -17,23 +17,7 @@ module.exports = function() {
       function(callback) {
         async.parallel([
           function(callback) {
-            var user = data[2].users[0];
-            request.post('/users/login')
-              .send({
-                email: user.email,
-                password: '55yali'
-              })
-              .expect(200)
-              .end(function(err, res) {
-                if (err) {
-                  console.log(res.body);
-                  return done(err);
-                }
-                userToken = res.body.token;
-                callback();
-              });
-          },
-          function(callback) {
+            //第一个公司的第一个人
             var user = data[0].users[0];
             request.post('/users/login')
               .send({
@@ -43,29 +27,28 @@ module.exports = function() {
               .expect(200)
               .end(function(err, res) {
                 if (err) {
-                  console.log(res.body);
-                  return done(err);
+                  return callback(err);
                 }
-                userToken1 = res.body.token;
+                userToken = res.body.token;
                 callback();
               });
           },
           function(callback) {
-            var company = data[2].model;
-            request.post('/companies/login')
+            // //第二个公司的第一个人
+            var user = data[1].users[0];
+            request.post('/users/login')
               .send({
-                username: company.username,
+                email: user.email,
                 password: '55yali'
               })
               .expect(200)
               .end(function(err, res) {
                 if (err) {
-                  console.log(res.body);
-                  return done(err);
+                  return callback(err);
                 }
-                hrToken = res.body.token;
+                userToken1 = res.body.token;
                 callback();
-              })
+              });
           }
         ], function(err, results) {
           if (err) {
@@ -73,30 +56,26 @@ module.exports = function() {
           } else {
             callback(null, results);
           }
-
-        })
+        });
       },
       function(callback) {
         // Generate several circle-contents and store these into circleContentIds
         var contents = [];
-        for (var i = 0; i < 6; i++) {
+        for (var i = 0; i < 3; i++) {
           contents.push(chance.string({
             length: 10,
             pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
           }));
         }
+
         async.map(contents, function(content, callback) {
-          request.post('/circle_contents')
+          request.post('/circle/contents')
             .field(
               'content', content
-            )
-            .field(
-              'campaign_id', data[2].teams[0].campaigns[0]._id.toString()
             )
             .set('x-access-token', userToken)
             .expect(200)
             .end(function(err, res) {
-              if(err) console.log(err);
               circleContentIds.push(res.body.circleContent._id.toString());
               callback();
             })
@@ -116,11 +95,11 @@ module.exports = function() {
           comments.push({
             kind: 'comment',
             content: chance.string(),
-            is_only_to_content: true
+            isOnlyToContent: true
           });
         }
         async.map(comments, function(comment, callback) {
-          request.post('/circle_contents/' + circleContentIds[0] + '/comments')
+          request.post('/circle/contents/' + circleContentIds[0] + '/comments')
             .send(comment)
             .set('x-access-token', userToken)
             .expect(200)
@@ -131,16 +110,15 @@ module.exports = function() {
         }, function(err, results) {
           callback(err, results);
         })
-
       }
     ], function(err, results) {
       if (err) return done(err);
       else done();
     });
-  })
+  });
 
   describe('get /circle/company', function() {
-    describe('本公司成员', function() {
+    describe('获取公司消息及评论', function() {
       it('用户应能不带参数获取同事圈', function(done) {
         request.get('/circle/company')
           .set('x-access-token', userToken)
@@ -150,10 +128,11 @@ module.exports = function() {
             done();
           })
       });
+
       it('用户应能刷新同事圈', function(done) {
         request.get('/circle/company')
           .query({
-            last_content_date: Date.now() - 1,
+            latestContentDate: Date.now() - 3600000
           })
           .set('x-access-token', userToken)
           .expect(200)
@@ -162,10 +141,11 @@ module.exports = function() {
             done();
           })
       });
+
       it('用户应能获取下一页同事圈', function(done) {
         request.get('/circle/company')
           .query({
-            last_content_date: Date.now(),
+            lastContentDate: Date.now(),
             limit: 20
           })
           .set('x-access-token', userToken)
@@ -175,14 +155,34 @@ module.exports = function() {
             done();
           })
       });
-    });
-    describe('hr', function() {
-      it('hr应不能获取公司同事圈', function(done) {
+
+      it('用户不能同时使用参数latestContentDate和lastContentDate', function(done) {
         request.get('/circle/company')
-          .set('x-access-token', hrToken)
-          .expect(403)
+          .query({
+            latestContentDate: Date.now() - 3600000,
+            lastContentDate: Date.now(),
+            limit: 20
+          })
+          .set('x-access-token', userToken)
+          .expect(400)
           .end(function(err, res) {
             if (err) return done(err);
+            res.body.msg.should.equal('参数错误');
+            done();
+          })
+      });
+
+      it('用户获取到最新同事圈消息应为空(无新同事圈消息时)', function(done) {
+        request.get('/circle/company')
+          .query({
+            latestContentDate: Date.now()
+          })
+          .set('x-access-token', userToken)
+          .expect(204)
+          .end(function(err, res) {
+            if (err) return done(err);
+            console.log(res.body);
+            // res.body.msg.should.equal('未找到同事圈消息');
             done();
           })
       });
