@@ -3,6 +3,7 @@ var common = require('../support/common');
 var mongoose = common.mongoose;
 var async = require('async');
 var Gift  = mongoose.model('Gift');
+var Notification = mongoose.model('Notification');
 var chance = require('chance').Chance();
 
 /**
@@ -35,6 +36,19 @@ var createGift = function(opts, callback) {
   }
   gift.save(function (err) {
     callback(err, gift);
+  });
+  //生成提醒
+  Notification.create({
+    noticeType: 2,
+    gift: gift._id,
+    giftDirection: 1,
+    sender: gift.sender,
+    receiver: gift.receiver,
+    createTime: gift.createTime
+  }, function(err) {
+    if(err) {
+      log(err);
+    }
   });
 };
 
