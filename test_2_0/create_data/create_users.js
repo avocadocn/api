@@ -39,6 +39,37 @@ var createNewUser = function(opts, callback) {
   });
 };
 
+var addConcern = function(users, callback) {
+  //第0个人关注第1、2、3、4个人
+  //第1个人关注第0个人
+  async.parallel([
+    function(pcb) {
+      users[0].concern = [];
+      for(var i=1; i<5; i++) {
+        users[0].concern.push({
+          user: users[i]._id,
+          createTime: new Date()
+        });
+      }
+      users[0].save(function(err) {
+        pcb(err);
+      });
+    },
+    function(pcb) {
+      users[1].concern = [{
+        user: users[0]._id,
+        createTime: new Date()
+      }];
+      users[0].save(function(err) {
+        pcb(err);
+      });
+    }
+  ],function(err, results) {
+    callback(err);
+  });
+};
+
+
 /**
  * 创建公司的成员
  * 前5个为正常用户，第6个未激活，第7个被HR关闭，第8个被管理员关闭，第9个用户用于修改信息测试，第10个用于测试被hr关闭
@@ -89,9 +120,11 @@ var createUsers = function (company, callback) {
     },
     function(err) {
       if(err) {
-        console.log(err);
+        callback(err);
       } else {
-        callback(null, users);
+        addConcern(users, function(err) {
+          callback(err, users);
+        })
       }
     }
   );

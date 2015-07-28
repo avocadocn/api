@@ -149,7 +149,7 @@ exports.createData = function (callback) {
         return;
       }
       resCompanyDataList = results;
-      console.log(resCompanyDataList);
+      // console.log(resCompanyDataList);
       console.log('成功生成所有测试数据');
       callback();
       
