@@ -60,7 +60,7 @@ var addConcern = function(users, callback) {
         user: users[0]._id,
         createTime: new Date()
       }];
-      users[0].save(function(err) {
+      users[1].save(function(err) {
         pcb(err);
       });
     }

@@ -79,7 +79,7 @@ module.exports = {
     getUserGifts: function (req, res) {
       //暂时只能看自己的
       if(req.user._id.toString() != req.params.userId) {
-        return res.status(403);
+        return res.status(403).send({msg:'权限不足'});
       }
       var option = {};
       if(req.params.direction === 'send') {
@@ -101,7 +101,7 @@ module.exports = {
       .populate('replyGift')
       .exec()
       .then(function (gifts) {
-        return res.status(200).send({gifts:gifts});
+        return res.status(200).send(gifts);
       })
       .then(null, function(err) {
         log(err);
