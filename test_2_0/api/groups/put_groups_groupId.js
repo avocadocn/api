@@ -58,7 +58,7 @@ module.exports = function() {
   describe('put /groups/:groupId', function() {
     describe('编辑群组', function() {
       it('用户(leader)应能修改群组的设置', function(done) {
-        request.post('/groups/' + data[0].teams[0].model._id.toString())
+        request.put('/groups/' + data[0].teams[0].model._id.toString())
           .field(
             'name', chance.string({
               length: 10,
@@ -74,7 +74,7 @@ module.exports = function() {
       });
 
       it('用户(非leader)不能修改群组的设置', function(done) {
-        request.post('/groups/' + data[0].teams[0].model._id.toString())
+        request.put('/groups/' + data[0].teams[0].model._id.toString())
           .field(
             'name', chance.string({
               length: 10,
@@ -90,7 +90,7 @@ module.exports = function() {
       });
 
       it('用户不能修改不存在的群组的设置(id长度不够)', function(done) {
-        request.post('/groups/1')
+        request.put('/groups/1')
           .field(
             'name', chance.string({
               length: 10,
@@ -106,7 +106,7 @@ module.exports = function() {
       });
 
       it('用户不能修改不存在的群组的设置(id不存在)', function(done) {
-        request.post('/groups/0000c3fcd271b3943b2d44c9')
+        request.put('/groups/0000c3fcd271b3943b2d44c9')
           .field(
             'name', chance.string({
               length: 10,

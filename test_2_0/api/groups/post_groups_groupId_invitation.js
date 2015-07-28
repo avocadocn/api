@@ -58,14 +58,14 @@ module.exports = function() {
   describe('post /groups/:groupId/invitation', function() {
     describe('群组APP内邀请', function() {
       it('用户(该群组成员)应能邀请公司其他用户加入该群组', function(done) {
-        var data = {
+        var _data = {
           userIds: []
         };
-        data.userIds.push(data[0].users[2]._id.toString());
-        data.userIds.push(data[0].users[3]._id.toString());
+        _data.userIds.push(data[0].users[2]._id.toString());
+        _data.userIds.push(data[0].users[3]._id.toString());
 
         request.post('/groups/' + data[0].teams[0].model._id.toString() + '/invitation')
-          .send(data)
+          .send(_data)
           .set('x-access-token', userToken)
           .expect(200)
           .end(function(err, res) {
@@ -75,14 +75,14 @@ module.exports = function() {
       });
 
       it('用户(该群组成员)应不能邀请已加入或者已邀请用户加入该群组', function(done) {
-        var data = {
+        var _data = {
           userIds: []
         };
-        data.userIds.push(data[0].users[1]._id.toString());
-        data.userIds.push(data[0].users[2]._id.toString());
+        _data.userIds.push(data[0].users[1]._id.toString());
+        _data.userIds.push(data[0].users[2]._id.toString());
 
         request.post('/groups/' + data[0].teams[0].model._id.toString() + '/invitation')
-          .send(data)
+          .send(_data)
           .set('x-access-token', userToken)
           .expect(400)
           .end(function(err, res) {
@@ -93,13 +93,13 @@ module.exports = function() {
       });
 
       it('用户(该群组成员)应不能邀请不存在用户加入该群组', function(done) {
-        var data = {
+        var _data = {
           userIds: []
         };
-        data.userIds.push('0000c3fcd271b3943b2d44c9');
+        _data.userIds.push('0000c3fcd271b3943b2d44c9');
 
         request.post('/groups/' + data[0].teams[0].model._id.toString() + '/invitation')
-          .send(data)
+          .send(_data)
           .set('x-access-token', userToken)
           .expect(400)
           .end(function(err, res) {
@@ -110,14 +110,14 @@ module.exports = function() {
       });
 
       it('用户(非该群组成员)应不能邀请公司其他用户加入该群组', function(done) {
-        var data = {
+        var _data = {
           userIds: []
         };
-        data.userIds.push(data[0].users[1]._id.toString());
-        data.userIds.push(data[0].users[2]._id.toString());
+        _data.userIds.push(data[0].users[1]._id.toString());
+        _data.userIds.push(data[0].users[2]._id.toString());
 
         request.post('/groups/' + data[0].teams[0].model._id.toString() + '/invitation')
-          .send(data)
+          .send(_data)
           .set('x-access-token', userToken1)
           .expect(403)
           .end(function(err, res) {

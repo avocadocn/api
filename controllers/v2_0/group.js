@@ -54,7 +54,7 @@ module.exports = {
           },
           logo: {
             name: '封面',
-            value: files[fieldName][0].originalFilename,
+            value: files[fieldName] ? files[fieldName][0].originalFilename : undefined,
             validators: ['required']
           }
         }, 'complete', function(pass, msg) {

@@ -24,7 +24,7 @@ module.exports = function() {
           return done(err);
         }
         userToken = res.body.token;
-        callback();
+        done();
       });
   });
 
@@ -51,7 +51,7 @@ module.exports = function() {
       });
 
       it('用户不能建立新群组(缺少参数)', function(done) {
-        request.get('/circle/company')
+        request.post('/groups')
           .field(
             'name', chance.string({
               length: 10,
@@ -62,7 +62,7 @@ module.exports = function() {
             'themeColor', chance.color()
           )
           .set('x-access-token', userToken)
-          .expect(200)
+          .expect(400)
           .end(function(err, res) {
             if (err) return done(err);
             done();
