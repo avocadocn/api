@@ -10,6 +10,7 @@ var async = require('async');
 var createCompanies = require('./create_companies.js');
 var createUsers = require('./create_users.js');
 var addUsersToGroups = require('./add_users_to_groups.js');
+var createGifts = require('./create_gifts.js');
 
 var createConfig = require('./create_config.js');
 var createRegion = require('./create_region.js');
@@ -108,14 +109,12 @@ exports.createData = function (callback) {
               });
             });
             resCompanyData.users = results.users;
-            console.log(resCompanyData);
             waterfallCallback();
           });
         },
         function (waterfallCallback) {
           // 用户加入小队
           console.log('让公司的用户加入小队');
-          //todo for YT
           addUsersToGroups(resCompanyData, waterfallCallback);
         },
         function (waterfallCallback) {

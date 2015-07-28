@@ -175,7 +175,7 @@ module.exports = {
         giftIndex: req.body.giftIndex,
         addition: req.body.addition,
         cid: req.user.cid,
-        receiverGender: req.receiver.sex === '男' ? 1:2 
+        receiverGender: req.receiver.gender
       });
       if(req.body.replyGift) {
         gift.replyGift = req.body.replyGift;
