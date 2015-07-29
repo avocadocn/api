@@ -125,17 +125,16 @@ exports.createData = function (callback) {
           console.log('开始生成互动');
           createInteractions(resCompanyData, resTemplate, waterfallCallback);
         },
-        // function (waterfallCallback) {
-        //   console.log('生成互动成功');
-        //   console.log('开始生成评论');
-        //   waterfallCallback();
-        //   // createInteractionComments(resCompanyData, waterfallCallback);
-        // },
-        // function (waterfallCallback) {
-        //   console.log('生成评论成功');
-        //   console.log('开始生成礼物');
-        //   createGifts(resCompanyData, waterfallCallback);
-        // }
+        function (waterfallCallback) {
+          console.log('生成互动成功');
+          console.log('开始生成评论');
+          createInteractionComments(resCompanyData, waterfallCallback);
+        },
+        function (waterfallCallback) {
+          console.log('生成评论成功');
+          console.log('开始生成礼物');
+          createGifts(resCompanyData, waterfallCallback);
+        }
       ], function (err, result) {
         if (err) {
           console.error('生成公司', company.info.name, '的数据失败');

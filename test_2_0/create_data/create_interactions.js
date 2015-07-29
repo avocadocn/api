@@ -10,7 +10,7 @@ var Interaction = mongoose.model('Interaction'),
 var async = require('async');
 var chance = require('chance').Chance();
 var moment = require('moment');
-var templates;
+var interactionTemplates;
 var interactionTypes = ['activity','poll','question'];
 var molds = ['其它','羽毛球','篮球','阅读','自行车','下午茶','棋牌','足球','k歌','健身','美食','跑步','亲子','影视','摄影','旅行','桌游'];
 /**
@@ -195,9 +195,9 @@ var createCompanyInteraction = function (companyData, callback) {
 
 }
 var createInteractions = function (companyDataList, templates, callback) {
-  templates = templates;
+  interactionTemplates = templates;
   async.mapLimit(companyDataList,2,createCompanyInteraction,function(err,results) {
-    callback(err,companyDataList)
+    callback(err)
   })
 }
 module.exports = createInteractions;
