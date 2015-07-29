@@ -330,15 +330,13 @@ module.exports = {
     },
     getConcern: function (req, res) {
       //暂时只能获取自己的
-      return res.status(200).send({concern: req.user.concern});
+      return res.status(200).send(req.user.concern);
     },
     deleteConcern: function (req, res) {
       var index = -1;
       if(req.user.concern){
         index = tools.arrayObjectIndexOf(req.user.concern, req.params.userId, 'user');
       }
-      console.log(req.user.concern);
-      console.log(index);
       if(index>-1) {
         req.user.concern.splice(index,1);
         req.user.save(function (err) {
