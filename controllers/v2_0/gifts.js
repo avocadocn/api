@@ -111,8 +111,21 @@ module.exports = {
     //先验证是否能发
     validateGiftRemain: function (req, res, next) {
       var remainGiftValidator = function(name, value, callback) {
-        if(value===5) { // 蛋糕无限送
-          callback(true)
+        if(value===5) { // 蛋糕的话给某个人一天只能一个
+          var last0oclock = new Date();
+          last0oclock.setHours(0);
+          last0oclock.setMinutes(0);
+          last0oclock.setSeconds(0);
+          Gift.findOne({giftIndex:5, sender:req.user._id, receiver:req.body.receiverId, createTime:{'$gt':last0oclock}},
+            function(err, gift) {
+              if(gift) {
+                callback(false, '今天给TA送过蛋糕啦');
+              }
+              else {
+                callback(true);
+              }
+              return;
+            });
         }
         getGiftRemain(value, req.user._id, function(err, remains) {
           req.remains = remains;
