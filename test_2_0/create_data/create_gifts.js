@@ -114,7 +114,8 @@ var createGifts = function(company, callback) {
       )
     }
   ], function(err, results) {
-    callback(err, gifts);
+    company.gifts = gifts;
+    callback(err);
   });
 };
 

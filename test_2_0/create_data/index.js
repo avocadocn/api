@@ -76,7 +76,8 @@ exports.createData = function (callback) {
         activities: [],
         questions: [],
         polls: [],
-        circles: []
+        circles: [],
+        gifts: []
       };
       resCompanyDataList.push(resCompanyData);
 
