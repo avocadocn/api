@@ -299,6 +299,9 @@ module.exports = {
       })
     },
     addConcern: function (req, res) {
+      if(req.params.userId === req.user._id.toString()) {
+        return res.status(400).send({msg: '无法关注自己'});
+      }
       var newConcern = {
         user: req.params.userId,
         createTime: new Date()
