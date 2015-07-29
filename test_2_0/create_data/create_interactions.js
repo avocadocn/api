@@ -124,7 +124,9 @@ var _createInteraction = function(data,timeType,template,callback) {
     },
     function(cb) {
       interaction[interactionTypes[data.type-1]] = interactionContent._id;
-      interaction.save(cb)
+      interaction.save(function(err) {
+        cb(err,interaction)
+      })
     }
   ],function(err,results) {
     callback(err,results[1])
@@ -195,7 +197,7 @@ var createInteractions = function (companyData, templates, callback) {
     },
     //创建小队互动
     teamInteractions: function(parallelCallback){
-      async.mapLimit(companyData.teams,3,function(team,index,callback){
+      async.mapLimit(companyData.teams,3,function(team,callback){
         var data =  {
           targetType: 2,
           target:team.model,
