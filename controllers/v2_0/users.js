@@ -2,12 +2,69 @@
 
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
+var Company = mongoose.model('Company');
+
 var log = require('../../services/error_log.js'),
     donlerValidator = require('../../services/donler_validator.js'),
+    uploader = require('../../services/uploader.js'),
     tools = require('../../tools/tools.js');
 var publicDomain = require('../../services/public_domain.js');
 var emailService = require('../../services/email.js');
+var multiparty = require('multiparty');
+
 module.exports = {
+      /**
+     * 解析注册用户formData
+     * @param  {[type]}   req  [description]
+     * @param  {[type]}   res  [description]
+     * @param  {Function} next [description]
+     * @return {[type]}        [description]
+     */
+    getFormData: function(req, res, next) {
+      var fieldName = 'photo';
+      var form = new multiparty.Form({
+        uploadDir: uploader.tempDir
+      });
+
+      form.parse(req, function(err, fields, files) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        }
+        req.userInfo = {};
+
+        req.userInfo.cid = (fields['cid'] && fields['cid'][0]) ? fields['cid'][0] : undefined;
+        req.userInfo.email = (fields['email'] && fields['email'][0]) ? fields['email'][0].toLowerCase() : undefined;
+        req.userInfo.password = (fields['password'] && fields['password'][0]) ? fields['password'][0] : undefined;
+        req.userInfo.gender = (fields['gender'] && fields['gender'][0]) ? fields['gender'][0] : undefined;
+        // req.userInfo.photo = (files['photo'] && files['photo'][0].originalFilename) ? files['photo'][0].originalFilename : undefined;
+
+        req.photoFile = (files['photo'] && files['photo'][0].originalFilename) ? files['photo'][0] : undefined;;
+        
+        next();
+      });
+    },
+    getCompanyByCid: function (req, res, next) {
+      if (!req.userInfo.cid) {
+        res.status(400).send({ msg: 'cid不能为空' });
+        return;
+      }
+
+      Company.findById(req.userInfo.cid).exec()
+        .then(function (company) {
+          if (!company) {
+            res.status(400).send({ msg: '没有找到对应的公司' });
+          } else {
+            req.company = company;
+            
+            next();
+          }
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
+    },
     registerValidate: function (req, res, next) {
       var isUsedEmail = function (name, value, callback) {
         User.findOne({ email: value }).exec()
@@ -32,80 +89,37 @@ module.exports = {
         }
       };
 
-
-      // var validateDepartment = function (name, value, callback) {
-      //   if (!value) {
-      //     callback(true);
-      //     return;
-      //   }
-      //   var departments = req.company.department;
-      //   for (var i = 0; i < value.length; i++) {
-      //     var index = tools.arrayObjectIndexOf(departments, value[i], 'name');
-      //     if (index === -1) {
-      //       callback(false, '公司没有开设该部门');
-      //       return;
-      //     } else {
-      //       departments = departments[index].department;
-      //     }
-      //   }
-      //   callback(true);
-      // };
-      var validateInviteKey = function (name, value, callback) {
-        var domain = value.email.split('@')[1];
-        if(!publicDomain.isPublicDomain(domain) || value.company.invite_key === value.inviteKey) {
-          callback(true);
-        }
-        else {
-          callback(false,'激活码错误');
-        }
-      }
-      var email = req.body.email.toLowerCase();
       donlerValidator({
         cid: {
           name: '公司id',
-          value: req.body.cid,
+          value: req.userInfo.cid,
           validators: ['required']
         },
         email: {
           name: '企业邮箱',
-          value: email,
+          value: req.userInfo.email,
           validators: ['required', 'email', isUsedEmail]
         },
         domain: {
           name: '邮箱后缀',
-          value: email.split('@')[1],
+          value: req.userInfo.email? req.userInfo.email.split('@')[1] : undefined,
           validators: [validateDomain]
-        },
-        nickname: {
-          name: '昵称',
-          value: req.body.nickname,
-          validators: ['required', donlerValidator.maxLength(20)]
         },
         password: {
           name: '密码',
-          value: req.body.password,
+          value: req.userInfo.password,
           validators: ['required', donlerValidator.minLength(6), donlerValidator.maxLength(30)]
         },
         gender: {
           name: '性别',
-          value: req.body.gender,
+          value: req.userInfo.gender,
           validators: ['required']
-        },
-        // department: {
-        //   name: '部门',
-        //   value: req.body.department,
-        //   validators: [validateDepartment]
-        // },
-        phone: {
-          name: '手机号码',
-          value: req.body.phone,
-          validators: []
-        }, 
-        invite_key: {
-          name: '邀请码',
-          value: {inviteKey:req.body.inviteKey, email: email, company:req.company},
-          validators: [validateInviteKey]
         }
+        // photo: {
+        //   name: '头像',
+        //   value: req.userInfo.photo,
+        //   validators: ['required']
+        // }
       }, 'complete', function (pass, msg) {
         if (pass) {
           next();
@@ -115,21 +129,50 @@ module.exports = {
         }
       });
     },
+    /**
+     * 上传头像
+     * @param  {[type]}   req  [description]
+     * @param  {[type]}   res  [description]
+     * @param  {Function} next [description]
+     * @return {[type]}        [description]
+     */
+    uploadPhotoForUser: function(req, res, next) {
+      if (!req.photoFile) {
+        // 不传照片的话直接到下一步
+        next();
+        return;
+      }
 
+      uploader.uploadImage(req.photoFile, {
+        targetDir: '/public/img/user/photo',
+        saveOrigin: true,
+        getSize: true,
+        success: function(imgInfo, oriCallback) {
+          req.userInfo.photo = imgInfo.url;
+          next();
+        },
+        error: function(err) {
+          log(err);
+          return res.status(500).send({
+            msg: '服务器错误'
+          });
+        }
+      });
+    },
     register: function (req, res) {
-      var email = req.body.email.toLowerCase();
       var user = new User({
-        email: email,
-        username: email,
+        email: req.userInfo.email,
+        username: req.userInfo.email,
         cid: req.company._id,
         cname: req.company.info.name,
-        nickname: req.body.nickname,
-        password: req.body.password,
-        gender: !!req.body.gender,
-        phone: req.body.phone,
-        role: 'EMPLOYEE'
+        password: req.userInfo.password,
+        gender: req.userInfo.gender
       });
 
+      if (req.userInfo.photo) {
+        user.photo = req.userInfo.photo;
+      }
+      
       user.save(function (err) {
         if (err) {
           log(err);

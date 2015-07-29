@@ -44,26 +44,27 @@ module.exports = {
         donlerValidator({
           name: {
             name: '名称',
-            value: fields['name'],
+            value: (fields['name'] && fields['name'][0]) ? fields['name'][0] : undefined,
             validators: ['required']
           },
           themeColor: {
             name: '主题颜色',
-            value: fields['themeColor'],
+            value: (fields['themeColor'] && fields['themeColor'][0]) ? fields['themeColor'][0] : undefined,
             validators: ['required']
           },
           logo: {
             name: '封面',
-            value: files[fieldName] ? files[fieldName][0].originalFilename : undefined,
+            value: (files[fieldName] && files[fieldName][0].originalFilename) ? files[fieldName][0].originalFilename : undefined,
             validators: ['required']
           }
         }, 'complete', function(pass, msg) {
           if (pass) {
             req.groupInfo = {};
 
-            req.groupInfo.name = fields['name'];
-            req.groupInfo.themeColor = fields['themeColor'];
+            req.groupInfo.name = fields['name'][0];
+            req.groupInfo.themeColor = fields['themeColor'][0];
             req.groupLogoFile = files[fieldName];
+            
             next();
           } else {
             var resMsg = donlerValidator.combineMsg(msg);

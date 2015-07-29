@@ -119,6 +119,28 @@
     <input class="js_groupId" type="text" placeholder="群组id" required/>
     <button class="js_submit">提交</button>
   </div>
+  <div id="UserRegisterWithCompanyTest">
+    <h1>用户注册测试(有公司)</h1>
+    <form id="UserRegisterWithCompanyForm" enctype="multipart/form-data">
+      <input type="text" name="cid" placeholder="公司id" />
+      <input type="text" name="email" placeholder="公司邮箱" />
+      <input type="text" name="password" placeholder="密码" />
+      <input type="text" name="gender" placeholder="性别"/>
+      <input type="file" name="photo" />
+    </form>
+    <button class="js_submit">提交</button>
+  </div>
+  <div id="UserRegisterWithoutCompanyTest">
+    <h1>用户注册测试(无公司)</h1>
+    <form id="UserRegisterWithoutCompanyForm" enctype="multipart/form-data">
+      <input type="text" name="name" placeholder="公司名称" />
+      <input type="text" name="email" placeholder="公司邮箱" />
+      <input type="text" name="password" placeholder="密码" />
+      <input type="text" name="gender" placeholder="性别"/>
+      <input type="file" name="photo" />
+    </form>
+    <button class="js_submit">提交</button>
+  </div>
   <script src="./jquery-2.1.1.min.js"></script>
   <script src="./upload.js"></script>
 </body>

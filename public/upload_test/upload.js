@@ -284,4 +284,50 @@
       });
     });
   })();
+
+  (function () {
+    var UserRegisterWithCompanyTestEle = $('#UserRegisterWithCompanyTest');
+    var submit = UserRegisterWithCompanyTestEle.find('.js_submit');
+    submit.click(function () {
+      var fd = new FormData($('#UserRegisterWithCompanyForm')[0]);
+      $.ajax({
+        url: baseUrl + '/v2_0/users',
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        headers: getCommonHeaders(),
+        success: function (data, status) {
+          alert('success');
+          console.log(data, status);
+        },
+        error: function (data, status) {
+          console.log(data, status);
+        }
+      });
+    });
+  })();
+
+  (function () {
+    var UserRegisterWithoutCompanyTestEle = $('#UserRegisterWithoutCompanyTest');
+    var submit = UserRegisterWithoutCompanyTestEle.find('.js_submit');
+    submit.click(function () {
+      var fd = new FormData($('#UserRegisterWithoutCompanyForm')[0]);
+      $.ajax({
+        url: baseUrl + '/v2_0/companies/quickRegister',
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        headers: getCommonHeaders(),
+        success: function (data, status) {
+          alert('success');
+          console.log(data, status);
+        },
+        error: function (data, status) {
+          console.log(data, status);
+        }
+      });
+    });
+  })();
 })(jQuery);

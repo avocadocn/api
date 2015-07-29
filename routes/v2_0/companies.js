@@ -20,7 +20,7 @@ var sessionMiddleware = session({
 module.exports = function (app, ctrl) {
 
   app.post('/companies', ctrl.v1_3.registerValidate, ctrl.v1_3.register, ctrl.v1_3.registerSave);
-  app.post('/companies/quickRegister', ctrl.v1_3.quickRegisterValidate, ctrl.v1_3.quickRegister);
+  app.post('/companies/quickRegister', ctrl.v2_0.quickRegisterValidate, ctrl.v2_0.uploadPhotoForUser, ctrl.v2_0.quickRegister);
   app.post('/companies/quickRegisterTeams', ctrl.v1_3.quickRegisterTeams);
 
   app.get('/companies/:companyId', token.needToken, ctrl.v1_3.getCompany);
