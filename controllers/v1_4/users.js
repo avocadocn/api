@@ -42,8 +42,8 @@ module.exports = {
           res.sendStatus(500);
           return;
         }
-        easemob.user.deactivate(req.resourceUser.user.id);
-        easemob.user.disconnect(req.resourceUser.user.id);
+        easemob.user.deactivate(req.resourceUser._id);
+        easemob.user.disconnect(req.resourceUser._id);
         res.sendStatus(204);
       });
 
@@ -69,7 +69,7 @@ module.exports = {
           res.sendStatus(500);
           return;
         }
-        easemob.user.activate(req.resourceUser.user.id);
+        easemob.user.activate(req.resourceUser._id);
         res.sendStatus(204);
       });
     },
