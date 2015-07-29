@@ -125,7 +125,7 @@ module.exports = {
         endTime: {
           name: '结束时间',
           value: req.body.endTime,
-          validators: !req.body.templateId &&interactionType!==3 ? ['required','date',donlerValidator.after(req.body.startTime)] : ['date']
+          validators: (!req.body.templateId &&interactionType!==3) ? ['required','date',donlerValidator.after(req.body.startTime)] : ['date']
         },
         tags: {
           name: '标签',
@@ -135,7 +135,7 @@ module.exports = {
         startTime: {
           name: '开始时间',
           value: req.body.startTime,
-          validators: interactionType===1 && !req.body.templateId ? ['required','date',donlerValidator.after(new Date())] : ['date']
+          validators: (interactionType===1 && !req.body.templateId )? ['required','date',donlerValidator.after(new Date())] : ['date']
         },
         memberMin:{
           name: '最小人数',
@@ -150,7 +150,7 @@ module.exports = {
         location:{
           name: '地点',
           value: req.body.location,
-          validators: interactionType===1 && !req.body.templateId ? ['required',locationValidator] : []
+          validators: (interactionType===1 && !req.body.templateId )? ['required',locationValidator] : []
         },
         deadline: {
           name: '截止时间',
@@ -160,12 +160,12 @@ module.exports = {
         activityMold: {
           name: '活动类型',
           value: req.body.activityMold,
-          validators: interactionType===1 && !req.body.templateId ? ['required'] :[]
+          validators: (interactionType===1 && !req.body.templateId) ? ['required'] :[]
         },
         option: {
           name: '选项',
           value: req.body.option,
-          validators: interactionType===2 && !req.body.templateId ? ['required',donlerValidator.minLength(2)] :[]
+          validators: (interactionType===2 && !req.body.templateId) ? ['required','array', donlerValidator.minLength(2)] :[]
         }
       }, 'fast', function (pass, msg) {
         if (pass) {

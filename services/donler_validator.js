@@ -350,7 +350,7 @@ validators.array = function (name, value, callback) {
     callback(true);
     return;
   }
-  if (!value instanceof Array) {
+  if (!(value instanceof Array)) {
     var msg = util.format('%s不是数组', name);
     callback(false, msg);
   } else {
