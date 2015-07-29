@@ -121,29 +121,21 @@ exports.createData = function (callback) {
           addUsersToGroups(resCompanyData, waterfallCallback);
         },
         function (waterfallCallback) {
-          console.log('加入小队成功');
-          console.log('开始生成互动模板');
-          createInteractionTemplates(function(error, templates) {
-            resTemplate = templates;
-            waterfallCallback();
-          });
-        },
-        function (waterfallCallback) {
           console.log('加入互动模板成功');
           console.log('开始生成互动');
           createInteractions(resCompanyData, resTemplate, waterfallCallback);
         },
-        function (waterfallCallback) {
-          console.log('生成互动成功');
-          console.log('开始生成评论');
-          waterfallCallback();
-          // createInteractionComments(resCompanyData, waterfallCallback);
-        },
-        function (waterfallCallback) {
-          console.log('生成评论成功');
-          console.log('开始生成礼物');
-          createGifts(resCompanyData, waterfallCallback);
-        }
+        // function (waterfallCallback) {
+        //   console.log('生成互动成功');
+        //   console.log('开始生成评论');
+        //   waterfallCallback();
+        //   // createInteractionComments(resCompanyData, waterfallCallback);
+        // },
+        // function (waterfallCallback) {
+        //   console.log('生成评论成功');
+        //   console.log('开始生成礼物');
+        //   createGifts(resCompanyData, waterfallCallback);
+        // }
       ], function (err, result) {
         if (err) {
           console.error('生成公司', company.info.name, '的数据失败');
@@ -203,16 +195,12 @@ exports.createRegion = function (callback) {
   });
 };
 
-
-exports.createCampaignMold = function (callback) {
-  createCampaignMold(function (err) {
-    if (err) {
-      callback(err);
-    } else {
-      callback();
-    }
+exports.createTemplate = function(callback){
+  createInteractionTemplates(function(error,templates) {
+    resTemplate= templates;
+    callback(error)
   });
-};
+}
 exports.getConfig = function () {
   return resConfig;
 };
@@ -220,3 +208,6 @@ exports.getConfig = function () {
 exports.getRegion = function () {
   return resRegion;
 };
+
+
+

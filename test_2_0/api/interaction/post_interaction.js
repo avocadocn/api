@@ -53,7 +53,7 @@ module.exports = function () {
           .expect(200)
           .end(function (err, res) {
             if (err) return done(err);
-            res.body.should.have.properties('activity');
+            res.body.should.have.properties('interactionId');
             done();
           });
       });
@@ -76,7 +76,7 @@ module.exports = function () {
           .expect(200)
           .end(function (err, res) {
             if (err) return done(err);
-            res.body.should.have.properties('poll');
+            res.body.should.have.properties('interactionId');
             done();
           });
       });
@@ -98,7 +98,7 @@ module.exports = function () {
           .expect(200)
           .end(function (err, res) {
             if (err) return done(err);
-            res.body.should.have.properties('question');
+            res.body.should.have.properties('interactionId');
             done();
           });
       });

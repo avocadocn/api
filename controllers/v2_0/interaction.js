@@ -1066,7 +1066,12 @@ module.exports = {
           name: '选项',
           value: req.body.option,
           validators: templateType=== 2 ? ['required',donlerValidator.minLength(2)] :[]
-        }
+        },
+        tags: {
+          name: '标签',
+          value: req.body.tags,
+          validators: ['array']
+        },
       }, 'fast', function (pass, msg) {
         if (pass) {
           next();
@@ -1141,6 +1146,7 @@ module.exports = {
             theme: data.theme,
             content: data.content,
             endTime: data.endTime,
+            tags:data.tags
           });
           var option =[];
           data.option.forEach(function(_option, index){
@@ -1155,7 +1161,8 @@ module.exports = {
           template = new QuestionTemplate({
             theme: data.theme,
             content: data.content,
-            endTime: data.endTime
+            endTime: data.endTime,
+            tags:data.tags
           });
           break;
       }

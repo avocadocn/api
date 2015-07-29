@@ -73,7 +73,7 @@ var _createInteraction = function(data,timeType,template,cb) {
     content: chance.paragraph(),
     tags: [chance.string({length: 5}),chance.string({length: 5})],
     public: data.target.public || true,
-    members:[data.users[0]._id],
+    members:[data.users[0]._id]
   });
   if(data.users.length>1)
     interaction.inviters =[data.users[1]._id]
@@ -109,6 +109,14 @@ var createAllTimesInteractions = function(data, type, callback) {
     users: data.users,
     cid: data.cid,
     type: type
+  }
+  switch(type) {
+    case 1:
+      _data.location = { name : chance.address(), coordinates : [chance.longitude(), chance.latitude()]}
+      break;
+    case 2:
+      
+      break;
   }
   async.parallel([
     function(cb){

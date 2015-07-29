@@ -21,6 +21,10 @@ before(function (done) {
         console.log('开始生成region数据');
         createDataModule.createRegion(parallelCallback);
       },
+      createTemplate: function (parallelCallback) {
+        console.log('开始生成互动模板数据');
+        createDataModule.createTemplate(parallelCallback);
+      },
       // createGroups: function (parallelCallback) {
       //   console.log('开始生成groups数据');
       //   createDataModule.createGroups(parallelCallback);
