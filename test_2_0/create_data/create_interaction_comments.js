@@ -1,6 +1,6 @@
 'use strict';
 
-var createInteractionComments = function(companyDataList, callback) {
+var createInteractionComments = function(companyData, callback) {
   callback(null)
 }
 module.exports = createInteractionComments;

@@ -35,9 +35,10 @@ var createActivity = function (data,template) {
     memberMax: data.memberMax || template.memberMax,
     location: data.location || template.location,
     startTime: data.startTime || template.startTime,
-    deadline: data.deadline || template.deadline,
+    deadline: data.deadline || template.deadline || data.endTime ,
     activityMold: data.activityMold || template.activityMold
   };
+
   return new Activity(_activity);
 }
 /**
@@ -49,13 +50,17 @@ var createActivity = function (data,template) {
 var createPoll = function (data,template) {
   template = template || {}
   var option = [];
-  var options = data.option || template.option;
-  options && options.forEach(function(_option, index){
-    option.push({
-      index:index,
-      value:_option
-    })
-  });
+  if(data.option) {
+    data.option.forEach(function(_option, index){
+      option.push({
+        index:index,
+        value:_option
+      })
+    });
+  }
+  else {
+    option = template.option;
+  }
   var poll = new Poll({option:option});
   return poll;
 }

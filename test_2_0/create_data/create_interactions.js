@@ -13,6 +13,10 @@ var moment = require('moment');
 var interactionTemplates;
 var interactionTypes = ['activity','poll','question'];
 var molds = ['其它','羽毛球','篮球','阅读','自行车','下午茶','棋牌','足球','k歌','健身','美食','跑步','亲子','影视','摄影','旅行','桌游'];
+var now = new Date();
+var nowYear = now.getFullYear();
+var nowMonth = now.getMonth();
+var iii =0;
 /**
  * 创建活动,如果data中存在的使用data,否则使用template中的
  * @param  {Object} data      活动数据
@@ -22,12 +26,12 @@ var molds = ['其它','羽毛球','篮球','阅读','自行车','下午茶','棋
 var createActivity = function (data,template) {
   template = template || {}
   var  _activity = {
-    memberMin: data.memberMin || template.memberMin,
-    memberMax: data.memberMax || template.memberMax,
-    location: data.location || template.location,
-    startTime: data.startTime || template.startTime,
-    deadline: data.deadline || template.deadline,
-    activityMold: data.activityMold || template.activityMold
+    memberMin: template.memberMin || data.memberMin,
+    memberMax: template.memberMax || data.memberMax,
+    location: template.location || { name : chance.address(), coordinates : [chance.longitude(), chance.latitude()]},
+    startTime: template.startTime || data.startTime,
+    deadline: template.deadline || data.deadline,
+    activityMold: template.activityMold || molds[chance.integer({min:0,max:15})]
   };
   return new Activity(_activity);
 }
@@ -40,13 +44,12 @@ var createActivity = function (data,template) {
 var createPoll = function (data,template) {
   template = template || {}
   var option = [];
-  var options = data.option || template.option;
-  options && options.forEach(function(_option, index){
-    option.push({
-      index:index,
-      value:_option
-    })
-  });
+  if(template.option) {
+    option = template.option;
+  }
+  else {
+    option = [{index:1,value:chance.string({length:5})},{index:2,value:chance.string({length:5})},{index:3,value:chance.string({length:5})}]
+  }
   var poll = new Poll({option:option});
   return poll;
 }
@@ -60,23 +63,23 @@ var createQuestion= function (data) {
   var question = new Question();
   return question;
 }
-var _createInteraction = function(data,timeType,template,cb) {
+var _createInteraction = function(data,timeType,template,callback) {
   var interaction = new Interaction({
     cid: data.cid,
     targetType: data.targetType,
     target: data.target.id,
     poster: {
-      _id:data.users[0]._id
+      _id:data.users[0]
     },
     type: data.type,
     theme: chance.string(),
     content: chance.paragraph(),
     tags: [chance.string({length: 5}),chance.string({length: 5})],
     public: data.target.public || true,
-    members:[data.users[0]._id]
+    members:data.users
   });
   if(data.users.length>1)
-    interaction.inviters =[data.users[1]._id]
+    interaction.inviters =data.users.slice(1)
   var interactionContent;
   switch(data.type) {
     case 1:
@@ -89,13 +92,39 @@ var _createInteraction = function(data,timeType,template,cb) {
       interactionContent = createQuestion(data,template);
       break;
   }
+  switch(timeType) {
+    //未开始
+    case 1:
+      interaction.endTime = chance.date({year: nowYear, month: nowMonth+2});
+      if(data.type==1){
+        interactionContent.startTime = chance.date({year: nowYear, month: nowMonth+1});
+        interaction.deadline = chance.date({year: nowYear, month: nowMonth+2});
+      }
+      break;
+    //正在进行
+    case 2:
+      interaction.endTime = chance.date({year: nowYear, month: nowMonth+2});
+      if(data.type==1){
+        interactionContent.startTime = chance.date({year: nowYear, month: nowMonth-1});
+        interaction.deadline = chance.date({year: nowYear, month: nowMonth+2});
+      }
+      break;
+    //结束
+    case 3:
+      interaction.endTime = chance.date({year: nowYear, month: nowMonth-1});
+      if(data.type==1){
+        interactionContent.startTime = chance.date({year: nowYear, month: nowMonth-2});
+        interaction.deadline = chance.date({year: nowYear, month: nowMonth-1});
+      }
+      break;
+  }
   async.parallel([
-    function(callback) {
-      interactionContent.save(callback)
+    function(cb) {
+      interactionContent.save(cb)
     },
-    function(callback) {
+    function(cb) {
       interaction[interactionTypes[data.type-1]] = interactionContent._id;
-      interaction.save(callback)
+      interaction.save(cb)
     }
   ],function(err,results) {
     callback(err,results[1])
@@ -110,20 +139,12 @@ var createAllTimesInteractions = function(data, type, callback) {
     cid: data.cid,
     type: type
   }
-  switch(type) {
-    case 1:
-      _data.location = { name : chance.address(), coordinates : [chance.longitude(), chance.latitude()]}
-      break;
-    case 2:
-      
-      break;
-  }
   async.parallel([
     function(cb){
       _createInteraction(_data, 1, null, cb);
     },
     function(cb){
-      _createInteraction(_data, 1, templates[type-1], cb);
+      _createInteraction(_data, 1, interactionTemplates[type-1], cb);
     },
     function(cb){
       _createInteraction(_data, 2, null, cb);
@@ -143,61 +164,57 @@ var createAllTypeInteractions = function(data,callback) {
     },
     //投票
     polls:function(cb){
-      createCampaign(data, 2, cb);
+      createAllTimesInteractions(data, 2, cb);
     },
     //求助
     questions:function(cb){
-      createCampaign(data, 3, cb);
+      createAllTimesInteractions(data, 3, cb);
     }
   },callback);
 }
-var createCompanyInteraction = function (companyData, callback) {
-    if(!companyData.model.status.mail_active) {
-      return callback(null,companyDataList);
-    }
-    async.parallel({
-      //创建公司互动
-      companyInteractions: function(parallelCallback){
+var createInteractions = function (companyData, templates, callback) {
+  interactionTemplates = templates;
+  if(!companyData.model.status.mail_active) {
+    return callback(null);
+  }
+  async.parallel({
+    //创建公司互动
+    companyInteractions: function(parallelCallback){
+      var data =  {
+        targetType: 3,
+        target:companyData.model,
+        users: [companyData.users[0]._id],
+        cid: companyData.model.id
+      }
+      createAllTypeInteractions(data,function(err, results) {
+        companyData.activities = results.activities;
+        companyData.polls = results.polls;
+        companyData.questions = results.questions;
+        parallelCallback(err, 'companyInteractions');
+      })
+    },
+    //创建小队互动
+    teamInteractions: function(parallelCallback){
+      async.mapLimit(companyData.teams,3,function(team,index,callback){
         var data =  {
-          targetType: 3,
-          target:companyData.model,
-          users: [companyData.users[0]._id],
+          targetType: 2,
+          target:team.model,
+          users: [companyData.users[0]._id, companyData.users[1]._id],
           cid: companyData.model.id
         }
         createAllTypeInteractions(data,function(err, results) {
-          companyData.activities = results.activities;
-          companyData.polls = results.polls;
-          companyData.questions = results.questions;
-          parallelCallback(err, 'companyInteractions');
+          team.activities = results.activities;
+          team.polls = results.polls;
+          team.questions = results.questions;
+          callback(err, 'teamInteractions');
         })
-      },
-      //创建小队互动
-      teamInteractions: function(parallelCallback){
-        async.mapLimit(companyData.teams,3,function(team){
-          var data =  {
-            targetType: 2,
-            target:team.model,
-            users: [companyData.users[0]._id, companyData.users[1]._id],
-            cid: companyData.model.id
-          }
-          createAllTypeInteractions(data,function(err, results) {
-            team.activities = results.activities;
-            team.polls = results.polls;
-            team.questions = results.questions;
-            parallelCallback(err, 'teamInteractions');
-          })
-        },parallelCallback);
-      }
-    },
-    function(err, results) {
-      callback(err,companyData)
-    });
-
-}
-var createInteractions = function (companyDataList, templates, callback) {
-  interactionTemplates = templates;
-  async.mapLimit(companyDataList,2,createCompanyInteraction,function(err,results) {
+      },parallelCallback);
+    }
+  },
+  function(err, results) {
+    
     callback(err)
-  })
+  });
+
 }
 module.exports = createInteractions;
