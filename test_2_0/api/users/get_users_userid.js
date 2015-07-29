@@ -6,7 +6,7 @@ var common = require('../../support/common');
 
 module.exports = function () {
 
-  describe('get /users/invite', function () {
+  describe('get /users/:userId', function () {
 
     var accessToken, data, user;
     before(function (done) {
@@ -40,7 +40,7 @@ module.exports = function () {
           resUser.nickname.should.equal(user.nickname);
           resUser.photo.should.equal(user.photo);
           resUser.realname.should.equal(user.realname);
-          resUser.sex.should.equal(user.sex);
+          resUser.gender.should.equal(user.gender);
           (new Date(resUser.birthday).valueOf()).should.equal(user.birthday.valueOf());
           (new Date(resUser.registerDate).valueOf()).should.equal(user.register_date.valueOf());
           resUser.phone.should.equal(user.phone);
@@ -81,7 +81,7 @@ module.exports = function () {
           resUser.nickname.should.equal(otherUser.nickname);
           resUser.photo.should.equal(otherUser.photo);
           resUser.realname.should.equal(otherUser.realname);
-          resUser.sex.should.equal(otherUser.sex);
+          resUser.gender.should.equal(otherUser.gender);
           (new Date(resUser.birthday).valueOf()).should.equal(otherUser.birthday.valueOf());
           resUser.phone.should.equal(otherUser.phone);
           resUser.company._id.should.equal(otherUser.cid.toString());

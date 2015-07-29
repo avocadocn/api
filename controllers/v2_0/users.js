@@ -7,7 +7,8 @@ var Company = mongoose.model('Company');
 var log = require('../../services/error_log.js'),
     donlerValidator = require('../../services/donler_validator.js'),
     uploader = require('../../services/uploader.js'),
-    tools = require('../../tools/tools.js');
+    tools = require('../../tools/tools.js'),
+    auth = require('../../services/auth.js');
 var publicDomain = require('../../services/public_domain.js');
 var emailService = require('../../services/email.js');
 var multiparty = require('multiparty');
@@ -189,6 +190,97 @@ module.exports = {
         });
       });
     },
+
+    getUserById: function (req, res, next) {
+      //获取免打扰开关
+      if(req.query.responseKey==='pushToggle') {
+        var user = {'pushToggle' : req.user.push_toggle};
+        return res.status(200).send(user);
+      }
+
+      //非获取免打扰
+      User.findById(req.params.userId).exec()
+        .then(function (user) {
+          if (!user) {
+            return res.status(404).send({ msg: "找不到该用户" });
+          }
+          var role = auth.getRole(req.user, {
+            companies: [user.cid],
+            users: [user._id]
+          });
+          var allow = auth.auth(role, ['getUserCompleteData', 'getUserBriefData', 'getUserMinData']);
+          if (allow.getUserCompleteData) {
+            var completeData = {
+              _id: user._id,
+              active:user.active,
+              mail_active:user.mail_active,
+              email: user.email,
+              nickname: user.nickname,
+              photo: user.photo,
+              realname: user.realname,
+              department: user.department,
+              gender: user.gender,
+              birthday: user.birthday,
+              bloodType: user.bloodType,
+              introduce: user.introduce,
+              registerDate: user.register_date,
+              phone: user.phone,
+              qq: user.qq,
+              company: {
+                _id: user.cid,
+                name: user.company_official_name,
+                briefName: user.cname
+              },
+              tids: user.getTids(0),
+              score: user.score.total || 0,
+              tags: user.tags,
+              team: user.teams
+            };
+            res.status(200).send(completeData);
+          } else if (allow.getUserBriefData) {
+            var tids = [];
+            user.team.forEach(function (team) {//不拿部门和公司
+              if(team.entity_type!='virtual') tids.push(team._id);
+            });
+            var briefData = {
+              _id: user._id,
+              email: user.email,
+              nickname: user.nickname,
+              photo: user.photo,
+              realname: user.realname,
+              department: user.department,
+              gender: user.gender,
+              birthday: user.birthday,
+              bloodType: user.bloodType,
+              introduce: user.introduce,
+              company: {
+                _id: user.cid,
+                name: user.company_official_name,
+                briefName: user.cname
+              },
+              phone: user.phone,
+              qq: user.qq,
+              score: user.score.total || 0,
+              tags: user.tags,
+              campaignCount: user.campaignCount || 0,
+              tids: user.getTids(1)
+            };
+            res.status(200).send(briefData);
+          } else if (allow.getUserMinData) {
+            var minData = {
+              _id: user._id,
+              nickname: user.nickname,
+              photo: user.photo
+            };
+            res.status(200).send(minData);
+          } else {
+            res.sendStatus(403);
+          }
+
+        })
+        .then(null, next);
+    },
+
     validateConcern: function (req, res, next) {
       donlerValidator({
         concern:{

@@ -29,9 +29,9 @@ module.exports = function (app, ctrl) {
   
   app.post('/companies/validate', ctrl.v1_3.companyInfoValidate);
   app.post('/companies/forgetPassword', ctrl.v1_3.forgetPassword);
-  app.get('/companies/:companyId/undisposed', token.needToken, ctrl.v1_3.getCompanyUndisposed);
-  app.get('/companies/:companyId/statistics', token.needToken, ctrl.v1_3.getCompanyStatistics);
-  app.get('/companies/:companyId/charts', token.needToken, ctrl.v1_3.getCompanyCharts);
+  // app.get('/companies/:companyId/undisposed', token.needToken, ctrl.v1_3.getCompanyUndisposed);
+  // app.get('/companies/:companyId/statistics', token.needToken, ctrl.v1_3.getCompanyStatistics);
+  // app.get('/companies/:companyId/charts', token.needToken, ctrl.v1_3.getCompanyCharts);
   app.get('/companies/:companyId/members', token.needToken, ctrl.v1_3.getCompanyMembers);
   app.get('/companies/:companyId/latestMembers', token.needToken, ctrl.v1_3.getLatestMembers);
   app.get('/companies/:companyId/reportedMembers', token.needToken, ctrl.v1_3.getCompanyReportedMembers);
@@ -40,6 +40,6 @@ module.exports = function (app, ctrl) {
   app.post('/companies/login', sessionMiddleware, ctrl.v1_3.login);
   app.post('/companies/refresh/token', token.needToken, sessionMiddleware, ctrl.v1_3.refreshToken);
   app.post('/companies/logout', token.needToken, sessionMiddleware, ctrl.v1_3.logout);
-  app.get('/companies/:companyId/hasLeader', token.needToken, ctrl.v1_3.hasLeader);
+  // app.get('/companies/:companyId/hasLeader', token.needToken, ctrl.v1_3.hasLeader);
 };
 

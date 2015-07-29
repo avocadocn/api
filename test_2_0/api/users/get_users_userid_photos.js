@@ -6,7 +6,7 @@ var common = require('../../support/common');
 
 module.exports = function () {
 
-  describe('get /users/:userId/photos', function () {
+  describe.skip('get /users/:userId/photos', function () {
 
     var accessToken;
     before(function (done) {

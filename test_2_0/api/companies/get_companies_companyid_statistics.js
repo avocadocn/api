@@ -49,7 +49,7 @@ module.exports = function () {
       });
   })
 
-  describe('get /companies/:companyId/statistics', function () {
+  describe.skip('get /companies/:companyId/statistics', function () {
     it('本公司HR获取公司小队统计数据成功', function (done) {
       request.get(url+'?target=team&type=official')
         .set('x-access-token', tokens[0])

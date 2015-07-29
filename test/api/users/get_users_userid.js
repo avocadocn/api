@@ -6,7 +6,8 @@ var common = require('../../support/common');
 
 module.exports = function () {
 
-  describe('get /users/invite', function () {
+  describe('get /users/:userId', function () {
+
 
     var accessToken, data, user;
     before(function (done) {
