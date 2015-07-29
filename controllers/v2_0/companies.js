@@ -50,6 +50,29 @@ module.exports = {
         });
     };
 
+    var nameValidate = function(name, value, callback) {
+      if (!value) {
+        callback(true);
+      }
+      Company.findOne({
+          'info.name': value
+        }, {
+          '_id': 1
+        }).exec()
+        .then(function(company) {
+          if (!company) {
+            callback(true);
+          } else {
+            var msg = util.format('%s已被注册', name);
+            callback(false, msg);
+          }
+        })
+        .then(null, function(err) {
+          log(err);
+          var msg = util.format('验证%s时出错', name);
+          callback(false, msg);
+        });
+    };
     var fieldName = 'photo';
     var form = new multiparty.Form({
       uploadDir: uploader.tempDir
@@ -74,12 +97,12 @@ module.exports = {
         name: {
           name: '公司名称',
           value: req.registerInfo.name,
-          validators: ['required']
+          validators: ['required', nameValidate]
         },
         email: {
           name: '企业邮箱',
           value: req.registerInfo.email,
-          validators: ['required', 'email']
+          validators: ['required', 'email', emailValidate]
         },
         password: {
           name: '密码',
@@ -224,5 +247,50 @@ module.exports = {
           next(err);
         }
       });
+  },
+  /**
+   * 根据邮箱后缀查询相关公司
+   * 缺少domain参数, 返回400, msg: 参数错误
+   * 参数正确, 查询相关公司, 
+   *     若查询到的公司个数为0, 返回204
+   *     若查询到的公司个数不为0, 返回200, company: companyDocs
+   * @param  {[type]} req [description]
+   * query:
+   * {
+   *   domain: String // 邮箱后缀
+   * }
+   * @param  {[type]} res [description]
+   * @return {[type]}     [description]
+   */
+  getCompanyByDomain: function(req, res) {
+    if (!req.query.domain) {
+      return res.status(400).send({
+        msg: '缺少domain参数'
+      });
+    }
+
+    Company.find({ // 查询条件还需进一步考虑
+      'email.domain': req.query.domain
+      // 'status.mail_active': true,
+      // 'status.active': true,
+    }, 'info.name', function(err, companyDocs) {
+      if (err) {
+        return res.status(500).send({
+          msg: '服务器错误'
+        });
+      }
+
+      if (companyDocs.length === 0) {
+        return res.sendStatus(204);
+      }
+
+      var results = companyDocs.map(function(obj) {
+        return {'_id': obj._id, 'name': obj.info.name};
+      });
+
+      res.status(200).send({
+        company: results
+      });
+    });
   }
 };

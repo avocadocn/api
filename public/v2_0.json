@@ -700,6 +700,42 @@
             }
           }
         }
+      },
+      "get": {
+        "tags": [
+          "companies"
+        ],
+        "summary": "根据邮箱后缀查询相关公司",
+        "operationId": "getCompanyByDomain",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "domain",
+            "description": "注册表单数据",
+            "required": true,
+            "type": "string",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "查询成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "companyResult"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
       }
     },
     "/companies/quickRegister": {
@@ -4413,6 +4449,21 @@
           "type": "string",
           "format": "date-time",
           "description": "通知时间"
+        }
+      }
+    },
+    "companyResult": {
+      "title": "companyResult",
+      "required": [
+        "_id",
+        "name"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
         }
       }
     }
