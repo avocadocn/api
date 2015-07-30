@@ -670,8 +670,9 @@ module.exports = {
      */
     deleteComment: function (req, res) {
       var interactionType = parseInt(req.params.interactionType)
-      if([1,2,3].indexOf(interactionType)===-1)
+      if([1,2,3].indexOf(interactionType)===-1) {
         return res.status(400).send({ msg: "参数错误" });
+      }
       var commentModel =commentModelTypes[interactionType-1];
       async.waterfall([
         function (callback) {
@@ -680,7 +681,7 @@ module.exports = {
           mongoose.model(commentModel).findOneAndUpdate(option,update,{"new":true}, callback);
         },
         function (comment, callback) {
-          if(!comment) return callback(400);
+          if(!comment) {return callback(400);}
           var option ={commentId: req.body.commentId, status: 1};
           var update ={status: 3};
           mongoose.model(commentModel).update(option,update,{ multi: true }, function (error, count) {

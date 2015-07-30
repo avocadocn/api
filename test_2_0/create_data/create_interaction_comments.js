@@ -44,6 +44,16 @@ var createQuestionApprove = function(comment, callback) {
   }
   QuestionApprove.create(appove, callback)
 }
+var createAnswerComment = function(comment, callback) {
+  var answerComment = {
+    interactionId: comment.interactionId,
+    commentId: comment._id, 
+    posterCid: comment.posterCid,
+    posterId: comment.posterId,
+    content: chance.string()
+  }
+  QuestionComment.create(answerComment, callback);
+}
 var createAllTypeComments = function(model,callback) {
   async.parallel({
     activities: function(parallelCallback){
@@ -63,6 +73,9 @@ var createAllTypeComments = function(model,callback) {
         },
         function(seriesCallback){
           createQuestionApprove(comment,seriesCallback)
+        },
+        function(seriesCallback){
+          createAnswerComment(comment,seriesCallback);
         }
       ],parallelCallback);
     }
@@ -72,6 +85,7 @@ var createAllTypeComments = function(model,callback) {
     model.pollComment = results.polls;
     model.questionComment = results.questions[0];
     model.questionApprove = results.questions[1];
+    model.answerComment = results.questions[2];
     callback(err)
   });
 }
