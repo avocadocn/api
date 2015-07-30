@@ -2,9 +2,10 @@ var app = require('../../../config/express.js'),
 request = require('supertest')(app);
 var dataService = require('../../create_data');
 var async = require('async');
+var chance = require('chance').Chance();
 
 module.exports = function () {
-  describe('get /interaction/:interactionType/:interactionId/comment', function() {
+  describe('post /interaction/:interactionType/:interactionId/comment', function() {
     var data, userToken = [];
     before(function (done) {
       data = dataService.getData();
@@ -44,55 +45,56 @@ module.exports = function () {
         
     });
 
-    var getInteractionCommentTest = function(msg, type, modelType) {
+    var postInteractionCommentTest = function(msg, type, modelType) {
       it(msg, function(done) {
         var models = [data[0].activities[0], data[0].polls[0], data[0].questions[0], 
           data[0].teams[0].activities[0], data[0].teams[0].polls[0], data[0].teams[0].questions[0]];
-        request.get('/interaction/' + type + '/' + models[modelType]._id +'/comment')
+        request.post('/interaction/' + type + '/' + models[modelType]._id +'/comment')
+        .send({content:chance.string()})
         .set('x-access-token', userToken[0])
         .expect(200)
         .end(function (err, res) {
           if(err) return done(err);
-          res.body.should.be.an.Array;
+          res.body.should.be.ok;
           done();
         });
       })
     };
 
-    getInteractionCommentTest('公司成员应能获取公司活动评论列表', 1, 0);
-    getInteractionCommentTest('公司成员应能获取公司投票评论列表', 2, 1);
-    getInteractionCommentTest('公司成员应能获取公司提问评论列表', 3, 2);
-    getInteractionCommentTest('小队成员应能获取小队活动评论列表', 1, 3);
-    getInteractionCommentTest('小队成员应能获取小队投票评论列表', 2, 4);
-    getInteractionCommentTest('小队成员应能获取小队提问评论列表', 3, 5);
+    postInteractionCommentTest('公司成员应能评论公司活动', 1, 0);
+    postInteractionCommentTest('公司成员应能评论公司投票', 2, 1);
+    postInteractionCommentTest('公司成员应能回答公司提问', 3, 2);
+    postInteractionCommentTest('小队成员应能评论小队活动', 1, 3);
+    postInteractionCommentTest('小队成员应能评论小队投票', 2, 4);
+    postInteractionCommentTest('小队成员应能回答小队提问', 3, 5);
 
-
-    it('公司成员应能获取公司提问某回答的评论列表', function(done) {
-      request.get('/interaction/3/' + data[0].questions[0]._id +'/comment')
-      .query({commentId:data[0].questionComments.id})
+    it('公司成员应能评论公司提问某回答', function(done) {
+      request.post('/interaction/3/' + data[0].questions[0]._id +'/comment')
+      .send({commentId:data[0].questionComments.id, content:chance.string()})
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
         if(err) return done(err);
-        res.body.should.be.an.Array;
+        res.body.should.be.ok;
         done();
       });
     });
 
-    it('小队成员应能获取小队提问某回答的评论列表', function(done) {
-      request.get('/interaction/3/' + data[0].teams[0].questions[0].id +'/comment')
-      .query({commentId:data[0].teams[0].questionComments.id})
+    it('小队成员应能评论小队提问某回答', function(done) {
+      request.post('/interaction/3/' + data[0].teams[0].questions[0]._id +'/comment')
+      .send({commentId:data[0].teams[0].questionComments.id, content:chance.string()})
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
         if(err) return done(err);
-        res.body.should.be.an.Array;
+        res.body.should.be.ok;
         done();
       });
     });
 
-    it('非公司成员应不能获取公司活动评论列表', function(done) {
-      request.get('/interaction/1/' + data[0].activities[0].id +'/comment')
+    it('非公司成员应不能评论公司活动', function(done) {
+      request.post('/interaction/1/' + data[0].activities[0]._id +'/comment')
+      .send({content:chance.string()})
       .set('x-access-token', userToken[1])
       .expect(403)
       .end(function (err, res) {
@@ -104,4 +106,4 @@ module.exports = function () {
   })
 }
 
-//todo 非私密小队成员应不能获取私密小队评论列表
+//todo 非私密小队成员应不能评论私密小队活动
