@@ -69,7 +69,7 @@ module.exports = function () {
 
     it('公司成员应能获取公司提问某回答的评论列表', function(done) {
       request.get('/interaction/3/' + data[0].questions[0]._id +'/comment')
-      .query({commentId:data[0].questionComments.id})
+      .query({commentId:data[0].questionComment.id})
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
@@ -81,7 +81,7 @@ module.exports = function () {
 
     it('小队成员应能获取小队提问某回答的评论列表', function(done) {
       request.get('/interaction/3/' + data[0].teams[0].questions[0].id +'/comment')
-      .query({commentId:data[0].teams[0].questionComments.id})
+      .query({commentId:data[0].teams[0].questionComment.id})
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {

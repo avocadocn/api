@@ -68,10 +68,10 @@ var createAllTypeComments = function(model,callback) {
     }
   },
   function(err, results) {
-    model.activityComments = results.activities;
-    model.pollComments = results.polls;
-    model.questionComments = results.questions[0];
-    model.questionApproves = results.questions[1];
+    model.activityComment = results.activities;
+    model.pollComment = results.polls;
+    model.questionComment = results.questions[0];
+    model.questionApprove = results.questions[1];
     callback(err)
   });
 }
