@@ -625,32 +625,42 @@ module.exports = {
       var interactionType = parseInt(req.params.interactionType)
       if([1,2,3].indexOf(interactionType)===-1)
         return res.status(400).send({ msg: "参数错误" });
-      var commentModel =commentModelTypes[interactionType-1];
-      var option ={interactionId:req.params.interactionId, status: 1};
-      if(req.query.createTime) {
-        option.createTime ={"$lt":req.query.createTime}
-      }
-      //获取针对评论的评论
-      if(req.query.commentId) {
-        option.commentId = req.query.commentId
-      }
-      //求助获取的是直接的评论，而不获取对评论的评论
-      else if(interactionType===3){
-        option.commentId ={"$exists":false}
-      }
-      //对于活动和投票获取所有的评论，按时间排序
-      var _perPageNum = req.query.limit || perPageNum;
-      mongoose.model(commentModel).find(option)
-      .sort({ createTime: -1 })
-      .limit(_perPageNum)
-      .exec()
-      .then(function (comments) {
-        return res.send(comments);
-      })
-      .then(null,function (error) {
-        log(error);
-        res.status(500).send({msg:"服务器发生错误"});
-      });
+      Interaction.findById(req.params.interactionId).exec()
+        .then(function(interaction) {
+          if(!interaction)
+            return res.status(400).send({msg:"参数错误"})
+          if(req.user.cid.toString()!=interaction.cid.toString() || !interaction.public && interaction.targetType===2&&!req.user.isTeamMember(interaction.target))
+            return res.status(403).send({msg:"您没有权限获取该互动评论"})
+          var commentModel =commentModelTypes[interactionType-1];
+          var option ={interactionId:req.params.interactionId, status: 1};
+          if(req.query.createTime) {
+            option.createTime ={"$lt":req.query.createTime}
+          }
+          //获取针对评论的评论
+          if(req.query.commentId) {
+            option.commentId = req.query.commentId
+          }
+          //求助获取的是直接的评论，而不获取对评论的评论
+          else if(interactionType===3){
+            option.commentId ={"$exists":false}
+          }
+          //对于活动和投票获取所有的评论，按时间排序
+          var _perPageNum = req.query.limit || perPageNum;
+          mongoose.model(commentModel).find(option)
+          .sort({ createTime: -1 })
+          .limit(_perPageNum)
+          .exec()
+          .then(function (comments) {
+            return res.send(comments);
+          })
+          .then(null,function (error) {
+            console.log(error);
+            res.status(500).send({msg:"服务器发生错误"});
+          });
+        })
+        .then(null,function(error){
+
+        })
     },
     /**
      * 删除评论，设置status为2,针对该评论的评论status设置为3
@@ -1129,7 +1139,6 @@ module.exports = {
           next();
         } else {
           var resMsg = donlerValidator.combineMsg(msg);
-          console.log(resMsg);
           return res.status(400).send({ msg: resMsg });
         }
       });

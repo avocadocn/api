@@ -47,7 +47,7 @@ module.exports = function () {
     });
 
     it('公司成员应能获取公司活动评论列表', function(done) {
-      request.get('/interaction/1/' + data[0].activities[0]._id +'/comment')
+      request.get('/interaction/1/' + data[0].activities[0].id +'/comment')
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
@@ -58,7 +58,7 @@ module.exports = function () {
     });
 
     it('公司成员应能获取公司投票评论列表', function(done) {
-      request.get('/interaction/2/' + data[0].polls[0]._id +'/comment')
+      request.get('/interaction/2/' + data[0].polls[0].id +'/comment')
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
@@ -69,7 +69,7 @@ module.exports = function () {
     });
 
     it('公司成员应能获取公司提问评论列表', function(done) {
-      request.get('/interaction/3/' + data[0].questions[0]._id +'/comment')
+      request.get('/interaction/3/' + data[0].questions[0].id +'/comment')
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
@@ -80,8 +80,8 @@ module.exports = function () {
     });
 
     it('公司成员应能获取公司提问某回答的评论列表', function(done) {
-      request.get('/interaction/3/' + data[0].questions[0]._id +'/comment')
-      .query({commentId:data[0].questionComments._id})
+      request.get('/interaction/3/' + data[0].questions[0].id +'/comment')
+      .query({commentId:data[0].questionComments.id})
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
@@ -92,7 +92,7 @@ module.exports = function () {
     });
 
     it('小队成员应能获取小队活动评论列表', function(done) {
-      request.get('/interaction/1/' + data[0].teams[0].activities[0]._id +'/comment')
+      request.get('/interaction/1/' + data[0].teams[0].activities[0].id +'/comment')
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
@@ -103,7 +103,7 @@ module.exports = function () {
     });
 
     it('小队成员应能获取小队投票评论列表', function(done) {
-      request.get('/interaction/2/' + data[0].teams[0].polls[0]._id +'/comment')
+      request.get('/interaction/2/' + data[0].teams[0].polls[0].id +'/comment')
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
@@ -114,7 +114,7 @@ module.exports = function () {
     });
 
     it('小队成员应能获取小队提问评论列表', function(done) {
-      request.get('/interaction/3/' + data[0].teams[0].questions[0]._id +'/comment')
+      request.get('/interaction/3/' + data[0].teams[0].questions[0].id +'/comment')
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
@@ -124,9 +124,9 @@ module.exports = function () {
       });
     });
 
-    it('小队成员应能获取小提问某回答的评论列表', function(done) {
-      request.get('/interaction/3/' + data[0].teams[0].questions[0]._id +'/comment')
-      .query({commentId:data[0].teams[0].questionComments._id})
+    it('小队成员应能获取小队提问某回答的评论列表', function(done) {
+      request.get('/interaction/3/' + data[0].teams[0].questions[0].id +'/comment')
+      .query({commentId:data[0].teams[0].questionComments.id})
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
@@ -137,7 +137,7 @@ module.exports = function () {
     });
 
     it('非公司成员应不能获取公司活动评论列表', function(done) {
-      request.get('/interaction/1/' + data[0].activities[0]._id +'/comment')
+      request.get('/interaction/1/' + data[0].activities[0].id +'/comment')
       .set('x-access-token', userToken[1])
       .expect(403)
       .end(function (err, res) {
