@@ -346,13 +346,26 @@ module.exports = {
       var populateType;
       var userId = req.query.userId || req.user._id;
       var option;
-      //自己
-      if(userId==req.user._id) {
-        option ={cid:req.user.cid, status:{"$lt":3}, "$or":[{"targetType":2,target:{"$in":req.user.getTids()}},{"targetType":3,target:req.user.cid}]};
-      }
-      //其他人
-      else {
-        option ={ cid:req.user.cid,
+      async.series([
+        function (callback) {
+          //自己
+          if(userId==req.user._id) {
+            option ={cid:req.user.cid, status:{"$lt":3}, "$or":[{"targetType":2,target:{"$in":req.user.getTids()}},{"targetType":3,target:req.user.cid}]};
+            callback(null,req.user)
+          }
+          //其他人
+          else {
+            User.findOne({_id:userId}).exec()
+            .then(function(user){
+              if(!user)  {
+                callback(400);
+              }
+              else if(user.cid.toString()!==req.user.cid.toString()){
+                callback(403);
+              }
+              else {
+                option = {
+                 cid:req.user.cid,
                   status:{"$lt":3},
                   "$and":[
                     {"$or":[
@@ -373,44 +386,70 @@ module.exports = {
                     ]}
                   ]
                 };
-      }
-      //分页
-      if(req.query.createTime) {
-        option.createTime ={"$lt":req.query.createTime}
-      }
-      var _perPageNum = req.query.limit || perPageNum;
-      switch(interactionType) {
-        //活动
-        case '1':
-          option.type =1;
-          populateType = interactionTypes[0];
-          break;
-        //投票
-        case '2':
-          option.type =2;
-          populateType = interactionTypes[1];
-          break;
-        //求助
-        case '3':
-          option.type =3;
-          populateType = interactionTypes[2];
-          break;
-        default:
-          populateType = 'activity poll question';
-      }
-      Interaction.find(option)
-      .populate(populateType)
-      .sort({ createTime: -1 })
-      .limit(_perPageNum)
-      .exec()
-      .then(function (interactions) {
-        // console.timeEnd("getInteraction")
-        return res.send(interactions);
+                callback(null,user)
+              }
+            })
+            .then(null,function (error) {
+              log(error);
+              callback(500);
+            })
+          }
+        },
+        function(callback){
+          //分页
+          if(req.query.createTime) {
+            option.createTime ={"$lt":req.query.createTime}
+          }
+          var _perPageNum = req.query.limit || perPageNum;
+          switch(interactionType) {
+            //活动
+            case '1':
+              option.type =1;
+              populateType = interactionTypes[0];
+              break;
+            //投票
+            case '2':
+              option.type =2;
+              populateType = interactionTypes[1];
+              break;
+            //求助
+            case '3':
+              option.type =3;
+              populateType = interactionTypes[2];
+              break;
+            default:
+              populateType = 'activity poll question';
+          }
+          Interaction.find(option)
+          .populate(populateType)
+          .sort({ createTime: -1 })
+          .limit(_perPageNum)
+          .exec()
+          .then(function (interactions) {
+            // console.timeEnd("getInteraction")
+            callback(null, interactions);
+          })
+          .then(null,function (error) {
+            log(error);
+            callback(500);
+          });
+        }
+      ],
+      function(error,results){
+        switch(error) {
+          case undefined:
+            return res.send(results[1])
+            break;
+          case 400:
+            return res.status(400).send({msg:"您提交的参数错误"})
+            break;
+          case 403:
+            return res.status(403).send({msg:"您没有权限获取该用户的互动列表"})
+            break;
+          default:
+            return res.status(500).send({msg:"服务器发送错误"})
+        }
       })
-      .then(null,function (error) {
-        log(error);
-        res.status(500).send({msg:"服务器发生错误"});
-      });
     },
     /**
      * 根据Id获取互动详情
@@ -419,14 +458,22 @@ module.exports = {
      * @return {[type]}     [description]
      */
     getInteractionDetail: function (req, res) {
-      var interactionType = req.params.interactionType;
-      if(interactionType<1 || interactionType>interactionTypes.length)
+      var interactionType = parseInt(req.params.interactionType);
+      if(!interactionType || interactionType<1 || interactionType>interactionTypes.length)
          return res.status(400).send({msg:"互动类型错误"});
-      Interaction.findById(req.params.interactionId)
+      Interaction.findOne({_id:req.params.interactionId,type:interactionType})
         .populate(interactionTypes[interactionType-1])
         .exec()
         .then(function (interaction) {
-          return res.send(interaction);
+          if(!interaction){
+            return res.status(400).send({msg:"参数错误"})
+          }
+          else if(interaction.public || interaction.targetType===2&&req.user.isTeamMember(interaction.target)) {
+            return res.send(interaction);
+          }
+          else {
+            return res.status(403).send({msg:"您没有权限获取该互动详情"})
+          }
         })
         .then(null,function (error) {
           log(error);

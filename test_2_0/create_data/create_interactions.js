@@ -16,7 +16,7 @@ var molds = ['其它','羽毛球','篮球','阅读','自行车','下午茶','棋
 var now = new Date();
 var nowYear = now.getFullYear();
 var nowMonth = now.getMonth();
-var iii =0;
+
 /**
  * 创建活动,如果data中存在的使用data,否则使用template中的
  * @param  {Object} data      活动数据
@@ -75,7 +75,7 @@ var _createInteraction = function(data,timeType,template,callback) {
     theme: chance.string(),
     content: chance.paragraph(),
     tags: [chance.string({length: 5}),chance.string({length: 5})],
-    public: data.target.public || true,
+    public: data.target.open ==undefined ? true : data.target.open,
     members:data.users
   });
   if(data.users.length>1)
@@ -185,7 +185,7 @@ var createInteractions = function (companyData, templates, callback) {
       var data =  {
         targetType: 3,
         target:companyData.model,
-        users: [companyData.users[0]._id],
+        users: [companyData.users[0]._id,companyData.users[1]._id],
         cid: companyData.model.id
       }
       createAllTypeInteractions(data,function(err, results) {
@@ -201,7 +201,7 @@ var createInteractions = function (companyData, templates, callback) {
         var data =  {
           targetType: 2,
           target:team.model,
-          users: [companyData.users[0]._id, companyData.users[1]._id],
+          users: [team.users[0]._id],
           cid: companyData.model.id
         }
         createAllTypeInteractions(data,function(err, results) {

@@ -50,6 +50,7 @@ var resCompanyDataList = [];
 var resConfig;
 var resRegion;
 var resGroups;
+//数组，分别为活动，投票，求助的模板
 var resTemplate;
 /**
  * 生成测试数据
@@ -200,6 +201,9 @@ exports.createTemplate = function(callback){
     resTemplate= templates;
     callback(error)
   });
+}
+exports.getTemplate = function(){
+  return resTemplate;
 }
 exports.getConfig = function () {
   return resConfig;
