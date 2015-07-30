@@ -13,7 +13,7 @@ module.exports = function () {
     var data;
     before(function (done) {
       data = dataService.getData();
-      var user = data[0].teams[1].leaders[0];
+      var user = data[0].users[2];
       request.post('/users/login')
         .send({
           email: user.email,
@@ -34,6 +34,33 @@ module.exports = function () {
         type: 1,
         targetType: 3,
         target:data[0].model.id,
+        theme:chance.string({length: 10}),
+        location:{
+          name : chance.address(),
+          coordinates : [chance.longitude(), chance.latitude()]
+        },
+        activityMold:chance.string({length: 5}),
+        content:chance.paragraph(),
+        tags: [chance.string({length: 5}),chance.string({length: 5})],
+        startTime:chance.date({year: nowYear, month: nowMonth +1}),
+        endTime:chance.date({year: nowYear, month: nowMonth +2})
+      }
+      request.post('/interaction')
+        .send(campaignData)
+        .set('x-access-token', accessToken)
+        .expect(200)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.should.have.properties('interactionId');
+          done();
+        });
+    });
+    it('应该成功发私有活动', function (done) {
+      var campaignData = {
+        cid: data[0].model.id,
+        type: 1,
+        targetType: 2,
+        target:data[0].teams[2].model.id,
         theme:chance.string({length: 10}),
         location:{
           name : chance.address(),

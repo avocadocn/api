@@ -3,7 +3,7 @@ var common = require('../support/common');
 var tools = require('../../tools/tools');
 var mongoose = common.mongoose;
 var Interaction = mongoose.model('Interaction'),
-    Activity = mongoose.model('PhotoAlbum'),
+    Activity = mongoose.model('Activity'),
     Poll = mongoose.model('Poll'),
     Question = mongoose.model('Question');
 
@@ -29,10 +29,15 @@ var createActivity = function (data,template) {
     memberMin: template.memberMin || data.memberMin,
     memberMax: template.memberMax || data.memberMax,
     location: template.location || { name : chance.address(), coordinates : [chance.longitude(), chance.latitude()]},
-    startTime: template.startTime || data.startTime,
-    deadline: template.deadline || data.deadline,
-    activityMold: template.activityMold || molds[chance.integer({min:0,max:15})]
+    activityMold: template.activityMold || molds[chance.integer({min:0,max:15})],
+    members:[]
   };
+  data.users && data.users.forEach(function(value) {
+    _activity.members.push({
+      _id:value,
+      createTime: _activity.deadline
+    })
+  })
   return new Activity(_activity);
 }
 /**
@@ -48,8 +53,18 @@ var createPoll = function (data,template) {
     option = template.option;
   }
   else {
-    option = [{index:1,value:chance.string({length:5})},{index:2,value:chance.string({length:5})},{index:3,value:chance.string({length:5})}]
+    option = [{index:1,value:chance.string({length:5}),voters:[]},{index:2,value:chance.string({length:5}),voters:[]},{index:3,value:chance.string({length:5}),voters:[]}]
   }
+  var length = option.length;
+  data.users && data.users.forEach(function(value,index) {
+    if(!option[index%length].voters) {
+      option[index%length].voters =[]
+    }
+    option[index%length].voters.push({
+      _id: value,
+      createTime: new Date()
+    })
+  })
   var poll = new Poll({option:option});
   return poll;
 }
@@ -98,7 +113,7 @@ var _createInteraction = function(data,timeType,template,callback) {
       interaction.endTime = chance.date({year: nowYear, month: nowMonth+2});
       if(data.type==1){
         interactionContent.startTime = chance.date({year: nowYear, month: nowMonth+1});
-        interaction.deadline = chance.date({year: nowYear, month: nowMonth+2});
+        interactionContent.deadline = chance.date({year: nowYear, month: nowMonth+2});
       }
       break;
     //正在进行
@@ -106,7 +121,7 @@ var _createInteraction = function(data,timeType,template,callback) {
       interaction.endTime = chance.date({year: nowYear, month: nowMonth+2});
       if(data.type==1){
         interactionContent.startTime = chance.date({year: nowYear, month: nowMonth-1});
-        interaction.deadline = chance.date({year: nowYear, month: nowMonth+2});
+        interactionContent.deadline = chance.date({year: nowYear, month: nowMonth+2});
       }
       break;
     //结束
@@ -114,7 +129,7 @@ var _createInteraction = function(data,timeType,template,callback) {
       interaction.endTime = chance.date({year: nowYear, month: nowMonth-1});
       if(data.type==1){
         interactionContent.startTime = chance.date({year: nowYear, month: nowMonth-2});
-        interaction.deadline = chance.date({year: nowYear, month: nowMonth-1});
+        interactionContent.deadline = chance.date({year: nowYear, month: nowMonth-1});
       }
       break;
   }
@@ -123,7 +138,7 @@ var _createInteraction = function(data,timeType,template,callback) {
       interactionContent.save(cb)
     },
     function(cb) {
-      interaction[interactionTypes[data.type-1]] = interactionContent._id;
+      interaction[interactionTypes[data.type-1]] = interactionContent.id;
       interaction.save(function(err) {
         cb(err,interaction)
       })
@@ -204,7 +219,7 @@ var createInteractions = function (companyData, templates, callback) {
     return callback(null);
   }
   async.parallel({
-    //创建公司互动
+    //创建公司互动,前两个人参加
     companyInteractions: function(parallelCallback){
       var data =  {
         targetType: 3,
@@ -225,7 +240,7 @@ var createInteractions = function (companyData, templates, callback) {
         var data =  {
           targetType: 2,
           target:team.model,
-          users: [team.users[0]._id],
+          users: [team.users[0].id],
           cid: companyData.model.id
         }
         createAllTypeInteractions(data,function(err, results) {

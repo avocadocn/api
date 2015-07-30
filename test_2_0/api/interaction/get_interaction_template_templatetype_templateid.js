@@ -3,7 +3,6 @@ var app = require('../../../config/express.js'),
 
 var dataService = require('../../create_data');
 var chance = require('chance').Chance();
-var util = require('util');
 module.exports = function () {
   describe('get /interaction/template/templateType/templateId', function () {
     var accessToken;

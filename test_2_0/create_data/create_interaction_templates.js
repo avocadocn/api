@@ -37,7 +37,7 @@ var createInteractionTemplates = function (callback) {
         content: chance.paragraph(),
         endTime: chance.date({year: nowYear, month: nowMonth +3}),
         tags: [chance.string({length:5})],
-        option: [{index:1,value:chance.string({length:5})},{index:2,value:chance.string({length:5})},{index:3,value:chance.string({length:5})}]
+        option: [{index:1,value:chance.string({length:5}),voters:[]},{index:2,value:chance.string({length:5}),voters:[]},{index:3,value:chance.string({length:5}),voters:[]}]
       });
       pollTemplate.save(function(err) {
         cb(err,pollTemplate)

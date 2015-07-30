@@ -3,7 +3,6 @@ var app = require('../../../config/express.js'),
 
 var dataService = require('../../create_data');
 var chance = require('chance').Chance();
-var util = require('util');
 module.exports = function () {
   describe('get /interaction', function () {
     var accessToken;
@@ -13,7 +12,7 @@ module.exports = function () {
     var data;
     before(function (done) {
       data = dataService.getData();
-      var user = data[0].users[0];
+      var user = data[1].users[0];
       request.post('/users/login')
         .send({
           email: user.email,
@@ -30,10 +29,10 @@ module.exports = function () {
     var getInteractionTest = function (msg, queryData, expectLength) {
       it(msg, function (done) {
         if(queryData.userId===1) {
-          queryData.userId = data[0].users[1].id;
+          queryData.userId = data[1].users[1].id;
         }
         else if(queryData.userId===2) {
-          queryData.userId = data[0].users[2].id;
+          queryData.userId = data[1].users[2].id;
         }
         request.get('/interaction')
           .set('x-access-token', accessToken)
@@ -58,7 +57,7 @@ module.exports = function () {
     it("获取其他公司人员互动应该返回403", function (done) {
       request.get('/interaction')
         .set('x-access-token', accessToken)
-        .query({interactionType:4,userId:data[1].users[0].id})
+        .query({interactionType:4,userId:data[0].users[0].id})
         .expect(403)
         .end(function (err, res) {
           if (err){

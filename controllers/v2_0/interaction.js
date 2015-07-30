@@ -718,11 +718,16 @@ module.exports = {
         .populate("activity")
         .exec()
         .then(function (interaction) {
-          if(!interaction)
+          if(!interaction|| !interaction.activity)
             return res.status(404).send({msg:"该活动不存在"})
           if(interaction.members.indexOf(userId)>-1){
             return res.status(400).send({msg:"您已经参加了该活动"})
           }
+          if(interaction.activity.deadline<new Date()){
+            return res.status(400).send({msg:"活动报名已经截止"})
+          }
+          if(req.user.cid.toString()!=interaction.cid.toString() || interaction.targetType===2&&!req.user.isTeamMember(interaction.target))
+            return res.status(403).send({msg:"您没有权限参加该活动"})
           var quitMemberIndex = tools.arrayObjectIndexOf(interaction.activity.quitMembers,userId, '_id');
           quitMemberIndex > -1 && interaction.activity.quitMembers.splice(quitMemberIndex,1);
           var memberIndex = tools.arrayObjectIndexOf(interaction.activity.members,userId, '_id');
@@ -749,13 +754,13 @@ module.exports = {
               return;
             }
             else{
-              log(err,err.stack)
+              console.log(err)
               return res.status(500).send({msg:"服务器发生错误"});
             }
           });
         })
         .then(null,function (error) {
-          log(error);
+          console.log(error);
           res.status(500).send({msg:"服务器发生错误"});
         });
     },
@@ -771,8 +776,11 @@ module.exports = {
         .populate("activity")
         .exec()
         .then(function (interaction) {
-          if(!interaction)
+          if(!interaction || !interaction.activity)
             return res.status(404).send({msg:"该活动不存在"})
+          if(interaction.activity.deadline<new Date()){
+            return res.status(400).send({msg:"活动报名已经截止,无法退出"})
+          }
           var memberIndex = interaction.members.indexOf(userId);
           if(memberIndex===-1){
             return res.status(400).send({msg:"您还没有参加该活动"})
@@ -824,6 +832,13 @@ module.exports = {
         .populate("poll")
         .exec()
         .then(function (interaction) {
+          if(!interaction || !interaction.poll)
+            return res.status(404).send({msg:"该投票不存在"})
+          if(interaction.endTime<new Date()){
+            return res.status(400).send({msg:"投票已经截止"})
+          }
+          if(req.user.cid.toString()!=interaction.cid.toString() || interaction.targetType===2&&!req.user.isTeamMember(interaction.target))
+            return res.status(403).send({msg:"您没有权限进行投票"})
           if(interaction.members.indexOf(userId)>-1){
             return res.status(400).send({msg:"您已经进行了投票"})
           }
@@ -845,13 +860,13 @@ module.exports = {
               return;
             }
             else{
-              log(err)
+              console.log(err)
               return res.status(500).send({msg:"服务器发生错误"});
             }
           });
         })
         .then(null,function (error) {
-          log(error);
+          console.log(error);
           res.status(500).send({msg:"服务器发生错误"});
         });
     }
@@ -886,11 +901,11 @@ module.exports = {
             .populate('question')
             .exec()
             .then(function (interaction) {
-              if(interaction.cid.toString()!==req.user.cid.toString() || interaction.poster._id.toString()!==userId.toString()){
-                callback(403)
-              }
-              else if(!interaction.question || interaction.question.select){
+              if(!interaction || !interaction.question || interaction.question.select){
                 callback(400)
+              }
+              else if(interaction.cid.toString()!==req.user.cid.toString() || interaction.poster._id.toString()!==userId.toString()){
+                callback(403)
               }
               else{
                 callback(null, interaction);
