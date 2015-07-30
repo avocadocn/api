@@ -10,12 +10,12 @@ var async = require('async');
 /**
  * 生成公司数据
  * @param {Function} callback 形式为function(err, companies){}
- * 第四个公司未激活,第五个公司被关闭
+ * 第6个公司未激活,第7个公司被关闭
  */
 var createCompanies = function(callback) {
   var companies = [];
   // The number of companies that you want to create
-  var num = 6;
+  var num = 7;
   for (var i = 0; i < num; i++) {
     // 非异步方法
     chance.generateCompanyData(function(err, result) {
@@ -27,8 +27,8 @@ var createCompanies = function(callback) {
           domain: [result.email.split('@')[1]]
         },
         status: {
-          mail_active: i===3 ? false : true,
-          active: i===4 ? false : true
+          mail_active: i===5 ? false : true,
+          active: i===6 ? false : true
         },
         info: {
           name: result.name,

@@ -70,7 +70,7 @@ module.exports = function () {
 
     it('公司成员应能评论公司提问某回答', function(done) {
       request.post('/interaction/3/' + data[0].questions[0]._id +'/comment')
-      .send({commentId:data[0].questionComments.id, content:chance.string()})
+      .send({commentId:data[0].questionComment.id, content:chance.string()})
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
@@ -82,7 +82,7 @@ module.exports = function () {
 
     it('小队成员应能评论小队提问某回答', function(done) {
       request.post('/interaction/3/' + data[0].teams[0].questions[0]._id +'/comment')
-      .send({commentId:data[0].teams[0].questionComments.id, content:chance.string()})
+      .send({commentId:data[0].teams[0].questionComment.id, content:chance.string()})
       .set('x-access-token', userToken[0])
       .expect(200)
       .end(function (err, res) {
