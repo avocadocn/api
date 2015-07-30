@@ -1117,7 +1117,7 @@ module.exports = {
         option: {
           name: '选项',
           value: req.body.option,
-          validators: templateType=== 2 ? ['required',donlerValidator.minLength(2)] :[]
+          validators: templateType=== 2 ? ['required','array', donlerValidator.minLength(2)] :[]
         },
         tags: {
           name: '标签',
@@ -1128,7 +1128,9 @@ module.exports = {
         if (pass) {
           next();
         } else {
-          return res.status(400).send({ msg: donlerValidator.combineMsg(msg) });
+          var resMsg = donlerValidator.combineMsg(msg);
+          console.log(resMsg);
+          return res.status(400).send({ msg: resMsg });
         }
       });
     },
@@ -1157,7 +1159,7 @@ module.exports = {
         option.createTime ={"$lt":req.query.createTime}
       }
       var _perPageNum = req.query.limit || perPageNum;
-      mongoose.mode(templateModel).find(option)
+      mongoose.model(templateModel).find(option)
       .sort({ createTime: -1 })
       .limit(_perPageNum)
       .exec()

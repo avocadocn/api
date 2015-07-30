@@ -77,6 +77,10 @@ exports.createData = function (callback) {
         activities: [],
         questions: [],
         polls: [],
+        activityComments: [],
+        questionComments: [],
+        pollComments: [],
+        questionApproves: [],
         circles: [],
         gifts: []
       };

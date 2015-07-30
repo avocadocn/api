@@ -132,7 +132,13 @@ var _createInteraction = function(data,timeType,template,callback) {
     callback(err,results[1])
   })
 }
-
+/**
+ * 创建不同时间的互动
+ * @param  {Object}   data     互动数据
+ * @param  {Int}   type        时间类型1：未开始（只有活动存在未开始，其他也为正在进行），2，正在进行，3，已结束
+ * @param  {Function} callback [description]
+ * @return {[type]}            [description]
+ */
 var createAllTimesInteractions = function(data, type, callback) {
   var _data = {
     targetType: data.targetType,
@@ -141,6 +147,7 @@ var createAllTimesInteractions = function(data, type, callback) {
     cid: data.cid,
     type: type
   }
+
   async.parallel([
     function(cb){
       _createInteraction(_data, 1, null, cb);
@@ -157,7 +164,17 @@ var createAllTimesInteractions = function(data, type, callback) {
     }
   ],callback);
 }
-
+/**
+ * 创建活动，投票和求助三种互动
+ * @param  {[type]}   data     [description]
+ * @param  {Function} callback function(err,results） {}
+ *                               results:{
+ *                               activities:[],
+ *                               polls:[],
+ *                               questions:[]
+ *                               }
+ * @return {[type]}            [description]
+ */
 var createAllTypeInteractions = function(data,callback) {
   async.parallel({
     //活动
@@ -174,6 +191,13 @@ var createAllTypeInteractions = function(data,callback) {
     }
   },callback);
 }
+/**
+ * 为一个公司创建互动
+ * @param  {[type]}   companyData 公司数据，直接引用，互动数据加在公司和前三个小队的（activities,polls,questions）属性中
+ * @param  {[type]}   templates   [description]
+ * @param  {Function} callback    [description]
+ * @return {[type]}               [description]
+ */
 var createInteractions = function (companyData, templates, callback) {
   interactionTemplates = templates;
   if(!companyData.model.status.mail_active) {
