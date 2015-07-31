@@ -3,11 +3,11 @@ request = require('supertest')(app);
 var dataService = require('../../create_data');
 
 module.exports = function () {
-  describe('post /interaction/question/:interactionId/approve', function() {
+  describe('delete /interaction/question/:interactionId/approve', function() {
     var data, userToken;
     before(function (done) {
       data = dataService.getData();
-      var user = data[0].users[0];
+      var user = data[2].users[0];
       request.post('/users/login')
       .send({
         email: user.email,
@@ -21,9 +21,9 @@ module.exports = function () {
       });
     });
 
-    it('能为未赞过的公司问题的回答点赞', function(done) {
-      request.post('/interaction/question/' + data[0].questions[0].id + '/approve')
-      .send({commentId: data[0].questionComments[4].id})
+    it('能为赞过的公司问题的回答取消点赞', function(done) {
+      request.delete('/interaction/question/' + data[2].questions[0].id + '/approve')
+      .send({commentId: data[2].questionComments[3].id})
       .set('x-access-token', userToken)
       .expect(200)
       .end(function (err, res) {
@@ -33,9 +33,9 @@ module.exports = function () {
       });
     });
 
-    it('能为未赞过的小队问题的回答点赞', function(done) {
-      request.post('/interaction/question/' + data[0].teams[0].questions[0].id + '/approve')
-      .send({commentId: data[0].teams[0].questionComments[4].id})
+    it('能为赞过的小队问题的回答取消点赞', function(done) {
+      request.delete('/interaction/question/' + data[2].teams[0].questions[0].id + '/approve')
+      .send({commentId: data[2].teams[0].questionComments[3].id})
       .set('x-access-token', userToken)
       .expect(200)
       .end(function (err, res) {
@@ -45,9 +45,9 @@ module.exports = function () {
       });
     });
 
-    it('已赞过的回答再点赞应返回400', function(done) {
-      request.post('/interaction/question/' + data[0].teams[0].questions[0].id + '/approve')
-      .send({commentId: data[0].teams[0].questionComments[0].id})
+    it('未点过赞的回答取消点赞应返回400', function(done) {
+      request.delete('/interaction/question/' + data[2].teams[0].questions[0].id + '/approve')
+      .send({commentId: data[2].teams[0].questionComments[4].id})
       .set('x-access-token', userToken)
       .expect(400)
       .end(function (err, res) {
@@ -55,18 +55,9 @@ module.exports = function () {
         done();
       });
     });
-    it('赞其他公司的回答应返回403', function(done) {
-      request.post('/interaction/question/' + data[2].teams[0].questions[0].id + '/approve')
-      .send({commentId: data[2].teams[0].questionComments[0].id})
-      .set('x-access-token', userToken)
-      .expect(403)
-      .end(function (err, res) {
-        if(err) return done(err);
-        done();
-      });
-    });
-    it('赞不存在的回答应返回400', function(done) {
-      request.post('/interaction/question/' + data[2].teams[0].questions[0].id + '/approve')
+
+    it('取消赞不存在的回答应返回400', function(done) {
+      request.delete('/interaction/question/' + data[2].teams[0].questions[0].id + '/approve')
       .send({commentId: data[2].teams[0].questions[0].id})
       .set('x-access-token', userToken)
       .expect(400)

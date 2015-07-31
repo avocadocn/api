@@ -860,13 +860,13 @@ module.exports = {
               return;
             }
             else{
-              console.log(err)
+              log(err)
               return res.status(500).send({msg:"服务器发生错误"});
             }
           });
         })
         .then(null,function (error) {
-          console.log(error);
+          log(error);
           res.status(500).send({msg:"服务器发生错误"});
         });
     }
@@ -953,7 +953,7 @@ module.exports = {
       async.waterfall([
         function(callback){
           //判断是否已经点过赞
-          QuestionApprove.count({interactionId:req.params.interactionId,commentId:req.body.commentId,posterId:userId})
+          QuestionApprove.count({commentId:req.body.commentId,posterId:userId})
             .exec()
             .then(function(count){
               callback(count>0 ? 400 :null)
@@ -964,7 +964,7 @@ module.exports = {
           if (!mongoose.Types.ObjectId.isValid(req.body.commentId)) {
             return callback(400)
           }
-          QuestionComment.findOne({_id:req.body.commentId,commentId:{"$exists":false}})
+          QuestionComment.findOne({status:1, _id:req.body.commentId, commentId:{"$exists":false}})
             .exec()
             .then(function(questionComment){
               if(questionComment)
@@ -1027,20 +1027,27 @@ module.exports = {
       async.waterfall([
         function(callback){
           //点过赞的删除，否则400
-          QuestionApprove.findOneAndRemove({
-            _id: req.body.approveId,
-            interactionId: req.params.interactionId,
+          QuestionApprove.findOne({
+            // _id: req.body.approveId,
+            // interactionId: req.params.interactionId,
             commentId: req.body.commentId,
             posterId:req.user._id
-          },null,function (err, questionApprove) {
-            callback(err || questionApprove ? null :400, questionApprove)
+          }).exec()
+          .then(function (questionApprove) {
+            if(!questionApprove) {
+              callback(400)
+            }
+            else {
+              questionApprove.remove(callback)
+            }
           })
+          .then(null,callback)
         },
         function(questionApprove, callback){
-          QuestionComment.findOne({_id:req.body.commentId,commentId:{"$exists":false}})
+          QuestionComment.findOne({_id:req.body.commentId, status:1, commentId:{"$exists":false}})
             .exec()
             .then(function(questionComment){
-              if(questionComment &&questionComment.approveCount>0) {
+              if(questionComment && questionComment.approveCount>0) {
                 questionComment.approveCount--;
                 questionComment.save(function (error) {
                   callback(error,questionComment)

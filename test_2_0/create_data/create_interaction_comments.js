@@ -26,12 +26,13 @@ var createPollComment =function(interaction, callback) {
   }
   PollComment.create(_comment, callback)
 }
-var createQuestionComment =function(interaction, callback) {
+var createQuestionComment =function(interaction, approveCount, callback) {
   var _comment = {
     interactionId: interaction._id,
     posterCid: interaction.cid,
     posterId: interaction.poster._id,
-    content: chance.string({length:10})
+    content: chance.string({length:10}),
+    approveCount: approveCount
   }
   QuestionComment.create(_comment, callback)
 }
@@ -92,13 +93,17 @@ var createAllTypeComments = function(model,callback) {
     },
     questions: function(parallelCallback) {
       var comments = [];
+      //生成多少评论
+      var commentNum = 5;
+      //前多少个评论点赞
+      var appoveNum = 4;
       async.series([
         function(seriesCallback){
           var i = 0;
           async.whilst(
-            function() {return i<5},
+            function() {return i<commentNum},
             function(cb) {
-              createQuestionComment(model.questions[0],function(err, comment) {
+              createQuestionComment(model.questions[0],i < appoveNum ? 1 : 0, function(err, comment) {
                 comments.push(comment);
                 i++;
                 cb(err);
@@ -113,7 +118,7 @@ var createAllTypeComments = function(model,callback) {
           var i = 0;
           var questionApproves = [];
           async.whilst(
-            function() {return i<4},
+            function() {return i<appoveNum},
             function(cb) {
               createQuestionApprove(comments[i],function(err, comment) {
                 questionApproves.push(comment);
