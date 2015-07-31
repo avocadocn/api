@@ -50,8 +50,8 @@ module.exports = function () {
           data[1].teams[0].activities[0], data[1].teams[0].polls[0], data[1].teams[0].questions[0], data[1].teams[0].questions[0]
         ];
         var comments = [
-          data[1].activityComment, data[1].pollComment, data[1].questionComment, data[1].answerComment,
-          data[1].teams[0].activityComment, data[1].teams[0].pollComment, data[1].teams[0].questionComment, data[1].teams[0].answerComment,
+          data[1].activityComments[0], data[1].pollComments[0], data[1].questionComments[0], data[1].answerComments[1],
+          data[1].teams[0].activityComments[0], data[1].teams[0].pollComments[0], data[1].teams[0].questionComments[0], data[1].teams[0].answerComments[1],
         ];
         request.delete('/interaction/' + type + '/' + models[modelType]._id +'/comment')
         .send({commentId: comments[modelType].id})
@@ -76,7 +76,7 @@ module.exports = function () {
 
     it('非本人应不能删除公司活动评论', function(done) {
       request.delete('/interaction/1/' + data[0].activities[0].id +'/comment')
-      .send({commentId: data[1].activityComment.id})
+      .send({commentId: data[1].activityComments[0].id})
       .set('x-access-token', userToken[1])
       .expect(400)
       .end(function (err, res) {

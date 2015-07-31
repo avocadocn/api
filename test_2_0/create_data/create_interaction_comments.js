@@ -57,35 +57,101 @@ var createAnswerComment = function(comment, callback) {
 var createAllTypeComments = function(model,callback) {
   async.parallel({
     activities: function(parallelCallback){
-      createActivityComment(model.activities[0],parallelCallback)
+      var i = 0;
+      var comments = [];
+      async.whilst(
+        function() {return i<5},
+        function(cb) {
+          createActivityComment(model.activities[0],function(err, comment) {
+            comments.push(comment);
+            i++;
+            cb(err);
+          });
+        },
+        function(err) {
+          parallelCallback(err, comments);
+        }
+      )
     },
     polls: function(parallelCallback){
-      createPollComment(model.polls[0],parallelCallback)
+      var i = 0;
+      var comments = [];
+      async.whilst(
+        function() {return i<5},
+        function(cb) {
+          createPollComment(model.polls[0],function(err, comment) {
+            comments.push(comment);
+            i++;
+            cb(err);
+          });
+        },
+        function(err) {
+          parallelCallback(err, comments);
+        }
+      )
     },
     questions: function(parallelCallback) {
-      var comment;
+      var comments = [];
       async.series([
         function(seriesCallback){
-          createQuestionComment(model.questions[0],function(err,_comment){
-            comment = _comment;
-            seriesCallback(err, _comment)
-          })
+          var i = 0;
+          async.whilst(
+            function() {return i<5},
+            function(cb) {
+              createQuestionComment(model.questions[0],function(err, comment) {
+                comments.push(comment);
+                i++;
+                cb(err);
+              });
+            },
+            function(err) {
+              seriesCallback(err, comments);
+            }
+          )
         },
         function(seriesCallback){
-          createQuestionApprove(comment,seriesCallback)
+          var i = 0;
+          var questionApproves = [];
+          async.whilst(
+            function() {return i<5},
+            function(cb) {
+              createQuestionApprove(comments[i],function(err, comment) {
+                questionApproves.push(comment);
+                i++;
+                cb(err);
+              });
+            },
+            function(err) {
+              seriesCallback(err, questionApproves);
+            }
+          )
         },
         function(seriesCallback){
-          createAnswerComment(comment,seriesCallback);
+          var i = 0;
+          var answerComments = [];
+          async.whilst(
+            function() {return i<5},
+            function(cb) {
+              createAnswerComment(comments[i],function(err, comment) {
+                answerComments.push(comment);
+                i++;
+                cb(err);
+              });
+            },
+            function(err) {
+              seriesCallback(err, answerComments);
+            }
+          )
         }
       ],parallelCallback);
     }
   },
   function(err, results) {
-    model.activityComment = results.activities;
-    model.pollComment = results.polls;
-    model.questionComment = results.questions[0];
-    model.questionApprove = results.questions[1];
-    model.answerComment = results.questions[2];
+    model.activityComments = results.activities;
+    model.pollComments = results.polls;
+    model.questionComments = results.questions[0];
+    model.questionApproves = results.questions[1];
+    model.answerComments = results.questions[2];
     callback(err)
   });
 }
