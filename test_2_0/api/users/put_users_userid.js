@@ -21,7 +21,6 @@ module.exports = function () {
         .expect(200)
         .end(function (err, res) {
           if (err) {
-            console.log(res.body);
             return done(err);
           }
           accessToken = res.body.token;
@@ -51,7 +50,6 @@ module.exports = function () {
         .expect(200)
         .end(function (err, res) {
           if (err) {
-            console.log(res.body);
             return done(err);
           }
           done();
@@ -72,7 +70,6 @@ module.exports = function () {
         .expect(400)
         .end(function (err, res) {
           if (err) {
-            console.log(res.body);
             return done(err);
           }
           done();
@@ -91,7 +88,6 @@ module.exports = function () {
         .expect(403)
         .end(function (err, res) {
           if (err) {
-            console.log(res.body);
             return done(err);
           }
           done();
@@ -110,7 +106,6 @@ module.exports = function () {
         .expect(403)
         .end(function (err, res) {
           if (err) {
-            console.log(res.body);
             return done(err);
           }
           done();
@@ -120,14 +115,12 @@ module.exports = function () {
     it('修改头像', function (done) {
       var data = dataService.getData();
       var user = data[0].users[8];
-
       request.put('/users/' + user.id)
         .attach('photo', __dirname + '/test_photo.png')
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
           if (err) {
-            console.log(res.body);
             return done(err);
           }
           done();
@@ -144,7 +137,6 @@ module.exports = function () {
         .expect(200)
         .end(function (err, res) {
           if (err) {
-            console.log(res.body);
             return done(err);
           }
           done();
@@ -161,7 +153,6 @@ module.exports = function () {
         .expect(500)
         .end(function (err, res) {
           if (err) {
-            console.log(res.body);
             return done(err);
           }
           res.body.msg.should.equal('服务器错误');
