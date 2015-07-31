@@ -113,7 +113,7 @@ var createAllTypeComments = function(model,callback) {
           var i = 0;
           var questionApproves = [];
           async.whilst(
-            function() {return i<5},
+            function() {return i<4},
             function(cb) {
               createQuestionApprove(comments[i],function(err, comment) {
                 questionApproves.push(comment);

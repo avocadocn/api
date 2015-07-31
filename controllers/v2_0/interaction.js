@@ -1000,7 +1000,7 @@ module.exports = {
         if(!err){
           res.send(results);
           var tempInteraction = {_id: req.params.interactionId, type:3};
-          notificationController.sendInteractionNfct(5, tempInteraction, req.user._id, results.questionComment.posterId, results.questionComment.questionComment);
+          notificationController.sendInteractionNfct(5, tempInteraction, req.user._id, results.questionComment.posterId, results.questionComment);
         }
         else{
           if(err===403) {

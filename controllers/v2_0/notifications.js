@@ -68,7 +68,7 @@ module.exports = {
       Notification.findOne({interaction:interaction._id, action:1, noticeType:1, receiver:receiver},findNfct);
     }
     else if(action === 5) { //如果是赞 查找一下
-      Notification.findOne({replyTo:commentId._id, action:5, noticeType:1, receiver:receiver},findNfct);
+      Notification.findOne({replyTo:comment._id, action:5, noticeType:1, receiver:receiver},findNfct);
     }
     else if(action === 9) { //如果是活动被关闭了，发给所有人
       if(receiver.length) {
