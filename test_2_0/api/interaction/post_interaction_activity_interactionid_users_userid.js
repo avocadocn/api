@@ -4,7 +4,7 @@ var async = require('async');
 var dataService = require('../../create_data');
 var chance = require('chance').Chance();
 module.exports = function () {
-  describe('post /interaction/activity/interactionId/users/userId', function () {
+  describe('post /interaction/activity/:interactionId/users/:userId', function () {
     var accessToken =[];//分别为公司的第一,二,三个人
     var now = new Date();
     var nowYear = now.getFullYear();

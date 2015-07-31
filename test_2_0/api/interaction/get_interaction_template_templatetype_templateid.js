@@ -4,7 +4,7 @@ var app = require('../../../config/express.js'),
 var dataService = require('../../create_data');
 var chance = require('chance').Chance();
 module.exports = function () {
-  describe('get /interaction/template/templateType/templateId', function () {
+  describe('get /interaction/template/:templateType/:templateId', function () {
     var accessToken;
     var now = new Date();
     var nowYear = now.getFullYear();

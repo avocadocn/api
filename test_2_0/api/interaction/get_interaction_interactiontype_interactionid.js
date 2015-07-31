@@ -4,7 +4,7 @@ var app = require('../../../config/express.js'),
 var dataService = require('../../create_data');
 var chance = require('chance').Chance();
 module.exports = function () {
-  describe('get /interaction/interactionType/interactionId', function () {
+  describe('get /interaction/:interactionType/:interactionId', function () {
     var accessToken;
     var now = new Date();
     var nowYear = now.getFullYear();
