@@ -2,11 +2,12 @@
 var mongoose = require('mongoose'),
     async = require('async');
 var Gift = mongoose.model('Gift'),
-    User = mongoose.model('User');
+    User = mongoose.model('User'),
+    FavoriteRank = mongoose.model('FavoriteRank');
 var log = require('../../services/error_log.js'),
     donlerValidator = require('../../services/donler_validator.js'),
-    notificationController = require('./notifications.js');
-
+    notificationController = require('./notifications.js'),
+    redisService = require('../../services/redis_service.js');
 var maxGifts = 3; //最多3个
 var recoveryHour = 3; //恢复时间3小时
 var recoveryTime = recoveryHour*3600*1000;
@@ -193,6 +194,7 @@ module.exports = {
       if(req.body.replyGift) {
         gift.replyGift = req.body.replyGift;
       }
+
       gift.save(function (err) {
         if(err) {
           return res.status(500).send({msg:'保存礼物失败'});
@@ -201,6 +203,53 @@ module.exports = {
           req.remains && req.remains.remainGift --;
           res.status(200).send({gift:gift, remain:req.remains});
           notificationController.sendGiftNfct(gift, 1);
+          // 更新排行榜
+          // var type;
+
+          // switch(req.body.giftIndex) {
+          //   case 1:
+          //   case 2:
+          //   case 3:
+          //     type = 3;
+          //     break;
+          //   case 4:
+          //     switch(req.receiver.gender) {
+          //       case true:
+          //         type = 2;
+          //         break;
+          //       case false:
+          //         type = 1;
+          //         break;
+          //     }
+          //     break;
+          // }
+
+          // var conditions = {'cid': req.user.cid, 'userId': req.body.receiverId};
+          // FavoriteRank.findOne(conditions, function(err, rankDoc) {
+          //   if (err) {
+          //     log(err);
+          //     return;
+          //   }
+          //   var _newDoc = (rankDoc === null);
+          //   FavoriteRank.findOneAndUpdate(conditions, {
+          //     $set: {
+          //       'type': type,
+          //       'photo': req.receiver.photo
+          //     },
+          //     $inc: {
+          //       'vote': 1
+          //     }
+          //   }, {
+          //     'new': 1,
+          //     'upsert': 1
+          //   }, function(err, doc) {
+          //     console.log(doc);
+          //     redisService.redisRanking.addEleToZSET(doc.cid, doc.type, [doc.vote, doc.userId + '&' + doc.photo]);
+          //     if (_newDoc) {
+          //       redisService.redisRanking.updateElement(doc.cid, doc.type, ['isAll', 0]);
+          //     }
+          //   });
+          // });
           return;
         }
       })

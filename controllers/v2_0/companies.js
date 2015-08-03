@@ -92,7 +92,7 @@ module.exports = {
       // req.registerInfo.photo = (files['photo'] && files['photo'][0].originalFilename) ? files['photo'][0].originalFilename : undefined;
 
       req.photoFile = (files['photo'] && files['photo'][0].originalFilename) ? files['photo'][0] : undefined;
-
+      // TODO: 验证头像信息
       donlerValidator({
         name: {
           name: '公司名称',
@@ -247,50 +247,5 @@ module.exports = {
           next(err);
         }
       });
-  },
-  /**
-   * 根据邮箱后缀查询相关公司
-   * 缺少domain参数, 返回400, msg: 参数错误
-   * 参数正确, 查询相关公司, 
-   *     若查询到的公司个数为0, 返回204
-   *     若查询到的公司个数不为0, 返回200, company: companyDocs
-   * @param  {[type]} req [description]
-   * query:
-   * {
-   *   domain: String // 邮箱后缀
-   * }
-   * @param  {[type]} res [description]
-   * @return {[type]}     [description]
-   */
-  getCompanyByDomain: function(req, res) {
-    if (!req.query.domain) {
-      return res.status(400).send({
-        msg: '缺少domain参数'
-      });
-    }
-
-    Company.find({ // 查询条件还需进一步考虑
-      'email.domain': req.query.domain
-      // 'status.mail_active': true,
-      // 'status.active': true,
-    }, 'info.name', function(err, companyDocs) {
-      if (err) {
-        return res.status(500).send({
-          msg: '服务器错误'
-        });
-      }
-
-      if (companyDocs.length === 0) {
-        return res.sendStatus(204);
-      }
-
-      var results = companyDocs.map(function(obj) {
-        return {'_id': obj._id, 'name': obj.info.name};
-      });
-
-      res.status(200).send({
-        company: results
-      });
-    });
   }
 };

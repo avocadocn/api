@@ -66,7 +66,7 @@ module.exports = {
             next();
           } else {
             var resMsg = donlerValidator.combineMsg(msg);
-            console.log(resMsg);
+            // console.log(resMsg);
             res.status(400).send({
               msg: resMsg
             });
@@ -92,7 +92,6 @@ module.exports = {
 
       uploader.uploadImage(req.groupLogoFile[0], {
         targetDir: '/public/img/groups',
-        subDir: req.user.getCid().toString(),
         saveOrigin: true,
         getSize: true,
         success: function(imgInfo, oriCallback) {
@@ -141,61 +140,73 @@ module.exports = {
 
       var groupMembers = team.member.map(function(member){return member._id});
 
-      //创建群聊
-      easemob.group.add({
-        "groupname": team.id,
-        "desc": team.name,
-        "public": true,
-        "owner": req.user.cid,
-        "members": groupMembers
-      }, function(error, data) {
-        if (error) {
-          log(error);
+      team.save(function(err) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
         } else {
-          team.easemobId = data.data.groupid;
+          res.status(200).send({
+            msg: '群组创建成功'
+          });
+
+          //创建群聊
+          easemob.group.add({
+            "groupname": team.id,
+            "desc": team.name,
+            "public": true,
+            "owner": req.user.cid,
+            "members": groupMembers
+          }, function(error, data) {
+            if (error) {
+              log(error);
+            } else {
+
+              Team.update({
+                '_id': team._id
+              }, {
+                $set: {
+                  'easemobId': data.data.groupid
+                }
+              }, function(err) {
+                if (err) {
+                  log(err);
+                }
+              });
+            }
+          });
+
+          // 更新user的team属性
+          // TODO: 增加conditions条件
+          User.update({
+            '_id': req.user._id
+          }, {
+            $addToSet: {
+              'team': {
+                _id: team._id, //群组id
+                leader: true, //该员工是不是这个群组的队长
+                public: false
+              }
+            }
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
+          });
+
+          Company.update({
+            '_id': req.user.cid
+          }, {
+            $addToSet: {
+              'team': {
+                _id: team._id //群组id
+              }
+            }
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
+          });
         }
-
-        team.save(function(err) {
-          if (err) {
-            log(err);
-            return res.sendStatus(500);
-          } else {
-            res.status(200).send({
-              msg: '群组创建成功'
-            });
-            // 更新user的team属性
-            // TODO: 增加conditions条件
-            User.update({
-              '_id': req.user._id
-            }, {
-              $addToSet: {
-                'team': {
-                  _id: team._id, //群组id
-                  leader: true, //该员工是不是这个群组的队长
-                  public: false
-                }
-              }
-            }, function(err, numberAffected) {
-              if (err) {
-                log(err);
-              }
-            });
-
-            Company.update({
-              '_id': req.user.cid
-            }, {
-              $addToSet: {
-                'team': {
-                  _id: team._id //群组id
-                }
-              }
-            }, function(err, numberAffected) {
-              if (err) {
-                log(err);
-              }
-            });
-          }
-        });
       });
     },
     /**

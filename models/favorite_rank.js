@@ -7,23 +7,6 @@ var mongoose = require('mongoose'),
   Schema = mongoose.Schema;
 
 /**
- * 数据模型依赖组件
- */
-var _member = new Schema({ // 榜单成员组件
-  _id: { // 成员id
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  nickname: String, // 成员昵称
-  photo: String, // 成员头像
-  score: {
-    type: Number,
-    required: true,
-    default: 0
-  }
-});
-
-/**
  * 榜单数据模型
  */
 var FavoriteRankModel = new Schema({
@@ -32,9 +15,20 @@ var FavoriteRankModel = new Schema({
     ref: 'Company',
     required: true
   },
-  cname: String, // 公司名称
 
-  member: [_member], //榜单前十名
+  // cname: String, // 公司名称
+
+  userId: { // 用户id
+    type: Schema.Types.ObjectId,
+    required: true
+  },
+
+  photo: String, // 用户头像
+
+  vote: { // 票数
+    type: Number,
+    default: 0
+  },
 
   type: { // 榜单种类
     type: Number,
@@ -42,10 +36,11 @@ var FavoriteRankModel = new Schema({
     required: true
   },
 
-  createTime: { // 创建时间(每周的最后零点)
-    type: Date,
+  phase: { // 期数(暂考虑使用期数, 不使用时间, 同时该属性待用)
+    type: Number,
     required: true
   }
+
 });
 
-mongoose.model('FavoriteRankModel', FavoriteRankModel);
+mongoose.model('FavoriteRank', FavoriteRankModel);
