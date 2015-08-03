@@ -78,6 +78,13 @@ var createQuestion= function (data,template) {
 }
 module.exports = {
   interaction: {
+    /**
+     * 将form中的属性放到body中，将file解析
+     * @param  {[type]}   req  [description]
+     * @param  {[type]}   res  [description]
+     * @param  {Function} next [description]
+     * @return {[type]}        [description]
+     */
     interactionFormFormat: function(req, res, next) {
       var fieldName = 'photo';
       var form = new multiparty.Form({
@@ -99,6 +106,16 @@ module.exports = {
             req.body[field] = fields[field];
           }
         };
+        req.body.type = parseInt(req.body.type);
+        req.body.targetType = parseInt(req.body.targetType);
+        try {
+          if(fields.location) {
+            req.body.location = JSON.parse(req.body.location);
+          }
+        }
+        catch(e) {
+          log(e)
+        }
         next()
       });
     },
@@ -116,9 +133,6 @@ module.exports = {
         if(value.coordinate && (!value.coordinate instanceof Array || value.coordinate.length !=2 || typeof value.coordinate[0] !=="number" || typeof value.coordinate[1] !=="number")) return callback(false,"坐标格式错误");
         return callback(true);
       };
-      req.body.type = parseInt(req.body.type);
-      req.body.targetType = parseInt(req.body.targetType);
-      req.body.location = JSON.parse(req.body.location);
       var interactionType =req.body.type;
       donlerValidator({
         type: {
@@ -223,7 +237,7 @@ module.exports = {
             default:
           }
           if(req.body.photos) {
-            //目前只要第一张
+            //目前只能传一张图片，所以只取第一张
             uploader.uploadImage(req.body.photos[0], {
               targetDir: '/public/img/interaction',
               subDir: req.user.getCid().toString(),

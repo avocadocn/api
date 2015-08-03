@@ -80,7 +80,7 @@ paths:
           type: string
           in: path
           default: 53aa707a11fd597b3e1be260
-        - name: reponseKey
+        - name: responseKey
           description: 需要返回的key
           required: false
           type: string
