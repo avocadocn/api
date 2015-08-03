@@ -10,6 +10,48 @@
   "schemes": [
     "http"
   ],
+  "tags": [
+    {
+      "name": "user",
+      "description": "用户"
+    },
+    {
+      "name": "group",
+      "description": "群组"
+    },
+    {
+      "name": "companies",
+      "description": "公司"
+    },
+    {
+      "name": "circles",
+      "description": "同事圈"
+    },
+    {
+      "name": "favoriteRank",
+      "description": "排行榜"
+    },
+    {
+      "name": "gifts",
+      "description": "礼物"
+    },
+    {
+      "name": "interaction",
+      "description": "互动"
+    },
+    {
+      "name": "notifications",
+      "description": "通知"
+    },
+    {
+      "name": "search",
+      "description": "查找"
+    },
+    {
+      "name": "report",
+      "description": "举报"
+    }
+  ],
   "produces": [
     "application/json",
     "text/plain"
@@ -21,7 +63,7 @@
     "/users/login": {
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "summary": "用户登录",
         "operationId": "userLogin",
@@ -53,18 +95,48 @@
       }
     },
     "/users/concern/{userId}": {
-      "get": {
+      "post": {
         "tags": [
-          "users"
+          "user"
         ],
-        "summary": "获取xx的关注列表",
+        "summary": "对xx增加关注",
+        "operationId": "addUserConcern",
         "parameters": [
           {
             "name": "userId",
             "in": "path",
             "required": true,
             "description": "userId",
-            "default": "53aa707a11fd597b3e1be260"
+            "default": "53aa707a11fd597b3e1be260",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "增加关注成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "获取xx的关注列表",
+        "operationId": "getUserConcern",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "userId",
+            "default": "53aa91a76b2836fd41ba422b"
           }
         ],
         "responses": {
@@ -85,42 +157,18 @@
           }
         }
       },
-      "post": {
-        "tags": [
-          "users"
-        ],
-        "summary": "对xx增加关注",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "description": "userId",
-            "default": "53aa91a76b2836fd41ba422b"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "增加关注成功"
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      },
       "delete": {
         "tags": [
-          "users"
+          "user"
         ],
         "summary": "将xx从自己的关注列表中删除",
+        "operationId": "deleteUserConcern",
         "parameters": [
           {
             "name": "userId",
             "in": "path",
             "required": true,
+            "type": "string",
             "description": "userId",
             "default": "53aa91a76b2836fd41ba422b"
           }
@@ -141,7 +189,7 @@
     "/users/logout": {
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "summary": "用户注销",
         "operationId": "userLogout",
@@ -161,7 +209,7 @@
     "/users": {
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "summary": "注册用户",
         "operationId": "registerUser",
@@ -192,7 +240,7 @@
     "/users/{userId}": {
       "get": {
         "tags": [
-          "users"
+          "user"
         ],
         "summary": "获取用户数据",
         "operationId": "getUserData",
@@ -233,7 +281,7 @@
       },
       "put": {
         "tags": [
-          "users"
+          "user"
         ],
         "summary": "修改用户数据",
         "operationId": "editUserData",
@@ -344,13 +392,10 @@
     "/users/list/{companyId}": {
       "get": {
         "tags": [
-          "users"
+          "user"
         ],
         "operationId": "getUserList",
         "summary": "获取通讯录",
-        "produces": [
-          "application/json"
-        ],
         "parameters": [
           {
             "name": "companyId",
@@ -373,7 +418,9 @@
             "description": "获取成功",
             "schema": {
               "type": "array",
-              "$ref": "User"
+              "items": {
+                "$ref": "User"
+              }
             }
           },
           "default": {
@@ -388,7 +435,7 @@
     "/users/validate": {
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "operationId": "userInfoValidate",
         "summary": "验证个人邮箱以及邀请码",
@@ -434,7 +481,7 @@
     "/users/forgetPassword": {
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "summary": "用户忘记密码，发送邮件",
         "operationId": "userForgetPassword",
@@ -466,7 +513,7 @@
     "/users/sendFeedback": {
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "summary": "用户发送反馈",
         "operationId": "sendFeedback",
@@ -498,10 +545,10 @@
     "/users/{userId}/close": {
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "summary": "屏蔽用户",
-        "operationId": "deleteUser",
+        "operationId": "inactiveUser",
         "parameters": [
           {
             "name": "userId",
@@ -528,10 +575,10 @@
     "/users/{userId}/open": {
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "summary": "解除屏蔽",
-        "operationId": "deleteUser",
+        "operationId": "reactiveUser",
         "parameters": [
           {
             "name": "userId",
@@ -558,7 +605,7 @@
     "/users/{userId}/active": {
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "summary": "激活成员",
         "operationId": "activeUser",
@@ -588,8 +635,7 @@
     "/users/{userId}/photos": {
       "get": {
         "tags": [
-          "photoAlbums",
-          "users"
+          "user"
         ],
         "summary": "获取用户上传过的照片",
         "parameters": [
@@ -628,7 +674,7 @@
     "/users/resend/activeEmail": {
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "operationId": "resendActiveEamil",
         "summary": "重新发送激活邮件",
@@ -839,6 +885,13 @@
             "description": "简称",
             "required": false,
             "type": "string",
+            "in": "formData"
+          },
+          {
+            "name": "logo",
+            "description": "logo",
+            "required": false,
+            "type": "file",
             "in": "formData"
           },
           {
@@ -1345,15 +1398,156 @@
         ],
         "summary": "发互动",
         "operationId": "postInteraction",
+        "consumes": [
+          "multipart/form-data"
+        ],
         "parameters": [
           {
-            "name": "body",
-            "description": "互动信息",
+            "name": "type",
+            "description": "互动类型 1:'活动',2:'投票',3:'求助'",
             "required": true,
+            "in": "formData",
+            "type": "integer",
+            "format": "int32",
+            "default": 1,
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "name": "target",
+            "description": "目标id",
+            "required": true,
+            "in": "formData",
+            "type": "string",
+            "default": "53aa6fc011fd597b3e1be250"
+          },
+          {
+            "name": "targetType",
+            "description": "目标类型 1:'个人',2:'群',3:'公司'",
+            "required": true,
+            "in": "formData",
+            "type": "integer",
+            "format": "int32",
+            "default": 3,
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "name": "templateId",
+            "description": "模板Id",
+            "required": false,
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "inviters",
+            "description": "邀请人列表",
+            "required": false,
+            "in": "formData",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "photo",
+            "description": "图片",
+            "required": false,
+            "type": "file",
+            "in": "formData"
+          },
+          {
+            "name": "theme",
+            "description": "主题",
+            "required": true,
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "description": "内容",
+            "required": true,
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "endTime",
+            "description": "结束时间",
+            "required": true,
+            "in": "formData",
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "startTime",
+            "description": "开始时间(活动时必须)",
+            "required": false,
+            "in": "formData",
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "deadline",
+            "description": "截止时间(活动时用)",
+            "required": false,
+            "in": "formData",
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "activityMold",
+            "description": "活动模型(活动时必须)",
+            "required": true,
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "location",
+            "description": "地点(活动时必须)",
+            "required": false,
+            "in": "formData",
             "schema": {
-              "$ref": "InteractionForm"
-            },
-            "in": "body"
+              "$ref": "Location"
+            }
+          },
+          {
+            "name": "memberMax",
+            "description": "最大人数(活动时用)",
+            "required": false,
+            "in": "formData",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "memberMin",
+            "description": "最小人数(活动时用)",
+            "required": false,
+            "in": "formData",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "option",
+            "description": "选项(投票是必须)",
+            "required": false,
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "tags",
+            "description": "标签",
+            "required": false,
+            "in": "formData",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2030,8 +2224,30 @@
         "consumes": [
           "multipart/form-data"
         ],
-        "description": "此功能测试移动到upload_test",
-        "parameters": null,
+        "description": "新建群组测试",
+        "parameters": [
+          {
+            "name": "name",
+            "description": "群组名称",
+            "required": true,
+            "type": "string",
+            "in": "formData"
+          },
+          {
+            "name": "themeColor",
+            "description": "群组主题颜色",
+            "required": true,
+            "type": "string",
+            "in": "formData"
+          },
+          {
+            "name": "photo",
+            "description": "群组logo",
+            "required": true,
+            "type": "file",
+            "in": "formData"
+          }
+        ],
         "responses": {
           "200": {
             "description": "成功"
@@ -3075,6 +3291,126 @@
         },
         "content": {
           "type": "string"
+        }
+      }
+    },
+    "User": {
+      "title": "User",
+      "type": "object",
+      "required": [
+        "_id",
+        "nickname",
+        "photo"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "用户id"
+        },
+        "email": {
+          "type": "string",
+          "description": "用户邮箱"
+        },
+        "nickname": {
+          "type": "string",
+          "description": "昵称"
+        },
+        "photo": {
+          "type": "string",
+          "description": "头像url"
+        },
+        "realname": {
+          "type": "string",
+          "description": "真实姓名"
+        },
+        "department": {
+          "type": "object",
+          "description": "部门",
+          "properties": {
+            "_id": {
+              "type": "string",
+              "description": "部门id"
+            },
+            "name": {
+              "type": "string",
+              "description": "部门名"
+            }
+          }
+        },
+        "sex": {
+          "type": "string",
+          "enum": [
+            "男",
+            "女"
+          ],
+          "description": "性别"
+        },
+        "birthday": {
+          "type": "string",
+          "format": "date-time",
+          "description": "生日"
+        },
+        "bloodType": {
+          "type": "string",
+          "description": "血型"
+        },
+        "introduce": {
+          "type": "string",
+          "description": "简介"
+        },
+        "registerDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "注册时间"
+        },
+        "phone": {
+          "type": "string",
+          "description": "电话号码"
+        },
+        "qq": {
+          "type": "string",
+          "description": "QQ"
+        },
+        "company": {
+          "type": "object",
+          "description": "公司",
+          "properties": {
+            "_id": {
+              "type": "string",
+              "description": "公司id"
+            },
+            "name": {
+              "type": "string",
+              "description": "公司名"
+            },
+            "briefName": {
+              "type": "string",
+              "description": "公司简称"
+            }
+          }
+        },
+        "score": {
+          "type": "number",
+          "description": "积分"
+        },
+        "tids": {
+          "type": "array",
+          "description": "小队id数组",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lastCommentTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "上次发表评论的时间"
+        },
+        "tags": {
+          "type": "array",
+          "description": "个人标签",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

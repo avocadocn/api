@@ -1,170 +1,185 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>Swagger UI</title>
-  <!-- <link href='//fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'/> -->
+  <link rel="icon" type="image/png" href="images/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="images/favicon-16x16.png" sizes="16x16" />
+  <link href='css/typography.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='css/reset.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='css/reset.css' media='print' rel='stylesheet' type='text/css'/>
-  <link href='css/screen.css' media='print' rel='stylesheet' type='text/css'/>
-  <script type="text/javascript" src="lib/shred.bundle.js"></script>
+  <link href='css/print.css' media='print' rel='stylesheet' type='text/css'/>
   <script src='lib/jquery-1.8.0.min.js' type='text/javascript'></script>
   <script src='lib/jquery.slideto.min.js' type='text/javascript'></script>
   <script src='lib/jquery.wiggle.min.js' type='text/javascript'></script>
   <script src='lib/jquery.ba-bbq.min.js' type='text/javascript'></script>
-  <script src='lib/handlebars-1.0.0.js' type='text/javascript'></script>
+  <script src='lib/handlebars-2.0.0.js' type='text/javascript'></script>
   <script src='lib/underscore-min.js' type='text/javascript'></script>
   <script src='lib/backbone-min.js' type='text/javascript'></script>
-  <script src='lib/swagger.js' type='text/javascript'></script>
-  <script src='lib/swagger-client.js' type='text/javascript'></script>
   <script src='swagger-ui.js' type='text/javascript'></script>
   <script src='lib/highlight.7.3.pack.js' type='text/javascript'></script>
-
-  <!-- enabling this will enable oauth2 implicit scope support -->
+  <script src='lib/marked.js' type='text/javascript'></script>
   <script src='lib/swagger-oauth.js' type='text/javascript'></script>
+
+  <!-- Some basic translations -->
+  <!-- <script src='lang/translator.js' type='text/javascript'></script> -->
+  <!-- <script src='lang/ru.js' type='text/javascript'></script> -->
+  <!-- <script src='lang/en.js' type='text/javascript'></script> -->
+
   <script type="text/javascript">
     $(function () {
       var url = window.location.search.match(/url=([^&]+)/);
       if (url && url.length > 1) {
-        url = url[1];
+        url = decodeURIComponent(url[1]);
       } else {
         //url = "http://petstore.swagger.wordnik.com/v2/swagger.json";
         url = "/v2_0.json";
       }
+
+      // Pre load translate...
+      if(window.SwaggerTranslator) {
+        window.SwaggerTranslator.translate();
+      }
       window.swaggerUi = new SwaggerUi({
         url: url,
         dom_id: "swagger-ui-container",
-        supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
+        supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
         onComplete: function(swaggerApi, swaggerUi){
-          log("Loaded SwaggerUI");
           if(typeof initOAuth == "function") {
-            /*
             initOAuth({
               clientId: "your-client-id",
+              clientSecret: "your-client-secret",
               realm: "your-realms",
-              appName: "your-app-name"
+              appName: "your-app-name", 
+              scopeSeparator: ","
             });
-            */
           }
+          var inputs = $('#donler_headers_form input');
+          for (var i = 0; i < inputs.length; i++) {
+            var input = inputs[i];
+            window.swaggerUi.api.clientAuthorizations.add(input.id,  new SwaggerClient.ApiKeyAuthorization(input.id, input.value, "header"));
+          }
+          $('#donler_headers_form input').change(function () {
+            var name = $(this).attr('id');
+            window.swaggerUi.api.clientAuthorizations.add(name,  new SwaggerClient.ApiKeyAuthorization(name, $(this).val(), "header"));
+          });
+          if(window.SwaggerTranslator) {
+            window.SwaggerTranslator.translate();
+          }
+
           $('pre code').each(function(i, e) {
             hljs.highlightBlock(e)
           });
+
+          addApiKeyAuthorization();
         },
         onFailure: function(data) {
           log("Unable to Load SwaggerUI");
         },
         docExpansion: "none",
-        sorter : "alpha"
+        apisSorter: "alpha",
+        showRequestHeaders: false
       });
 
-      function addApiKeyAuthorization() {
-        var key = $('#input_apiKey')[0].value;
-        log("key: " + key);
+      function addApiKeyAuthorization(){
+        var key = encodeURIComponent($('#input_apiKey')[0].value);
         if(key && key.trim() != "") {
-            log("added key " + key);
-            window.authorizations.add("api_key", new ApiKeyAuthorization("api_key", key, "query"));
+          var apiKeyAuth = new SwaggerClient.ApiKeyAuthorization("api_key", key, "query");
+          window.authorizations.add("api_key", apiKeyAuth);
+          log("added key " + key);
         }
       }
 
-      $('#input_apiKey').change(function() {
-        addApiKeyAuthorization();
-      });
-
-      $('#donler_headers_form input').change(function () {
-        var name = $(this).attr('id');
-        window.authorizations.add(name, new ApiKeyAuthorization(name, $(this).val(), "header"));
-      });
-
-      var inputs = $('#donler_headers_form input');
-      for (var i = 0; i < inputs.length; i++) {
-        var input = inputs[i];
-        window.authorizations.add(input.id, new ApiKeyAuthorization(input.id, input.value, "header"));
-      }
+      $('#input_apiKey').change(addApiKeyAuthorization);
 
       // if you have an apiKey you would like to pre-populate on the page for demonstration purposes...
       /*
         var apiKey = "myApiKeyXXXX123456789";
         $('#input_apiKey').val(apiKey);
-        addApiKeyAuthorization();
       */
 
+      
       window.swaggerUi.load();
+
+      function log() {
+        if ('console' in window) {
+          console.log.apply(console, arguments);
+        }
+      }
   });
   </script>
 </head>
 
 <body class="swagger-section">
-<div id='header'>
-  <div class="swagger-ui-wrap">
-    <a id="logo" href="http://swagger.io">swagger</a>
-    <form id='api_selector'>
-      <div class='input'><input placeholder="http://example.com/api" id="input_baseUrl" name="baseUrl" type="text"/></div>
-      <div class='input'><input placeholder="api_key(不要用于测试donler-api)" id="input_apiKey" name="apiKey" type="text"/></div>
-      <div class='input'><a id="explore" href="#">Explore</a></div>
-    </form>
+  <div id='header'>
+    <div class="swagger-ui-wrap">
+      <a id="logo" href="http://swagger.io">swagger</a>
+      <form id='api_selector'>
+        <div class='input'><input placeholder="http://example.com/api" id="input_baseUrl" name="baseUrl" type="text"/></div>
+        <div class='input'><input placeholder="api_key" id="input_apiKey" name="apiKey" type="text"/></div>
+        <div class='input'><a id="explore" href="#" data-sw-translate>Explore</a></div>
+      </form>
+    </div>
   </div>
-</div>
-<div class="swagger-ui-wrap">
-  <form id="donler_headers_form">
-    <h1>common headers</h1>
-    <div class="donler_headers">
-      <label for="x-app-id">x-app-id</label>
-      <input type="text" id="x-app-id" value="id1a2b3c4d5e6f" placeholder="app id"/>
-    </div>
-    <div class="donler_headers">
-      <label for="x-api-key">x-api-key</label>
-      <input type="text" id="x-api-key" value="key1a2b3c4d5e6f" placeholder="api key"/>
-    </div>
-    <div class="donler_headers">
-      <label for="x-device-id">x-device-id</label>
-      <input type="text" id="x-device-id" value="did1a2b3c4d5e6f" placeholder="设备id"/>
-    </div>
-    <div class="donler_headers">
-      <label for="x-device-type">x-device-type</label>
-      <input type="text" id="x-device-type" value="iphone 6" placeholder="设备型号"/>
-    </div>
-    <div class="donler_headers">
-      <label for="x-platform">x-platform</label>
-      <input type="text" id="x-platform" value="iOS" placeholder="平台系统"/>
-    </div>
-    <div class="donler_headers">
-      <label for="x-version">x-version</label>
-      <input type="text" id="x-version" value="8.0" placeholder="平台版本"/>
-    </div>
-    <div class="donler_headers">
-      <label for="x-access-token">x-access-token</label>
-      <input type="text" id="x-access-token" placeholder="登录成功后获得的access token"/>
-    </div>
-  </form>
-  <p><a href="#commonIds">常用id列表</a></p>
-</div>
-
-<div id="message-bar" class="swagger-ui-wrap">&nbsp;</div>
-<div id="swagger-ui-container" class="swagger-ui-wrap"></div>
-
-<div id="commonIds" class="swagger-ui-wrap">
-  <h1>常用id</h1>
-  <h2>公司</h2>
-  <p>donler公司: 53aa6fc011fd597b3e1be250(default)</p>
-  <h2>小队</h2>
-  <p>吃香喝辣队: 53aa701011fd597b3e1be25d(default)</p>
-  <p>动梨足球队: 53aa701011fd597b3e1be25a</p>
-  <p>donler-足球球球球队: 53b3ba73b186c6177226a5ed</p>
-  <h2>部门</h2>
-  <p>开发部: 53c8d423f52d7d4e5ba03de9</p>
-  <p>前端: 53c8d43df52d7d4e5ba03def(default)</p>
-  <p>css: 53c8d5e1f52d7d4e5ba03df5</p>
-  <p>餐饮部: 53c8d42df52d7d4e5ba03deb</p>
-  <p>家属: 53c8d459f52d7d4e5ba03df3</p>
-  <h2>用户</h2>
-  <p>Eric: 53aa707a11fd597b3e1be260(default)</p>
-  <p>Vxx: 53aa77ed6b2836fd41ba41b3</p>
-  <p>afei: 53aa7a0c6b2836fd41ba41d7</p>
-  <p>maggie: 53b0cf036ee6998827948c46</p>
-  <p>echo: 5434c8a06564f4a43daa38e1</p>
-  <p>CahaVar: 53aa91a76b2836fd41ba422b</p>
-  <p>乔二爷: 53abe097bf30423c7b1566fb</p>
-</div>
+  <div class="swagger-ui-wrap">
+    <form id="donler_headers_form">
+      <h1>common headers</h1>
+      <div class="donler_headers">
+        <label for="x-app-id">x-app-id</label>
+        <input type="text" id="x-app-id" value="id1a2b3c4d5e6f" placeholder="app id"/>
+      </div>
+      <div class="donler_headers">
+        <label for="x-api-key">x-api-key</label>
+        <input type="text" id="x-api-key" value="key1a2b3c4d5e6f" placeholder="api key"/>
+      </div>
+      <div class="donler_headers">
+        <label for="x-device-id">x-device-id</label>
+        <input type="text" id="x-device-id" value="did1a2b3c4d5e6f" placeholder="设备id"/>
+      </div>
+      <div class="donler_headers">
+        <label for="x-device-type">x-device-type</label>
+        <input type="text" id="x-device-type" value="iphone 6" placeholder="设备型号"/>
+      </div>
+      <div class="donler_headers">
+        <label for="x-platform">x-platform</label>
+        <input type="text" id="x-platform" value="iOS" placeholder="平台系统"/>
+      </div>
+      <div class="donler_headers">
+        <label for="x-version">x-version</label>
+        <input type="text" id="x-version" value="8.0" placeholder="平台版本"/>
+      </div>
+      <div class="donler_headers">
+        <label for="x-access-token">x-access-token</label>
+        <input type="text" id="x-access-token" placeholder="登录成功后获得的access token"/>
+      </div>
+    </form>
+    <p><a href="#commonIds">常用id列表</a></p>
+  </div>
+  <div id="message-bar" class="swagger-ui-wrap" data-sw-translate>&nbsp;</div>
+  <div id="swagger-ui-container" class="swagger-ui-wrap"></div>
+  <div id="commonIds" class="swagger-ui-wrap">
+    <h1>常用id</h1>
+    <h2>公司</h2>
+    <p>donler公司: 53aa6fc011fd597b3e1be250(default)</p>
+    <h2>小队</h2>
+    <p>吃香喝辣队: 53aa701011fd597b3e1be25d(default)</p>
+    <p>动梨足球队: 53aa701011fd597b3e1be25a</p>
+    <p>donler-足球球球球队: 53b3ba73b186c6177226a5ed</p>
+    <h2>部门</h2>
+    <p>开发部: 53c8d423f52d7d4e5ba03de9</p>
+    <p>前端: 53c8d43df52d7d4e5ba03def(default)</p>
+    <p>css: 53c8d5e1f52d7d4e5ba03df5</p>
+    <p>餐饮部: 53c8d42df52d7d4e5ba03deb</p>
+    <p>家属: 53c8d459f52d7d4e5ba03df3</p>
+    <h2>用户</h2>
+    <p>Eric: 53aa707a11fd597b3e1be260(default)</p>
+    <p>Vxx: 53aa77ed6b2836fd41ba41b3</p>
+    <p>afei: 53aa7a0c6b2836fd41ba41d7</p>
+    <p>maggie: 53b0cf036ee6998827948c46</p>
+    <p>echo: 5434c8a06564f4a43daa38e1</p>
+    <p>CahaVar: 53aa91a76b2836fd41ba422b</p>
+    <p>乔二爷: 53abe097bf30423c7b1566fb</p>
+  </div>
 </body>
 </html>

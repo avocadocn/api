@@ -5,7 +5,7 @@ var token = require('../../services/token');
 module.exports = function (router, ctrl) {
   router.use('/interaction', token.needToken)
   router.route('/interaction')
-    .post(ctrl.v2_0.interaction.createInteractionValidate, ctrl.v2_0.interaction.createInteraction)          //发起互动
+    .post(ctrl.v2_0.interaction.interactionFormFormat, ctrl.v2_0.interaction.createInteractionValidate, ctrl.v2_0.interaction.createInteraction)          //发起互动
     .get(ctrl.v2_0.interaction.getInteraction);                                                              //获取互动列表
   router.get('/interaction/:interactionType/:interactionId', ctrl.v2_0.interaction.getInteractionDetail);    //获取互动详情
 

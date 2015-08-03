@@ -18,7 +18,9 @@ var log = require('../../services/error_log.js'),
     donlerValidator = require('../../services/donler_validator.js'),
     tools = require('../../tools/tools.js'),
     async = require('async'),
-    notificationController = require('./notifications.js');
+    notificationController = require('./notifications.js'),
+    uploader = require('../../services/uploader.js'),
+    multiparty = require('multiparty');
 var interactionTypes = ['activity','poll','question'];
 var commentModelTypes = ['ActivityComment','PollComment','QuestionComment'];
 var perPageNum = 10;
@@ -76,6 +78,30 @@ var createQuestion= function (data,template) {
 }
 module.exports = {
   interaction: {
+    interactionFormFormat: function(req, res, next) {
+      var fieldName = 'photo';
+      var form = new multiparty.Form({
+        uploadDir: uploader.tempDir
+      });
+      form.parse(req, function(err, fields, files) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        }
+        if(files) {
+          req.body.photos = files[fieldName];
+        }
+        for (var field in fields) {
+          if(fields[field].length==1) {
+            req.body[field] = fields[field][0]
+          }
+          else {
+            req.body[field] = fields[field];
+          }
+        };
+        next()
+      });
+    },
     /**
      * 发互动的验证（三种类型）
      * @param  {[type]}   req  [description]
@@ -90,6 +116,9 @@ module.exports = {
         if(value.coordinate && (!value.coordinate instanceof Array || value.coordinate.length !=2 || typeof value.coordinate[0] !=="number" || typeof value.coordinate[1] !=="number")) return callback(false,"坐标格式错误");
         return callback(true);
       };
+      req.body.type = parseInt(req.body.type);
+      req.body.targetType = parseInt(req.body.targetType);
+      req.body.location = JSON.parse(req.body.location);
       var interactionType =req.body.type;
       donlerValidator({
         type: {
@@ -193,7 +222,32 @@ module.exports = {
               break;
             default:
           }
-          next();
+          if(req.body.photos) {
+            //目前只要第一张
+            uploader.uploadImage(req.body.photos[0], {
+              targetDir: '/public/img/interaction',
+              subDir: req.user.getCid().toString(),
+              saveOrigin: true,
+              getSize: true,
+              success: function(imgInfo, oriCallback) {
+                req.body.photo = [{
+                  uri: imgInfo.url,
+                  width: imgInfo.size.width,
+                  height: imgInfo.size.height
+                }];
+                next();
+              },
+              error: function(err) {
+                log(err);
+                return res.status(500).send({
+                  msg: '服务器错误'
+                });
+              }
+            });
+          }
+          else {
+            next();
+          }
         } else {
           return res.status(400).send({ msg: donlerValidator.combineMsg(msg) });
         }
@@ -238,6 +292,7 @@ module.exports = {
         content: data.content,
         endTime: data.endTime,
         tags: data.tags,
+        photo: data.photo,
         public: data.public
       });
       
@@ -328,7 +383,7 @@ module.exports = {
         }
         else{
           res.send({interactionId:interaction.id});
-          if(interaction.inviters) {
+          if(interaction.inviters.length>0) {
             notificationController.sendInteractionNfct(2, interaction, req.user._id, interaction.inviters);
           }
         }

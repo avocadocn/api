@@ -34,13 +34,11 @@ module.exports = {
       var form = new multiparty.Form({
         uploadDir: uploader.tempDir
       });
-
       form.parse(req, function(err, fields, files) {
         if (err) {
           log(err);
           return res.sendStatus(500);
         }
-
         donlerValidator({
           name: {
             name: '名称',
