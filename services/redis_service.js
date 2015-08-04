@@ -38,7 +38,7 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
     return deferred.promise;
   }
 
-  if (elements.length % 2) {
+  if (elements.length % 2 || elements.length === 0) {
     deferred.reject(new Error('参数错误'));
     return deferred.promise;
   }
@@ -62,6 +62,10 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
         if (err) log(err);
       });
 
+      redisClient.hmset([hashKeyInf, 'vote', elements[elements.length - 2], 'id', elements[elements.length - 1]], function(err) {
+        if (err) log(err);
+      });
+
       if (length < limit) {
         redisClient.hmset([hashKeyInf, 'isAll', 1], function(err) {
           if (err) log(err);
@@ -69,7 +73,7 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
       }
     });
   } else {
-    redisClient.zrevrange([hashKeyInf, '-1', '-1', 'WITHSCORES'], function(err, reply) {
+    redisClient.hmget([hashKeyInf, 'vote', 'id'], function(err, reply) {
       if (err) deferred.reject(err);
       else deferred.resolve(reply);
 
@@ -90,33 +94,33 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
  * 
  * @return {[type]}         [description]
  */
-// redisRanking.updateElement = function(cid, type, elements) {
-//   var deferred = Q.defer();
+redisRanking.updateElement = function(cid, type, elements) {
+  var deferred = Q.defer();
 
-//   if (!isConnect) {
-//     deferred.reject(new Error('redis连接失败'));
-//     return deferred.promise;
-//   }
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
 
-//   if (elements.length % 2) {
-//     deferred.reject(new Error('参数错误'));
-//     return deferred.promise;
-//   }
+  if (elements.length % 2) {
+    deferred.reject(new Error('参数错误'));
+    return deferred.promise;
+  }
 
-//   var hashKeyInf = identifierInf + type + cid;
+  var hashKeyInf = identifierInf + type + cid;
 
-//   var args = [];
-//   args.push(hashKeyInf);
+  var args = [];
+  args.push(hashKeyInf);
 
-//   args = args.concat(elements);
+  args = args.concat(elements);
 
-//   redisClient.hmset(args, function(err, reply) {
-//     if (err) deferred.reject(err);
-//     else deferred.resolve(reply);
-//   });
+  redisClient.hmset(args, function(err, reply) {
+    if (err) deferred.reject(err);
+    else deferred.resolve(reply);
+  });
 
-//   return deferred.promise;
-// };
+  return deferred.promise;
+};
 /**
  * Remove an element from ZSET
  * @param  cid            the id of company
@@ -170,7 +174,7 @@ redisRanking.getEleFromZSET = function(cid, type, elements) {
     return deferred.promise;
   }
 
-  if (elements.length % 2) {
+  if (elements.length % 2 || elements.length === 0) {
     deferred.reject(new Error('参数错误'));
     return deferred.promise;
   }
