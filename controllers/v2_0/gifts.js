@@ -244,7 +244,7 @@ module.exports = {
           //     'upsert': 1
           //   }, function(err, doc) {
           //     console.log(doc);
-          //     redisService.redisRanking.addEleToZSET(doc.cid, doc.type, [doc.vote, doc.userId + '&' + doc.photo]);
+          //     redisService.redisRanking.addEleToZSET(doc.cid, doc.type, [doc.vote, doc.userId]);
           //     if (_newDoc) {
           //       redisService.redisRanking.updateElement(doc.cid, doc.type, ['isAll', 0]);
           //     }

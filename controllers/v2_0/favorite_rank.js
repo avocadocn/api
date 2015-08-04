@@ -150,8 +150,7 @@ module.exports = {
       var parseRes = function(arr) {
         var res = [];
         for (var i = 0; i < arr.length; i+= 2) {
-          var splits = arr[i].split('&');
-          res.push({'_id': splits[0], 'photo': splits[1], 'vote': arr[i + 1]});
+          res.push({'_id': arr[i], 'vote': arr[i + 1]});
         }
         return res;
       }
@@ -227,7 +226,7 @@ module.exports = {
         .exec()
         .then(function(ranking) {
           var result = ranking.map(function(e) {
-            return {'_id': e.userId, 'photo': e.photo, 'vote': e.vote};
+            return {'_id': e.userId, 'vote': e.vote};
           });
 
           res.status(200).send({
@@ -238,9 +237,9 @@ module.exports = {
 
           ranking.forEach(function(e) {
             elements.push(e.vote);
-            elements.push(e.userId + '&' + e.photo);
+            elements.push(e.userId);
           });
-
+          
           redisService.redisRanking.addEleToZSET(req.query.cid, req.query.type, elements, limit);
         })
         .then(null, function(err) {
