@@ -37,8 +37,13 @@ var Activity = new Schema({
   },
   members: [_member],
   quitMembers: [_member],
-  startTime: Date,
+  //开始时间
+  startTime: {
+    type: Date,
+    required: true
+  },
   deadline: Date,
+  remindTime: Date,
   //活动类型,篮球等
   activityMold: String,
   template:{

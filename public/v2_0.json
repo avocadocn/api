@@ -1469,6 +1469,14 @@
             "format": "date-time"
           },
           {
+            "name": "remindTime",
+            "description": "提醒时间(活动时用)",
+            "required": false,
+            "in": "formData",
+            "type": "string",
+            "format": "date-time"
+          },
+          {
             "name": "activityMold",
             "description": "活动模型(活动时必须)",
             "required": true,
@@ -4192,6 +4200,11 @@
         },
         "deadline": {
           "description": "截止时间",
+          "type": "string",
+          "format": "date-time"
+        },
+        "remindTime": {
+          "description": "提醒时间",
           "type": "string",
           "format": "date-time"
         },

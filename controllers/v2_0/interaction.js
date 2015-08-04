@@ -38,7 +38,8 @@ var createActivity = function (data,template) {
     location: data.location || template.location,
     startTime: data.startTime || template.startTime,
     deadline: data.deadline || template.deadline || data.endTime ,
-    activityMold: data.activityMold || template.activityMold
+    activityMold: data.activityMold || template.activityMold,
+    remindTime: data.remindTime
   };
 
   return new Activity(_activity);
@@ -203,6 +204,11 @@ module.exports = {
         deadline: {
           name: '截止时间',
           value: req.body.deadline,
+          validators: ['date',donlerValidator.notAfter(req.body.endTime),donlerValidator.after(new Date())]
+        },
+        remindTime: {
+          name: '提醒时间',
+          value: req.body.remindTime,
           validators: ['date',donlerValidator.notAfter(req.body.endTime),donlerValidator.after(new Date())]
         },
         activityMold: {
