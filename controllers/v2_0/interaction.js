@@ -407,7 +407,6 @@ module.exports = {
           res.status(500).send({msg:"服务器发生错误"});
         }
         else{
-          console.log(interaction)
           res.send({interactionId:interaction.id});
           if(interaction.inviters.length>0) {
             notificationController.sendInteractionNfct(2, interaction, req.user._id, interaction.inviters);
