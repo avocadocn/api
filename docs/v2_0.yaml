@@ -250,6 +250,11 @@ paths:
           required: false
           type: string
           in: formData
+        - name: photo
+          description: 头像
+          required: false
+          type: file
+          in: formData
       responses:
         "200":
           description: 修改成功
@@ -450,8 +455,6 @@ paths:
         - user
       operationId: resendActiveEamil
       summary: 重新发送激活邮件
-      consumes:
-        - application/json
       produces:
         - text/plain
       parameters:
@@ -3329,3 +3332,23 @@ definitions:
         type: string
       name:
         type: string
+  resendActiveEamilForm:
+    title: resendActiveEamilForm
+    type: object
+    properties:
+      email:
+        description: email
+        type: string
+  resendActiveEamilResult:
+    title: resendActiveEamilResult
+    type: object
+    properties:
+      msg:
+        description: 返回信息
+        type: string
+      hasResend:
+        description: 是否已经发送
+        type: boolean
+      isActive:
+        description: 是否已经激活
+        type: boolean

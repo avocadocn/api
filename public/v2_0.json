@@ -374,6 +374,13 @@
             "required": false,
             "type": "string",
             "in": "formData"
+          },
+          {
+            "name": "photo",
+            "description": "头像",
+            "required": false,
+            "type": "file",
+            "in": "formData"
           }
         ],
         "responses": {
@@ -678,9 +685,6 @@
         ],
         "operationId": "resendActiveEamil",
         "summary": "重新发送激活邮件",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "text/plain"
         ],
@@ -4756,6 +4760,16 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        }
+      }
+    },
+    "resendActiveEamilForm": {
+      "title": "resendActiveEamilForm",
+      "type": "object",
+      "properties": {
+        "email": {
+          "description": "email",
           "type": "string"
         }
       }
