@@ -11,6 +11,11 @@ var ActivityTemplate = new Schema({
   content: {//简介
     type: String
   },
+  photos: [{ // 照片列表
+    uri: String,
+    width: Number,
+    height: Number
+  }],
   memberMin: {//最少人数
     type: Number,
     default: 0

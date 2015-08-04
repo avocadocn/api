@@ -41,7 +41,6 @@ var createActivity = function (data,template) {
     activityMold: data.activityMold || template.activityMold,
     remindTime: data.remindTime
   };
-
   return new Activity(_activity);
 }
 /**
@@ -109,13 +108,19 @@ module.exports = {
         };
         req.body.type = parseInt(req.body.type);
         req.body.targetType = parseInt(req.body.targetType);
-        try {
-          if(fields.location) {
-            req.body.location = JSON.parse(req.body.location);
+        if(fields.location) {
+          req.body.location = {
+            "name": req.body.location,
+            "loc" : {
+              "coordinates" : [parseFloat(req.body.longitude),parseFloat(req.body.latitude)],
+            }
           }
         }
-        catch(e) {
-          log(e)
+        if(fields.option) {
+          req.body.option = req.body.option.split(",")
+        }
+        if(fields.tags) {
+          req.body.tags = tools.unique(req.body.tags.split(","));
         }
         next()
       });
@@ -131,7 +136,7 @@ module.exports = {
       var locationValidator = function(name, value, callback) {
         if(!value) return callback(true);
         if(!value.name) return callback(false,"没有地址")
-        if(value.coordinate && (!value.coordinate instanceof Array || value.coordinate.length !=2 || typeof value.coordinate[0] !=="number" || typeof value.coordinate[1] !=="number")) return callback(false,"坐标格式错误");
+        if(value.loc.coordinates && (!value.loc.coordinates instanceof Array || value.loc.coordinates.length !=2 || typeof value.loc.coordinates[0] !=="number" || typeof value.loc.coordinates[1] !=="number")) return callback(false,"坐标格式错误");
         return callback(true);
       };
       var interactionType =req.body.type;
@@ -197,7 +202,7 @@ module.exports = {
           validators: ['number']
         },
         location:{
-          name: '地点',
+          name: '地址',
           value: req.body.location,
           validators: (interactionType===1 && !req.body.templateId )? ['required',locationValidator] : []
         },
@@ -250,7 +255,7 @@ module.exports = {
               saveOrigin: true,
               getSize: true,
               success: function(imgInfo, oriCallback) {
-                req.body.photo = [{
+                req.body.photos = [{
                   uri: imgInfo.url,
                   width: imgInfo.size.width,
                   height: imgInfo.size.height
@@ -312,7 +317,7 @@ module.exports = {
         content: data.content,
         endTime: data.endTime,
         tags: data.tags,
-        photo: data.photo,
+        photos: data.photos,
         public: data.public
       });
       
@@ -402,6 +407,7 @@ module.exports = {
           res.status(500).send({msg:"服务器发生错误"});
         }
         else{
+          console.log(interaction)
           res.send({interactionId:interaction.id});
           if(interaction.inviters.length>0) {
             notificationController.sendInteractionNfct(2, interaction, req.user._id, interaction.inviters);
@@ -1156,6 +1162,45 @@ module.exports = {
     }
   },
   template: {
+    templateFormFormat:function(req, res, next) {
+      var fieldName = 'photo';
+      var form = new multiparty.Form({
+        uploadDir: uploader.tempDir
+      });
+      form.parse(req, function(err, fields, files) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        }
+        if(files) {
+          req.body.photos = files[fieldName];
+        }
+        for (var field in fields) {
+          if(fields[field].length==1) {
+            req.body[field] = fields[field][0]
+          }
+          else {
+            req.body[field] = fields[field];
+          }
+        };
+        req.body.templateType = parseInt(req.body.templateType);
+        if(fields.location) {
+          req.body.location = {
+            "name": req.body.location,
+            "loc" : {
+              "coordinates" : [parseFloat(req.body.longitude),parseFloat(req.body.latitude)],
+            }
+          }
+        }
+        if(fields.option) {
+          req.body.option = req.body.option.split(",")
+        }
+        if(fields.tags) {
+          req.body.tags = tools.unique(req.body.tags.split(","));
+        }
+        next()
+      });
+    },
     /**
      * 发互动的模板的验证
      * @param  {[type]}   req  [description]
@@ -1167,7 +1212,7 @@ module.exports = {
       var locationValidator = function(name, value, callback) {
         if(!value) return callback(true);
         if(!value.name) return callback(false,"没有地址")
-        if(value.coordinate && (!value.coordinate instanceof Array || value.coordinate.length !=2 || typeof value.coordinate[0] !=="number" || typeof value.coordinate[1] !=="number")) return callback(false,"坐标格式错误");
+        if(value.loc.coordinates && (!value.loc.coordinates instanceof Array || value.loc.coordinates.length !=2 || typeof value.loc.coordinates[0] !=="number" || typeof value.loc.coordinates[1] !=="number")) return callback(false,"坐标格式错误");
         return callback(true);
       };
       var templateType = req.body.templateType;
@@ -1234,7 +1279,32 @@ module.exports = {
         },
       }, 'fast', function (pass, msg) {
         if (pass) {
-          next();
+          if(req.body.photos) {
+            //目前只能传一张图片，所以只取第一张
+            uploader.uploadImage(req.body.photos[0], {
+              targetDir: '/public/img/interaction',
+              subDir: req.user.getCid().toString(),
+              saveOrigin: true,
+              getSize: true,
+              success: function(imgInfo, oriCallback) {
+                req.body.photos = [{
+                  uri: imgInfo.url,
+                  width: imgInfo.size.width,
+                  height: imgInfo.size.height
+                }];
+                next();
+              },
+              error: function(err) {
+                log(err);
+                return res.status(500).send({
+                  msg: '服务器错误'
+                });
+              }
+            });
+          }
+          else {
+            next();
+          }
         } else {
           var resMsg = donlerValidator.combineMsg(msg);
           return res.status(400).send({ msg: resMsg });
@@ -1299,7 +1369,8 @@ module.exports = {
             memberMin: data.memberMin,
             memberMax: data.memberMax,
             deadline: data.deadline,
-            tags:data.tags
+            tags:data.tags,
+            photos: data.photos
           });
           break;
         case 2:
@@ -1307,7 +1378,8 @@ module.exports = {
             theme: data.theme,
             content: data.content,
             endTime: data.endTime,
-            tags:data.tags
+            tags:data.tags,
+            photos: data.photos
           });
           var option =[];
           data.option.forEach(function(_option, index){
@@ -1323,7 +1395,8 @@ module.exports = {
             theme: data.theme,
             content: data.content,
             endTime: data.endTime,
-            tags:data.tags
+            tags:data.tags,
+            photos: data.photos
           });
           break;
       }

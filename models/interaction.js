@@ -63,7 +63,7 @@ var Interaction = new Schema({
   content: {//简介
     type: String
   },
-  photo: [{ // 照片列表
+  photos: [{ // 照片列表
     uri: String,
     width: Number,
     height: Number

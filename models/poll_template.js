@@ -14,6 +14,11 @@ var PollTemplate = new Schema({
   content: {//简介
     type: String
   },
+  photos: [{ // 照片列表
+    uri: String,
+    width: Number,
+    height: Number
+  }],
   option: [_option],
   tags:[String],
   endTime: Date,

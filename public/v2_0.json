@@ -1479,7 +1479,7 @@
           {
             "name": "activityMold",
             "description": "活动模型(活动时必须)",
-            "required": true,
+            "required": false,
             "in": "formData",
             "type": "string"
           },
@@ -1488,9 +1488,23 @@
             "description": "地点(活动时必须)",
             "required": false,
             "in": "formData",
-            "schema": {
-              "$ref": "Location"
-            }
+            "type": "string"
+          },
+          {
+            "name": "latitude",
+            "description": "维度(活动时用)",
+            "required": false,
+            "in": "formData",
+            "type": "number",
+            "format": "float"
+          },
+          {
+            "name": "longitude",
+            "description": "经度(活动时用)",
+            "required": false,
+            "in": "formData",
+            "type": "number",
+            "format": "float"
           },
           {
             "name": "memberMax",
@@ -1513,7 +1527,10 @@
             "description": "选项(投票是必须)",
             "required": false,
             "in": "formData",
-            "type": "string"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           {
             "name": "tags",
@@ -1611,16 +1628,135 @@
           "interaction"
         ],
         "summary": "发互动模板",
+        "consumes": [
+          "multipart/form-data"
+        ],
         "operationId": "postTemplate",
         "parameters": [
           {
-            "name": "body",
-            "description": "模板信息",
+            "name": "templateType",
+            "description": "模板类型 1:'活动',2:'投票',3:'求助'",
             "required": true,
-            "schema": {
-              "$ref": "InteractionTemplate"
-            },
-            "in": "body"
+            "in": "formData",
+            "type": "integer",
+            "format": "int32",
+            "default": 1,
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "name": "photo",
+            "description": "图片",
+            "required": false,
+            "type": "file",
+            "in": "formData"
+          },
+          {
+            "name": "theme",
+            "description": "主题",
+            "required": true,
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "description": "内容",
+            "required": true,
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "endTime",
+            "description": "结束时间",
+            "required": true,
+            "in": "formData",
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "startTime",
+            "description": "开始时间(活动时必须)",
+            "required": false,
+            "in": "formData",
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "deadline",
+            "description": "截止时间(活动时用)",
+            "required": false,
+            "in": "formData",
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "activityMold",
+            "description": "活动模型(活动时必须)",
+            "required": false,
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "location",
+            "description": "地点(活动时必须)",
+            "required": false,
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "latitude",
+            "description": "维度(活动时用)",
+            "required": false,
+            "in": "formData",
+            "type": "number",
+            "format": "float"
+          },
+          {
+            "name": "longitude",
+            "description": "经度(活动时用)",
+            "required": false,
+            "in": "formData",
+            "type": "number",
+            "format": "float"
+          },
+          {
+            "name": "memberMax",
+            "description": "最大人数(活动时用)",
+            "required": false,
+            "in": "formData",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "memberMin",
+            "description": "最小人数(活动时用)",
+            "required": false,
+            "in": "formData",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "option",
+            "description": "选项(投票是必须)",
+            "required": false,
+            "in": "formData",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tags",
+            "description": "标签",
+            "required": false,
+            "in": "formData",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

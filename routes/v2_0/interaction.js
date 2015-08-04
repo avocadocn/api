@@ -10,7 +10,7 @@ module.exports = function (router, ctrl) {
   router.get('/interaction/:interactionType/:interactionId', ctrl.v2_0.interaction.getInteractionDetail);    //获取互动详情
 
   router.route('/interaction/template')
-    .post(ctrl.v2_0.template.createTemplateValidate, ctrl.v2_0.template.createTemplate)                      //发模板
+    .post(ctrl.v2_0.template.templateFormFormat, ctrl.v2_0.template.createTemplateValidate, ctrl.v2_0.template.createTemplate)                      //发模板
     .get(ctrl.v2_0.template.getTemplateList);                                                                //获取模板列表
   router.route('/interaction/template/:templateType/:templateId')
     .get(ctrl.v2_0.template.getTemplateDetail);                                                              //获取模板详情
