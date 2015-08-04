@@ -137,13 +137,46 @@ paths:
         - user
       summary: 注册用户
       operationId: registerUser
+      consumes:
+        - multipart/form-data
       parameters:
-        - name: body
-          schema:
-            $ref: UserRegisterForm
-          in: body
+        # - name: body
+        #   schema:
+        #     $ref: UserRegisterForm
+        #   in: body
+        #   required: true
+        #   description: 用户注册表单数据
+        - name: cid
+          description: 公司id
           required: true
-          description: 用户注册表单数据
+          type: string
+          in: formData
+        - name: email
+          description: 公司邮箱
+          required: true
+          type: string
+          format: email
+          in: formData
+        - name: password
+          description: 密码
+          required: true
+          type: string
+          format: password
+          in: formData
+        - name: gender
+          description: "性别,0为女,1为男"
+          required: true
+          type: integer
+          format: int32
+          enum:
+            - 0
+            - 1
+          in: formData
+        - name: photo
+          description: 头像
+          required: false
+          type: file
+          in: formData
       responses:
         "201":
           description: 注册成功
@@ -508,12 +541,43 @@ paths:
       produces:
         - text/plain
       parameters:
-        - name: body
-          description: 注册表单数据
+        # - name: body
+        #   description: 注册表单数据
+        #   required: true
+        #   schema:
+        #     $ref: CompanyQuickRegisterForm
+        #   in: body
+        - name: name
+          description: 公司名称
           required: true
-          schema:
-            $ref: CompanyQuickRegisterForm
-          in: body
+          type: string
+          in: formData
+        - name: email
+          description: 公司邮箱
+          required: true
+          type: string
+          format: email
+          in: formData
+        - name: password
+          description: 密码
+          required: true
+          type: string
+          format: password
+          in: formData
+        - name: gender
+          description: "性别,0为女,1为男"
+          required: true
+          type: integer
+          format: int32
+          enum:
+            - 0
+            - 1
+          in: formData
+        - name: photo
+          description: 头像
+          required: false
+          type: file
+          in: formData
       responses:
         "201":
           description: 注册成功
@@ -1632,8 +1696,43 @@ paths:
       operationId: editGroup
       consumes:
         - multipart/form-data
-      description: 此功能测试移动到upload_test
+      description: 编辑群组信息
       parameters:
+        - name: groupId
+          description: 群组Id
+          required: true
+          type: string
+          in: path
+        - name: name
+          description: 群组名称
+          required: false
+          type: string
+          in: formData
+        - name: themeColor
+          description: 群组主题颜色
+          required: false
+          type: string
+          in: formData
+        - name: photo
+          description: 群组logo
+          required: false
+          type: file
+          in: formData
+        - name: brief
+          description: 群组简介
+          required: false
+          type: string
+          in: formData
+        - name: open
+          description: 群组是否公开
+          required: false
+          type: boolean
+          in: formData
+        - name: hasValidate
+          description: 群组是否需要验证
+          required: false
+          type: boolean
+          in: formData
       responses:
         200:
           description: 成功
@@ -2343,6 +2442,7 @@ definitions:
         description: 用户id
       email:
         type: string
+        formData: email
         description: 用户邮箱
       nickname:
         type: string

@@ -264,12 +264,11 @@ module.exports = {
           log(err);
           return res.sendStatus(500);
         }
-        
         req.groupInfo = {};
         // 基本群组设置
         req.groupInfo.name = (fields['name'] && fields['name'][0]) ? fields['name'][0] : undefined;
         req.groupInfo.themeColor = (fields['themeColor'] && fields['themeColor'][0]) ? fields['themeColor'][0] : undefined;
-        req.groupLogoFile = (files[fieldName] && files[fieldName][0].originalFilename) ? files[fieldName][0] : undefined;
+        req.groupLogoFile = (files[fieldName] && files[fieldName][0].originalFilename) ? files[fieldName] : undefined;
         // 额外群组设置
         req.groupInfo.brief = (fields['brief'] && fields['brief'][0]) ? fields['brief'][0] : undefined;
         req.groupInfo.open = (fields['open'] && fields['open'][0]) ? fields['open'][0] : undefined;

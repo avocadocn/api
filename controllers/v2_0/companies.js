@@ -124,7 +124,6 @@ module.exports = {
           next();
         } else {
           var resMsg = donlerValidator.combineMsg(msg);
-          console.log(resMsg)
           res.status(400).send({
             msg: resMsg
           });
