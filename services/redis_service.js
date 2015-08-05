@@ -38,7 +38,7 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
     return deferred.promise;
   }
 
-  if (elements.length % 2 || elements.length === 0) {
+  if (!elements.length || elements.length % 2) {
     deferred.reject(new Error('参数错误'));
     return deferred.promise;
   }
@@ -53,33 +53,37 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
 
   if (limit) {
     redisClient.zadd(args, function(err, reply) {
-      if (err) deferred.reject(err);
-      else deferred.resolve(reply);
+      if (err) { deferred.reject(err); return; }
 
       var length = elements.length / 2;
 
-      redisClient.hincrby([hashKeyInf, 'count', reply], function(err) {
-        if (err) log(err);
-      });
-
-      redisClient.hmset([hashKeyInf, 'vote', elements[elements.length - 2], 'id', elements[elements.length - 1]], function(err) {
-        if (err) log(err);
-      });
+      var commands = [
+        ['hincrby', hashKeyInf, 'count', reply],
+        ['hmset', hashKeyInf, 'vote', elements[elements.length - 2], 'id', elements[elements.length - 1]]
+      ];
 
       if (length < limit) {
-        redisClient.hmset([hashKeyInf, 'isAll', 1], function(err) {
-          if (err) log(err);
-        });
+        commands.push(['hmset', hashKeyInf, 'isAll', 1]);
       }
+
+      redisClient.multi(commands).exec(function(err, replies) {
+        if (err) deferred.reject(err);
+        else deferred.resolve(replies);
+      });
+
     });
   } else {
     redisClient.hmget([hashKeyInf, 'vote', 'id'], function(err, reply) {
-      if (err) deferred.reject(err);
-      else deferred.resolve(reply);
+      if (err) { deferred.reject(err); return; }
 
-      if (reply[1] < elements[0] || reply[1] == elements[0] && reply[0] > elements[1]) {
-        redisClient.zadd(args, function(err) {if (err) log(err);});
-        redisClient.hincrby([hashKeyInf, 'count', 1], function(err) {if (err) log(err);});
+      if ((reply[0] && reply[1]) && (reply[1] < elements[0] || reply[1] == elements[0] && reply[0] > elements[1])) {
+        redisClient.zadd(args, function(err, reply) {
+          if (err) { deferred.reject(err); return; }
+          redisClient.hincrby([hashKeyInf, 'count', reply], function(err, reply) {
+            if (err) deferred.reject(err);
+            else deferred.resolve(replies);
+          });
+        });
       }
     });
   }
@@ -102,7 +106,7 @@ redisRanking.updateElement = function(cid, type, elements) {
     return deferred.promise;
   }
 
-  if (elements.length % 2) {
+  if (!elements.length || elements.length % 2) {
     deferred.reject(new Error('参数错误'));
     return deferred.promise;
   }
@@ -174,7 +178,7 @@ redisRanking.getEleFromZSET = function(cid, type, elements) {
     return deferred.promise;
   }
 
-  if (elements.length % 2 || elements.length === 0) {
+  if (!elements.length || elements.length % 2) {
     deferred.reject(new Error('参数错误'));
     return deferred.promise;
   }
