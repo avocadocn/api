@@ -10,10 +10,13 @@ var mongoose = require('mongoose'),
     Group = mongoose.model('Group'),
     Region = mongoose.model('Region'),
     CompetitionMessage = mongoose.model('CompetitionMessage'),
+    FavoriteRank = mongoose.model('FavoriteRank'),
+    Gift = mongoose.model('Gift'),
     async = require('async'),
     schedule = require('node-schedule'),
     emailService = require('../services/email.js'),
-    userScore = require('./user_score.js');
+    userScore = require('./user_score.js'),
+    moment = require('moment');
 var winScore =3;
 var tieScore = 1;
 var loseScore = 0;
@@ -467,6 +470,106 @@ var sendCompanyGuideJob = function () {
     console.log('发送操作指南错误:', err);
   });
 }
+
+var ranking = function() {
+  // 设置增量查询的时间 (TODO)
+  var _start = moment().subtract(1, 'day').hour(0).minute(0).second(0).millisecond(0);
+  var _end = moment().subtract(1, 'day').hour(23).minute(59).second(59).millisecond(999);
+
+  var updateFavoriteRank = function(company, callback) {
+    var aggregateOptions = [{
+      $match: {
+        'cid': company._id, 
+        'createTime': {
+          $gte: new Date(_start.format()),
+          $lte: new Date(_end)
+        }
+      }
+    }, {
+      $group: {
+        '_id': '$receiver',
+        'vote': {
+          $sum: 1
+        }
+      }
+    }, {
+      $sort: {
+        'vote': -1,
+        '_id': 1
+      }
+    }];
+
+    // 榜单类型的选择
+    switch (company.type) {
+      case '1':
+        aggregateOptions[0].$match.receiverGender = 1;
+        aggregateOptions[0].$match.giftIndex = 4;
+        break;
+      case '2':
+        aggregateOptions[0].$match.receiverGender = 2;
+        aggregateOptions[0].$match.giftIndex = 4;
+        break;
+      case '3':
+        aggregateOptions[0].$match.giftIndex = {
+          $in: [1, 2, 3]
+        };
+        break;
+      default:
+        break;
+    }
+
+    Gift.aggregate(aggregateOptions).exec(function(err, increments) {
+      if (err) {
+        console.log(err);
+        callback(err);
+      }
+
+      async.map(increments, function(increment, _callback) {
+        var conditions = {
+          'cid': company._id,
+          'type': company.type,
+          'userId': increment._id
+        };
+
+        FavoriteRank.findOneAndUpdate(conditions, {
+          $inc: {
+            'vote': increment.vote
+          }
+        }, {
+          'upsert': 1
+        }, function(err, doc) {
+          if (err) _callback(err);
+          else _callback();
+        });
+      }, function(err, res) {
+        if (err) callback(err);
+        else callback();
+      });
+    });
+  };
+
+  // TODO: 查询公司的条件还需进一步设置
+  Company.find({'status.mail_active': true, 'status.active': true})
+  .exec()
+  .then(function(companies) {
+    var objArr = [];
+    companies.forEach(function(company) {
+      for (var i = 1; i <= 3; i++) {
+        objArr.push({'_id': company._id, 'type': i});
+      }
+    });
+
+    async.map(objArr, updateFavoriteRank, function(err, res) {
+      if (err) console.log('榜单数据生成失败');
+      else console.log('榜单数据生成成功');
+    });
+  })
+  .then(null, function(err) {
+    console.log('榜单数据生成失败');
+  });
+
+}
+
 exports.init = function(){
   //自动统计小队排名
   // var teamPointRule = new schedule.RecurrenceRule();
