@@ -38,7 +38,7 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
     return deferred.promise;
   }
 
-  if (!elements.length || elements.length % 2) {
+  if (elements.length % 2) {
     deferred.reject(new Error('参数错误'));
     return deferred.promise;
   }
@@ -51,19 +51,26 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
 
   args = args.concat(elements);
 
-  if (limit) {
+  if (!elements.length) {
+    redisClient.hmset([hashKeyInf, 'all', 1], function(err, reply) {
+      if (err) deferred.reject(err);
+      else deferred.resolve(replies);
+    });
+  } else {
     redisClient.zadd(args, function(err, reply) {
-      if (err) { deferred.reject(err); return; }
+      if (err) {
+        deferred.reject(err);
+        return;
+      }
 
       var length = elements.length / 2;
 
       var commands = [
-        ['hincrby', hashKeyInf, 'count', reply],
-        ['hmset', hashKeyInf, 'vote', elements[elements.length - 2], 'id', elements[elements.length - 1]]
+        ['hincrby', hashKeyInf, 'count', reply]
       ];
 
       if (length < limit) {
-        commands.push(['hmset', hashKeyInf, 'isAll', 1]);
+        commands.push(['hmset', hashKeyInf, 'all', 1]);
       }
 
       redisClient.multi(commands).exec(function(err, replies) {
@@ -72,95 +79,9 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
       });
 
     });
-  } else {
-    redisClient.hmget([hashKeyInf, 'vote', 'id'], function(err, reply) {
-      if (err) { deferred.reject(err); return; }
-
-      if ((reply[0] && reply[1]) && (reply[1] < elements[0] || reply[1] == elements[0] && reply[0] > elements[1])) {
-        redisClient.zadd(args, function(err, reply) {
-          if (err) { deferred.reject(err); return; }
-          redisClient.hincrby([hashKeyInf, 'count', reply], function(err, reply) {
-            if (err) deferred.reject(err);
-            else deferred.resolve(replies);
-          });
-        });
-      }
-    });
   }
-
   return deferred.promise;
 };
-/**
- * Update the exist element
- * @param  cid            the id of company
- * @param  elements       the args of command. eg: 
- * [2(increment), 53e9c3fcd271b3943b2d44c9]
- * 
- * @return {[type]}         [description]
- */
-redisRanking.updateElement = function(cid, type, elements) {
-  var deferred = Q.defer();
-
-  if (!isConnect) {
-    deferred.reject(new Error('redis连接失败'));
-    return deferred.promise;
-  }
-
-  if (!elements.length || elements.length % 2) {
-    deferred.reject(new Error('参数错误'));
-    return deferred.promise;
-  }
-
-  var hashKeyInf = identifierInf + type + cid;
-
-  var args = [];
-  args.push(hashKeyInf);
-
-  args = args.concat(elements);
-
-  redisClient.hmset(args, function(err, reply) {
-    if (err) deferred.reject(err);
-    else deferred.resolve(reply);
-  });
-
-  return deferred.promise;
-};
-/**
- * Remove an element from ZSET
- * @param  cid            the id of company
- * @param  elements       the args of command. eg: 
- * [53e9c3fcd271b3943b2d44c9]
- * @return {[type]}         [description]
- */
-// redisRanking.rmEleFromZSET = function(cid, elements) {
-//   var deferred = Q.defer();
-
-//   if (!isConnect) {
-//     deferred.reject(new Error('redis连接失败'));
-//     return deferred.promise;
-//   }
-
-//   if (!(elements.length % 2)) {
-//     deferred.reject(new Error('参数错误'));
-//     return deferred.promise;
-//   }
-
-//   var hashKey = identifier + cid;
-//   console.log(hashKey);
-//   var args = [];
-//   args.push(hashKey);
-
-//   args = args.concat(elements);
-
-//   console.log(args);
-
-//   redisClient.zrem(args, function(err, reply) {
-//     if (err) deferred.reject(err);
-//     else deferred.resolve(reply);
-//   });
-
-//   return deferred.promise;
-// };
 
 /**
  * Get elements from ZSET
@@ -186,7 +107,7 @@ redisRanking.getEleFromZSET = function(cid, type, elements) {
   var hashKey = identifier + type + cid;
   var hashKeyInf = identifierInf + type + cid;
 
-  redisClient.hmget([hashKeyInf, 'count', 'isAll'], function(err, reply) {
+  redisClient.hmget([hashKeyInf, 'count', 'all'], function(err, reply) {
     if (err) {
       deferred.reject(err);
       return;

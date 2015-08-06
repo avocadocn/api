@@ -203,53 +203,6 @@ module.exports = {
           req.remains && req.remains.remainGift --;
           res.status(200).send({gift:gift, remain:req.remains});
           notificationController.sendGiftNfct(gift, 1);
-          // 更新排行榜
-          // var type;
-
-          // switch(req.body.giftIndex) {
-          //   case 1:
-          //   case 2:
-          //   case 3:
-          //     type = 3;
-          //     break;
-          //   case 4:
-          //     switch(req.receiver.gender) {
-          //       case true:
-          //         type = 2;
-          //         break;
-          //       case false:
-          //         type = 1;
-          //         break;
-          //     }
-          //     break;
-          // }
-
-          // var conditions = {'cid': req.user.cid, 'userId': req.body.receiverId};
-          // FavoriteRank.findOne(conditions, function(err, rankDoc) {
-          //   if (err) {
-          //     log(err);
-          //     return;
-          //   }
-          //   var _newDoc = (rankDoc === null);
-          //   FavoriteRank.findOneAndUpdate(conditions, {
-          //     $set: {
-          //       'type': type,
-          //       'photo': req.receiver.photo
-          //     },
-          //     $inc: {
-          //       'vote': 1
-          //     }
-          //   }, {
-          //     'new': 1,
-          //     'upsert': 1
-          //   }, function(err, doc) {
-          //     console.log(doc);
-          //     redisService.redisRanking.addEleToZSET(doc.cid, doc.type, [doc.vote, doc.userId]);
-          //     if (_newDoc) {
-          //       redisService.redisRanking.updateElement(doc.cid, doc.type, ['isAll', 0]);
-          //     }
-          //   });
-          // });
           return;
         }
       })
