@@ -358,6 +358,33 @@ validators.array = function (name, value, callback) {
   }
 };
 
+validators.phone = function (name, value, callback) {
+  if (!value) {
+    callback(true);
+    return;
+  }
+  // validator 4.0 以上是有手机号验证
+  if (!(/^(\+?0?86\-?)?1[345789]\d{9}$/).test(value)) {
+    var msg = util.format('%s不是有效的手机号格式', name);
+    callback(false, msg);
+  } else {
+    callback(true);
+  }
+};
+
+validators.enrollment = function (name, value, callback) {
+  if (!value) {
+    callback(true);
+    return;
+  }
+  // validator 4.0 以上是有手机号验证
+  if (!(/^[12]\d{3}$/).test(value)) {
+    var msg = util.format('%s不是有效的入学年份格式', name);
+    callback(false, msg);
+  } else {
+    callback(true);
+  }
+};
 /**
  * 验证省市区是否合法
  * @param {String} name 验证目标的名称，用于描述错误消息

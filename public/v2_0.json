@@ -219,17 +219,17 @@
         "parameters": [
           {
             "name": "cid",
-            "description": "公司id",
+            "description": "学校id",
             "required": true,
             "type": "string",
             "in": "formData"
           },
           {
-            "name": "email",
-            "description": "公司邮箱",
+            "name": "phone",
+            "description": "手机号码",
             "required": true,
             "type": "string",
-            "format": "email",
+            "format": "phone",
             "in": "formData"
           },
           {
@@ -238,6 +238,13 @@
             "required": true,
             "type": "string",
             "format": "password",
+            "in": "formData"
+          },
+          {
+            "name": "name",
+            "description": "姓名",
+            "required": true,
+            "type": "string",
             "in": "formData"
           },
           {
@@ -250,6 +257,13 @@
               0,
               1
             ],
+            "in": "formData"
+          },
+          {
+            "name": "enrollment",
+            "description": "入学年份",
+            "required": true,
+            "type": "string",
             "in": "formData"
           },
           {
@@ -3747,13 +3761,13 @@
       "title": "LoginForm",
       "type": "object",
       "required": [
-        "email",
+        "phone",
         "password",
         "pushInfo"
       ],
       "properties": {
-        "email": {
-          "description": "用户邮箱",
+        "phone": {
+          "description": "手机号码",
           "type": "string"
         },
         "password": {

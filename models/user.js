@@ -63,7 +63,7 @@ var UserSchema = new Schema({
   //HR是否关闭此人
   active: {
     type: Boolean,
-    default: false
+    default: true
   },
   //邮件激活
   mail_active: {
@@ -111,7 +111,8 @@ var UserSchema = new Schema({
   },
   //手机
   phone: {
-    type: String
+    type: String,
+    unique: true
   },
   qq: {
     type: String
@@ -183,7 +184,11 @@ var UserSchema = new Schema({
       type: Date,
       default: Date.now
     }
-  }]
+  }],
+  enrollment: { // 入学时间(TODO: 取消required注释)
+    type: String
+    // required: true
+  }
 });
 
 /**

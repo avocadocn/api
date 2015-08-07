@@ -12,6 +12,8 @@ var log = require('../../services/error_log.js'),
 var publicDomain = require('../../services/public_domain.js');
 var emailService = require('../../services/email.js');
 var multiparty = require('multiparty');
+var tokenService = require('../../services/token.js');
+var jwt = require('jsonwebtoken');
 
 module.exports = {
       /**
@@ -34,13 +36,14 @@ module.exports = {
         }
         req.userInfo = {};
 
-        req.userInfo.cid = (fields['cid'] && fields['cid'][0]) ? fields['cid'][0] : undefined;
-        req.userInfo.email = (fields['email'] && fields['email'][0]) ? fields['email'][0].toLowerCase() : undefined;
-        req.userInfo.password = (fields['password'] && fields['password'][0]) ? fields['password'][0] : undefined;
-        req.userInfo.gender = (fields['gender'] && fields['gender'][0]) ? fields['gender'][0] : undefined;
-        // req.userInfo.photo = (files['photo'] && files['photo'][0].originalFilename) ? files['photo'][0].originalFilename : undefined;
+        req.userInfo.cid = (fields['cid'] && fields['cid'][0]) ? fields['cid'][0] : undefined; // 学校id
+        req.userInfo.phone = (fields['phone'] && fields['phone'][0]) ? fields['phone'][0] : undefined; // 用户手机号
+        req.userInfo.name = (fields['name'] && fields['name'][0]) ? fields['name'][0] : undefined; // 用户昵称(姓名)
+        req.userInfo.password = (fields['password'] && fields['password'][0]) ? fields['password'][0] : undefined; // 用户密码
+        req.userInfo.gender = (fields['gender'] && fields['gender'][0]) ? fields['gender'][0] : undefined; // 用户性别
+        req.userInfo.enrollment = (fields['enrollment'] && fields['enrollment'][0]) ? fields['enrollment'][0] : undefined; // 用户入学年份
 
-        req.photoFile = (files['photo'] && files['photo'][0].originalFilename) ? files['photo'][0] : undefined;;
+        req.photoFile = (files['photo'] && files['photo'][0].originalFilename) ? files['photo'][0] : undefined; // 用户头像
         
         next();
       });
@@ -54,7 +57,7 @@ module.exports = {
       Company.findById(req.userInfo.cid).exec()
         .then(function (company) {
           if (!company) {
-            res.status(400).send({ msg: '没有找到对应的公司' });
+            res.status(400).send({ msg: '没有找到对应的学校' });
           } else {
             req.company = company;
             
@@ -67,11 +70,11 @@ module.exports = {
         });
     },
     registerValidate: function (req, res, next) {
-      var isUsedEmail = function (name, value, callback) {
-        User.findOne({ email: value }).exec()
+      var isUsedPhone = function (name, value, callback) {
+        User.findOne({ phone: value }).exec()
           .then(function (user) {
             if (user) {
-              callback(false, '该邮箱已被注册');
+              callback(false, '该手机号已被注册');
               return;
             }
             callback(true);
@@ -82,45 +85,37 @@ module.exports = {
           });
       };
 
-      var validateDomain = function (name, value, callback) {
-        if (req.company.email.domain.indexOf(value) === -1) {
-          callback(false, '邮箱后缀与公司允许的后缀不一致');
-        } else {
-          callback(true);
-        }
-      };
-
       donlerValidator({
         cid: {
-          name: '公司id',
+          name: '学校id',
           value: req.userInfo.cid,
           validators: ['required']
         },
-        email: {
-          name: '企业邮箱',
-          value: req.userInfo.email,
-          validators: ['required', 'email', isUsedEmail]
-        },
-        domain: {
-          name: '邮箱后缀',
-          value: req.userInfo.email? req.userInfo.email.split('@')[1] : undefined,
-          validators: [validateDomain]
+        phone: {
+          name: '手机号',
+          value: req.userInfo.phone,
+          validators: ['required', 'phone', isUsedPhone]
         },
         password: {
           name: '密码',
           value: req.userInfo.password,
           validators: ['required', donlerValidator.minLength(6), donlerValidator.maxLength(30)]
         },
+        name: {
+          name: '姓名',
+          value: req.userInfo.name,
+          validators: ['required']
+        },
         gender: {
           name: '性别',
           value: req.userInfo.gender,
           validators: ['required']
+        },
+        enrollment: {
+          name: '入学年份',
+          value: req.userInfo.enrollment,
+          validators: ['required', 'enrollment']
         }
-        // photo: {
-        //   name: '头像',
-        //   value: req.userInfo.photo,
-        //   validators: ['required']
-        // }
       }, 'complete', function (pass, msg) {
         if (pass) {
           next();
@@ -162,12 +157,13 @@ module.exports = {
     },
     register: function (req, res) {
       var user = new User({
-        email: req.userInfo.email,
-        username: req.userInfo.email,
+        phone: req.userInfo.phone,
+        realname: req.userInfo.name,
         cid: req.company._id,
         cname: req.company.info.name,
         password: req.userInfo.password,
-        gender: req.userInfo.gender
+        gender: req.userInfo.gender,
+        enrollment: req.userInfo.enrollment
       });
 
       if (req.userInfo.photo) {
@@ -180,15 +176,72 @@ module.exports = {
           res.sendStatus(500);
           return;
         }
-        emailService.sendStaffActiveMail(user.email, user._id.toString(), user.cid.toString(), function (err) {
-          if (err) {
-            log(err);
-            res.sendStatus(500);
-          } else {
-            res.sendStatus(201);
-          }
-        });
+        res.status(200).send({msg: '用户注册成功'});
       });
+    },
+
+    login: function (req, res) {
+      if (!req.body || !req.body.phone || !req.body.password) {
+        return res.status(400).send({ msg: '缺少邮箱或密码' });
+      }
+
+      User.findOne({
+        phone: req.body.phone
+      }).populate('cid').exec()
+        .then(function (user) {
+          if (!user) {
+            return res.status(401).send({ msg: '账号不存在,请检查或注册。' });
+          }
+
+          if (!user.authenticate(req.body.password)) {
+            return res.status(401).send({ msg: '密码输入错误,请检查重试。' });
+          }
+
+          // if(!user.mail_active) {
+          //   return res.status(401).send({ msg: '账号未激活,请至邮箱点击链接激活。' });
+          // }
+
+          if(!user.active) {
+            return res.status(401).send({ msg: '您的账号已被管理员禁用。' });
+          }
+
+          if(user.disabled) {
+            return res.status(401).send({ msg: '账号已被关闭。'})
+          }
+          // if(!user.cid.status.active) {
+          //   return res.status(401).send({ msg: '你的账号所属学校已被关闭。'})
+          // }
+          var payload = {
+            type: "user",
+            id: user._id.toString(),
+            exp: req.app.get('tokenExpires') + Date.now()
+          };
+          var token = jwt.sign(payload, req.app.get('tokenSecret'));
+          var pushInfo = req.body.pushInfo ||{};
+          user.addDevice(req.headers, token, pushInfo);
+          user.save(function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+            } else {
+              res.status(200).send({
+                token: token,
+                id:user._id,
+                cid:user.cid.id,
+                role:user.role,
+                guide_step:(user.cid.guide_step || user.email !==user.cid.login_email) ? 1:0
+              });
+
+              tokenService.redisToken.create(token, payload)
+                .then(null, console.log);
+            }
+          });
+
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
     },
 
     getUserById: function (req, res, next) {
