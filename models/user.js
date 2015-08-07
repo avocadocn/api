@@ -124,7 +124,7 @@ var UserSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ['Admin', 'Leader', 'Student'] //大使, 队长, 学生
+    enum: ['SuperAdmin', 'Student'] //大使, 学生
   },
   //公司_id
   cid: {
@@ -190,9 +190,8 @@ var UserSchema = new Schema({
       default: Date.now
     }
   }],
-  enrollment: { // 入学时间(TODO: 取消required注释)
-    type: String
-    // required: true
+  enrollment: { // 入学时间
+    type: Number
   }
 });
 
@@ -216,6 +215,15 @@ var validatePresenceOf = function(value) {
 var filterTeam = function (teamType) {
   var _filterTeam;
   switch(teamType) {
+    case 0:
+      _filterTeam = function (teams) {
+        var tids = [];
+        teams.forEach(function (team) {
+          tids.push(team._id)
+        })
+        return tids;
+      }
+      break;
     case 1:
       _filterTeam = function (teams) {
         var tids = [];
@@ -236,14 +244,16 @@ var filterTeam = function (teamType) {
         return tids;
       }
       break;
-    default:
+    case 3:
       _filterTeam = function (teams) {
         var tids = [];
         teams.forEach(function (team) {
-          tids.push(team._id)
+          if(team.leader || team.admin)
+            tids.push(team._id)
         })
         return tids;
       }
+      break;
   }
   return _filterTeam;
 }
@@ -323,6 +333,20 @@ UserSchema.methods = {
     return false;
   },
 
+  isTeamAdmin: function(tid) {
+    tid = tid.toString();
+    for (var i = 0; i < this.team.length; i++) {
+      if (tid === this.team[i]._id.toString()) {
+        return this.team[i].leader || this.team[i].admin;
+      }
+    }
+    return false;
+  },
+
+  isSuperAdmin: function(cid) {
+    return this.role === 'SuperAdmin' && cid.toString() === this.cid.toString() ;
+  },
+
   // isLeader: function() {
   //   for (var i = 0; i < this.team.length; i++) {
   //     if (this.team[i].leader) {
@@ -337,7 +361,7 @@ UserSchema.methods = {
   },
   /**
    * 获取tid
-   * @param  {[type]} teamType 0:所有，1：公开，2：私有
+   * @param  {[type]} teamType 0:所有，1:公开，2:私有，3:管理的小队
    * @return {[type]}          [description]
    */
   getTids: function(teamType) {
