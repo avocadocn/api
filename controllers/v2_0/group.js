@@ -23,6 +23,24 @@ var auth = require('../../services/auth.js'),
 // TODO: 群组API涉及到权限判断，同时有重复代码，需要
 // 修改原权限判断代码，优化代码。
 module.exports = {
+    //验证权限 是否为群管理员
+    validateAdmin: function(req, res, next) {
+      if(req.user.isTeamAdmin(req.params.groupId)) {
+        next();
+      }
+      else {
+        return res.status(403).send({msg:'抱歉，您无管理员权限'});
+      }
+    },
+    //验证权限，是否为群主
+    validateLeader: function(req, res, next) {
+      if(req.user.isTeamLeader(req.params.groupId)) {
+        next();
+      }
+      else {
+        return res.status(403).send({msg:'抱歉，您无管理员权限'});
+      }
+    },
     /**
      * 验证创建群组的数据
      * 解析form数据，验证必需数据是否存在
@@ -241,18 +259,6 @@ module.exports = {
      * @param  {[type]}   req  [description]
      */
     getFormDataForUpdateGroup: function(req, res, next) {
-      // 判断权限
-      var users = [];
-      users.push(req.group.leader._id);
-      var role = auth.getRole(req.user, {
-        users: users
-      });
-      var allow = auth.auth(role, ['updateGroup']);
-      if (!allow.updateGroup) {
-        return res.status(403).send({
-          msg: '无权限'
-        });
-      }
 
       var fieldName = 'photo';
       var form = new multiparty.Form({
@@ -708,12 +714,6 @@ module.exports = {
      * @return {[type]}     [description]
      */
     removeMemberFromGroup: function(req, res) {
-      // 判断该请求用户是否是该群的群主
-      if (req.user._id.toString() !== req.group.leader._id.toString()) {
-        return res.status(403).send({
-          msg: '无权限'
-        });
-      }
 
       // 判断移除用户是否已经是该群组成员
       var isMember = req.group.member.some(function(member) {
@@ -782,12 +782,7 @@ module.exports = {
      * @return {[type]}     [description]
      */
     reassignLeaderForGroup: function(req, res) {
-      // 判断该请求用户是否是该群的群主
-      if (req.user._id.toString() !== req.group.leader._id.toString()) {
-        return res.status(403).send({
-          msg: '无权限'
-        });
-      }
+
       var user;
       // 判断移除用户是否已经是该群组成员
       var isMember = req.group.member.some(function(member) {
@@ -871,13 +866,6 @@ module.exports = {
      * @return {[type]}     [description]
      */
     deleteGroup: function(req, res) {
-      // 判断该请求用户是否是该群的群主
-      if (req.user._id.toString() !== req.group.leader._id.toString()) {
-        return res.status(403).send({
-          msg: '无权限'
-        });
-      }
-
       if (req.group.member.length > 1) {
         return res.status(400).send({
           msg: '只有没有成员时该群组才能删除'
@@ -1206,12 +1194,6 @@ module.exports = {
      * @return {[type]}     [description]
      */
     handleApplication: function(req, res) {
-      if (req.user._id.toString() !== req.group.leader._id.toString()) {
-        return res.status(403).send({
-          msg: '无权限'
-        });
-      }
-
       var isMember = req.group.member.some(function(member) {
         return member._id.toString() === req.params.userId.toString()
       });

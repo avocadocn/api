@@ -254,6 +254,14 @@ var filterTeam = function (teamType) {
         return tids;
       }
       break;
+    default:
+      _filterTeam = function (teams) {
+        var tids = [];
+        teams.forEach(function (team) {
+          tids.push(team._id)
+        })
+        return tids;
+      }
   }
   return _filterTeam;
 }
@@ -361,7 +369,7 @@ UserSchema.methods = {
   },
   /**
    * 获取tid
-   * @param  {[type]} teamType 0:所有，1:公开，2:私有，3:管理的小队
+   * @param  {[type]} teamType undefined:所有，1:公开，2:私有，3:管理的小队
    * @return {[type]}          [description]
    */
   getTids: function(teamType) {

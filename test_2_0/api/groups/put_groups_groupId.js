@@ -98,7 +98,7 @@ module.exports = function() {
             })
           )
           .set('x-access-token', userToken)
-          .expect(500)
+          .expect(403)
           .end(function(err, res) {
             if (err) return done(err);
             done();
@@ -114,7 +114,7 @@ module.exports = function() {
             })
           )
           .set('x-access-token', userToken)
-          .expect(204)
+          .expect(403)
           .end(function(err, res) {
             if (err) return done(err);
             done();
