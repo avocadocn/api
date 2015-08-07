@@ -29,66 +29,62 @@ module.exports = function () {
 
     });
     it('应该成功发活动模板', function (done) {
-      var campaignData = {
-        templateType: 1,
-        theme:chance.string({length: 10}),
-        location:{
-          name : chance.address(),
-          coordinates : [chance.longitude(), chance.latitude()]
-        },
-        activityMold:chance.string({length: 5}),
-        content:chance.paragraph(),
-        tags: [chance.string({length: 5}),chance.string({length: 5})],
-        startTime:chance.date({year: nowYear, month: nowMonth +1}),
-        endTime:chance.date({year: nowYear, month: nowMonth +2})
-      }
+      var theme = chance.string({length: 10})
       request.post('/interaction/template')
-        .send(campaignData)
+        .field("templateType", 1)
+        .field("theme", theme)
+        .field("location", chance.address())
+        .field("longitude", chance.longitude())
+        .field("latitude", chance.latitude())
+        .field("activityMold", chance.latitude({length: 5}))
+        .field("content", chance.paragraph())
+        .field("tags", chance.string({length: 5})+","+chance.string({length: 5}))
+        .field("startTime", chance.date({year: nowYear, month: nowMonth +1}).toString())
+        .field("endTime", chance.date({year: nowYear, month: nowMonth +2}).toString())
+        .attach('photo', __dirname + '/test_photo.png')
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
           if (err) return done(err);
-          res.body.theme.should.equal(campaignData.theme);
+          res.body.theme.should.equal(theme);
           done();
         });
     });
     
     it('应该成功发投票模板', function (done) {
-      var pollData = {
-        templateType: 2,
-        theme:chance.string({length: 10}),
-        content:chance.paragraph(),
-        option:[chance.string({length: 5}),chance.string({length: 5}),chance.string({length: 5}),chance.string({length: 5})],
-        tags: [chance.string({length: 5}),chance.string({length: 5})],
-        startTime:chance.date({year: nowYear, month: nowMonth +1}),
-        endTime:chance.date({year: nowYear, month: nowMonth +2})
-      }
+      var theme = chance.string({length: 10})
       request.post('/interaction/template')
-        .send(pollData)
+        .field("templateType", 2)
+        .field("theme", theme)
+        .field("content", chance.paragraph())
+        .field("tags", chance.string({length: 5})+","+chance.string({length: 5}))
+        .field("option", chance.string({length: 5})+","+chance.string({length: 5})+","+chance.string({length: 5})+","+chance.string({length: 5}))
+        .field("startTime", chance.date({year: nowYear, month: nowMonth +1}).toString())
+        .field("endTime", chance.date({year: nowYear, month: nowMonth +2}).toString())
+        .attach('photo', __dirname + '/test_photo.png')
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
           if (err) return done(err);
-          res.body.theme.should.equal(pollData.theme);
+          res.body.theme.should.equal(theme);
           done();
         });
     });
     it('应该成功发求助模板', function (done) {
-      var questionData = {
-        templateType: 3,
-        theme:chance.string({length: 10}),
-        content:chance.paragraph(),
-        tags: [chance.string({length: 5}),chance.string({length: 5})],
-        startTime:chance.date({year: nowYear, month: nowMonth +1}),
-        endTime:chance.date({year: nowYear, month: nowMonth +2})
-      }
+      var theme = chance.string({length: 10})
       request.post('/interaction/template')
-        .send(questionData)
+        .field("templateType", 3)
+        .field("theme", theme)
+        .field("content", chance.paragraph())
+        .field("tags", chance.string({length: 5})+","+chance.string({length: 5}))
+        .field("startTime", chance.date({year: nowYear, month: nowMonth +1}).toString())
+        .field("endTime", chance.date({year: nowYear, month: nowMonth +2}).toString())
+        .attach('photo', __dirname + '/test_photo.png')
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
           if (err) return done(err);
-          res.body.theme.should.equal(questionData.theme);
+          res.body.theme.should.equal(theme);
           done();
         });
     });
@@ -102,29 +98,33 @@ module.exports = function () {
           target: interactionData.target || data[0].model.id,
           theme: interactionData.theme ===null ? null : chance.string({length: 10}),
           content:interactionData.content || chance.paragraph(),
-          tags: interactionData.tags || [chance.string({length: 5}),chance.string({length: 5})],
-          endTime: interactionData.endTime || chance.date({year: nowYear, month: nowMonth +2})
+          tags: interactionData.tags || chance.string({length: 5})+","+chance.string({length: 5}),
+          endTime: interactionData.endTime? interactionData.endTime.toString() : chance.date({year: nowYear, month: nowMonth +2}).toString()
         }
         if(interactionData.templateType===1) {
-          _interactionData.location = interactionData.location || {
-            name : chance.address(),
-            coordinates : [chance.longitude(), chance.latitude()]
-          }
+          _interactionData.location = interactionData.location || chance.address()
+          _interactionData.longitude = interactionData.longitude || chance.longitude()
+          _interactionData.latitude = interactionData.latitude || chance.latitude()
           _interactionData.activityMold = interactionData.activityMold ===null ? null :chance.string({length: 5})
-          _interactionData.startTime = interactionData.startTime || chance.date({year: nowYear, month: nowMonth +1})
+          _interactionData.startTime = interactionData.startTime ? interactionData.startTime.toString() : chance.date({year: nowYear, month: nowMonth +1}).toString()
         }
         else if(interactionData.templateType===2) {
-          _interactionData.option = interactionData.option || [chance.string({length: 5}),chance.string({length: 5}),chance.string({length: 5}),chance.string({length: 5})]
+          _interactionData.option = interactionData.option || chance.string({length: 5})+","+chance.string({length: 5})+","+chance.string({length: 5})+","+chance.string({length: 5})
         }
-        request.post('/interaction/template')
-          .send(_interactionData)
-          .set('x-access-token', accessToken)
-          .expect(_expectStatus)
-          .end(function (err, res) {
-            if (err) return done(err);
-            res.body.msg.should.be.type('string');
-            done();
-          });
+        var _request=request.post('/interaction/template')
+        for( var field in _interactionData) {
+          if(_interactionData[field])
+            _request = _request.field(field,_interactionData[field]);
+        }
+        _request
+        .send(_interactionData)
+        .set('x-access-token', accessToken)
+        .expect(_expectStatus)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.msg.should.be.type('string');
+          done();
+        });
       });
     };
     errorInteractionTest('模板类型',{templateType: 5});
