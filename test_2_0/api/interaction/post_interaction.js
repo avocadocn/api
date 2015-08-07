@@ -28,25 +28,21 @@ module.exports = function () {
         });
 
     });
-    it('应该成功发活动', function (done) {
-      var campaignData = {
-        cid: data[0].model.id,
-        type: 1,
-        targetType: 3,
-        target:data[0].model.id,
-        theme:chance.string({length: 10}),
-        location:{
-          name : chance.address(),
-          coordinates : [chance.longitude(), chance.latitude()]
-        },
-        activityMold:chance.string({length: 5}),
-        content:chance.paragraph(),
-        tags: [chance.string({length: 5}),chance.string({length: 5})],
-        startTime:chance.date({year: nowYear, month: nowMonth +1}),
-        endTime:chance.date({year: nowYear, month: nowMonth +2})
-      }
+    it('应该成功发公司活动', function (done) {
       request.post('/interaction')
-        .send(campaignData)
+        .field("type", 1)
+        .field("targetType", 3)
+        .field("target", data[0].model.id)
+        .field("theme", chance.string({length: 10}))
+        .field("location", chance.address())
+        .field("longitude", chance.longitude())
+        .field("latitude", chance.latitude())
+        .field("activityMold", chance.latitude({length: 5}))
+        .field("content", chance.paragraph())
+        .field("tags", chance.string({length: 5})+","+chance.string({length: 5}))
+        .field("startTime", chance.date({year: nowYear, month: nowMonth +1}).toString())
+        .field("endTime", chance.date({year: nowYear, month: nowMonth +2}).toString())
+        .attach('photo', __dirname + '/test_photo.png')
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
@@ -56,24 +52,20 @@ module.exports = function () {
         });
     });
     it('应该成功发私有活动', function (done) {
-      var campaignData = {
-        cid: data[0].model.id,
-        type: 1,
-        targetType: 2,
-        target:data[0].teams[2].model.id,
-        theme:chance.string({length: 10}),
-        location:{
-          name : chance.address(),
-          coordinates : [chance.longitude(), chance.latitude()]
-        },
-        activityMold:chance.string({length: 5}),
-        content:chance.paragraph(),
-        tags: [chance.string({length: 5}),chance.string({length: 5})],
-        startTime:chance.date({year: nowYear, month: nowMonth +1}),
-        endTime:chance.date({year: nowYear, month: nowMonth +2})
-      }
       request.post('/interaction')
-        .send(campaignData)
+        .field("type", 1)
+        .field("targetType", 2)
+        .field("target", data[0].teams[2].model.id)
+        .field("theme", chance.string({length: 10}))
+        .field("location", chance.address())
+        .field("longitude", chance.longitude())
+        .field("latitude", chance.latitude())
+        .field("activityMold", chance.latitude({length: 5}))
+        .field("content", chance.paragraph())
+        .field("tags", chance.string({length: 5})+","+chance.string({length: 5}))
+        .field("startTime", chance.date({year: nowYear, month: nowMonth +1}).toString())
+        .field("endTime", chance.date({year: nowYear, month: nowMonth +2}).toString())
+        .attach('photo', __dirname + '/test_photo.png')
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
@@ -84,15 +76,11 @@ module.exports = function () {
     });
     it('应该成功用模板发活动', function (done) {
       var templates = dataService.getTemplate();
-      var campaignData = {
-        cid: data[0].model.id,
-        type: 1,
-        targetType: 3,
-        target: data[0].model.id,
-        templateId: templates[0].id
-      }
       request.post('/interaction')
-        .send(campaignData)
+        .field("type", 1)
+        .field("targetType", 3)
+        .field("target", data[0].model.id)
+        .field("templateId", templates[0].id)
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
@@ -102,20 +90,17 @@ module.exports = function () {
         });
     });
     it('应该成功发投票', function (done) {
-      var pollData = {
-        cid: data[0].model.id,
-        type: 2,
-        targetType: 3,
-        target: data[0].model.id,
-        theme: chance.string({length: 10}),
-        content: chance.paragraph(),
-        option: [chance.string({length: 5}),chance.string({length: 5}),chance.string({length: 5}),chance.string({length: 5})],
-        tags: [chance.string({length: 5}),chance.string({length: 5})],
-        startTime: chance.date({year: nowYear, month: nowMonth +1}),
-        endTime: chance.date({year: nowYear, month: nowMonth +2})
-      }
       request.post('/interaction')
-        .send(pollData)
+        .field("type", 2)
+        .field("targetType", 3)
+        .field("target", data[0].model.id)
+        .field("theme", chance.string({length: 10}))
+        .field("content", chance.paragraph())
+        .field("tags", chance.string({length: 5})+","+chance.string({length: 5}))
+        .field("option", chance.string({length: 5})+","+chance.string({length: 5})+","+chance.string({length: 5})+","+chance.string({length: 5}))
+        .field("startTime", chance.date({year: nowYear, month: nowMonth +1}).toString())
+        .field("endTime", chance.date({year: nowYear, month: nowMonth +2}).toString())
+        .attach('photo', __dirname + '/test_photo.png')
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
@@ -125,18 +110,16 @@ module.exports = function () {
         });
     });
     it('应该成功发求助', function (done) {
-      var questionData = {
-        type: 3,
-        targetType: 3,
-        target:data[0].model.id,
-        theme:chance.string({length: 10}),
-        content:chance.paragraph(),
-        tags: [chance.string({length: 5}),chance.string({length: 5})],
-        startTime:chance.date({year: nowYear, month: nowMonth +1}),
-        endTime:chance.date({year: nowYear, month: nowMonth +2})
-      }
       request.post('/interaction')
-        .send(questionData)
+        .field("type", 3)
+        .field("targetType", 3)
+        .field("target", data[0].model.id)
+        .field("theme", chance.string({length: 10}))
+        .field("content", chance.paragraph())
+        .field("tags", chance.string({length: 5})+","+chance.string({length: 5}))
+        .field("startTime", chance.date({year: nowYear, month: nowMonth +1}).toString())
+        .field("endTime", chance.date({year: nowYear, month: nowMonth +2}).toString())
+        .attach('photo', __dirname + '/test_photo.png')
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
@@ -146,18 +129,16 @@ module.exports = function () {
         });
     });
     it('发其他公司互动时活动应该返回403', function (done) {
-      var campaignData = {
-        type: 3,
-        targetType: 3,
-        target:data[1].model.id,
-        theme:chance.string({length: 10}),
-        content:chance.paragraph(),
-        tags: [chance.string({length: 5}),chance.string({length: 5})],
-        startTime:chance.date({year: nowYear, month: nowMonth +1}),
-        endTime:chance.date({year: nowYear, month: nowMonth +2})
-      }
       request.post('/interaction')
-        .send(campaignData)
+        .field("type", 3)
+        .field("targetType", 3)
+        .field("target", data[1].model.id)
+        .field("theme", chance.string({length: 10}))
+        .field("content", chance.paragraph())
+        .field("tags", chance.string({length: 5})+","+chance.string({length: 5}))
+        .field("startTime", chance.date({year: nowYear, month: nowMonth +1}).toString())
+        .field("endTime", chance.date({year: nowYear, month: nowMonth +2}).toString())
+        .attach('photo', __dirname + '/test_photo.png')
         .set('x-access-token', accessToken)
         .expect(403)
         .end(function (err, res) {
@@ -176,29 +157,32 @@ module.exports = function () {
           target: interactionData.target || data[0].model.id,
           theme: interactionData.theme ===null ? null : chance.string({length: 10}),
           content:interactionData.content || chance.paragraph(),
-          tags: interactionData.tags || [chance.string({length: 5}),chance.string({length: 5})],
-          endTime: interactionData.endTime || chance.date({year: nowYear, month: nowMonth +2})
+          tags: interactionData.tags || chance.string({length: 5})+","+chance.string({length: 5}),
+          endTime: interactionData.endTime ? interactionData.endTime.toString() : chance.date({year: nowYear, month: nowMonth +2}).toString()
         }
         if(interactionData.type===1) {
-          _interactionData.location = interactionData.location || {
-            name : chance.address(),
-            coordinates : [chance.longitude(), chance.latitude()]
-          }
+          _interactionData.location = interactionData.location || chance.address()
+          _interactionData.longitude = interactionData.longitude || chance.longitude()
+          _interactionData.latitude = interactionData.latitude || chance.latitude()
           _interactionData.activityMold = interactionData.activityMold ===null ? null :chance.string({length: 5})
-          _interactionData.startTime = interactionData.startTime || chance.date({year: nowYear, month: nowMonth +1})
+          _interactionData.startTime = interactionData.startTime ? interactionData.startTime.toString() : chance.date({year: nowYear, month: nowMonth +1}).toString()
         }
         else if(interactionData.type===2) {
-          _interactionData.option = interactionData.option || [chance.string({length: 5}),chance.string({length: 5}),chance.string({length: 5}),chance.string({length: 5})]
+          _interactionData.option = interactionData.option || chance.string({length: 5})+","+chance.string({length: 5})+","+chance.string({length: 5})+","+chance.string({length: 5})
         }
-        request.post('/interaction')
-          .send(_interactionData)
-          .set('x-access-token', accessToken)
-          .expect(_expectStatus)
-          .end(function (err, res) {
-            if (err) return done(err);
-            res.body.msg.should.be.type('string');
-            done();
-          });
+        var _request=request.post('/interaction')
+        for( var field in _interactionData) {
+          if(_interactionData[field])
+            _request = _request.field(field,_interactionData[field]);
+        }
+        _request
+        .set('x-access-token', accessToken)
+        .expect(_expectStatus)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.msg.should.be.type('string');
+          done();
+        });
       });
     };
     errorInteractionTest('互动类型',{type: 5});
