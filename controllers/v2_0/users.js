@@ -114,7 +114,7 @@ module.exports = {
         enrollment: {
           name: '入学年份',
           value: req.userInfo.enrollment,
-          validators: ['required', 'enrollment']
+          validators: ['enrollment']
         }
       }, 'complete', function (pass, msg) {
         if (pass) {
