@@ -31,6 +31,10 @@ var _team = new Schema({ // 群组组件
     type: Boolean,
     default: false
   },
+  admin: { //该用户是否是这个群组的管理员
+    type: Boolean,
+    default: false
+  },
   public: { // 是否公开
     type: Boolean,
     default: true
@@ -87,10 +91,11 @@ var UserSchema = new Schema({
 
   nickname: String,
   realname: String,
-  department: {
-    name: String,
-    _id: Schema.Types.ObjectId
-  },
+  // department: {
+  //   name: String,
+  //   _id: Schema.Types.ObjectId
+  // },
+  major: String, //专业/学院
   position: String, //职位？已不用
   gender: Boolean,//0:女，1：男
   birthday: {
@@ -117,10 +122,10 @@ var UserSchema = new Schema({
   qq: {
     type: String
   },
-  // role: {
-  //   type: String,
-  //   enum: ['LEADER', 'EMPLOYEE'] //队长 普通员工
-  // },
+  role: {
+    type: String,
+    enum: ['Admin', 'Leader', 'Student'] //大使, 队长, 学生
+  },
   //公司_id
   cid: {
     type: Schema.Types.ObjectId,
@@ -129,7 +134,7 @@ var UserSchema = new Schema({
   cname: String, // 公司全称
   company_official_name: String, //公司简称
   team: [_team],
-  established_team: [_team], //自己创建的小队
+  //established_team: [_team], //自己创建的小队
   //本系统是否关闭此人
   disabled: {
     type: Boolean,
