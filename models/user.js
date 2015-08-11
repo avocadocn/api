@@ -340,7 +340,13 @@ UserSchema.methods = {
     }
     return false;
   },
-
+  isAdmin: function() {
+    for (var i = 0; i < this.team.length; i++) {
+      if(this.team[i].leader || this.team[i].admin)
+        return true;
+    }
+    return false;
+  },
   isTeamAdmin: function(tid) {
     tid = tid.toString();
     for (var i = 0; i < this.team.length; i++) {
@@ -384,6 +390,7 @@ UserSchema.methods = {
    * @param {Object} pushData push的相关数据
    */
   addDevice: function(headers, access_token, pushData) {
+    pushData = pushData || {};
     var headersKeys = ['x-app-id', 'x-api-key', 'x-device-id', 'x-device-type', 'x-platform', 'x-version'];
     var modelKeys = ['app_id', 'api_key', 'device_id', 'device_type', 'platform', 'version'];
     var device = {};

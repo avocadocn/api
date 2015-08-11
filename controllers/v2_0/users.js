@@ -14,6 +14,10 @@ var emailService = require('../../services/email.js');
 var multiparty = require('multiparty');
 var tokenService = require('../../services/token.js');
 var jwt = require('jsonwebtoken');
+var isMobile = function(req) {
+  var deviceAgent = req.headers["user-agent"].toLowerCase();
+  return deviceAgent.match(/(iphone|ipod|ipad|android)/);
+};
 
 module.exports = {
       /**
@@ -187,7 +191,7 @@ module.exports = {
 
       User.findOne({
         phone: req.body.phone
-      }).populate('cid').exec()
+      }).exec()
         .then(function (user) {
           if (!user) {
             return res.status(401).send({ msg: '账号不存在,请检查或注册。' });
@@ -208,6 +212,10 @@ module.exports = {
           if(user.disabled) {
             return res.status(401).send({ msg: '账号已被关闭。'})
           }
+          //登录网站，则只能管理员（大使，社团管理员）进行登录,app登录没有现在
+          if(!req.headers["x-api-key"] && !isMobile(req) && user.role!=="SuperAdmin" &&!user.isAdmin()) {
+            return res.status(401).send({ msg: '您不是管理员无法进行登录管理界面'})
+          }
           // if(!user.cid.status.active) {
           //   return res.status(401).send({ msg: '你的账号所属学校已被关闭。'})
           // }
@@ -227,11 +235,9 @@ module.exports = {
               res.status(200).send({
                 token: token,
                 id:user._id,
-                cid:user.cid.id,
-                role:user.role,
-                guide_step:(user.cid.guide_step || user.email !==user.cid.login_email) ? 1:0
+                cid:user.cid,
+                role:user.role
               });
-
               tokenService.redisToken.create(token, payload)
                 .then(null, console.log);
             }
@@ -243,7 +249,6 @@ module.exports = {
           res.sendStatus(500);
         });
     },
-
     getUserById: function (req, res, next) {
       //获取免打扰开关
       if(req.query.responseKey==='pushToggle') {
