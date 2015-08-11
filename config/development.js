@@ -9,5 +9,5 @@ module.exports = {
     expires: 1000 * 60 * 60 * 24 * 7
   },
   serverListenPort: 3002,
-  db: 'mongodb://localhost/donler-beta'
+  db: 'mongodb://localhost/donler-edu-beta'
 };

@@ -79,8 +79,12 @@ module.exports = {
 
             req.groupInfo.name = fields['name'][0];
             req.groupInfo.themeColor = fields['themeColor'][0];
+            req.groupInfo.brief = fields['brief'][0];
+            req.groupInfo.open = fields['open'][0];
+            req.groupInfo.hasValidate = fields['hasValidate'][0];
             req.groupLogoFile = files[fieldName];
-            
+            req.isAdmin = fields['isAdmin'][0];
+
             next();
           } else {
             var resMsg = donlerValidator.combineMsg(msg);
@@ -132,6 +136,12 @@ module.exports = {
      */
     createGroup: function(req, res) {
 
+      var isAdmin = req.isAdmin && req.user.isSuperAdmin;
+      var _user = { // 群组管理人员（队长）
+          _id: req.user.id,
+          nickname: req.user.nickname,
+          photo: req.user.photo
+      };
       var team = new Team({
         cid: req.user.cid, // 公司id
 
@@ -143,17 +153,15 @@ module.exports = {
 
         themeColor: req.groupInfo.themeColor, // 群组主题颜色
 
-        leader: { // 群组管理人员（队长）
-          _id: req.user.id,
-          nickname: req.user.nickname,
-          photo: req.user.photo
-        },
+        brief: req.groupInfo.brief,
+
+        open: req.groupInfo.open,
+
+        hasValidate: req.groupInfo.hasValidate,
+        // 群组管理人员（队长）
+        leader: isAdmin ? null : _user,
         // 群组成员
-        member: [{
-          _id: req.user.id,
-          nickname: req.user.nickname,
-          photo: req.user.photo
-        }]
+        member: isAdmin ? null : [_user]
       });
 
       var groupMembers = team.member.map(function(member){return member._id});
@@ -193,23 +201,25 @@ module.exports = {
             }
           });
 
-          // 更新user的team属性
-          // TODO: 增加conditions条件
-          User.update({
-            '_id': req.user._id
-          }, {
-            $addToSet: {
-              'team': {
-                _id: team._id, //群组id
-                leader: true, //该员工是不是这个群组的队长
-                public: false
+          if(!isAdmin) {
+            // 更新user的team属性
+            // TODO: 增加conditions条件
+            User.update({
+              '_id': req.user._id
+            }, {
+              $addToSet: {
+                'team': {
+                  _id: team._id, //群组id
+                  leader: true, //该员工是不是这个群组的队长
+                  public: false
+                }
               }
-            }
-          }, function(err, numberAffected) {
-            if (err) {
-              log(err);
-            }
-          });
+            }, function(err, numberAffected) {
+              if (err) {
+                log(err);
+              }
+            });
+          }
 
           Company.update({
             '_id': req.user.cid

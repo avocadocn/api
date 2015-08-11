@@ -45,6 +45,11 @@ var TeamModel = new Schema({
     type: Boolean,
     default: false
   },
+  level: {  //级别 0为未认证, 1为已认证, 以后可增加vip等等...
+    type: Number,
+    enum: [0,1],
+    default: 0
+  },
 
   member: [_member], // 群组成员
 
@@ -79,7 +84,7 @@ var TeamModel = new Schema({
     }
   }],
 
-  applyMember: [_member], // 申请加入该群组的人(group_type.validate === true)
+  applyMember: [_member], // 申请加入该群组的人(hasValidate === true)
 
   photoAlbumList: [{ // 相册(待用)
     type: Schema.Types.ObjectId,

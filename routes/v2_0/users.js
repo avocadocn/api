@@ -18,7 +18,7 @@ module.exports = function (app, ctrl) {
   app.post('/users/:userId/active', token.needToken, getById.getUserById, ctrl.v1_4.activeUser);
   app.post('/users/actions/invite', token.needToken, ctrl.v1_3.inviteUser);
   app.post('/users/actions/batchinvite', token.needToken, ctrl.v1_3.batchinviteUser); //批量邀请用户
-  app.post('/users/login', ctrl.v1_3.login);
+  app.post('/users/login', ctrl.v2_0.login);
   app.post('/users/refresh/token', token.needToken, ctrl.v1_3.refreshToken);
   app.post('/users/logout', token.needToken, ctrl.v1_3.logout);
 

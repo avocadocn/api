@@ -1691,6 +1691,26 @@ paths:
           required: true
           type: file
           in: formData
+        - name: brief
+          description: 简介
+          required: false
+          type: string
+          in: formData
+        - name: hasValidate
+          description: 是否需要验证
+          required: true
+          type: boolean
+          in: formData
+        - name: open
+          description: 是否公开
+          required: true
+          type: boolean
+          in: formData
+        - name: isAdmin
+          description: 是否是大使网站版登录
+          required: true
+          type: boolean
+          in: formData
       responses:
         200:
           description: 成功
@@ -3338,13 +3358,14 @@ definitions:
       - comments
     properties:
       content:
-        type: CircleContent
+        type: object
+        $ref: CircleContent
         description: 消息相关信息
       comments:
         type: array
         description: 消息相关评论数组
         items:
-          type: CircleComment
+          $ref: CircleComment
   CircleContent:
     title: Content
     required:
@@ -3579,3 +3600,12 @@ definitions:
       isActive:
         description: 是否已经激活
         type: boolean
+  Keyword:
+    title: Keyword
+    properties:
+      name:
+        type: string
+      city:
+        type: string
+      page:
+        type: number

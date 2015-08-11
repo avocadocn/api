@@ -182,7 +182,7 @@ module.exports = {
 
     login: function (req, res) {
       if (!req.body || !req.body.phone || !req.body.password) {
-        return res.status(400).send({ msg: '缺少邮箱或密码' });
+        return res.status(400).send({ msg: '缺少账户或密码' });
       }
 
       User.findOne({
