@@ -3,7 +3,7 @@
 var token = require('../../services/token.js');
 
 module.exports = function(app, ctrl) {
-  app.post('/groups', token.needToken, ctrl.v2_0.getFormDataForGroup, ctrl.v2_0.uploadLogoForGroup, ctrl.v2_0.createGroup); // 发新群组 
+  app.post('/groups', token.needToken, ctrl.v2_0.getFormDataForGroup, ctrl.v2_0.uploadLogoForGroup, ctrl.v2_0.createGroup); // 发新群组
   app.put('/groups/:groupId', token.needToken, ctrl.v2_0.validateAdmin, ctrl.v2_0.getGroupById, ctrl.v2_0.getFormDataForUpdateGroup, ctrl.v2_0.uploadLogoForGroup, ctrl.v2_0.updateGroup); // 编辑群组
   app.post('/groups/:groupId/invitation', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.inviteMemberToGroup); // app内群组邀请
   app.get('/groups/:groupId/invitation', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.getInviteCodeForGroup); // app外群组邀请(获取邀请链接)
@@ -22,4 +22,8 @@ module.exports = function(app, ctrl) {
   app.put('/groups/:groupId/applicant/:userId', token.needToken, ctrl.v2_0.validateAdmin, ctrl.v2_0.getGroupById, ctrl.v2_0.handleApplication); // 处理用户申请
 
   //缺少：指定管理员，群申请认证，获取自己管理的群列表
+  app.post('/groups/:groupId/admin', token.needToken, ctrl.v2_0.validateLeader, ctrl.v2_0.getGroupById, ctrl.v2_0.addAdmin); // 添加管理员
+  app.delete('/groups/:groupId/admin', token.needToken, ctrl.v2_0.validateLeader, ctrl.v2_0.getGroupById, ctrl.v2_0.removeAdmin); // 移除管理员
+  app.post('/groups/:groupId/update', token.needToken, ctrl.v2_0.validateAdmin, ctrl.v2_0.getGroupById, ctrl.v2_0.requestUpdate); // 申请升级群
+  app.put('/groups/:groupId/update', token.needToken, ctrl.v2_0.validateAdmin, ctrl.v2_0.getGroupById, ctrl.v2_0.dealUpdate); // 处理升级群
 };

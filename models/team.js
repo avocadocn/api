@@ -50,7 +50,12 @@ var TeamModel = new Schema({
     enum: [0,1],
     default: 0
   },
-
+  //0:未申请, 1:等待验证, 2:通过, 3:拒绝
+  applyStatus:{
+    type: Number,
+    enum: [0,1,2,3],
+    default: 0
+  },
   member: [_member], // 群组成员
 
   leader: { // 群组管理人员（队长）

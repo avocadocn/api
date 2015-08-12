@@ -1284,5 +1284,126 @@ module.exports = {
           }
         }
       });
+    },
+    addAdmin: function(req, res) {
+      Team.update({
+        '_id': req.group._id,
+        'active': true
+      }, {
+        $addToSet: {"administrators":req.body.admin}
+      }, function(err, numberAffected) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        } else {
+          res.status(200).send({
+            msg: '设置管理员成功'
+          });
+          // 更新user的team属性
+          if (req.groupInfo.open !== undefined) {
+            // TODO: 增加conditions条件
+            User.update({
+              _id:req.body.admin,
+              'team': {
+                '$elemMatch': {
+                  '_id': req.group._id
+                }
+              }
+            }, {
+              $set: {
+                'team.$.admin': true
+              }
+            }, {
+              multi: false
+            }, function(err, numberAffected) {
+              if (err) {
+                log(err);
+              }
+            });
+          }
+        }
+      });
+    },
+    removeAdmin: function(req, res) {
+      Team.update({
+        '_id': req.group._id,
+        'active': true
+      }, {
+        $pull: {"administrators":req.body.admin}
+      }, function(err, numberAffected) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        } else {
+          res.status(200).send({
+            msg: '移除管理员成功'
+          });
+          // 更新user的team属性
+          if (req.groupInfo.open !== undefined) {
+            // TODO: 增加conditions条件
+            User.update({
+              _id:req.body.admin,
+              'team': {
+                '$elemMatch': {
+                  '_id': req.group._id
+                }
+              }
+            }, {
+              $set: {
+                'team.$.admin': false
+              }
+            }, {
+              multi: false
+            }, function(err, numberAffected) {
+              if (err) {
+                log(err);
+              }
+            });
+          }
+        }
+      });
+    },
+    requestUpdate: function(req, res) {
+      if(req.group.applyStatus === 1) {
+        return res.status(400).send({msg:"已经收到了您申请的认证，无需重复申请！"})
+      }
+      else if(req.group.applyStatus === 2) {
+        return res.status(400).send({msg:"您的群已经通过认证，无需继续申请！"})
+      }
+      Team.update({
+        '_id': req.group._id,
+        'active': true
+      }, {
+        $set: {"applyStatus":1}
+      }, function(err, numberAffected) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        } else {
+          res.status(200).send({
+            msg: '申请成功！'
+          });
+        }
+      });
+    },
+    dealUpdate: function(req, res) {
+      if(req.group.applyStatus !== 1) {
+        return res.status(400).send({msg:"该群没有进行申请认证或已经通过了验证，无需处理！"})
+      }
+      Team.update({
+        '_id': req.group._id,
+        'active': true
+      }, {
+        $set: {"applyStatus":req.body.status}
+      }, function(err, numberAffected) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        } else {
+          res.status(200).send({
+            msg: '处理成功！'
+          });
+        }
+      });
     }
 };
