@@ -41,6 +41,14 @@ module.exports = {
         return res.status(403).send({msg:'抱歉，您无管理员权限'});
       }
     },
+    validateSuperAdmin: function(req, res, next) {
+      if(req.user.isSuperAdmin(req.group.cid)) {
+        next();
+      }
+      else {
+        return res.status(403).send({msg:'抱歉，您无大使权限'});
+      }
+    },
     /**
      * 验证创建群组的数据
      * 解析form数据，验证必需数据是否存在
@@ -510,9 +518,7 @@ module.exports = {
         groupId: req.group._id, // 公司名称
 
         user: {
-          _id: req.user._id,
-          nickname: req.user.nickname,
-          photo: req.user.photo
+          _id: req.user._id
         }
       });
 
@@ -575,9 +581,7 @@ module.exports = {
         }, {
           $addToSet: {
             'applyMember': {
-              _id: req.user._id, // 成员id
-              nickname: req.user.nickname, // 成员昵称
-              photo: req.user.photo, // 成员头像
+              _id: req.user._id // 成员id
             }
           }
         }, function(err, numberAffected) {
@@ -812,9 +816,7 @@ module.exports = {
       }, {
         $set: {
           'leader': {
-            '_id': user._id,
-            'nickname': user.nickname,
-            'photo': user.photo
+            '_id': user._id
           }
         }
       }, function(err, numberAffected) {
@@ -1146,9 +1148,7 @@ module.exports = {
       if (req.query.accept === 'true') {
         doc.$addToSet = {
           'member': {
-            _id: req.user._id, // 成员id
-            nickname: req.user.nickname, // 成员昵称
-            photo: req.user.photo, // 成员头像
+            _id: req.user._id // 成员id
           }
         };
         msg = '加入受邀群组成功';
@@ -1286,12 +1286,56 @@ module.exports = {
         }
       });
     },
-    addAdmin: function(req, res) {
+    addLeader: function(req, res) {
       Team.update({
         '_id': req.group._id,
         'active': true
       }, {
-        $addToSet: {"administrators":req.body.admin}
+        $set: {"leader":req.body.userId},
+        $addToSet: {
+          'member': {
+            _id: req.user._id // 成员id
+          }
+        }
+      }, function(err, numberAffected) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        } else {
+          res.status(200).send({
+            msg: '设置群主成功！'
+          });
+          // 更新user的team属性
+          User.update({
+            _id:req.body.userId
+          }, {
+            $addToSet: {
+              'team': { // 群组组件
+                _id: req.group._id, //群组id
+                leader: true,
+                admin: false,
+                public: req.group.public
+              }
+            }
+          }, {
+            multi: false
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
+          });
+        }
+      });
+    },
+    addAdmin: function(req, res) {
+      if(!req.group.isMember(req.body.userId)) {
+        return res.status(400).send({msg:"该成员不是本小队成员，无法任命为管理员"})
+      }
+      Team.update({
+        '_id': req.group._id,
+        'active': true
+      }, {
+        $addToSet: {"administrators":req.body.userId}
       }, function(err, numberAffected) {
         if (err) {
           log(err);
@@ -1301,36 +1345,36 @@ module.exports = {
             msg: '设置管理员成功'
           });
           // 更新user的team属性
-          if (req.groupInfo.open !== undefined) {
-            // TODO: 增加conditions条件
-            User.update({
-              _id:req.body.admin,
-              'team': {
-                '$elemMatch': {
-                  '_id': req.group._id
-                }
+          User.update({
+            _id:req.body.userId,
+            'team': {
+              '$elemMatch': {
+                '_id': req.group._id
               }
-            }, {
-              $set: {
-                'team.$.admin': true
-              }
-            }, {
-              multi: false
-            }, function(err, numberAffected) {
-              if (err) {
-                log(err);
-              }
-            });
-          }
+            }
+          }, {
+            $set: {
+              'team.$.admin': true
+            }
+          }, {
+            multi: false
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
+          });
         }
       });
     },
     removeAdmin: function(req, res) {
+      if(!req.group.isAdmin(req.body.userId)) {
+        return res.status(400).send({msg:"该成员不是本小队管理员，无法移除"})
+      }
       Team.update({
         '_id': req.group._id,
         'active': true
       }, {
-        $pull: {"administrators":req.body.admin}
+        $pull: {"administrators":req.body.userId}
       }, function(err, numberAffected) {
         if (err) {
           log(err);
@@ -1340,27 +1384,24 @@ module.exports = {
             msg: '移除管理员成功'
           });
           // 更新user的team属性
-          if (req.groupInfo.open !== undefined) {
-            // TODO: 增加conditions条件
-            User.update({
-              _id:req.body.admin,
-              'team': {
-                '$elemMatch': {
-                  '_id': req.group._id
-                }
+          User.update({
+            _id:req.body.userId,
+            'team': {
+              '$elemMatch': {
+                '_id': req.group._id
               }
-            }, {
-              $set: {
-                'team.$.admin': false
-              }
-            }, {
-              multi: false
-            }, function(err, numberAffected) {
-              if (err) {
-                log(err);
-              }
-            });
-          }
+            }
+          }, {
+            $set: {
+              'team.$.admin': false
+            }
+          }, {
+            multi: false
+          }, function(err, numberAffected) {
+            if (err) {
+              log(err);
+            }
+          });
         }
       });
     },
@@ -1388,9 +1429,6 @@ module.exports = {
       });
     },
     dealUpdate: function(req, res) {
-      if(!req.user.isSuperAdmin(req.group.cid)) {
-        return res.status(403).send({msg:"您不是校园大使没有处理权限！"})
-      }
       if(req.group.applyStatus !== 1) {
         return res.status(400).send({msg:"该群没有进行申请认证或已经通过了验证，无需处理！"})
       }

@@ -21,9 +21,9 @@ module.exports = function(app, ctrl) {
   app.put('/groups/:groupId/invitation', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.handleInvitationFromGroup); // 处理群组邀请
   app.put('/groups/:groupId/applicant/:userId', token.needToken, ctrl.v2_0.validateAdmin, ctrl.v2_0.getGroupById, ctrl.v2_0.handleApplication); // 处理用户申请
 
-  //缺少：指定管理员，群申请认证，获取自己管理的群列表
+  app.post('/groups/:groupId/leader', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.validateSuperAdmin, ctrl.v2_0.addLeader); // 任命群主（仅限大使创建的认证群）
   app.post('/groups/:groupId/admin', token.needToken, ctrl.v2_0.validateLeader, ctrl.v2_0.getGroupById, ctrl.v2_0.addAdmin); // 添加管理员
   app.delete('/groups/:groupId/admin', token.needToken, ctrl.v2_0.validateLeader, ctrl.v2_0.getGroupById, ctrl.v2_0.removeAdmin); // 移除管理员
   app.post('/groups/:groupId/update', token.needToken, ctrl.v2_0.validateAdmin, ctrl.v2_0.getGroupById, ctrl.v2_0.requestUpdate); // 申请升级群
-  app.put('/groups/:groupId/update', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.dealUpdate); // 处理升级群
+  app.put('/groups/:groupId/update', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.validateSuperAdmin, ctrl.v2_0.dealUpdate); // 处理升级群
 };

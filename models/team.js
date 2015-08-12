@@ -13,8 +13,6 @@ var _member = new Schema({ // 群组成员组件
     type: Schema.Types.ObjectId,
     ref: 'User'
   },
-  nickname: String, // 成员昵称
-  photo: String, // 成员头像
   time: { //加入时间、申请时间
     type: Date,
     default: Date.now
@@ -122,6 +120,20 @@ TeamModel.methods = {
   // 群组所有成员id
   memberIds: function() {
     return this.member.map(function(obj) { return obj._id});
+  },
+  isMember: function(userId) {
+    for (var i = this.member.length - 1; i >= 0; i--) {
+      if(this.member[i]._id.toString()===userId.toString())
+        return true;
+    }
+    return false;
+  },
+  isAdmin: function(userId) {
+    for (var i = this.member.length - 1; i >= 0; i--) {
+      if(this.administrators[i]._id.toString()===userId.toString())
+        return true;
+    }
+    return false;
   }
 };
 

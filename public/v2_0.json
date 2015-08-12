@@ -2920,6 +2920,183 @@
         }
       }
     },
+    "/groups/{groupId}/leader": {
+      "post": {
+        "tags": [
+          "group"
+        ],
+        "summary": "任命验证过的无群主的群的群主",
+        "operationId": "addLeader",
+        "parameters": [
+          {
+            "name": "groupId",
+            "description": "群组id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "body",
+            "required": true,
+            "schema": {
+              "$ref": "addLeaderForm"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/groups/{groupId}/admin": {
+      "post": {
+        "tags": [
+          "group"
+        ],
+        "summary": "任命群的管理员",
+        "operationId": "addAdmin",
+        "parameters": [
+          {
+            "name": "groupId",
+            "description": "群组id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "body",
+            "required": true,
+            "schema": {
+              "$ref": "addLeaderForm"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "group"
+        ],
+        "summary": "移除群的管理员",
+        "operationId": "removeAdmin",
+        "parameters": [
+          {
+            "name": "groupId",
+            "description": "群组id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "body",
+            "required": true,
+            "schema": {
+              "$ref": "addLeaderForm"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/groups/{groupId}/update": {
+      "post": {
+        "tags": [
+          "group"
+        ],
+        "summary": "申请认证群",
+        "operationId": "requestUpdate",
+        "parameters": [
+          {
+            "name": "groupId",
+            "description": "群组id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "group"
+        ],
+        "summary": "处理认证群",
+        "operationId": "dealUpdate",
+        "parameters": [
+          {
+            "name": "groupId",
+            "description": "群组id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          },
+          {
+            "name": "body",
+            "description": "body",
+            "required": true,
+            "schema": {
+              "$ref": "updateTeamForm"
+            },
+            "in": "body"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/groups/{groupId}/applicant/{userId}": {
       "put": {
         "tags": [
@@ -5097,6 +5274,23 @@
         },
         "page": {
           "type": "number"
+        }
+      }
+    },
+    "addLeaderForm": {
+      "title": "addLeaderForm",
+      "properties": {
+        "userId": {
+          "type": "string"
+        }
+      }
+    },
+    "updateTeamForm": {
+      "title": "updateTeamForm",
+      "properties": {
+        "status": {
+          "type": "boolean",
+          "description": "true为通过，false为拒绝"
         }
       }
     }
