@@ -1388,6 +1388,9 @@ module.exports = {
       });
     },
     dealUpdate: function(req, res) {
+      if(!req.user.isSuperAdmin(req.group.cid)) {
+        return res.status(403).send({msg:"您不是校园大使没有处理权限！"})
+      }
       if(req.group.applyStatus !== 1) {
         return res.status(400).send({msg:"该群没有进行申请认证或已经通过了验证，无需处理！"})
       }

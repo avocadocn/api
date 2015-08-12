@@ -83,10 +83,10 @@ var CompanySchema = new Schema({
 
     // 企业给用户的邀请码
     invite_key: String,
-    guide_step:{
-        type: Number,
-        default: 0
-    },
+    // guide_step:{
+    //     type: Number,
+    //     default: 0
+    // },
     //管理员
     super_admin: [{
         type: Schema.Types.ObjectId,
