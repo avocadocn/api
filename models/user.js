@@ -61,8 +61,7 @@ var UserSchema = new Schema({
     unique: true
   }, //登录用的用户名=email
   email: {
-    type: String,
-    unique: true
+    type: String
   },
   //HR是否关闭此人
   active: {
@@ -96,7 +95,6 @@ var UserSchema = new Schema({
   //   _id: Schema.Types.ObjectId
   // },
   major: String, //专业/学院
-  position: String, //职位？已不用
   gender: Boolean,//0:女，1：男
   birthday: {
     type: Date

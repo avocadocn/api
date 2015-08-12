@@ -162,6 +162,8 @@ module.exports = {
     register: function (req, res) {
       var user = new User({
         phone: req.userInfo.phone,
+        username: req.userInfo.phone,
+        nickname: req.userInfo.name,
         realname: req.userInfo.name,
         cid: req.company._id,
         cname: req.company.info.name,
