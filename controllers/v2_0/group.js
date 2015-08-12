@@ -79,7 +79,7 @@ module.exports = {
 
             req.groupInfo.name = fields['name'][0];
             req.groupInfo.themeColor = fields['themeColor'][0];
-            req.groupInfo.brief = fields['brief'][0];
+            req.groupInfo.brief = fields['brief'] ? fields['brief'][0]:'';
             req.groupInfo.open = fields['open'][0];
             req.groupInfo.hasValidate = fields['hasValidate'][0];
             req.groupLogoFile = files[fieldName];
@@ -135,8 +135,7 @@ module.exports = {
      * @return {[type]}     [description]
      */
     createGroup: function(req, res) {
-
-      var isAdmin = req.isAdmin && req.user.isSuperAdmin;
+      var isAdmin = req.isAdmin && req.user.role === 'SuperAdmin';
       var _user = { // 群组管理人员（队长）
           _id: req.user.id,
           nickname: req.user.nickname,
@@ -161,10 +160,12 @@ module.exports = {
         // 群组管理人员（队长）
         leader: isAdmin ? null : _user,
         // 群组成员
-        member: isAdmin ? null : [_user]
+        member: isAdmin ? [] : [_user],
+
+        level: isAdmin ? 1 : 0
       });
 
-      var groupMembers = team.member.map(function(member){return member._id});
+      var groupMembers = team.member.length ? team.member.map(function(member){return member._id}) : [];
 
       team.save(function(err) {
         if (err) {
