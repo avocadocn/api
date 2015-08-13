@@ -89,10 +89,11 @@ var Interaction = new Schema({
   },
   //修改时间
   updateTime: Date,
+  //是否为空开，私有群发的为非公开
   public: {
     type: Boolean,
     default: true
-  },
+  }
 });
 
 mongoose.model('Interaction', Interaction);

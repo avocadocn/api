@@ -26,4 +26,5 @@ module.exports = function(app, ctrl) {
   app.delete('/groups/:groupId/admin', token.needToken, ctrl.v2_0.validateLeader, ctrl.v2_0.getGroupById, ctrl.v2_0.removeAdmin); // 移除管理员
   app.post('/groups/:groupId/update', token.needToken, ctrl.v2_0.validateAdmin, ctrl.v2_0.getGroupById, ctrl.v2_0.requestUpdate); // 申请升级群
   app.put('/groups/:groupId/update', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.validateSuperAdmin, ctrl.v2_0.dealUpdate); // 处理升级群
+  app.get('/groups/list/update', token.needToken, ctrl.v2_0.validateSuperAdmin, ctrl.v2_0.getUpdateList); // 获取申请升级的群
 };

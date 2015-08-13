@@ -42,7 +42,8 @@ module.exports = {
       }
     },
     validateSuperAdmin: function(req, res, next) {
-      if(req.user.isSuperAdmin(req.group.cid)) {
+      //如果是存在req.group则判断是否为该群所在学校的管理员，否则为自己的学校的
+      if(req.user.isSuperAdmin(req.group ? req.group.cid : req.user.cid)) {
         next();
       }
       else {
@@ -1456,6 +1457,32 @@ module.exports = {
         } else {
           res.status(200).send({
             msg: '处理成功！'
+          });
+        }
+      });
+    },
+    getUpdateList: function(req, res) {
+      var conditions = {
+        'cid':req.user.cid,
+        'active': true,
+        'level':0,
+        'applyStatus':1
+      };
+
+      var projection = {
+        'name': 1,
+        'logo': 1,
+        'themeColor': 1,
+        'brief': 1
+      };
+
+      Team.find(conditions, projection, function(err, docs) {
+        if (err) {
+          log(err);
+          return res.sendStatus(500);
+        } else {
+          return res.status(200).send({
+            groups: docs
           });
         }
       });

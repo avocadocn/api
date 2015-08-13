@@ -1145,6 +1145,17 @@ paths:
             - 2
             - 3
             - 4
+        - name: requestType
+          description: 请求类型:参加的小队的活动，2：认证小队活动和学校活动(面向全校发的互动)，3：未认证小队活动(未参加且公开的互动)
+          required: true
+          type: integer
+          format: int32
+          in: query
+          enum:
+            - 1
+            - 2
+            - 3
+            - 4
         - name: createTime
           description: 创建时间，分页用
           required: false
@@ -2003,6 +2014,19 @@ paths:
         - group
       summary: 获取公司群组列表
       operationId: getGroupListOfCompany
+      responses:
+        200:
+          description: 成功
+        default:
+          description: error
+          schema:
+            $ref: Error
+  "/groups/list/update":
+    get:
+      tags:
+        - group
+      summary: 获取公司正在申请认证的群组列表
+      operationId: getGroupListOfUpdate
       responses:
         200:
           description: 成功

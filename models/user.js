@@ -40,18 +40,6 @@ var _team = new Schema({ // 群组组件
     default: true
   }
 });
-
-var chatroom = new Schema({
-  _id: Schema.Types.ObjectId,
-  join_time:{
-    type: Date,
-    default: Date.now
-  },
-  read_time: {
-    type: Date,
-    default: Date.now
-  }
-});
 /**
  * User Schema
  */
@@ -67,11 +55,6 @@ var UserSchema = new Schema({
   active: {
     type: Boolean,
     default: true
-  },
-  //邮件激活
-  mail_active: {
-    type: Boolean,
-    default: false
   },
   invited: Boolean, // 是否是通过hr发邀请来注册的
 
