@@ -1053,7 +1053,7 @@ module.exports = {
           log(err);
           return res.sendStatus(500);
         } else {
-          return res.status(200).send({
+          return res.send({
             groups: docs
           });
         }

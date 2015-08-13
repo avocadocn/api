@@ -22,7 +22,7 @@ var Gift = new Schema({
   giftIndex: {
     type: Number,
     required: true,
-    enum: [1,2,3,4,5] //1鲜花 2咖啡 3拥抱 4爱心 5蛋糕
+    enum: [4,5] //1鲜花 2咖啡 3拥抱 4爱心 5蛋糕
   },
   //送礼时间
   createTime: {

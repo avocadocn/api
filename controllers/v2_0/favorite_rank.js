@@ -24,7 +24,7 @@ module.exports = {
      * req.query
      * {
      *   cid: String, // 榜单公司id
-     *   type: Number, // 榜单类型 1男神榜 2女神榜 3人气榜
+     *   type: Number, // 榜单类型 1男神榜 2女神榜 3人气榜(已经移除)
      *   limit: Number, // 查询数量(分页查询使用)
      *   vote: Number, // 积分(分页查询使用)
      *   id: String // 上一页最后一名用户的id(分页查询使用)
@@ -84,11 +84,11 @@ module.exports = {
             aggregateOptions[0].$match.receiverGender = 2;
             aggregateOptions[0].$match.giftIndex = 4;
             break;
-          case '3':
-            aggregateOptions[0].$match.giftIndex = {
-              $in: [1, 2, 3]
-            };
-            break;
+          // case '3':
+          //   aggregateOptions[0].$match.giftIndex = {
+          //     $in: [1, 2, 3]
+          //   };
+          //   break;
           default:
             break;
         }

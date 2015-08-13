@@ -2189,10 +2189,13 @@ paths:
           type: string
           in: query
         - name: type
-          description: 榜单类型
+          description: 榜单类型1男神榜 2女神榜
           required: true
           type: integer
           in: query
+          enum:
+            - 1
+            - 2
         - name: page
           description: 页数
           required: true
@@ -3070,9 +3073,15 @@ definitions:
         type: string
         default: 53aa7a0c6b2836fd41ba41d7
       giftIndex:
-        description: 礼物的编号
+        description: 礼物的编号1鲜花(去掉) 2咖啡(去掉) 3拥抱(去掉) 4爱心 5蛋糕
         type: number
         default: 1
+        enum:
+          # - 1
+          # - 2
+          # - 3
+          - 4
+          - 5
       addition:
         description: 附言
         type: string

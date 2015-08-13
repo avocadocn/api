@@ -159,7 +159,7 @@ module.exports = {
         giftIndex: {
           name: '礼物编号',
           value: req.body.giftIndex,
-          validators: [donlerValidator.enum([1,2,3,4,5], '礼物编号错误')]
+          validators: [donlerValidator.enum([4,5], '礼物编号错误')]
         },
         replyGift: {
           name: '回复礼物',
