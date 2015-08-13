@@ -93,6 +93,10 @@ var Interaction = new Schema({
   public: {
     type: Boolean,
     default: true
+  },
+  offical: {
+    type: Boolean,
+    default: false
   }
 });
 

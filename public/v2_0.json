@@ -1404,6 +1404,13 @@
             "default": "53aa6fc011fd597b3e1be250"
           },
           {
+            "name": "relatedTeam",
+            "description": "发起小队ID",
+            "required": false,
+            "in": "formData",
+            "type": "string"
+          },
+          {
             "name": "targetType",
             "description": "目标类型 1:'个人',2:'群',3:'公司'",
             "required": true,

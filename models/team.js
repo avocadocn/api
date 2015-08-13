@@ -57,12 +57,8 @@ var TeamModel = new Schema({
   member: [_member], // 群组成员
 
   leader: { // 群组管理人员（队长）
-    _id: {
-      type: Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    nickname: String,
-    photo: String
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   },
   administrators: [{
     type: Schema.Types.ObjectId,
@@ -129,8 +125,19 @@ TeamModel.methods = {
     return false;
   },
   isAdmin: function(userId) {
-    for (var i = this.member.length - 1; i >= 0; i--) {
-      if(this.administrators[i]._id.toString()===userId.toString())
+    userId = userId.toString();
+    for (var i = this.administrators.length - 1; i >= 0; i--) {
+      if(this.administrators[i].toString()===userId)
+        return true;
+    }
+    return false;
+  },
+  isAdminOrLeader:function(userId) {
+    userId = userId.toString();
+    if(this.leader.toString()===userId)
+      return true;
+    for (var i = this.administrators.length - 1; i >= 0; i--) {
+      if(this.administrators[i].toString()===userId)
         return true;
     }
     return false;

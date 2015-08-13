@@ -145,11 +145,7 @@ module.exports = {
      */
     createGroup: function(req, res) {
       var isAdmin = req.isAdmin && req.user.role === 'SuperAdmin';
-      var _user = { // 群组管理人员（队长）
-          _id: req.user.id,
-          nickname: req.user.nickname,
-          photo: req.user.photo
-      };
+      var _user = req.user.id; // 群组管理人员（队长）
       var team = new Team({
         cid: req.user.cid, // 公司id
 
@@ -594,7 +590,7 @@ module.exports = {
               msg: '申请加入该群组成功'
             });
             //发通知给群主
-            notificationController.sendTeamNtct(8, req.group, req.user._id, req.group.leader._id);
+            notificationController.sendTeamNtct(8, req.group, req.user._id, req.group.leader);
           }
         });
       } else {
@@ -666,7 +662,7 @@ module.exports = {
       }
 
       // 判断该用户是否为群主
-      if (req.group.leader._id.toString() === req.user._id.toString()) {
+      if (req.group.leader.toString() === req.user._id.toString()) {
         if (req.group.member.length > 1) {
           return res.status(200).send({
             msg: '指定新群主'
@@ -816,9 +812,7 @@ module.exports = {
         'active': true
       }, {
         $set: {
-          'leader': {
-            '_id': user._id
-          }
+          'leader': user._id
         }
       }, function(err, numberAffected) {
         if (err) {
@@ -1314,7 +1308,6 @@ module.exports = {
               'team': { // 群组组件
                 _id: req.group._id, //群组id
                 leader: true,
-                admin: false,
                 public: req.group.public
               }
             }

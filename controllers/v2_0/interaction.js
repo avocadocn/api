@@ -4,6 +4,7 @@ var path = require('path');
 
 var mongoose = require('mongoose');
 var User = mongoose.model('User'),
+  Team = mongoose.model('Team'),
   Interaction = mongoose.model('Interaction'),
   Activity = mongoose.model('Activity'),
   Poll = mongoose.model('Poll'),
@@ -156,6 +157,11 @@ module.exports = {
           value: req.body.target,
           validators: ['required', 'objectId']
         },
+        relatedTeam: {
+          name: '发起小队ID',
+          value: req.body.relatedTeam,
+          validators: ['objectId']
+        },
         templateId: {
           name: '模板ID',
           value: req.body.templateId,
@@ -235,6 +241,8 @@ module.exports = {
               if(req.user.cid.toString()!==target)
                 return res.status(403).send({ msg: "您不能与其他学校进行互动" });
               //TODO:将来应该限制只要认证的社团管理员或者校园大使可以面向全校发
+              if(req.user.cid.toString()!==target)
+                return res.status(403).send({ msg: "您不能与其他学校进行互动" });
               break;
             case 2:
               for (var i = req.user.team.length - 1; i >= 0; i--) {
@@ -279,6 +287,24 @@ module.exports = {
         }
       });
     },
+    createInteractionAuth:function(req, res, next) {
+      //公司类型时需要验证身份1：如果为大使直接通过，如果不是需要验证是否为小队管理员，是否为认证小队
+      if(req.body.targetType===3) {
+        Team.findOne({_id:req.body.relatedTeam,cid:req.body.target}).exec()
+        .then(function(team) {
+          if(req.user.isSuperAdmin(req.body.target) || team && team.level===1 && team.isAdminOrLeader(req.user._id)) {
+            req.body.offical = true;
+          }
+          next();
+        })
+        .then(null,function(err) {
+          return req.status(500).send({msg:"数据发生错误"})
+        })
+      }
+      else {
+        next()
+      }
+    },
     /**
      * 创建互动
      * @param  {[type]} req [description]
@@ -319,7 +345,9 @@ module.exports = {
         endTime: data.endTime,
         tags: data.tags,
         photos: data.photos,
-        public: data.public
+        public: data.public,
+        relatedTeam: data.relatedTeam,
+        offical: data.offical
       });
       
       async.waterfall([
