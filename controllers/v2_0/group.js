@@ -1409,7 +1409,7 @@ module.exports = {
       if(req.group.applyStatus === 1) {
         return res.status(400).send({msg:"已经收到了您申请的认证，无需重复申请！"})
       }
-      else if(req.group.applyStatus === 2) {
+      else if(req.group.level === 1 || req.group.applyStatus === 2) {
         return res.status(400).send({msg:"您的群已经通过认证，无需继续申请！"})
       }
       Team.update({
@@ -1429,14 +1429,26 @@ module.exports = {
       });
     },
     dealUpdate: function(req, res) {
-      if(req.group.applyStatus !== 1) {
+      if(req.group.level === 1 || req.group.applyStatus !== 1) {
         return res.status(400).send({msg:"该群没有进行申请认证或已经通过了验证，无需处理！"})
+      }
+      var set;
+      if(req.body.status) {
+        set = {
+          "applyStatus": 2,
+          "level": 1
+        }
+      }
+      else {
+        set =  {
+          "applyStatus": 3
+        }
       }
       Team.update({
         '_id': req.group._id,
         'active': true
       }, {
-        $set: {"applyStatus":req.body.status}
+        $set: set
       }, function(err, numberAffected) {
         if (err) {
           log(err);
