@@ -1033,12 +1033,19 @@ module.exports = {
         'active': true,
         'open': true
       };
-
+      //1认证过的小队，0未认证的小队，其他则为所有
+      if(req.query.type ==='1'){
+        conditions.level= 1;
+      }
+      else if(req.query.type ==='0') {
+        conditions.level= 0;
+      }
       var projection = {
         'name': 1,
         'logo': 1,
         'themeColor': 1,
-        'brief': 1
+        'brief': 1,
+        'level':1
       };
 
       Team.find(conditions, projection, function(err, docs) {

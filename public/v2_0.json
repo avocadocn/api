@@ -2855,6 +2855,20 @@
         ],
         "summary": "获取公司群组列表",
         "operationId": "getGroupListOfCompany",
+        "parameters": [
+          {
+            "name": "type",
+            "description": "小队类型：1认证过的小队，0未认证的小队，其他则为所有",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "in": "query",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        ],
         "responses": {
           "200": {
             "description": "成功"
