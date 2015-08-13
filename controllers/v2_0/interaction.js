@@ -459,19 +459,19 @@ module.exports = {
         function (callback) {
           //自己
           if(userId==req.user._id) {
-            //1:参加的小队的活动，2：认证小队活动和学校活动（面向全校发的互动），3：未认证小队活动
+            //1:参加的小队的活动，2：认证小队活动和学校活动（面向全校发的互动），3：未认证小队活动,default:所以自己所在学校和参加的小队的
             switch(req.query.requestType) {
               case "1":
-                option ={cid:req.user.cid, status:{"$lt":3},"targetType":2,target:{"$in":req.user.getTids()}};
+                option ={"cid":req.user.cid, "status":{"$lt":3},"targetType":2,"target":{"$in":req.user.getTids()}};
                 break;
               case "2":
-                option ={cid:req.user.cid, status:{"$lt":3}, "targetType":3,target:req.user.cid};
+                option ={"status":{"$lt":3}, "offical":true, "targetType":3,"target":req.user.cid};
                 break;
               case "3":
-                option ={cid:req.user.cid, status:{"$lt":3}, "public":true, "targetType":2, target:{"$not":{"$in":req.user.getTids()}}};
+                option ={"status":{"$lt":3}, "offical": {$ne:true}, "targetType":3, "target":req.user.cid};
                 break;
               default:
-                option ={cid:req.user.cid, status:{"$lt":3}, "$or":[{"targetType":2,target:{"$in":req.user.getTids()}},{"targetType":3,target:req.user.cid}]};
+                option ={"cid":req.user.cid, "status":{"$lt":3}, "$or":[{"targetType":2,"target":{"$in":req.user.getTids()}},{"targetType":3,"target":req.user.cid}]};
             }
             callback(null,req.user)
           }
