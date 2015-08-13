@@ -87,6 +87,10 @@ var Interaction = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Question'
   },
+  relatedTeam: {
+    type: Schema.Types.ObjectId,
+    ref: 'Team'
+  },
   //修改时间
   updateTime: Date,
   //是否为空开，私有群发的为非公开
