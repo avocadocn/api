@@ -376,10 +376,24 @@
             "in": "formData"
           },
           {
-            "name": "intro",
+            "name": "introduce",
             "description": "简介",
             "required": false,
             "type": "string",
+            "in": "formData"
+          },
+          {
+            "name": "gender",
+            "description": "性别 false为女 true为男",
+            "required": false,
+            "type": "boolean",
+            "in": "formData"
+          },
+          {
+            "name": "enrollment",
+            "description": "入学年份",
+            "required": false,
+            "type": "number",
             "in": "formData"
           },
           {
@@ -423,13 +437,6 @@
             "description": "要删除的tag",
             "required": false,
             "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "photo",
-            "description": "头像",
-            "required": false,
-            "type": "file",
             "in": "formData"
           }
         ],
@@ -501,21 +508,9 @@
         ],
         "parameters": [
           {
-            "name": "email",
-            "description": "企业邮箱",
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "cid",
-            "description": "企业id",
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "inviteKey",
-            "description": "邀请码",
-            "type": "string",
+            "name": "phone",
+            "description": "手机号码",
+            "type": "number",
             "in": "formData"
           }
         ],
@@ -659,36 +654,6 @@
         }
       }
     },
-    "/users/{userId}/active": {
-      "post": {
-        "tags": [
-          "user"
-        ],
-        "summary": "激活成员",
-        "operationId": "activeUser",
-        "parameters": [
-          {
-            "name": "userId",
-            "description": "用户id",
-            "required": true,
-            "type": "string",
-            "in": "path",
-            "default": "53aa707a11fd597b3e1be260"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "激活成功"
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
     "/users/{userId}/photos": {
       "get": {
         "tags": [
@@ -717,43 +682,6 @@
             "description": "成功",
             "schema": {
               "$ref": "PhotoListData"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/users/resend/activeEmail": {
-      "post": {
-        "tags": [
-          "user"
-        ],
-        "operationId": "resendActiveEamil",
-        "summary": "重新发送激活邮件",
-        "produces": [
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "body",
-            "description": "重新发送激活的目标邮箱",
-            "required": true,
-            "schema": {
-              "$ref": "resendActiveEamilForm"
-            },
-            "in": "body"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "重新发送成功",
-            "schema": {
-              "$ref": "resendActiveEamilResult"
             }
           },
           "default": {
@@ -3911,24 +3839,8 @@
       "type": "object",
       "properties": {
         "active": {
-          "description": "验证邮箱结果,1为可以注册，2为已注册未激活，3已经注册并激活，4邮箱后缀不符合",
-          "type": "integer",
-          "format": "int32",
-          "enum": [
-            1,
-            2,
-            3,
-            4
-          ]
-        },
-        "invitekeyCheck": {
-          "description": "验证激活码结果,1为正确,2为错误",
-          "type": "integer",
-          "format": "int32",
-          "enum": [
-            1,
-            2
-          ]
+          "description": "true为已注册，false为未注册",
+          "type": "boolean"
         },
         "msg": {
           "description": "验证结果描述",

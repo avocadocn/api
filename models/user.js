@@ -44,10 +44,10 @@ var _team = new Schema({ // 群组组件
  * User Schema
  */
 var UserSchema = new Schema({
-  username: {
+  username: { //2.0版改为phone
     type: String,
     unique: true
-  }, //登录用的用户名=email
+  }, 
   email: {
     type: String
   },
@@ -56,6 +56,11 @@ var UserSchema = new Schema({
     type: Boolean,
     default: true
   },
+  //邮件激活
+  // mail_active: {
+  //   type: Boolean,
+  //   default: false
+  // },
   invited: Boolean, // 是否是通过hr发邀请来注册的
 
   hashed_password: String,
@@ -73,11 +78,11 @@ var UserSchema = new Schema({
 
   nickname: String,
   realname: String,
-  // department: {
-  //   name: String,
-  //   _id: Schema.Types.ObjectId
-  // },
-  major: String, //专业/学院
+  //todo
+  department: {
+    name: String,
+    _id: Schema.Types.ObjectId
+  },
   gender: Boolean,//0:女，1：男
   birthday: {
     type: Date
@@ -105,7 +110,8 @@ var UserSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ['SuperAdmin', 'Student'] //大使, 学生
+    enum: ['SuperAdmin', 'Student'], //大使, 学生
+    default: 'Student'
   },
   //公司_id
   cid: {
@@ -339,6 +345,7 @@ UserSchema.methods = {
   },
 
   isSuperAdmin: function(cid) {
+    if(!cid) return false;
     return this.role === 'SuperAdmin' && cid.toString() === this.cid.toString() ;
   },
 

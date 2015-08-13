@@ -33,7 +33,7 @@ module.exports = function (app, ctrl) {
   // app.get('/companies/:companyId/undisposed', token.needToken, ctrl.v1_3.getCompanyUndisposed);
   // app.get('/companies/:companyId/statistics', token.needToken, ctrl.v1_3.getCompanyStatistics);
   // app.get('/companies/:companyId/charts', token.needToken, ctrl.v1_3.getCompanyCharts);
-  app.get('/companies/:companyId/members', token.needToken, ctrl.v1_3.getCompanyMembers);
+  // app.get('/companies/:companyId/members', token.needToken, ctrl.v1_3.getCompanyMembers);
   app.get('/companies/:companyId/latestMembers', token.needToken, ctrl.v1_3.getLatestMembers);
   app.get('/companies/:companyId/reportedMembers', token.needToken, ctrl.v1_3.getCompanyReportedMembers);
   app.get('/companies/:companyId/departments', token.needToken, ctrl.v1_3.getCompanyDepartments);

@@ -333,6 +333,19 @@ validators.sex = function (name, value, callback) {
   }
 };
 
+validators.boolean = function (name, value, callback) {
+  if(value === undefined) {
+    callback(true);
+    return;
+  }
+  if( value !== true && value !== false) {
+    var msg = util.format('%s无效', name);
+    callback(false, msg);
+  }else {
+    callback(true);
+  }
+};
+
 validators.date = function (name, value, callback) {
   if (!value) {
     callback(true);
