@@ -16,6 +16,8 @@ var multiparty = require('multiparty');
 var tokenService = require('../../services/token.js');
 var jwt = require('jsonwebtoken');
 var easemob = require('../../services/easemob.js');
+var multerService = require('../../middlewares/multerService.js');
+var path = require('path');
 
 var isMobile = function(req) {
   var deviceAgent = req.headers["user-agent"].toLowerCase();
@@ -328,23 +330,34 @@ module.exports = {
     },
 
     sendFeedback: function(req, res) {
-      //图片todo
-      // var feedback = new Feedback({
-      //   user: req.user._id,
-      //   content: req.body.content
-      // });
-      // var photos;
-      // if(req.files && req.files.length) {
-      //   req.photos.forEach(function(img) {
-      //     var photo = {
-      //       uri: path.join('/img/feedback/', img.filename)
-      //     }
-      //   })
-      //   feedback.photos = req.photos;
-      // }
-      // console.log(req.files);
-      // console.log(req.body);
-      return res.send(200);
+      var feedback = new Feedback({
+        user: req.user._id,
+        content: req.body.content
+      });
+      //图片过滤
+      multerService.formatPhotos(req.files, {getSize:false}, function(err, files) {
+        var photos = [];
+        if(files && files.length) {
+          var now = new Date();
+          var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
+          var dir = path.join('/img/feedback', dateDirName)
+          files.forEach(function(img) {
+            var photo = {
+              uri: path.join(dir, img.filename)
+            };
+            photos.push(photo);
+          });
+          feedback.photos = photos;
+        }
+        feedback.save(function(ferr) {
+          if(ferr) {
+            return res.status(500).send({msg:'反馈保存错误'});
+          }
+          else {
+            return res.status(200).send({msg:'反馈发送成功'});
+          }
+        });
+      });
     },
 
     registerValidate: function (req, res, next) {
