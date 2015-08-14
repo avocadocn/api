@@ -3,6 +3,7 @@
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var Company = mongoose.model('Company');
+var Feedback = mongoose.model('Feedback');
 
 var log = require('../../services/error_log.js'),
     donlerValidator = require('../../services/donler_validator.js'),
@@ -271,14 +272,79 @@ module.exports = {
     },
 
     getCompanyUsers: function(req, res) {
-
+      if(req.user.cid.toString() !== req.params.companyId)
+        return res.sendStatus(403);
+      var findOptions = {'cid':req.params.companyId, 'active':true};
+      var outputOptions = {'nickname':1, 'photo':1, 'realname': 1, 'gender':1};
+      if(req.query.page) {
+        var pageNum = 10;
+        var page = req.query.page;
+        User.paginate(findOptions, page, pageNum, function(err, pageCount, results, itemCount) {
+          if(err){
+            log(err);
+            res.status(500).send({msg:err});
+          }
+          else{
+            return res.send({'users':results,'maxPage':pageCount,'hasNext':pageCount>page});
+          }
+        },{columns:outputOptions, sortBy:{'nickname':1}});
+      }
+      else{
+        User.find(findOptions,outputOptions)
+        .sort('nickname')
+        .exec()
+        .then(function (users){
+          return res.status(200).send(users);
+        })
+        .then(null, function (err){
+          log(err);
+          return res.status(500).send({msg:'查询错误'});
+        })
+      }
     },
 
     forgetPassword: function(req, res) {
-
+      //todo 短信
+      User.find({phone:req.body.phone}, function(err, user) {
+        if(err) {
+          return res.status(500).send({msg:'服务器出错'});
+        }
+        if(!user) {
+          return res.status(400).send({msg:'此手机号未注册过'});
+        }
+        if(req.body.password.length<6) {
+          return res.status(400).send({msg: '密码长度不够'});
+        }
+        user.password = req.body.password;
+        user.save(function(err) {
+          if(err) {
+            return res.status(500).send({msg:'服务器出错'});
+          }
+          else {
+            return res.sendStatus(200);
+          }
+        })
+      })
     },
-    sendFeedback: function(req, res) {
 
+    sendFeedback: function(req, res) {
+      //图片todo
+      // var feedback = new Feedback({
+      //   user: req.user._id,
+      //   content: req.body.content
+      // });
+      // var photos;
+      // if(req.files && req.files.length) {
+      //   req.photos.forEach(function(img) {
+      //     var photo = {
+      //       uri: path.join('/img/feedback/', img.filename)
+      //     }
+      //   })
+      //   feedback.photos = req.photos;
+      // }
+      // console.log(req.files);
+      // console.log(req.body);
+      return res.send(200);
     },
 
     registerValidate: function (req, res, next) {

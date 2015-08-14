@@ -2,6 +2,7 @@
 
 var token = require('../../services/token.js');
 var getById = require('../../middlewares/getById.js');
+var multerService = require('../../middlewares/multerService.js');
 
 module.exports = function (app, ctrl) {
 
@@ -12,7 +13,7 @@ module.exports = function (app, ctrl) {
   app.put('/users/:userId', token.needToken, ctrl.v2_0.updateValidate, ctrl.v2_0.updatePhoto, ctrl.v2_0.update);
   app.get('/users/list/:companyId', token.needToken, ctrl.v2_0.getCompanyUsers);
   app.post('/users/forgetPassword', ctrl.v2_0.forgetPassword);
-  app.post('/users/sendFeedback', token.needToken, ctrl.v2_0.sendFeedback);
+  app.post('/users/sendFeedback', token.needToken, multerService.upload('feedback').array('photos',9), ctrl.v2_0.sendFeedback);
 
   app.post('/users/:userId/close', token.needToken, getById.getUserById, ctrl.v2_0.validateSuperAdmin, ctrl.v2_0.close);
   app.post('/users/:userId/open', token.needToken, getById.getUserById, ctrl.v2_0.validateSuperAdmin, ctrl.v2_0.open);

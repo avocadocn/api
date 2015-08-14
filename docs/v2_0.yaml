@@ -394,16 +394,21 @@ paths:
       summary: 用户发送反馈
       operationId: sendFeedback
       consumes:
-        - application/x-www-form-urlencoded
+        - multipart/form-data
       parameters:
         - name: content
           description: 反馈内容
           type: string
           required: true
           in: formData
+        - name: photos
+          description: 照片
+          type: file
+          required: false
+          in: formData
       responses:
         "201":
-          description: 邮件发送成功
+          description: 发送反馈成功
         default:
           description: error
           schema:
