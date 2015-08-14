@@ -3232,6 +3232,46 @@
         }
       }
     },
+    "/favoriteRank/team": {
+      "get": {
+        "tags": [
+          "favoriteRank"
+        ],
+        "summary": "获取小队排行榜",
+        "operationId": "getTeamFavoriteRank",
+        "parameters": [
+          {
+            "name": "page",
+            "description": "页数",
+            "required": false,
+            "type": "integer",
+            "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "每页数目，默认10",
+            "required": false,
+            "type": "integer",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "type": "array",
+            "items": {
+              "$ref": null
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/circle/contents": {
       "post": {
         "tags": [

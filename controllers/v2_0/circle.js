@@ -125,15 +125,13 @@ module.exports = {
           success: function(imgInfo, oriCallback) {
             callback(null, imgInfo);
           },
-          error: function(err) {
-            log(err);
-            return res.status(500).send({ msg: '服务器错误' });
-          }
+          error: callback
         });
 
       }, function(err, results) {
         if (err) {
           log(err);
+           return res.status(500).send({ msg: '服务器错误' });
         }
         req.imgInfos = results;
         next();

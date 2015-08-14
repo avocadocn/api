@@ -7,6 +7,7 @@ var mongoose = require('mongoose');
 var FavoriteRank = mongoose.model('FavoriteRank');
 var User = mongoose.model('User');
 var Gift = mongoose.model('Gift');
+var Team = mongoose.model('Team');
 
 var auth = require('../../services/auth.js'),
   log = require('../../services/error_log.js'),
@@ -15,7 +16,7 @@ var auth = require('../../services/auth.js'),
   async = require('async');
 
 var redisService = require('../../services/redis_service.js');
-
+var perPage =10;
 module.exports = {
     /**
      * 获取榜单
@@ -243,6 +244,30 @@ module.exports = {
           redisService.redisRanking.addEleToZSET(req.query.cid, req.query.type, elements, limit);
         })
         .then(null, function(err) {
+          log(err);
+          return res.status(500).send({
+            msg: '服务器错误'
+          });
+        });
+    },
+    /**
+     * 获取小队排行榜
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    getTeamRank:function(req, res) {
+      var skip = isNaN(parseInt(req.query.page)) ? 0 : parseInt(req.query.page) * perPage;
+      var _limit = isNaN(parseInt(req.query.limit)) ? perPage : parseInt(req.query.limit);
+      Team.find({cid: req.user.cid, active: true})
+        .sort({"score.total": -1,"level": -1})
+        .limit(_limit)
+        .skip(skip)
+        .exec()
+        .then(function(teams){
+          res.send(teams);
+        })
+        .then(null,function(err){
           log(err);
           return res.status(500).send({
             msg: '服务器错误'

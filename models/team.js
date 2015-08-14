@@ -106,7 +106,13 @@ var TeamModel = new Schema({
     default: Date.now
   },
   // 环信id
-  easemobId: String
+  easemobId: String,
+  score: {
+    total: {
+      type: Number,
+      default: 0
+    }
+  }
 });
 
 /**
