@@ -539,45 +539,9 @@ module.exports = {
           if (!user) {
             return res.status(404).send({ msg: "找不到该用户" });
           }
-          var role = auth.getRole(req.user, {
-            companies: [user.cid],
-            users: [user._id]
-          });
-          var allow = auth.auth(role, ['getUserCompleteData', 'getUserBriefData', 'getUserMinData']);
-          if (allow.getUserCompleteData) {
-            var completeData = {
-              _id: user._id,
-              active:user.active,
-              mail_active:user.mail_active,
-              email: user.email,
-              nickname: user.nickname,
-              photo: user.photo,
-              realname: user.realname,
-              department: user.department,
-              gender: user.gender,
-              birthday: user.birthday,
-              bloodType: user.bloodType,
-              introduce: user.introduce,
-              registerDate: user.register_date,
-              phone: user.phone,
-              qq: user.qq,
-              company: {
-                _id: user.cid,
-                name: user.company_official_name,
-                briefName: user.cname
-              },
-              tids: user.getTids(0),
-              score: user.score.total || 0,
-              tags: user.tags,
-              team: user.teams
-            };
-            res.status(200).send(completeData);
-          } else if (allow.getUserBriefData) {
-            var tids = [];
-            user.team.forEach(function (team) {//不拿部门和公司
-              if(team.entity_type!='virtual') tids.push(team._id);
-            });
-            var briefData = {
+          var userData;
+          if (user.cid.toString()===req.user.cid.toString()) {
+            userData = {
               _id: user._id,
               email: user.email,
               nickname: user.nickname,
@@ -597,21 +561,16 @@ module.exports = {
               qq: user.qq,
               score: user.score.total || 0,
               tags: user.tags,
-              campaignCount: user.campaignCount || 0,
-              tids: user.getTids(1)
+              tids: user.getTids(req.user._id.toString()===req.params.userId ? 0 : 1)
             };
-            res.status(200).send(briefData);
-          } else if (allow.getUserMinData) {
-            var minData = {
+          } else {
+            userData = {
               _id: user._id,
               nickname: user.nickname,
               photo: user.photo
             };
-            res.status(200).send(minData);
-          } else {
-            res.sendStatus(403);
           }
-
+          res.status(200).send(userData);
         })
         .then(null, next);
     },
