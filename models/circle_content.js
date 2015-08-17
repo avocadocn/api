@@ -30,9 +30,6 @@ var CircleContent = new Schema({
     required: true
   },
 
-  tid: [Schema.Types.ObjectId], // 关联的小队id(无用)
-  campaignId: Schema.Types.ObjectId, // 关联的活动id(无用)
-
   content: String, // 文本内容(content和photos至少要有一个)
 
   photos: [{ // 照片列表

@@ -24,6 +24,15 @@ var easemob = require('../../services/easemob.js');
 var multiparty = require('multiparty');
 
 module.exports = {
+  validateSuperAdmin: function(req, res, next) {
+    if(req.user.isSuperAdmin(req.params.companyId)) {
+      next();
+    }
+    else {
+      return res.status(403).send({msg:'权限不足'});
+    }
+  },
+
   quickRegisterValidate: function(req, res, next) {
 
     var emailValidate = function(name, value, callback) {
