@@ -3,6 +3,18 @@
 var token = require('../../services/token.js');
 var getById = require('../../middlewares/getById.js');
 var multerService = require('../../middlewares/multerService.js');
+var session = require('express-session');
+var RedisStore = require('connect-redis')(session);
+var config = require('../../config/config');
+var sessionMiddleware = session({
+    store: new RedisStore(),
+    resave: false,
+    saveUninitialized: true,
+    secret: config.token.secret,
+    cookie: {
+      maxAge: config.token.expires
+    }
+});
 
 module.exports = function (app, ctrl) {
 
@@ -20,9 +32,9 @@ module.exports = function (app, ctrl) {
   // app.post('/users/:userId/active', token.needToken, getById.getUserById, ctrl.v1_4.activeUser);
   // app.post('/users/actions/invite', token.needToken, ctrl.v1_3.inviteUser);
   // app.post('/users/actions/batchinvite', token.needToken, ctrl.v1_3.batchinviteUser); //批量邀请用户
-  app.post('/users/login', ctrl.v2_0.login);
-  app.post('/users/refresh/token', token.needToken, ctrl.v1_3.refreshToken);
-  app.post('/users/logout', token.needToken, ctrl.v1_3.logout);
+  app.post('/users/login', sessionMiddleware, ctrl.v2_0.login);
+  app.post('/users/refresh/token', token.needToken, sessionMiddleware, ctrl.v2_0.refreshToken);
+  app.post('/users/logout', token.needToken, sessionMiddleware, ctrl.v2_0.logout);
 
   // app.get('/users/:userId/photos', token.needToken, ctrl.v1_3.getUserPhotosValidate, ctrl.v1_3.getUserPhotos);
   // app.get('/users/:userId/comments', token.needToken, getById.getUserById, ctrl.v1_3.getUserComments);

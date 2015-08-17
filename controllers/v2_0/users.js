@@ -516,6 +516,8 @@ module.exports = {
           var token = jwt.sign(payload, req.app.get('tokenSecret'));
           var pushInfo = req.body.pushInfo ||{};
           user.addDevice(req.headers, token, pushInfo);
+          req.session.uid = user.id;
+          req.headers["x-access-token"] = token;
           user.save(function (err) {
             if (err) {
               log(err);
@@ -537,6 +539,54 @@ module.exports = {
           log(err);
           res.sendStatus(500);
         });
+    },
+    refreshToken: function (req, res, next) {
+      var token = req.headers['x-access-token'];
+      tokenService.redisToken.refresh(token)
+        .then(function(reply) {
+          res.send({
+            msg: '更新成功',
+            newToken: token
+          });
+          req.session.touch();
+        })
+        .then(null, function(err) {
+          var newToken = jwt.sign({
+            type: "user",
+            id: req.user._id.toString(),
+            exp: req.app.get('tokenExpires') + Date.now()
+          }, req.app.get('tokenSecret'));
+          req.user.updateDeviceToken(req.headers['x-access-token'], newToken);
+          req.user.save(function(err) {
+            if (err) next(err);
+            else {
+              res.send({
+                msg: '更新成功',
+                newToken: newToken
+              });
+              req.session.touch();
+            }
+          });
+        });
+    },
+    logout: function (req, res) {
+      if (req.user.provider !== 'user') {
+        res.sendStatus(403);
+        return;
+      }
+      var token = req.headers['x-access-token'];
+      req.user.removeDevice(req.headers);
+      req.user.save(function (err) {
+        if (err) {
+          log(err);
+          res.sendStatus(500);
+        } else {
+          req.session.destroy();
+          res.sendStatus(204);
+          tokenService.redisToken.delete(token)
+            .then(null, console.log);
+        }
+      });
     },
     //todo
     getUserById: function (req, res, next) {
