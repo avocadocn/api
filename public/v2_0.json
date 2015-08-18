@@ -2386,14 +2386,14 @@
           {
             "name": "themeColor",
             "description": "群组主题颜色",
-            "required": true,
+            "required": false,
             "type": "string",
             "in": "formData"
           },
           {
             "name": "photo",
             "description": "群组logo",
-            "required": true,
+            "required": false,
             "type": "file",
             "in": "formData"
           },

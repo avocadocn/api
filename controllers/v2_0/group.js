@@ -72,26 +72,26 @@ module.exports = {
             value: (fields['name'] && fields['name'][0]) ? fields['name'][0] : undefined,
             validators: ['required']
           },
-          themeColor: {
-            name: '主题颜色',
-            value: (fields['themeColor'] && fields['themeColor'][0]) ? fields['themeColor'][0] : undefined,
-            validators: ['required']
-          },
-          logo: {
-            name: '封面',
-            value: (files[fieldName] && files[fieldName][0].originalFilename) ? files[fieldName][0].originalFilename : undefined,
-            validators: ['required']
-          }
+          // themeColor: {
+          //   name: '主题颜色',
+          //   value: (fields['themeColor'] && fields['themeColor'][0]) ? fields['themeColor'][0] : undefined,
+          //   validators: []
+          // },
+          // logo: {
+          //   name: '封面',
+          //   value: (files[fieldName] && files[fieldName][0].originalFilename) ? files[fieldName][0].originalFilename : undefined,
+          //   validators: ['required']
+          // }
         }, 'complete', function(pass, msg) {
           if (pass) {
             req.groupInfo = {};
 
             req.groupInfo.name = fields['name'][0];
-            req.groupInfo.themeColor = fields['themeColor'][0];
+            req.groupInfo.themeColor = fields['themeColor'] ? fields['themeColor'][0] : '';
             req.groupInfo.brief = fields['brief'] ? fields['brief'][0]:'';
             req.groupInfo.open = fields['open'][0];
             req.groupInfo.hasValidate = fields['hasValidate'][0];
-            req.groupLogoFile = files[fieldName];
+            req.groupLogoFile = files[fieldName] ? files[fieldName] :'';
             req.isAdmin = fields['isAdmin'][0];
 
             next();
