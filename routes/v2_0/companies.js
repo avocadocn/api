@@ -23,7 +23,7 @@ module.exports = function (app, ctrl) {
   // app.post('/companies/quickRegister', ctrl.v2_0.quickRegisterValidate, ctrl.v2_0.uploadPhotoForUser, ctrl.v2_0.quickRegister);
   // app.post('/companies/quickRegisterTeams', ctrl.v1_3.quickRegisterTeams);
   
-  app.get('/companies/:companyId', token.needToken, ctrl.v1_3.getCompany);
+  app.get('/companies/:companyId', token.needToken, ctrl.v2_0.getCompany);
 
   app.put('/companies/:companyId', token.needToken, ctrl.v1_3.getCompanyById, ctrl.v1_3.updateCompanyValidate, ctrl.v1_3.updateCompanyLogo, ctrl.v1_3.updateCompany);
   app.put('/companies/:companyId/companyCover', token.needToken, ctrl.v1_3.getCompanyById, ctrl.v1_3.updateCompanyCover);
