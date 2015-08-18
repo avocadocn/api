@@ -2874,6 +2874,17 @@
               0,
               1
             ]
+          },
+          {
+            "name": "from",
+            "description": "判断是否从大使网站上来",
+            "required": false,
+            "type": "string",
+            "format": "string",
+            "in": "query",
+            "enum": [
+              "admin"
+            ]
           }
         ],
         "responses": {

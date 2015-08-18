@@ -144,8 +144,8 @@ module.exports = {
      * @return {[type]}     [description]
      */
     createGroup: function(req, res) {
-      var isAdmin = req.isAdmin && req.user.role === 'SuperAdmin';
-      var _user = req.user.id; // 群组管理人员（队长）
+      var isAdmin = req.isAdmin==='true' && req.user.role === 'SuperAdmin';
+      var userId = req.user._id; // 群组管理人员（队长）
       var team = new Team({
         cid: req.user.cid, // 公司id
 
@@ -163,14 +163,14 @@ module.exports = {
 
         hasValidate: req.groupInfo.hasValidate,
         // 群组管理人员（队长）
-        leader: isAdmin ? null : _user,
+        leader: isAdmin ? null : userId,
         // 群组成员
-        member: isAdmin ? [] : [_user],
+        member: isAdmin ? [] : [{_id:userId}],
 
         level: isAdmin ? 1 : 0
       });
 
-      var groupMembers = team.member.length ? team.member.map(function(member){return member._id}) : [];
+      var groupMembers = team.member.length ? [userId] : [];
 
       team.save(function(err) {
         if (err) {
@@ -1045,19 +1045,29 @@ module.exports = {
         'logo': 1,
         'themeColor': 1,
         'brief': 1,
-        'level':1
+        'level':1,
+        'hasValidate':1,
+        'score':1
       };
+      var isAdmin = req.user.isSuperAdmin(req.user.cid) && req.query.from === 'admin';
+      if(isAdmin) {
+        projection.applyStatus = 1;
+        projection.leader = 1;
+        projection.member = 1;
+      };
+      var doc = Team.find(conditions, projection);
+      if(isAdmin) {
+        doc = doc.populate({path:'leader', select:'photo nickname'});
+      }
 
-      Team.find(conditions, projection, function(err, docs) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
-        } else {
-          return res.send({
-            groups: docs
-          });
-        }
+      doc.exec()
+      .then(function(docs) {
+        return res.status(200).send({groups: docs});
+      })
+      .then(null, function(err) {
+        return res.sendStatus(500);
       });
+
     },
     /**
      * 获取群组详细信息
