@@ -292,6 +292,10 @@ module.exports = {
         },{columns:outputOptions, sortBy:{'nickname':1}});
       }
       else{
+        if(req.query.from='admin' && req.user.isSuperAdmin(req.params.companyId)) {
+          findOptions = {'cid':req.params.companyId};
+          outputOptions.active = 1;
+        }
         User.find(findOptions,outputOptions)
         .sort('nickname')
         .exec()
