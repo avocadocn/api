@@ -43,5 +43,20 @@ module.exports = {
         }
       }
     });
+  },
+  searchUsersByName: function(req, res) {
+    if(!req.query.name)
+      return res.status(400).send({msg:'查询条件错误'});
+    var regx = new RegExp(req.query.name,'i');
+    var options = {cid:req.user.cid, 'nickname': regx, 'active':true};
+    console.log(options)
+    User.find(options).exec().then(function(users) {
+      res.send(users);
+    })
+    .then(null,function(err){
+      log(err);
+      return res.sendStatus(500);
+    });
   }
 };
+

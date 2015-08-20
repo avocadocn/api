@@ -1105,15 +1105,17 @@ module.exports = {
         projection = {};
       }
 
-      Team.findOne(conditions, projection, function(err, group) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
-        } else {
-          res.status(200).send({
-            group: group
-          });
-        }
+      Team.findOne(conditions, projection)
+      .populate('leader')
+      .exec()
+      .then(function(group) {
+        res.status(200).send({
+          group: group
+        });
+      })
+      .then(null,function(err) {
+        log(err);
+        return res.sendStatus(500);
       });
     },
     /**
