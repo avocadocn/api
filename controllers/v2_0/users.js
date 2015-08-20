@@ -439,7 +439,7 @@ module.exports = {
         saveOrigin: true,
         getSize: true,
         success: function(imgInfo, oriCallback) {
-          req.userInfo.photo = '/img/user/photo/' + imgInfo.url;
+          req.userInfo.photo = path.join('/img/user/photo/', imgInfo.url);
           next();
         },
         error: function(err) {

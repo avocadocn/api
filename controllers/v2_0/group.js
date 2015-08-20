@@ -43,7 +43,7 @@ module.exports = {
     },
     validateSuperAdmin: function(req, res, next) {
       //如果是存在req.group则判断是否为该群所在学校的管理员，否则为自己的学校的
-      if(req.user.isSuperAdmin(req.group ? req.group.cid : req.user.cid)) {
+      if(req.user.isSuperAdmin(req.group ? req.group.cid : req.user.cid)&&(!req.group ||req.group.level===1)) {
         next();
       }
       else {
@@ -126,7 +126,7 @@ module.exports = {
         saveOrigin: true,
         getSize: true,
         success: function(imgInfo, oriCallback) {
-          req.groupInfo.logo = imgInfo.url;
+          req.groupInfo.logo = path.join('/img/groups', imgInfo.url);
           next();
         },
         error: function(err) {
@@ -275,7 +275,11 @@ module.exports = {
      * @param  {[type]}   req  [description]
      */
     getFormDataForUpdateGroup: function(req, res, next) {
-
+      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
+        req.groupInfo = req.body;
+        next();
+        return;
+      }
       var fieldName = 'photo';
       var form = new multiparty.Form({
         uploadDir: uploader.tempDir
@@ -295,7 +299,6 @@ module.exports = {
         req.groupInfo.brief = (fields['brief'] && fields['brief'][0]) ? fields['brief'][0] : undefined;
         req.groupInfo.open = (fields['open'] && fields['open'][0]) ? fields['open'][0] : undefined;
         req.groupInfo.hasValidate = (fields['hasValidate'] && fields['hasValidate'][0]) ? fields['hasValidate'][0] : undefined;
-
         next();
       });
     },
@@ -311,7 +314,6 @@ module.exports = {
           doc[o] = req.groupInfo[o];
         }
       }
-
       Team.update({
         '_id': req.group._id,
         'active': true
@@ -1093,11 +1095,13 @@ module.exports = {
       };
 
       if (req.query.allInfo) {
-        conditions.member = {
-          $elemMatch: {
-            '_id': req.user._id
-          }
-        };
+        if(req.user.role!=="SuperAdmin") {
+          conditions.member = {
+            $elemMatch: {
+              '_id': req.user._id
+            }
+          };
+        }
         projection = {};
       }
 
