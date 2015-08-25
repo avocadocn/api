@@ -222,11 +222,11 @@ module.exports = {
           value: req.body.remindTime,
           validators: ['date',donlerValidator.notAfter(req.body.endTime),donlerValidator.after(new Date())]
         },
-        activityMold: {
-          name: '活动类型',
-          value: req.body.activityMold,
-          validators: (interactionType===1 && !req.body.templateId) ? ['required'] :[]
-        },
+        // activityMold: {
+        //   name: '活动类型',
+        //   value: req.body.activityMold,
+        //   validators: (interactionType===1 && !req.body.templateId) ? ['required'] :[]
+        // },
         option: {
           name: '选项',
           value: req.body.option,
