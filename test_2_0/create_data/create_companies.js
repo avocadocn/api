@@ -20,14 +20,7 @@ var createCompanies = function(callback) {
     // 非异步方法
     chance.generateCompanyData(function(err, result) {
       var company = new Company({
-        username: result.username,
-        login_email: result.email,
-        password:'55yali',
-        email: {
-          domain: [result.email.split('@')[1]]
-        },
         status: {
-          mail_active: i===3 ? false : true,
           active: i===4 ? false : true
         },
         info: {
@@ -38,14 +31,6 @@ var createCompanies = function(callback) {
             district: result.district
           },
           address: result.address,
-          lindline: {
-            areacode: result.areacode,
-            number: result.tel,
-            extension: result.extension
-          },
-          linkman: result.contacts,
-          phone: result.phone,
-          email: result.email,
           brief: result.brief,
           official_name: result.official_name
         },

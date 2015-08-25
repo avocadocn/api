@@ -49,8 +49,7 @@ module.exports = {
       return res.status(400).send({msg:'查询条件错误'});
     var regx = new RegExp(req.query.name,'i');
     var options = {cid:req.user.cid, 'nickname': regx, 'active':true};
-    console.log(options)
-    User.find(options).exec().then(function(users) {
+    User.find(options).limit(20).exec().then(function(users) {
       res.send(users);
     })
     .then(null,function(err){

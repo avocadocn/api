@@ -12,13 +12,12 @@ var chance = require('chance').Chance();
  */
 var createNewUser = function(opts, callback) {
   // var chance = new Chance();
-  var email =chance.email({domain: opts.domain});
+  var phone =chance.string({ pool: '0123456789', length: 11 })
   var user = new User({
-    username: email,
+    username: phone,
     password: '55yali',
-    email: email,
+    email: chance.email({domain: opts.domain}),
     active: opts.active,
-    mail_active: opts.mail_active,
     disabled: opts.disabled,
     gender: chance.bool(),
     nickname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
@@ -28,7 +27,7 @@ var createNewUser = function(opts, callback) {
     cname: opts.cname,
     company_official_name: opts.company_official_name,
     birthday: chance.birthday(),
-    phone: chance.string({ pool: '0123456789', length: 11 })
+    phone: phone
   });
   user.save(function(err) {
     if(err){
