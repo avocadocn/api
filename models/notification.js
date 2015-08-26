@@ -44,11 +44,12 @@ var Notification = new Schema({
   //  6: 被邀请进小队
   //  7: 入群申请被通过
   //  8: XX申请入X群，待处理(群主)
-  //  9: 活动被关闭了 //暂无此功能
+  //  9: XX申请入X群，已被其它管理员处理
+  //  10: 活动被关闭了 //暂无此功能
   //送礼及系统无此属性
   action: {
     type: Number,
-    enum: [1,2,3,4,5,6,7,8,9]
+    enum: [1,2,3,4,5,6,7,8,9,10]
   },
   //提醒中要显示的内容
   //活动、投票、求助的主题名, 若是评论则为他评论的内容，若是群则为群名
@@ -83,6 +84,12 @@ var Notification = new Schema({
   createTime: {
     type: Date,
     default: Date.now
+  },
+
+  //审核人 仅action = 9有
+  verifier: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   }
 })
 

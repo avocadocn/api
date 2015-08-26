@@ -18,52 +18,23 @@ var jwt = require('jsonwebtoken');
 var easemob = require('../../services/easemob.js');
 var multerService = require('../../middlewares/multerService.js');
 var path = require('path');
-
+var smsService = require('../../services/sms_service.js');
+var redisService = require('../../services/redis_service.js');
+var redisPhoneValidate = redisService.redisPhoneValidate;
 var isMobile = function(req) {
   var deviceAgent = req.headers["user-agent"].toLowerCase();
   return deviceAgent.match(/(iphone|ipod|ipad|android)/);
 };
 
+
 module.exports = {
-      /**
-     * 解析注册用户formData
-     * @param  {[type]}   req  [description]
-     * @param  {[type]}   res  [description]
-     * @param  {Function} next [description]
-     * @return {[type]}        [description]
-     */
-    getFormData: function(req, res, next) {
-      var fieldName = 'photo';
-      var form = new multiparty.Form({
-        uploadDir: uploader.tempDir
-      });
-
-      form.parse(req, function(err, fields, files) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
-        }
-        req.userInfo = {};
-
-        req.userInfo.cid = (fields['cid'] && fields['cid'][0]) ? fields['cid'][0] : undefined; // 学校id
-        req.userInfo.phone = (fields['phone'] && fields['phone'][0]) ? fields['phone'][0] : undefined; // 用户手机号
-        req.userInfo.name = (fields['name'] && fields['name'][0]) ? fields['name'][0] : undefined; // 用户昵称(姓名)
-        req.userInfo.password = (fields['password'] && fields['password'][0]) ? fields['password'][0] : undefined; // 用户密码
-        req.userInfo.gender = (fields['gender'] && fields['gender'][0]) ? fields['gender'][0] : undefined; // 用户性别
-        req.userInfo.enrollment = (fields['enrollment'] && fields['enrollment'][0]) ? fields['enrollment'][0] : undefined; // 用户入学年份
-
-        req.photoFile = (files['photo'] && files['photo'][0].originalFilename) ? files['photo'][0] : undefined; // 用户头像
-        
-        next();
-      });
-    },
     getCompanyByCid: function (req, res, next) {
-      if (!req.userInfo.cid) {
+      if (!req.body.cid) {
         res.status(400).send({ msg: 'cid不能为空' });
         return;
       }
 
-      Company.findById(req.userInfo.cid).exec()
+      Company.findById(req.body.cid).exec()
         .then(function (company) {
           if (!company) {
             res.status(400).send({ msg: '没有找到对应的学校' });
@@ -379,37 +350,61 @@ module.exports = {
             callback(false, '服务器错误');
           });
       };
+      var codeValidator = function(name, value, callback) {
+        if(req.body.from === 'website') {
+          redisPhoneValidate.getCode(req.body.phone).then(function(result) {
+            if(value == result) {
+              callback(true);
+            }
+            else {
+              callback(false, '验证码不正确');
+            }
+          })
+          .then(null, function(err) {
+            log(err);
+            callback(false, '验证码不正确');
+          });
+        }
+        else {
+          callback(true);
+        }
+      };
 
       donlerValidator({
         cid: {
           name: '学校id',
-          value: req.userInfo.cid,
+          value: req.body.cid,
           validators: ['required']
         },
         phone: {
           name: '手机号',
-          value: req.userInfo.phone,
+          value: req.body.phone,
           validators: ['required', 'phone', isUsedPhone]
         },
         password: {
           name: '密码',
-          value: req.userInfo.password,
+          value: req.body.password,
           validators: ['required', donlerValidator.minLength(6), donlerValidator.maxLength(30)]
         },
         name: {
           name: '姓名',
-          value: req.userInfo.name,
+          value: req.body.name,
           validators: ['required']
         },
         gender: {
           name: '性别',
-          value: req.userInfo.gender,
+          value: req.body.gender,
           validators: ['required']
         },
         enrollment: {
           name: '入学年份',
-          value: req.userInfo.enrollment,
+          value: req.body.enrollment,
           validators: ['enrollment']
+        },
+        smsCode: {
+          name: '短信验证码' ,
+          value: req.body.code,
+          validators: [codeValidator]
         }
       }, 'complete', function (pass, msg) {
         if (pass) {
@@ -420,51 +415,27 @@ module.exports = {
         }
       });
     },
-    /**
-     * 上传头像
-     * @param  {[type]}   req  [description]
-     * @param  {[type]}   res  [description]
-     * @param  {Function} next [description]
-     * @return {[type]}        [description]
-     */
-    uploadPhotoForUser: function(req, res, next) {
-      if (!req.photoFile) {
-        // 不传照片的话直接到下一步
-        next();
-        return;
-      }
-
-      uploader.uploadImage(req.photoFile, {
-        targetDir: '/public/img/user/photo',
-        saveOrigin: true,
-        getSize: true,
-        success: function(imgInfo, oriCallback) {
-          req.userInfo.photo = path.join('/img/user/photo/', imgInfo.url);
-          next();
-        },
-        error: function(err) {
-          log(err);
-          return res.status(500).send({
-            msg: '服务器错误'
-          });
-        }
-      });
-    },
     register: function (req, res) {
       var user = new User({
-        phone: req.userInfo.phone,
-        username: req.userInfo.phone,
-        nickname: req.userInfo.name,
-        realname: req.userInfo.name,
+        phone: req.body.phone,
+        username: req.body.phone,
+        nickname: req.body.name,
+        realname: req.body.name,
         cid: req.company._id,
         cname: req.company.info.name,
-        password: req.userInfo.password,
-        gender: req.userInfo.gender,
-        enrollment: req.userInfo.enrollment
+        password: req.body.password,
+        gender: req.body.gender,
+        enrollment: req.body.enrollment
       });
-
-      if (req.userInfo.photo) {
-        user.photo = req.userInfo.photo;
+      if(req.file) {
+        multerService.formatPhotos([req.file], {getSize:false}, function(err, files) {
+          if(files && files.length) {
+            var now = new Date();
+            var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
+            var dir = path.join('/img/user/photo', dateDirName)
+            user.photo = path.join(dir, files[0].filename);
+          }
+        })
       }
       
       user.save(function (err) {
@@ -649,6 +620,16 @@ module.exports = {
             return res.status(200).send({active: true, msg:'已注册'});
           }
           else {
+            if(req.body.from === 'website') {
+              smsService.sendSMS(phone, function(err) {
+                if(err) {
+                  return res.status(500).send({active:false, msg:'发送短信失败'})
+                }
+                else {
+                  return res.status(200).send({active:false, msg:'未注册过,发送短信成功'});
+                }
+              })
+            }
             return res.status(200).send({active:false, msg:'未注册过'});
           }
         })

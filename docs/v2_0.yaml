@@ -182,6 +182,18 @@ paths:
           required: true
           type: string
           in: formData
+        - name: code
+          description: 验证码
+          required: false
+          type: number
+          in: formData
+        - name: from
+          description: 是否从网站来 
+          required: false
+          type: string
+          enum:
+            - website
+          in: formData
         - name: photo
           description: 头像
           required: false
@@ -356,6 +368,14 @@ paths:
         - name: phone
           description: 手机号码
           type: number
+          in: formData
+          required: true
+        - name: from
+          description: 是否从网站来
+          type: string
+          enum:
+            - website
+          required: false
           in: formData
       responses:
         "200":

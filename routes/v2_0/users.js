@@ -18,7 +18,8 @@ var sessionMiddleware = session({
 
 module.exports = function (app, ctrl) {
 
-  app.post('/users', ctrl.v2_0.getFormData, ctrl.v2_0.getCompanyByCid, ctrl.v2_0.registerValidate, ctrl.v2_0.uploadPhotoForUser, ctrl.v2_0.register);
+  app.post('/users', multerService.upload('/user/photo').single('photo'), ctrl.v2_0.getCompanyByCid, ctrl.v2_0.registerValidate, ctrl.v2_0.register);
+  // app.post('/users', ctrl.v2_0.getFormData, ctrl.v2_0.getCompanyByCid, ctrl.v2_0.registerValidate, ctrl.v2_0.uploadPhotoForUser, ctrl.v2_0.register);
   app.post('/users/validate', ctrl.v2_0.userInfoValidate);
   app.get('/users/:userId', token.needToken, ctrl.v2_0.getUserById);
   app.put('/users/:userId', token.needToken, ctrl.v2_0.updateValidate, ctrl.v2_0.updatePhoto, ctrl.v2_0.update);
@@ -43,5 +44,4 @@ module.exports = function (app, ctrl) {
   app.get('/users/concern/:userId', token.needToken, ctrl.v2_0.validateConcern ,ctrl.v2_0.getConcern); //获取我的关注列表
   app.post('/users/concern/:userId', token.needToken, ctrl.v2_0.addConcern); //对xx增加关注 
   app.delete('/users/concern/:userId', token.needToken, ctrl.v2_0.deleteConcern); //将xx从自己的关注列表中删除
-
 };

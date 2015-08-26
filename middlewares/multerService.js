@@ -9,6 +9,10 @@ var mkdirp = require('mkdirp');
 
 var publicDir = path.join(__dirname, '../../yali/public/img/');
 
+/**
+ * 上传接口，调用后文件存储于img/dest/20xx-x/xxx
+ * @param  {string} dest 目标文件夹
+ */
 exports.upload = function(dest) {
   var destDir = path.join(publicDir,dest);
   var now = new Date();

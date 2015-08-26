@@ -22,6 +22,7 @@ var redisRanking = {};
 var identifier = 'id:';
 var identifierInf = 'inf:';
 
+
 /**
  * Add new elements to ZSET
  * @param  cid            the id of company
@@ -134,4 +135,48 @@ redisRanking.getEleFromZSET = function(cid, type, elements) {
   return deferred.promise;
 };
 
+var redisPhoneValidate = {};
+
+/**
+ * redis存储验证码,有效期10分钟
+ * @param {number} phone 手机号
+ * @param {number} code  验证码
+ * reutrn {Promise}  ["OK",1]
+ */
+redisPhoneValidate.setCode = function(phone, code) {
+  var deferred = Q.defer();
+
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+
+  var hashKey = 'phone:' + phone;
+  redisClient.multi([
+    ['set', hashKey, code],
+    ['expire', hashKey, 600]//设置10分钟的expire
+  ]).exec(function(err, replies) {
+    if (err) deferred.reject(err);
+    else deferred.resolve(replies);
+  });
+  return deferred.promise;
+};
+
+
+redisPhoneValidate.getCode = function(phone) {
+  var deferred = Q.defer();
+
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+  var hashKey = 'phone:' + phone;
+  redisClient.get(hashKey, function(err, values) {
+    if (err) deferred.reject(err);
+    else deferred.resolve(values);
+  });
+  return deferred.promise;
+};
+
 exports.redisRanking = redisRanking;
+exports.redisPhoneValidate = redisPhoneValidate;
