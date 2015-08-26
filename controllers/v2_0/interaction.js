@@ -87,6 +87,13 @@ module.exports = {
      * @return {[type]}        [description]
      */
     interactionFormFormat: function(req, res, next) {
+      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
+        if(req.body.tags) {
+          req.body.tags = tools.unique(req.body.tags);
+        }
+        next();
+        return;
+      }
       var fieldName = 'photo';
       var form = new multiparty.Form({
         uploadDir: uploader.tempDir
@@ -1204,6 +1211,13 @@ module.exports = {
   },
   template: {
     templateFormFormat:function(req, res, next) {
+      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
+        if(req.body.tags) {
+          req.body.tags = tools.unique(req.body.tags);
+        }
+        next();
+        return;
+      }
       var fieldName = 'photo';
       var form = new multiparty.Form({
         uploadDir: uploader.tempDir
