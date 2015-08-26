@@ -45,6 +45,9 @@ exports.upload = function(dest) {
  * @param  {Function} callback(err,files)
  */
 exports.formatPhotos = function(files, options, callback) {
+  if(!files) {
+    return callback();
+  }
   //检查文件及文件类型，过滤掉不要的
   var allowExts = ['jpg','png','gif'];
   for(var i = files.length-1; i>=0; i--) {
