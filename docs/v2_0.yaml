@@ -377,6 +377,13 @@ paths:
             - website
           required: false
           in: formData
+        - name: forgetValidate
+          description: 是否是忘记密码的验证
+          type: boolean
+          required: false
+          enum:
+            - true
+          in: formData
       responses:
         "200":
           description: 验证完成
@@ -390,14 +397,22 @@ paths:
     post:
       tags:
         - user
-      summary: 用户忘记密码，发送邮件
+      summary: 用户重置密码
       operationId: userForgetPassword
-      consumes:
-        - application/x-www-form-urlencoded
       parameters:
-        - name: email
-          description: 邮件
+        - name: phone
+          description: 手机号
           type: string
+          required: true
+          in: formData
+        - name: password
+          description: 密码
+          type: string
+          required: true
+          in: formData
+        - name: code
+          description: 验证码
+          type: stirng
           required: true
           in: formData
       responses:
@@ -519,85 +534,6 @@ paths:
           schema:
             $ref: Error
 
-  /companies:
-    post:
-      tags:
-        - companies
-      summary: 注册公司账号(todo)
-      operationId: addCompany
-      consumes:
-        - application/json
-      produces:
-        - text/plain
-      parameters:
-        - name: body
-          description: 注册表单数据
-          required: true
-          schema:
-            $ref: CompanyRegisterForm
-          in: body
-      responses:
-        "201":
-          description: 注册成功
-        default:
-          description: error
-          schema:
-            $ref: Error
-  /companies/quickRegister:
-    post:
-      tags:
-        - companies
-      summary: 快速注册公司账号
-      operationId: quickRegisterCompany
-      consumes:
-        - application/json
-      produces:
-        - text/plain
-      parameters:
-        # - name: body
-        #   description: 注册表单数据
-        #   required: true
-        #   schema:
-        #     $ref: CompanyQuickRegisterForm
-        #   in: body
-        - name: name
-          description: 公司名称
-          required: true
-          type: string
-          in: formData
-        - name: email
-          description: 公司邮箱
-          required: true
-          type: string
-          format: email
-          in: formData
-        - name: password
-          description: 密码
-          required: true
-          type: string
-          format: password
-          in: formData
-        - name: gender
-          description: "性别,0为女,1为男"
-          required: true
-          type: integer
-          format: int32
-          enum:
-            - 0
-            - 1
-          in: formData
-        - name: photo
-          description: 头像
-          required: false
-          type: file
-          in: formData
-      responses:
-        "201":
-          description: 注册成功
-        default:
-          description: error
-          schema:
-            $ref: Error
   "/companies/{companyId}":
     get:
       tags:
@@ -725,56 +661,6 @@ paths:
           description: error
           schema:
             $ref: Error
-  /companies/validate:
-    post:
-      tags:
-        - companies
-      summary: 验证某个属性是否已被使用
-      consumes:
-        - application/x-www-form-urlencoded
-      parameters:
-        - name: email
-          description: 企业邮箱
-          type: string
-          in: formData
-        - name: name
-          description: 企业官方名（与营业执照一致的）
-          type: string
-          in: formData
-        - name: username
-          description: 用户名（登录用）
-          type: string
-          in: formData
-      responses:
-        "200":
-          description: 验证完成
-          schema:
-            $ref: ValidateResult
-        default:
-          description: error
-          schema:
-            $ref: Error
-  "/companies/forgetPassword":
-    post:
-      tags:
-        - companies
-      summary: hr忘记密码，发送邮件
-      operationId: companyForgetPassword
-      consumes:
-        - application/x-www-form-urlencoded
-      parameters:
-        - name: email
-          description: 邮件
-          type: string
-          required: true
-          in: formData
-      responses:
-        "201":
-          description: 邮件发送成功
-        default:
-          description: error
-          schema:
-            $ref: Error
   "/companies/{companyId}/departments":
     get:
       tags:
@@ -796,61 +682,6 @@ paths:
           description: error
           schema:
             $ref: Error
-  "/companies/{companyId}/tags":
-    get:
-      tags:
-        - companies
-      summary: 获取公司相关标签
-      parameters:
-        - name: companyId
-          description: 公司id
-          required: true
-          type: string
-          in: path
-          default: 53aa6fc011fd597b3e1be250
-      responses:
-        "200":
-          description: tags
-          schema:
-            $ref: Tags
-        default:
-          description: error
-          schema:
-            $ref: Error
-  /companies/login:
-    post:
-      tags:
-        - companies
-      summary: 公司登录
-      parameters:
-        - name: body
-          schema:
-            $ref: CompanyLoginForm
-          in: body
-          required: true
-          description: 登录邮箱和密码
-      responses:
-        default:
-          description: error
-          schema:
-            $ref: Error
-        "200":
-          description: 登录成功后返回的数据
-          schema:
-            $ref: LoginSuccess
-  /companies/logout:
-    post:
-      tags:
-        - companies
-      summary: 公司注销
-      responses:
-        default:
-          description: error
-          schema:
-            $ref: Error
-        "204":
-          description: 注销成功
-
   /gifts/history/{userId}/{direction}:
     get:
       tags:

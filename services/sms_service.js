@@ -8,9 +8,10 @@ var redisPhoneValidate = redisService.redisPhoneValidate;
 /**
  * 使用云片网发短信接口
  * @param  {number/string}   phone    手机号
+ * @param {string} key enum:['signup', 'password']
  * @param  {Function} callback 形如function(err){}
  */
-exports.sendSMS = function(phone, callback) {
+exports.sendSMS = function(phone, key, callback) {
   var code = Math.floor(Math.random()*10000);
   if(code<1000) code = code + 1000;
   var data = {
@@ -19,7 +20,7 @@ exports.sendSMS = function(phone, callback) {
     text: '【warm验证】您的验证码是'+ code +'。如非本人操作，请忽略本短信'
   };
   data = querystring.stringify(data);
-  redisPhoneValidate.setCode(phone, code)
+  redisPhoneValidate.setCode(phone, key, code)
   .then(function(result) {
     var opt = {
       method: "POST",

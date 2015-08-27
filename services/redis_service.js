@@ -141,9 +141,10 @@ var redisPhoneValidate = {};
  * redis存储验证码,有效期10分钟
  * @param {number} phone 手机号
  * @param {number} code  验证码
+ * @param {string} key enum:['signup', 'password']
  * reutrn {Promise}  ["OK",1]
  */
-redisPhoneValidate.setCode = function(phone, code) {
+redisPhoneValidate.setCode = function(phone, key, code) {
   var deferred = Q.defer();
 
   if (!isConnect) {
@@ -151,7 +152,7 @@ redisPhoneValidate.setCode = function(phone, code) {
     return deferred.promise;
   }
 
-  var hashKey = 'phone:' + phone;
+  var hashKey = key + ':' + phone;
   redisClient.multi([
     ['set', hashKey, code],
     ['expire', hashKey, 600]//设置10分钟的expire
@@ -162,15 +163,20 @@ redisPhoneValidate.setCode = function(phone, code) {
   return deferred.promise;
 };
 
-
-redisPhoneValidate.getCode = function(phone) {
+/**
+ * 获取redis存储码
+ * @param  {number} phone 手机号
+ * @param {string} key enum:['signup', 'password']
+ * @return {Promise} 保存的验证码 or null
+ */
+redisPhoneValidate.getCode = function(phone, key) {
   var deferred = Q.defer();
 
   if (!isConnect) {
     deferred.reject(new Error('redis连接失败'));
     return deferred.promise;
   }
-  var hashKey = 'phone:' + phone;
+  var hashKey = key + ':' + phone;
   redisClient.get(hashKey, function(err, values) {
     if (err) deferred.reject(err);
     else deferred.resolve(values);

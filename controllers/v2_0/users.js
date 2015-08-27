@@ -281,25 +281,33 @@ module.exports = {
     },
 
     forgetPassword: function(req, res) {
-      //todo 短信
-      User.find({phone:req.body.phone}, function(err, user) {
+      User.findOne({phone:req.body.phone}, function(err, user) {
         if(err) {
           return res.status(500).send({msg:'服务器出错'});
         }
         if(!user) {
           return res.status(400).send({msg:'此手机号未注册过'});
         }
-        if(req.body.password.length<6) {
-          return res.status(400).send({msg: '密码长度不够'});
-        }
-        user.password = req.body.password;
-        user.save(function(err) {
-          if(err) {
-            return res.status(500).send({msg:'服务器出错'});
+        redisPhoneValidate.getCode(req.body.phone, 'password').then(function(result) {
+          if(req.body.code != result) {
+            return res.status(400).send({msg:'验证码输入错误或已过期'});
           }
-          else {
-            return res.sendStatus(200);
+          if(req.body.password.length<6) {
+            return res.status(400).send({msg: '密码长度不够'});
           }
+          user.password = req.body.password;
+          user.save(function(err) {
+            if(err) {
+              return res.status(500).send({msg:'服务器出错'});
+            }
+            else {
+              return res.sendStatus(200);
+            }
+          })
+        })
+        .then(null, function(err) {
+          log(err);
+          return res.status(500).send({msg:'服务器出错'});
         })
       })
     },
@@ -352,12 +360,12 @@ module.exports = {
       };
       var codeValidator = function(name, value, callback) {
         if(req.body.from === 'website') {
-          redisPhoneValidate.getCode(req.body.phone).then(function(result) {
+          redisPhoneValidate.getCode(req.body.phone, 'signup').then(function(result) {
             if(value == result) {
               callback(true);
             }
             else {
-              callback(false, '验证码不正确');
+              callback(false, '验证码输入错误或已过期');
             }
           })
           .then(null, function(err) {
@@ -617,11 +625,24 @@ module.exports = {
       if(phone) {
         User.findOne({phone: phone}).exec().then(function(user) {
           if(user) {
+            if(req.body.forgetValidate) {
+              smsService.sendSMS(phone, 'password', function(err) {
+                if(err) {
+                  return res.status(500).send({active:false, msg:'发送短信失败'})
+                }
+                else {
+                  return res.status(200).send({active:false, msg:'发送短信成功'});
+                }
+              })
+            }
             return res.status(200).send({active: true, msg:'已注册'});
           }
           else {
+            if(req.body.forgetValidate) {
+              return res.status(400).send({active:false, msg:'未注册过'});
+            }
             if(req.body.from === 'website') {
-              smsService.sendSMS(phone, function(err) {
+              smsService.sendSMS(phone, 'signup', function(err) {
                 if(err) {
                   return res.status(500).send({active:false, msg:'发送短信失败'})
                 }
