@@ -642,23 +642,24 @@ module.exports = {
         return res.status(400).send({msg:'参数错误'})
       }
     },
-    validateConcern: function (req, res, next) {
-      donlerValidator({
-        concern:{
-          name: '关注人id',
-          value: req.params.userId,
-          validators: [donlerValidator.inDatabase('User', '关注者不存在')]
-        }
-      }, 'complete', function (pass, msg) {
-        if(!pass) {
-          var msg = donlerValidator.combineMsg(msg);
-          return res.status(400).send({msg:msg});
-        }
-        else {
-          next();
-        }
-      })
-    },
+    // - 注释 by M 暂时不用验证，每次获取关注列表，无论发什么参数都返回自己的关注列表.
+    // validateConcern: function (req, res, next) {
+    //   donlerValidator({
+    //     concern:{
+    //       name: '关注人id',
+    //       value: req.params.userId,
+    //       validators: [donlerValidator.inDatabase('User', '关注者不存在')]
+    //     }
+    //   }, 'complete', function (pass, msg) {
+    //     if(!pass) {
+    //       var msg = donlerValidator.combineMsg(msg);
+    //       return res.status(400).send({msg:msg});
+    //     }
+    //     else {
+    //       next();
+    //     }
+    //   })
+    // },
     addConcern: function (req, res) {
       if(req.params.userId === req.user._id.toString()) {
         return res.status(400).send({msg: '无法关注自己'});
@@ -691,7 +692,21 @@ module.exports = {
     },
     getConcern: function (req, res) {
       //暂时只能获取自己的
-      return res.status(200).send(req.user.concern);
+      var concern = req.user.concern;
+      var concernIds = [];
+      for(var i = concern.length-1; i>=0; i--) {
+        concernIds.push(concern[i].user);
+      }
+      User.find({_id:{$in:concernIds}}, {interactionTime:1})
+      .sort('-interactionTime')
+      .exec()
+      .then(function (users) {
+        return res.status(200).send(users);
+      })
+      .then(null, function(err) {
+        log(err);
+        return res.status(500).send({msg:'获取用户错误'});
+      });
     },
     deleteConcern: function (req, res) {
       var index = -1;

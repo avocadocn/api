@@ -152,6 +152,12 @@ var UserSchema = new Schema({
     default: Date.now
   },
 
+  //有动态更新的时间戳
+  interactionTime: {
+    type: Date,
+    default: Date.now
+  },
+
   // 个人照片
   photos: [{
     uri: String,

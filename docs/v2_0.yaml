@@ -3096,13 +3096,13 @@ definitions:
     title: Concern
     type: object
     required:
-      - user
-      - createTime
+      - _id
+      - interactionTime
     properties:
-      user:
+      _id:
         description: 用户id 
         type: string
-      createTime:
+      interactionTime:
         description: 关注时间
         type: string
         format: date-time

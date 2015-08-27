@@ -77,6 +77,19 @@ var createQuestion= function (data,template) {
   var question = new Question();
   return question;
 }
+
+/**
+ * 如果是公开的互动，更新个人互动时间戳
+ * @param  {Object} user 
+ */
+var updateInteractionTime = function(user) {
+  User.update({_id:user._id}, {$set: {interactionTime: new Date()}}, function(err) {
+    if(err) {
+      log(err);
+    }
+  });
+};
+
 module.exports = {
   interaction: {
     /**
@@ -447,6 +460,9 @@ module.exports = {
           if(interaction.inviters.length>0) {
             notificationController.sendInteractionNfct(2, interaction, req.user._id, interaction.inviters);
           }
+          if(interaction.public) {
+            updateInteractionTime(req.user);
+          }
         }
       });
     },
@@ -723,6 +739,9 @@ module.exports = {
           }
           else if(interactionType === 3 ) { //若是回答求助，发通知
             notificationController.sendInteractionNfct(1, interaction, req.user._id, interaction.poster._id);
+            if(interaction.public) {
+              updateInteractionTime(req.user);
+            }
           }
         }
       ],
@@ -880,6 +899,10 @@ module.exports = {
               res.send(interaction);
               //给组织者发通知
               notificationController.sendInteractionNfct(1, interaction, req.user._id, interaction.poster._id);
+              //如果是公开的，更新个人互动时间戳
+              if(interaction.public) {
+                updateInteractionTime(req.user);
+              }
               return;
             }
             else{
@@ -986,6 +1009,9 @@ module.exports = {
             if(!err){
               res.send(interaction);
               notificationController.sendInteractionNfct(1, interaction, req.user._id, interaction.poster._id);
+              if(interaction.public) {
+                updateInteractionTime(req.user);
+              }
               return;
             }
             else{
