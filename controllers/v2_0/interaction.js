@@ -285,7 +285,7 @@ module.exports = {
               getSize: true,
               success: function(imgInfo, oriCallback) {
                 req.body.photos = [{
-                  uri: imgInfo.url,
+                  uri: path.join('/img/interaction', imgInfo.url),
                   width: imgInfo.size.width,
                   height: imgInfo.size.height
                 }];
@@ -1369,7 +1369,7 @@ module.exports = {
               getSize: true,
               success: function(imgInfo, oriCallback) {
                 req.body.photos = [{
-                  uri: imgInfo.url,
+                  uri: path.join('/img/interaction', imgInfo.url),
                   width: imgInfo.size.width,
                   height: imgInfo.size.height
                 }];
