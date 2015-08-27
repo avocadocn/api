@@ -775,29 +775,6 @@ paths:
           description: error
           schema:
             $ref: Error
-  "/companies/{companyId}/members":
-    get:
-      tags:
-        - companies
-      summary: 获取公司成员
-      parameters:
-        - name: companyId
-          description: 公司id
-          required: true
-          type: string
-          in: path
-          default: 53aa6fc011fd597b3e1be250
-      responses:
-        "200":
-          description: 成员
-          schema:
-            type: array
-            items:
-              $ref: Member
-        default:
-          description: error
-          schema:
-            $ref: Error
   "/companies/{companyId}/departments":
     get:
       tags:
