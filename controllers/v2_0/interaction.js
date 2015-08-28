@@ -21,7 +21,7 @@ var log = require('../../services/error_log.js'),
     async = require('async'),
     notificationController = require('./notifications.js'),
     uploader = require('../../services/uploader.js'),
-    multiparty = require('multiparty');
+    multerService = require('../../middlewares/multerService.js');
 var interactionTypes = ['activity','poll','question'];
 var commentModelTypes = ['ActivityComment','PollComment','QuestionComment'];
 var perPageNum = 10;
@@ -100,51 +100,22 @@ module.exports = {
      * @return {[type]}        [description]
      */
     interactionFormFormat: function(req, res, next) {
-      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
-        if(req.body.tags) {
-          req.body.tags = tools.unique(req.body.tags);
-        }
-        next();
-        return;
+      if(req.body.tags) {
+        req.body.tags = tools.unique(req.body.tags);
       }
-      var fieldName = 'photo';
-      var form = new multiparty.Form({
-        uploadDir: uploader.tempDir
-      });
-      form.parse(req, function(err, fields, files) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
+      req.body.type = parseInt(req.body.type);
+      req.body.targetType = parseInt(req.body.targetType);
+      if(req.body.location) {
+        req.body.location = {
+          "name": req.body.location
         }
-        if(files) {
-          req.body.photos = files[fieldName];
-        }
-        for (var field in fields) {
-          if(fields[field].length==1) {
-            req.body[field] = fields[field][0]
-          }
-          else {
-            req.body[field] = fields[field];
-          }
-        };
-        req.body.type = parseInt(req.body.type);
-        req.body.targetType = parseInt(req.body.targetType);
-        if(fields.location) {
-          req.body.location = {
-            "name": req.body.location,
-            "loc" : {
-              "coordinates" : [parseFloat(req.body.longitude),parseFloat(req.body.latitude)],
-            }
+        if(req.body.longitude){
+          req.body.location.loc = {
+            "coordinates" : [parseFloat(req.body.longitude),parseFloat(req.body.latitude)],
           }
         }
-        if(fields.option) {
-          req.body.option = req.body.option.split(",")
-        }
-        if(fields.tags) {
-          req.body.tags = tools.unique(req.body.tags.split(","));
-        }
-        next()
-      });
+      }
+      next();
     },
     /**
      * 发互动的验证（三种类型）
@@ -205,7 +176,7 @@ module.exports = {
         endTime: {
           name: '结束时间',
           value: req.body.endTime,
-          validators: (!req.body.templateId &&interactionType!==3) ? ['required','date',donlerValidator.after(req.body.startTime)] : ['date']
+          validators: (!req.body.templateId &&interactionType!==3) ? [interactionType=== 1 ?'required':undefined,'date',donlerValidator.after(req.body.startTime)] : ['date']
         },
         tags: {
           name: '标签',
@@ -276,27 +247,21 @@ module.exports = {
               break;
             default:
           }
-          if(req.body.photos) {
-            //目前只能传一张图片，所以只取第一张
-            uploader.uploadImage(req.body.photos[0], {
-              targetDir: '/public/img/interaction',
-              subDir: req.user.getCid().toString(),
-              saveOrigin: true,
-              getSize: true,
-              success: function(imgInfo, oriCallback) {
-                req.body.photos = [{
-                  uri: path.join('/img/interaction', imgInfo.url),
-                  width: imgInfo.size.width,
-                  height: imgInfo.size.height
-                }];
-                next();
-              },
-              error: function(err) {
-                log(err);
-                return res.status(500).send({
-                  msg: '服务器错误'
+          if(req.files) {
+            multerService.formatPhotos(req.files, {getSize:true}, function(err, files) {
+              var photos = [];
+              if(files && files.length) {
+                files.forEach(function(img) {
+                  var photo = {
+                    uri: multerService.getRelPath(img.path),
+                    width: img.size.width,
+                    height: img.size.height
+                  };
+                  photos.push(photo);
                 });
+                req.body.photos = photos;
               }
+              next();
             });
           }
           else {
@@ -1237,50 +1202,24 @@ module.exports = {
   },
   template: {
     templateFormFormat:function(req, res, next) {
-      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
-        if(req.body.tags) {
-          req.body.tags = tools.unique(req.body.tags);
+      req.body.templateType = parseInt(req.body.templateType);
+      if(req.body.location) {
+        req.body.location = {
+          "name": req.body.location
         }
-        next();
-        return;
+        if(req.body.longitude){
+          req.body.location.loc = {
+            "coordinates" : [parseFloat(req.body.longitude),parseFloat(req.body.latitude)],
+          }
+        }
       }
-      var fieldName = 'photo';
-      var form = new multiparty.Form({
-        uploadDir: uploader.tempDir
-      });
-      form.parse(req, function(err, fields, files) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
-        }
-        if(files) {
-          req.body.photos = files[fieldName];
-        }
-        for (var field in fields) {
-          if(fields[field].length==1) {
-            req.body[field] = fields[field][0]
-          }
-          else {
-            req.body[field] = fields[field];
-          }
-        };
-        req.body.templateType = parseInt(req.body.templateType);
-        if(fields.location) {
-          req.body.location = {
-            "name": req.body.location,
-            "loc" : {
-              "coordinates" : [parseFloat(req.body.longitude),parseFloat(req.body.latitude)],
-            }
-          }
-        }
-        if(fields.option) {
-          req.body.option = req.body.option.split(",")
-        }
-        if(fields.tags) {
-          req.body.tags = tools.unique(req.body.tags.split(","));
-        }
-        next()
-      });
+      if(req.body.option) {
+        req.body.option = req.body.option.split(",")
+      }
+      if(req.body.tags) {
+        req.body.tags = tools.unique(req.body.tags.split(","));
+      }
+      next();
     },
     /**
      * 发互动的模板的验证
@@ -1316,7 +1255,7 @@ module.exports = {
         endTime: {
           name: '结束时间',
           value: req.body.endTime,
-          validators: ['required','date',donlerValidator.after(req.body.startTime)]
+          validators: [templateType=== 1 ?'required':undefined,'date',donlerValidator.after(req.body.startTime)]
         },
         startTime: {
           name: '开始时间',
@@ -1360,27 +1299,21 @@ module.exports = {
         },
       }, 'fast', function (pass, msg) {
         if (pass) {
-          if(req.body.photos) {
-            //目前只能传一张图片，所以只取第一张
-            uploader.uploadImage(req.body.photos[0], {
-              targetDir: '/public/img/interaction',
-              subDir: req.user.getCid().toString(),
-              saveOrigin: true,
-              getSize: true,
-              success: function(imgInfo, oriCallback) {
-                req.body.photos = [{
-                  uri: path.join('/img/interaction', imgInfo.url),
-                  width: imgInfo.size.width,
-                  height: imgInfo.size.height
-                }];
-                next();
-              },
-              error: function(err) {
-                log(err);
-                return res.status(500).send({
-                  msg: '服务器错误'
+          if(req.files) {
+            multerService.formatPhotos(req.files, {getSize:true}, function(err, files) {
+              var photos = [];
+              if(files && files.length) {
+                files.forEach(function(img) {
+                  var photo = {
+                    uri: multerService.getRelPath(img.path),
+                    width: img.size.width,
+                    height: img.size.height
+                  };
+                  photos.push(photo);
                 });
+                req.body.photos = photos;
               }
+              next();
             });
           }
           else {

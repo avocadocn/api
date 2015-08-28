@@ -1281,8 +1281,8 @@
           },
           {
             "name": "endTime",
-            "description": "结束时间",
-            "required": true,
+            "description": "结束时间(活动时必须)",
+            "required": false,
             "in": "formData",
             "type": "string",
             "format": "date-time"

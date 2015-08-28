@@ -49,7 +49,7 @@ exports.formatPhotos = function(files, options, callback) {
     return callback();
   }
   //检查文件及文件类型，过滤掉不要的
-  var allowExts = ['jpg','png','gif'];
+  var allowExts = ['jpg','png','gif','jpeg'];
   for(var i = files.length-1; i>=0; i--) {
     var ext = mime.extension(files[i].mimetype);
     if(allowExts.indexOf(ext) === -1) {
@@ -86,3 +86,8 @@ exports.formatPhotos = function(files, options, callback) {
   }
 
 }
+exports.getRelPath = function(dest) {
+  return dest.slice(dest.indexOf('yali/public')+11)
+}
+
+
