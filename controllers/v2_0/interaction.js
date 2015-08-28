@@ -128,7 +128,7 @@ module.exports = {
       var locationValidator = function(name, value, callback) {
         if(!value) return callback(true);
         if(!value.name) return callback(false,"没有地址")
-        if(value.loc.coordinates && (!value.loc.coordinates instanceof Array || value.loc.coordinates.length !=2 || typeof value.loc.coordinates[0] !=="number" || typeof value.loc.coordinates[1] !=="number")) return callback(false,"坐标格式错误");
+        if(value.loc && value.loc.coordinates && (!value.loc.coordinates instanceof Array || value.loc.coordinates.length !=2 || typeof value.loc.coordinates[0] !=="number" || typeof value.loc.coordinates[1] !=="number")) return callback(false,"坐标格式错误");
         return callback(true);
       };
       var interactionType =req.body.type;
@@ -1232,7 +1232,7 @@ module.exports = {
       var locationValidator = function(name, value, callback) {
         if(!value) return callback(true);
         if(!value.name) return callback(false,"没有地址")
-        if(value.loc.coordinates && (!value.loc.coordinates instanceof Array || value.loc.coordinates.length !=2 || typeof value.loc.coordinates[0] !=="number" || typeof value.loc.coordinates[1] !=="number")) return callback(false,"坐标格式错误");
+        if(value.loc && value.loc.coordinates && (!value.loc.coordinates instanceof Array || value.loc.coordinates.length !=2 || typeof value.loc.coordinates[0] !=="number" || typeof value.loc.coordinates[1] !=="number")) return callback(false,"坐标格式错误");
         return callback(true);
       };
       var templateType = req.body.templateType;
