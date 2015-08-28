@@ -1037,7 +1037,7 @@ paths:
           type: string
         - name: content
           description: 内容
-          required: true
+          required: false
           in: formData
           type: string
         - name: endTime

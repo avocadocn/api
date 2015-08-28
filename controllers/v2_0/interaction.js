@@ -197,11 +197,11 @@ module.exports = {
           value: req.body.theme,
           validators: !req.body.templateId ? ['required'] :[]
         },
-        content: {
-          name: '内容',
-          value: req.body.content,
-          validators: !req.body.templateId ? ['required'] :[]
-        },
+        // content: {
+        //   name: '内容',
+        //   value: req.body.content,
+        //   validators: !req.body.templateId ? ['required'] :[]
+        // },
         endTime: {
           name: '结束时间',
           value: req.body.endTime,
@@ -1308,11 +1308,11 @@ module.exports = {
           value: req.body.theme,
           validators: ['required']
         },
-        content: {
-          name: '内容',
-          value: req.body.content,
-          validators: ['required']
-        },
+        // content: {
+        //   name: '内容',
+        //   value: req.body.content,
+        //   validators: ['required']
+        // },
         endTime: {
           name: '结束时间',
           value: req.body.endTime,
@@ -1343,11 +1343,11 @@ module.exports = {
           value: req.body.deadline,
           validators: ['date',donlerValidator.before(req.body.endTime),donlerValidator.after(new Date())]
         },
-        activityMold: {
-          name: '活动类型',
-          value: req.body.activityMold,
-          validators: templateType=== 1 ? ['required'] :[]
-        },
+        // activityMold: {
+        //   name: '活动类型',
+        //   value: req.body.activityMold,
+        //   validators: templateType=== 1 ? ['required'] :[]
+        // },
         option: {
           name: '选项',
           value: req.body.option,
