@@ -90,7 +90,9 @@ var Notification = new Schema({
   verifier: {
     type: Schema.Types.ObjectId,
     ref: 'User'
-  }
+  },
+  //处理结果 仅action = 9有
+  verifyResult: Boolean //true为通过 false未拒绝
 })
 
 mongoose.model('Notification', Notification);

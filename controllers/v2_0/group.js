@@ -257,7 +257,7 @@ module.exports = {
         }).exec()
         .then(function(group) {
           if (!group) {
-            return res.sendStatus(204);
+            return res.sendStatus(400);
             // return res.status(204).send({
             //   msg: '未找到该群组'
             // });
@@ -591,8 +591,8 @@ module.exports = {
             res.status(200).send({
               msg: '申请加入该群组成功'
             });
-            //发通知给群主
-            notificationController.sendTeamNtct(8, req.group, req.user._id, req.group.leader);
+            //发通知给管理员
+            notificationController.sendTeamNtct(8, req.group, req.user._id);
           }
         });
       } else {
@@ -1298,8 +1298,9 @@ module.exports = {
             });
 
             //发通知
-            var _team = {_id: req.group._id, }
             notificationController.sendTeamNtct(7, team, req.user._id, req.params.userId);
+            var result = req.query.accept === 'true';
+            notificationController.updateTeamNfct(team, req.params.userId, req.user._id, result);
           }
         }
       });

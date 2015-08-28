@@ -70,7 +70,7 @@ module.exports = {
     else if(action === 5) { //如果是赞 查找一下
       Notification.findOne({replyTo:comment._id, action:5, noticeType:1, receiver:receiver},findNfct);
     }
-    else if(action === 9) { //如果是活动被关闭了，发给所有人
+    else if(action === 10) { //如果是活动被关闭了，发给所有人
       if(receiver.length) {
         for(var i = receiver.length-1; i>=0; i--) {
           if(receiver[i].toString !== senderId) {
@@ -83,6 +83,7 @@ module.exports = {
       createNfct(receiver);
     }
   },
+
   /**
    * 送/拆礼物的通知
    * @param  {Gift} gift      礼物
@@ -106,10 +107,10 @@ module.exports = {
    * @param  {Number}   action      互动动作 6/7/8
    * @param  {Team}     team        小队
    * @param  {string}   senderId    发送者Id
-   * @param  {string}   receiverId  接收者Id
+   * @param  {string}   receiverId  接收者Id(optional)
    */
   sendTeamNtct: function(action, team, senderId, receiverId) {
-    var createTeamNfct = function() {
+    var createTeamNfct = function(receiverId) {
       Notification.create({
         noticeType: 2,
         team: team._id,
@@ -124,23 +125,44 @@ module.exports = {
       });
     }
     if(action === 8) {
-      Notification.findOne({receiver: receiverId, team:team._id, action:8, noticeType:2},
-        function(err, notification) {
-        if(err) {
-          log(err);
-          return;
+      var receiverIds = [];
+      if(team.leader) {
+        receiverIds.push(team.leader);
+      }
+      if(team.administrators.length) {
+        receiverIds = receiverIds.concat(team.administrators);
+      }
+      if(receiverIds.length) {
+        for(var i = receiverIds.length-1; i>=0; i--) {
+          createTeamNfct(receiverIds[i]);
         }
-        if(notification) {
-          updateNfct(notification, senderId);
-        }
-        else {
-          createTeamNfct();
-        }
-      });
+      }
     }
-    else {
-      createTeamNfct();
+    else if(receiverId) {
+      createTeamNfct(receiverId);
     }
+  },
+
+  /**
+   * 若是多管理员的群,处理后通知其它管理员
+   * @param  {Team}     team        小队
+   * @param  {string}   applyId     原申请者者Id
+   * @param  {string}   verifierId  审批人Id
+   * @param  {Boolean}  result      
+   * @return {[type]}            [description]
+   */
+  updateTeamNfct: function(team, applyId, verifierId, result) {
+    Notification.update({team:team._id, sender: applyId, noticeType:2, action:8},{
+      $set: {
+        verifier: verifierId,
+        verifyResult: result,
+        createTime: new Date()
+      }
+    }, {
+      multi:true
+    },function(err) {
+      log(err);
+    });
   },
   getNotifications: function(req, res) {
     var options = {receiver:{$in:[req.user._id, null]}};
