@@ -340,11 +340,23 @@ paths:
           type: string
           in: path
           default: 53aa6fc011fd597b3e1be250
-        - name: reslutType
-          description: 结果类型
+        - name: from
+          description: 是否从网站来
+          enum:
+            - admin
           required: false
+          type: string
+          in: query
+        - name: freshman
+          description: 是否是新人报道
+          required: false
+          type: boolean
+          in: query
+        - name: page
+          description: 第几页
           type: integer
-          in: path
+          required: false
+          in: query
       responses:
         default:
           description: error

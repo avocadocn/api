@@ -249,8 +249,9 @@ module.exports = {
         return res.sendStatus(403);
       var findOptions = {'cid':req.params.companyId, 'active':true};
       var outputOptions = {'nickname':1, 'photo':1, 'realname': 1, 'gender':1};
+      var sortOption = req.query.freshman ? {'nickname':1} : {'register_date':-1}
       if(req.query.page) {
-        var pageNum = 10;
+        var pageNum = 20;
         var page = req.query.page;
         User.paginate(findOptions, page, pageNum, function(err, pageCount, results, itemCount) {
           if(err){
@@ -260,7 +261,7 @@ module.exports = {
           else{
             return res.send({'users':results,'maxPage':pageCount,'hasNext':pageCount>page});
           }
-        },{columns:outputOptions, sortBy:{'nickname':1}});
+        },{columns:outputOptions, sortBy:sortOption});
       }
       else{
         if(req.query.from='admin' && req.user.isSuperAdmin(req.params.companyId)) {
