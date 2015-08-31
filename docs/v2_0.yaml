@@ -1000,6 +1000,16 @@ paths:
           required: false
           type: string
           in: query
+        - name: team
+          description: 是否为获取小队的互动
+          required: false
+          type: string
+          in: query
+        - name: teamId
+          description: 小队Id
+          required: false
+          type: string
+          in: query
       responses:
         "200":
           description: 成功

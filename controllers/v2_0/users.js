@@ -378,7 +378,6 @@ module.exports = {
           callback(true);
         }
       };
-
       donlerValidator({
         cid: {
           name: '学校id',

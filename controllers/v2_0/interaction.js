@@ -445,6 +445,15 @@ module.exports = {
       var option;
       async.series([
         function (callback) {
+          if(req.query.team) {//通过小队id获取该小队的互动
+            option ={
+              "cid":req.user.cid,
+              "status":{"$lt":3},
+              "targetType":2,
+              "target":req.query.teamId
+            }
+            return  callback(null);
+          }
           //自己
           if(userId==req.user._id) {
             //1:参加的小队的活动，2：认证小队活动和学校活动（面向全校发的互动），3：未认证小队活动,default:所以自己所在学校和参加的小队的
