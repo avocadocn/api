@@ -1341,7 +1341,10 @@ module.exports = {
      * @return {[type]}     [description]
      */
     getTemplateList: function (req, res) {
-      var option,templateModel;
+      var option ={
+        active: {"$ne":false}
+      };
+      var templateModel;
       switch(req.query.templateType) {
         case '1':
           templateModel = "ActivityTemplate";

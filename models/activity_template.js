@@ -43,7 +43,11 @@ var ActivityTemplate = new Schema({
     type: Date,
     default: Date.now
   },
-  tags: [String]
+  tags: [String],
+  active:  {
+    type: Boolean,
+    default: true
+  }
 });
 
 mongoose.model('ActivityTemplate', ActivityTemplate);

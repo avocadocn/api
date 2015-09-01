@@ -21,7 +21,11 @@ var QuestionTemplate = new Schema({
     type: Date,
     default: Date.now
   },
-  tags:[String]
+  tags:[String],
+  active:  {
+    type: Boolean,
+    default: true
+  }
 });
 
 mongoose.model('QuestionTemplate', QuestionTemplate);

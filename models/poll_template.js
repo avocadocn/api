@@ -25,6 +25,10 @@ var PollTemplate = new Schema({
   createTime: {
     type: Date,
     default: Date.now
+  },
+  active:  {
+    type: Boolean,
+    default: true
   }
 });
 
