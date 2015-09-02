@@ -485,7 +485,7 @@ module.exports = {
             return res.status(401).send({ msg: '账号已被关闭。'})
           }
           //登录网站，则只能管理员（大使，社团管理员）进行登录,app登录没有现在
-          if(!req.headers["x-api-key"] && !isMobile(req) && user.role!=="SuperAdmin" &&!user.isAdmin()) {
+          if(!req.headers["x-api-key"] && !isMobile(req) && user.role!=="SuperAdmin") {
             return res.status(401).send({ msg: '您不是管理员无法进行登录管理界面'})
           }
           // if(!user.cid.status.active) {
