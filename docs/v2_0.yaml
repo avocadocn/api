@@ -545,7 +545,25 @@ paths:
           description: error
           schema:
             $ref: Error
-
+  "/users/actions/invite":
+    post:
+      tags:
+        - user
+      summary: 短信邀请
+      parameters:
+        - name: body
+          schema:
+            $ref: InviteBody
+          in: body
+          required: true
+          description: 发邀请所需body
+      responses:
+        "200":
+          description: 成功
+        default:
+          description: error
+          schema:
+            $ref: Error
   "/companies/{companyId}":
     get:
       tags:
@@ -3639,3 +3657,10 @@ definitions:
       status:
         type: boolean
         description: "true为通过，false为拒绝"
+  InviteBody:
+    title: InviteBody
+    properties:
+      phones:
+        type: array
+        items:
+          type: string

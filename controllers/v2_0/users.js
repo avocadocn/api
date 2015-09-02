@@ -3,8 +3,11 @@
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var Company = mongoose.model('Company');
+var ShortUrl = mongoose.model('ShortUrl');
 var Feedback = mongoose.model('Feedback');
-
+var Config = mongoose.model('Config');
+var async = require('async');
+var shortid = require('shortid');
 var log = require('../../services/error_log.js'),
     donlerValidator = require('../../services/donler_validator.js'),
     uploader = require('../../services/uploader.js'),
@@ -89,6 +92,72 @@ module.exports = {
         res.sendStatus(204);
       });
     },
+    //短信邀请验证手机号
+    validatePhones: function(req, res, next) {
+      var phones = req.body.phones;
+      //把不符合的手机号筛选掉
+      for(var i = phones.length - 1; i>=0; i--) {
+        if (!(/^(\+?0?86\-?)?1[345789]\d{9}$/).test(phones[i])) {
+          phones.splice(i,1);
+        }
+      }
+      if(phones.length) {
+        next();
+      }
+      else {
+        return res.status(400).send({msg:'手机号格式有误'});
+      }
+    },
+    //生成短地址url
+    generateInviteUrl: function(req, res, next) {
+      Config.findOne({name: 'admin'}, function(err, config) {
+        if(err) return res.status(500).send({msg:'设置查找失败'});
+        else {
+          var host = config.host.product;
+          var url = 'http://' + host + '/signup?cid=' + req.user.cid + '&uid=' + req.user._id;
+          //如果带着gid来就继续拼
+          if(req.body.gid) {
+            url.concat('&gid=' + req.body.gid);
+          }
+          shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-');
+          var shortCode =  shortid.generate();
+          console.log(shortCode);
+          ShortUrl.findOne({shortId:shortCode}, function(err, shortId) {
+            if(err) {
+              log(err);
+              return res.status(500).send({msg:'短id查找出错'});
+            }
+            else if(shortId) {
+              //如果已存在，再生成一个
+              shortCode = shortid.generate();
+            }
+            ShortUrl.create({
+              shortId: shortCode,
+              url: url
+            }, function(err) {
+              if(err) {
+                log(err)
+                return res.status(500).send({msg:'短网址生成出错'})
+              };
+              req.shortUrl = 'http://'+host+'/s/'+shortCode;
+              console.log(req.shortUrl);
+              next();
+            });
+          });
+        }
+      });
+    },
+    //发短信邀请
+    inviteUser: function(req, res) {
+      var phones = req.body.phones;
+      async.map(phones, function(phone, callback) {
+        smsService.sendInviteSMS(req.user, phone, req.shortUrl, callback);
+      }, function(err, results) {
+        if(err) log(err);
+        return res.status(200).send({msg:'发送短信成功'});
+      });
+    },
+
     updateValidate: function(req, res, next) {
       if (req.headers['content-type'].indexOf('multipart/form-data') !== -1) {
         next();
@@ -431,6 +500,7 @@ module.exports = {
         realname: req.body.name,
         cid: req.company._id,
         cname: req.company.info.name,
+        company_official_name: req.company.info.official_name,
         password: req.body.password,
         gender: req.body.gender,
         enrollment: req.body.enrollment

@@ -138,13 +138,14 @@ redisRanking.getEleFromZSET = function(cid, type, elements) {
 var redisPhoneValidate = {};
 
 /**
- * redis存储验证码,有效期10分钟
+ * redis存储验证码,有效期10分钟||expire
  * @param {number} phone 手机号
  * @param {number} code  验证码
- * @param {string} key enum:['signup', 'password']
+ * @param {string} key string:['signup', 'password'] / phone
+ * @param {number} expire 有效期(s)
  * reutrn {Promise}  ["OK",1]
  */
-redisPhoneValidate.setCode = function(phone, key, code) {
+redisPhoneValidate.setCode = function(phone, key, code, expire) {
   var deferred = Q.defer();
 
   if (!isConnect) {
@@ -155,7 +156,7 @@ redisPhoneValidate.setCode = function(phone, key, code) {
   var hashKey = key + ':' + phone;
   redisClient.multi([
     ['set', hashKey, code],
-    ['expire', hashKey, 600]//设置10分钟的expire
+    ['expire', hashKey, expire || 600]//设置expire,没有expire默认10分钟
   ]).exec(function(err, replies) {
     if (err) deferred.reject(err);
     else deferred.resolve(replies);
@@ -166,7 +167,7 @@ redisPhoneValidate.setCode = function(phone, key, code) {
 /**
  * 获取redis存储码
  * @param  {number} phone 手机号
- * @param {string} key enum:['signup', 'password']
+ * @param {string} key string:['signup', 'password'] / phone
  * @return {Promise} 保存的验证码 or null
  */
 redisPhoneValidate.getCode = function(phone, key) {

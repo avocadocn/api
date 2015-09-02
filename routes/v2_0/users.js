@@ -30,7 +30,7 @@ module.exports = function (app, ctrl) {
   app.post('/users/:userId/close', token.needToken, getById.getUserById, ctrl.v2_0.validateSuperAdmin, ctrl.v2_0.close);
   app.post('/users/:userId/open', token.needToken, getById.getUserById, ctrl.v2_0.validateSuperAdmin, ctrl.v2_0.open);
   // app.post('/users/:userId/active', token.needToken, getById.getUserById, ctrl.v1_4.activeUser);
-  // app.post('/users/actions/invite', token.needToken, ctrl.v1_3.inviteUser);
+  app.post('/users/actions/invite', token.needToken, ctrl.v2_0.validatePhones, ctrl.v2_0.generateInviteUrl, ctrl.v2_0.inviteUser);
   // app.post('/users/actions/batchinvite', token.needToken, ctrl.v1_3.batchinviteUser); //批量邀请用户
   app.post('/users/login', sessionMiddleware, ctrl.v2_0.login);
   app.post('/users/refresh/token', token.needToken, sessionMiddleware, ctrl.v2_0.refreshToken);
