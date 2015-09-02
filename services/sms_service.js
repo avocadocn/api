@@ -84,7 +84,6 @@ exports.sendInviteSMS = function(inviter, phone, shortUrl, callback) {
       return callback();
     }
     redisPhoneValidate.setCode(phone, inviter.phone, 1, expire)
-    var url = 'http://' + host + '/s/' + shortid;
     var data = {
       apikey:'3aad4cd70fb6846ed93d755ae7697af5',
       mobile: phone,
@@ -121,5 +120,5 @@ exports.sendInviteSMS = function(inviter, phone, shortUrl, callback) {
   })
   .then(null, function(err) {
     callback(err);
-  })
+  });
 };

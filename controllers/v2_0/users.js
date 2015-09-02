@@ -121,7 +121,6 @@ module.exports = {
           }
           shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-');
           var shortCode =  shortid.generate();
-          console.log(shortCode);
           ShortUrl.findOne({shortId:shortCode}, function(err, shortId) {
             if(err) {
               log(err);
@@ -140,7 +139,6 @@ module.exports = {
                 return res.status(500).send({msg:'短网址生成出错'})
               };
               req.shortUrl = 'http://'+host+'/s/'+shortCode;
-              console.log(req.shortUrl);
               next();
             });
           });
