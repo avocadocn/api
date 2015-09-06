@@ -690,7 +690,7 @@ module.exports = {
     },
     userInfoValidate: function(req, res) {
       var phone = req.body.phone;
-      if(phone) {
+      if(phone && (/^(\+?0?86\-?)?1[345789]\d{9}$/).test(phone)) {
         User.findOne({phone: phone}).exec().then(function(user) {
           if(user) {
             if(req.body.forgetValidate) {
@@ -728,7 +728,7 @@ module.exports = {
         });
       }
       else {
-        return res.status(400).send({msg:'参数错误'})
+        return res.status(400).send({msg:'手机号填写错误'});
       }
     },
     // - 注释 by M 暂时不用验证，每次获取关注列表，无论发什么参数都返回自己的关注列表.
