@@ -568,6 +568,7 @@ module.exports = {
           var pushInfo = req.body.pushInfo ||{};
           user.addDevice(req.headers, token, pushInfo);
           req.session.uid = user.id;
+          var oldToken = req.headers["x-access-token"];
           req.headers["x-access-token"] = token;
           user.save(function (err) {
             if (err) {
@@ -580,6 +581,8 @@ module.exports = {
                 cid:user.cid,
                 role:user.role
               });
+              oldToken && tokenService.redisToken.delete(oldToken)
+                .then(null, console.log);
               tokenService.redisToken.create(token, payload)
                 .then(null, console.log);
             }

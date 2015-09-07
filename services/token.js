@@ -123,7 +123,6 @@ exports.needToken = function (req, res, next) {
 };
 
 
-
 // atk: access token
 var identifier = 'atk:';
 var invalidErrorMsg = '不是一个有效的Json Web Token';
