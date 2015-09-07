@@ -18,8 +18,8 @@ var auth = require('../../services/auth.js'),
   donlerValidator = require('../../services/donler_validator.js'),
   async = require('async'),
   notificationController = require('./notifications.js'),
-  easemob = require('../../services/easemob.js');
-
+  easemob = require('../../services/easemob.js'),
+  multerService = require('../../middlewares/multerService.js');
 // TODO: 群组API涉及到权限判断，同时有重复代码，需要
 // 修改原权限判断代码，优化代码。
 module.exports = {
@@ -56,86 +56,33 @@ module.exports = {
      * 
      * @param req formData(multipart/form-data)
      */
-    getFormDataForGroup: function(req, res, next) {
-      var fieldName = 'photo';
-      var form = new multiparty.Form({
-        uploadDir: uploader.tempDir
-      });
-      form.parse(req, function(err, fields, files) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
-        }
+    createGroupValidate: function(req, res, next) {
         donlerValidator({
           name: {
             name: '名称',
-            value: (fields['name'] && fields['name'][0]) ? fields['name'][0] : undefined,
+            value: req.body.name,
             validators: ['required']
           },
           // themeColor: {
           //   name: '主题颜色',
-          //   value: (fields['themeColor'] && fields['themeColor'][0]) ? fields['themeColor'][0] : undefined,
+          //   value:req.body.themeColor,
           //   validators: []
           // },
           // logo: {
           //   name: '封面',
-          //   value: (files[fieldName] && files[fieldName][0].originalFilename) ? files[fieldName][0].originalFilename : undefined,
+          //   value: req.file,
           //   validators: ['required']
           // }
         }, 'complete', function(pass, msg) {
           if (pass) {
-            req.groupInfo = {};
-
-            req.groupInfo.name = fields['name'][0];
-            req.groupInfo.themeColor = fields['themeColor'] ? fields['themeColor'][0] : '';
-            req.groupInfo.brief = fields['brief'] ? fields['brief'][0]:'';
-            req.groupInfo.open = fields['open'][0];
-            req.groupInfo.hasValidate = fields['hasValidate'][0];
-            req.groupLogoFile = files[fieldName] ? files[fieldName] :'';
-            req.isAdmin = fields['isAdmin'][0];
-
             next();
           } else {
             var resMsg = donlerValidator.combineMsg(msg);
-            // console.log(resMsg);
             res.status(400).send({
               msg: resMsg
             });
           }
         });
-      });
-    },
-    /**
-     * 上传群组的封面
-     * 无form图片数据, 进行下一步；
-     * 有form图片数据, 将图片从暂存区移动到指定存储区域, 返回图片相对路径等信息
-     * @param  {[type]}   req  [description]
-     * @param  {[type]}   res  [description]
-     * @param  {Function} next [description]
-     * @return {[type]}        [description]
-     */
-    uploadLogoForGroup: function(req, res, next) {
-      if (!req.groupLogoFile) {
-        // 不传照片的话直接到下一步
-        next();
-        return;
-      }
-
-      uploader.uploadImage(req.groupLogoFile[0], {
-        targetDir: '/public/img/groups',
-        saveOrigin: true,
-        getSize: true,
-        success: function(imgInfo, oriCallback) {
-          req.groupInfo.logo = path.join('/img/groups', imgInfo.url);
-          next();
-        },
-        error: function(err) {
-          log(err);
-          return res.status(500).send({
-            msg: '服务器错误'
-          });
-        }
-      });
     },
     /**
      * 创建群组
@@ -144,24 +91,24 @@ module.exports = {
      * @return {[type]}     [description]
      */
     createGroup: function(req, res) {
-      var isAdmin = req.isAdmin==='true' && req.user.role === 'SuperAdmin';
+      var isAdmin = req.body.isAdmin==='true' && req.user.role === 'SuperAdmin';
       var userId = req.user._id; // 群组管理人员（队长）
       var team = new Team({
         cid: req.user.cid, // 公司id
 
         cname: req.user.cname, // 公司名称
 
-        name: req.groupInfo.name, // 群组名称
+        name: req.body.name, // 群组名称
 
-        logo: req.groupInfo.logo, // 群组封面
+        logo: req.file ? multerService.getRelPath(req.file.path):undefined, // 群组封面
 
-        themeColor: req.groupInfo.themeColor, // 群组主题颜色
+        themeColor: req.body.themeColor, // 群组主题颜色
 
-        brief: req.groupInfo.brief,
+        brief: req.body.brief,
 
-        open: req.groupInfo.open,
+        open: req.body.open,
 
-        hasValidate: req.groupInfo.hasValidate,
+        hasValidate: req.body.hasValidate,
         // 群组管理人员（队长）
         leader: isAdmin ? null : userId,
         // 群组成员
@@ -271,36 +218,19 @@ module.exports = {
         });
     },
     /**
-     * 获取更新群组的数据
+     * 验证是否可以改信息
      * @param  {[type]}   req  [description]
+     * @param  {[type]}   res  [description]
+     * @param  {Function} next [description]
+     * @return {[type]}        [description]
      */
-    getFormDataForUpdateGroup: function(req, res, next) {
-      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
-        req.groupInfo = req.body;
+    validateUpdate: function(req, res, next) {
+      if(req.user.isTeamAdmin(req.params.groupId) || req.user.isSuperAdmin(req.group ? req.group.cid : req.user.cid)&&(!req.group ||req.group.level===1)) {
         next();
-        return;
       }
-      var fieldName = 'photo';
-      var form = new multiparty.Form({
-        uploadDir: uploader.tempDir
-      });
-
-      form.parse(req, function(err, fields, files) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
-        }
-        req.groupInfo = {};
-        // 基本群组设置
-        req.groupInfo.name = (fields['name'] && fields['name'][0]) ? fields['name'][0] : undefined;
-        req.groupInfo.themeColor = (fields['themeColor'] && fields['themeColor'][0]) ? fields['themeColor'][0] : undefined;
-        req.groupLogoFile = (files[fieldName] && files[fieldName][0].originalFilename) ? files[fieldName] : undefined;
-        // 额外群组设置
-        req.groupInfo.brief = (fields['brief'] && fields['brief'][0]) ? fields['brief'][0] : undefined;
-        req.groupInfo.open = (fields['open'] && fields['open'][0]) ? fields['open'][0] : undefined;
-        req.groupInfo.hasValidate = (fields['hasValidate'] && fields['hasValidate'][0]) ? fields['hasValidate'][0] : undefined;
-        next();
-      });
+      else {
+        return res.status(403).send({msg:'抱歉，您无管理员权限'});
+      }
     },
     /**
      * 编辑群组
@@ -308,12 +238,16 @@ module.exports = {
      *   
      */
     updateGroup: function(req, res) {
+      if(req.file) {
+        req.body.logo = multerService.getRelPath(req.file.path)
+      }
       var doc = {};
-      for (var o in req.groupInfo) {
-        if (req.groupInfo[o] !== undefined) {
-          doc[o] = req.groupInfo[o];
+      for (var o in req.body) {
+        if (req.body[o] !== undefined) {
+          doc[o] = req.body[o];
         }
       }
+
       Team.update({
         '_id': req.group._id,
         'active': true
@@ -328,7 +262,7 @@ module.exports = {
             msg: '编辑群组成功'
           });
           // 更新user的team属性
-          if (req.groupInfo.open !== undefined) {
+          if (req.body.open !== undefined) {
             // TODO: 增加conditions条件
             User.update({
               'team': {
@@ -338,7 +272,7 @@ module.exports = {
               }
             }, {
               $set: {
-                'team.$.public': req.groupInfo.open
+                'team.$.public': req.body.open
               }
             }, {
               multi: true

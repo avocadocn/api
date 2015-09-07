@@ -1,10 +1,10 @@
 'use strict';
 
 var token = require('../../services/token.js');
-
+var multerService = require('../../middlewares/multerService.js');
 module.exports = function(app, ctrl) {
-  app.post('/groups', token.needToken, ctrl.v2_0.getFormDataForGroup, ctrl.v2_0.uploadLogoForGroup, ctrl.v2_0.createGroup); // 发新群组
-  app.put('/groups/:groupId', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.validateSuperAdmin, ctrl.v2_0.getFormDataForUpdateGroup, ctrl.v2_0.uploadLogoForGroup, ctrl.v2_0.updateGroup); // 编辑群组
+  app.post('/groups', token.needToken, multerService.upload('/groups').single('photo'),ctrl.v2_0.createGroupValidate, ctrl.v2_0.createGroup); // 发新群组
+  app.put('/groups/:groupId', token.needToken, ctrl.v2_0.getGroupById,  ctrl.v2_0.validateUpdate, multerService.upload('/groups').single('photo'), ctrl.v2_0.updateGroup); // 编辑群组
   app.post('/groups/:groupId/invitation', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.inviteMemberToGroup); // app内群组邀请
   app.get('/groups/:groupId/invitation', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.getInviteCodeForGroup); // app外群组邀请(获取邀请链接)
   app.put('/groups/:groupId/user', token.needToken, ctrl.v2_0.getGroupById, ctrl.v2_0.joinGroup); // 加入群组
