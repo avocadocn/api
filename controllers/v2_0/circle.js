@@ -150,7 +150,7 @@ module.exports = {
       if (req.imgInfos) {
         req.imgInfos.forEach(function(imgInfo) {
           var photo = {
-            uri: imgInfo.url,
+            uri: path.join('/img/circle', imgInfo.url),
             width: imgInfo.size.width,
             height: imgInfo.size.height
           };
