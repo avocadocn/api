@@ -1,8 +1,5 @@
 'use strict';
 
-var path = require('path'),
-  fs = require('fs');
-var multiparty = require('multiparty');
 var mongoose = require('mongoose');
 var CircleContent = mongoose.model('CircleContent'),
   CircleComment = mongoose.model('CircleComment'),
@@ -15,10 +12,9 @@ var CircleContent = mongoose.model('CircleContent'),
 var auth = require('../../services/auth.js'),
   log = require('../../services/error_log.js'),
   socketClient = require('../../services/socketClient'),
-  uploader = require('../../services/uploader.js'),
   tools = require('../../tools/tools.js'),
   async = require('async');
-
+var multerService = require('../../middlewares/multerService.js');
 
 
 module.exports = {
@@ -63,42 +59,18 @@ module.exports = {
      * @param  {Function} next [description]
      * @return {[type]}        [description]
      */
-    getFormData: function(req, res, next) {
+    uploadValidate: function(req, res, next) {
       if (req.user.provider === 'company') {
         return res.status(403).send({
           msg: '公司账号暂无同事圈功能'
         });
       }
-      var fieldName = 'photo';
-      var form = new multiparty.Form({
-        uploadDir: uploader.tempDir
-      });
-
-      form.parse(req, function(err, fields, files) {
-        if (err) {
-          log(err);
-          console.log(err);
-          return res.sendStatus(500);
-        }
-
-        // Send error(400) when don't have content and images
-        if ((fields['content'] == undefined || !fields['content'][0]) && !files[fieldName]) {
-          return res.status(400).send({
-            msg: '文字和图片至少包含一种'
-          });
-        }
-
-        if (files[fieldName] && files[fieldName].some(function(fileInfo) { return !fileInfo.originalFilename})) {
-          return res.status(400).send({
-            msg: '图片信息出错'
-          });
-        }
-
-        req.content = (fields['content'] && fields['content'][0]) ? fields['content'][0] : undefined;
-        req.imgFiles = files[fieldName] ? files[fieldName] : undefined;
-
-        next();
-      });
+      if (!req.body.content &&!req.files) {
+        return res.status(400).send({
+          msg: '文字和图片至少包含一种'
+        });
+      }
+      next();
     },
     /**
      * Upload images for the circle content
@@ -109,34 +81,26 @@ module.exports = {
      * @return {[type]}        [description]
      */
     uploadPhotoForContent: function(req, res, next) {
-      if (!req.imgFiles) {
+      if (!req.files) {
         // 不传照片的话直接到下一步
         next();
-        return ;
+        return;
       }
-
-      var files = req.imgFiles;
-      async.map(files, function(file, callback) {
-        uploader.uploadImage(file, {
-          targetDir: '/public/img/circle',
-          subDir: req.user.getCid().toString(),
-          saveOrigin: true,
-          getSize: true,
-          success: function(imgInfo, oriCallback) {
-            callback(null, imgInfo);
-          },
-          error: callback
-        });
-
-      }, function(err, results) {
-        if (err) {
-          log(err);
-           return res.status(500).send({ msg: '服务器错误' });
+      multerService.formatPhotos(req.files, {getSize:true}, function(err, files) {
+        var photos = [];
+        if(files && files.length) {
+          files.forEach(function(img) {
+            var photo = {
+              uri: multerService.getRelPath(img.path),
+              width: img.size.width,
+              height: img.size.height
+            };
+            photos.push(photo);
+          });
+          req.body.photos = photos;
         }
-        req.imgInfos = results;
         next();
       });
-
     },
     /**
      * 创建新同事圈消息
@@ -146,24 +110,13 @@ module.exports = {
      * @return {[type]}     [description]
      */
     createCircleContent: function(req, res) {
-      var photos = [];
-      if (req.imgInfos) {
-        req.imgInfos.forEach(function(imgInfo) {
-          var photo = {
-            uri: path.join('/img/circle', imgInfo.url),
-            width: imgInfo.size.width,
-            height: imgInfo.size.height
-          };
-          photos.push(photo);
-        });
-      }
 
       var circleContent = new CircleContent({
         cid: req.user.getCid(), // 所属公司id
 
-        content: req.content, // 文本内容(content和photos至少要有一个)
+        content: req.body.content, // 文本内容(content和photos至少要有一个)
 
-        photos: photos, // 照片列表
+        photos: req.body.photos, // 照片列表
 
         postUserId: req.user._id // 发消息的用户的id（头像和昵称再次查询）
       });
