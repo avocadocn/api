@@ -645,8 +645,8 @@ module.exports = {
        * 5. targetUserId is null(or undefined) when isOnlyToContent is true
        * 6. targetUserId is not null(or undefined) when isOnlyToContent is false
        */
-      if (typeof(req.body.isOnlyToContent) !== 'boolean' || (req.body.kind != 'comment' && req.body.kind != 'appreciate') || (req.body.content && req.body.kind == 'appreciate') || (!req.body.content && req.body.kind == 'comment') || (req.body.isOnlyToContent == true && req.body.targetUserId) ||
-        (req.body.isOnlyToContent == false && !req.body.targetUserId)) {
+      if (req.body.kind != 'comment' && req.body.kind != 'appreciate' || req.body.content && req.body.kind == 'appreciate' || !req.body.content && req.body.kind == 'comment' || req.body.isOnlyToContent == true && req.body.targetUserId ||
+        req.body.isOnlyToContent == false && !req.body.targetUserId) {
         return res.status(400).send({
           msg: '参数错误'
         });
