@@ -645,18 +645,16 @@ module.exports = {
        * 5. targetUserId is null(or undefined) when isOnlyToContent is true
        * 6. targetUserId is not null(or undefined) when isOnlyToContent is false
        */
-      if (req.body.kind != 'comment' && req.body.kind != 'appreciate' || req.body.content && req.body.kind == 'appreciate' || !req.body.content && req.body.kind == 'comment' || req.body.isOnlyToContent == true && req.body.targetUserId ||
-        req.body.isOnlyToContent == false && !req.body.targetUserId) {
+      if (req.body.kind != 'comment' && req.body.kind != 'appreciate' || !req.body.content && req.body.kind == 'comment' || req.body.isOnlyToContent == false && !req.body.targetUserId) {
         return res.status(400).send({
           msg: '参数错误'
         });
       }
 
       if (req.body.targetUserId === req.user.id) {
-        res.status(400).send({
+        return res.status(400).send({
           msg: '不可以回复自己的评论'
         });
-        return;
       }
 
       if (req.body.kind == 'appreciate') {
