@@ -722,7 +722,9 @@ module.exports = {
                 }
               })
             }
-            return res.status(200).send({active:false, msg:'未注册过'});
+            else {
+              return res.status(200).send({active:false, msg:'未注册过'});
+            }
           }
         })
         .then(null, function(err){
