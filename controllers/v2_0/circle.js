@@ -651,7 +651,7 @@ module.exports = {
         });
       }
 
-      if (req.body.targetUserId === req.user.id) {
+      if (!req.body.isOnlyToContent && req.body.targetUserId === req.user.id) {
         return res.status(400).send({
           msg: '不可以回复自己的评论'
         });
