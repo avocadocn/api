@@ -456,8 +456,11 @@ module.exports = {
           }
           //自己
           if(userId==req.user._id) {
-            //1:参加的小队的活动，2：认证小队活动和学校活动（面向全校发的互动），3：未认证小队活动,default:所以自己所在学校和参加的小队的
+            //0：参加的活动，1:参加的小队的活动，2：认证小队活动和学校活动（面向全校发的互动），3：未认证小队活动,default:所以自己所在学校和参加的小队的
             switch(req.query.requestType) {
+              case "0":
+                option ={"status":{"$lt":3}, "cid":req.user.cid, "members": userId};
+                break;
               case "1":
                 option ={"cid":req.user.cid, "status":{"$lt":3},"targetType":2,"target":{"$in":req.user.getTids()}};
                 break;
@@ -467,7 +470,8 @@ module.exports = {
               case "3":
                 option ={"status":{"$lt":3}, "offical": {$ne:true}, "targetType":3, "target":req.user.cid};
                 break;
-              default:
+              case "4":
+              default: 
                 option ={"cid":req.user.cid, "status":{"$lt":3}, "$or":[{"targetType":2,"target":{"$in":req.user.getTids()}},{"targetType":3,"target":req.user.cid}]};
             }
             callback(null,req.user)
@@ -515,6 +519,8 @@ module.exports = {
           }
         },
         function(callback){
+          var _order = "-createTime";
+
           //分页
           if(req.query.createTime) {
             option.createTime ={"$lt":req.query.createTime}
@@ -525,6 +531,11 @@ module.exports = {
             case '1':
               option.type =1;
               populateType = interactionTypes[0];
+              //排序可以为开始时间倒序，结束时间倒序
+              var orderOption = ["-startTime","-endTime"];
+              if(orderOption.indexOf(req.query.order)>-1) {
+                _order = req.query.order;
+              }
               break;
             //投票
             case '2':
@@ -541,7 +552,7 @@ module.exports = {
           }
           Interaction.find(option)
           .populate(populateType)
-          .sort({ createTime: -1 })
+          .sort(_order)
           .limit(_perPageNum)
           .exec()
           .then(function (interactions) {
