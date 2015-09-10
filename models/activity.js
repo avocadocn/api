@@ -45,11 +45,7 @@ var Activity = new Schema({
   deadline: Date,
   remindTime: Date,
   //活动类型,篮球等
-  activityMold: String,
-  template:{
-    type: Schema.Types.ObjectId,
-    ref: 'ActivityTemplate'
-  }
+  activityMold: String
 });
 
 

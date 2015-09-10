@@ -332,7 +332,8 @@ module.exports = {
         photos: data.photos,
         public: data.public,
         relatedTeam: data.relatedTeam,
-        offical: data.offical
+        offical: data.offical,
+        template: data.templateId
       });
       
       async.waterfall([
@@ -348,6 +349,25 @@ module.exports = {
               })
               interaction.inviters = inviters;
               callback(null)
+            })
+            .then(null, callback)
+          }
+          else {
+            callback(null)
+          }
+        },
+        function(callback){
+          //模板
+          if(data.templateId) {
+            Interaction.findOne({template:data.templateId,target:data.target})
+            .exec()
+            .then(function(interaction){
+              if(interaction) {
+                callback(406)
+              }
+              else {
+                callback(null)
+              }
             })
             .then(null, callback)
           }
@@ -418,7 +438,16 @@ module.exports = {
       function(err, results){
         if(err) {
           log(err);
-          res.status(500).send({msg:"服务器发生错误"});
+          switch(err) {
+            case 400:
+              res.status(400).send({msg:"参数错误"});
+              break;
+            case 406:
+              res.status(500).send({msg:"该互动已经存在，无法重复创建"});
+              break;
+            default:
+              res.status(500).send({msg:"服务器发生错误"});
+          }
         }
         else{
           res.send({interactionId:interaction.id});
@@ -1479,7 +1508,34 @@ module.exports = {
           log(error);
           return res.status(500).send({msg:"服务器发生错误"});
         });
+    },
+    getTemplatePublishStatus: function(req, res) {
+      Interaction.find({cid:req.user.cid,template:req.params.templateId})
+      .select("target")
+      .exec()
+      .then(function (interactions) {
+        var targets = interactions.map(function(interaction) {
+          return interaction.target.toString();
+        })
+        var teams = req.user.team.map(function(team) {
+          var team = {
+            _id:team._id,
+            published:targets.indexOf(team._id.toString())>-1
+          }
+          return team;
+        })
+        var company = {
+          _id:req.user.cid,
+          published:targets.indexOf(req.user.cid.toString())>-1
+        }
+        return res.send({teams:teams,company:company});
+      })
+      .then(null,function (error) {
+        log(error);
+        return res.status(500).send({msg:"服务器发生错误"});
+      });
     }
+    
   }
 };
 

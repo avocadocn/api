@@ -14,7 +14,8 @@ module.exports = function (router, ctrl) {
     .get(ctrl.v2_0.template.getTemplateList);                                                                //获取模板列表
   router.route('/interaction/template/:templateType/:templateId')
     .get(ctrl.v2_0.template.getTemplateDetail);                                                              //获取模板详情
-  
+  router.route('/interaction/template/:templateType/:templateId/validate')
+    .get(ctrl.v2_0.template.getTemplatePublishStatus);
   router.route('/interaction/activity/:interactionId/users/:userId')
     .post(ctrl.v2_0.activity.join)                                                                           //参加活动
     .delete(ctrl.v2_0.activity.quit);                                                                        //退出活动

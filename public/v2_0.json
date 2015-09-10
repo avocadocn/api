@@ -5,7 +5,7 @@
     "description": "Donler API v2",
     "version": "2.0.0"
   },
-  "host": "localhost:3002",
+  "host": "www.55yali.com:3002",
   "basePath": "/v2_0",
   "schemes": [
     "http"
@@ -1398,6 +1398,51 @@
             "description": "成功",
             "schema": {
               "$ref": "InteractionTemplate"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
+    "/interaction/template/{templateType}/{templateId}/validate": {
+      "get": {
+        "tags": [
+          "interaction"
+        ],
+        "summary": "获取模板发布情况",
+        "operationId": "getActivityTemplateValidate",
+        "parameters": [
+          {
+            "name": "templateType",
+            "description": "模板类型",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "in": "path",
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "name": "templateId",
+            "description": "模板Id",
+            "required": true,
+            "type": "string",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "InteractionTemplateValidate"
             }
           },
           "default": {
@@ -4830,6 +4875,33 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "teamPublshStatus": {
+      "title": "小队模板发布状态",
+      "properties": {
+        "_id": {
+          "description": "id",
+          "type": "string"
+        },
+        "published": {
+          "type": "boolean",
+          "description": "是否已经发布过"
+        }
+      }
+    },
+    "InteractionTemplateValidate": {
+      "title": "互动模板发布情况",
+      "properties": {
+        "teams": {
+          "type": "array",
+          "items": {
+            "$ref": "teamPublshStatus"
+          }
+        },
+        "company": {
+          "$ref": "teamPublshStatus"
         }
       }
     }

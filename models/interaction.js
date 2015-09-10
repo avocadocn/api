@@ -87,6 +87,7 @@ var Interaction = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Question'
   },
+  template:Schema.Types.ObjectId,
   relatedTeam: {
     type: Schema.Types.ObjectId,
     ref: 'Team'
