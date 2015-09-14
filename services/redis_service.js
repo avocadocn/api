@@ -55,7 +55,7 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
   if (!elements.length) {
     redisClient.hmset([hashKeyInf, 'all', 1], function(err, reply) {
       if (err) deferred.reject(err);
-      else deferred.resolve(replies);
+      else deferred.resolve(reply);
     });
   } else {
     redisClient.zadd(args, function(err, reply) {

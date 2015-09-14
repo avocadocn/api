@@ -839,13 +839,13 @@ module.exports = {
       async.waterfall([
         function (callback) {
           var option ={_id: req.body.commentId, interactionId: req.params.interactionId, posterId: req.user._id, status: 1};
-          var update ={status: 2};
+          var update ={$set:{status: 2}};
           mongoose.model(commentModel).findOneAndUpdate(option,update,{"new":true}, callback);
         },
         function (comment, callback) {
           if(!comment) {return callback(400);}
           var option ={commentId: req.body.commentId, status: 1};
-          var update ={status: 3};
+          var update ={$set:{status: 3}};
           mongoose.model(commentModel).update(option,update,{ multi: true }, function (error, count) {
             callback(error,{comment: comment,subCount: count})
           });
