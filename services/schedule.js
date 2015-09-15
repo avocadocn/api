@@ -4,6 +4,8 @@ var mongoose = require('mongoose'),
     Company = mongoose.model('Company'),
     CompanyGroup = mongoose.model('CompanyGroup'),
     User = mongoose.model('User'),
+    Team = mongoose.model('Team'),
+    Interaction = mongoose.model('Interaction'),
     Campaign = mongoose.model('Campaign'),
     ScoreBoard = mongoose.model('ScoreBoard'),
     Rank = mongoose.model('Rank'),
@@ -21,6 +23,127 @@ var winScore =3;
 var tieScore = 1;
 var loseScore = 0;
 var rankLimit = 10;
+var objectToArray = function(obj) {
+  var arr = [];
+  for (var index in obj) {
+    arr.push({index:index,value:obj[index]});
+  }
+  return arr;
+}
+/**
+ * 活动结束更新小队积分
+ * @param {Function} callback [description]
+ */
+var addTeamScore = function (callback) {
+
+  var pageSize = 20;
+  var nowResultLength = 0;
+  var totalCount = 0, successCount = 0, failedCount = 0;
+  var nextQueryId;
+  var teamDatas ={};
+  var _updateTeamScore = function (interaction, mapCallback) {
+    var memberLength = interaction.members.length;
+    //仅小队活动或者有发起小队的全校活动且有人参加时计算分数
+    if(interaction.targetType===1 ||interaction.targetType===3&&!interaction.relatedTeam || !memberLength)
+      return mapCallback();
+    var teamId = interaction.targetType ===2 ? interaction.target :interaction.relatedTeam;
+    //每个人参加加1分，活动本身10分。
+    var score = memberLength + 10;
+    if(!teamDatas[teamId]){
+      teamDatas[teamId] = score;
+    }
+    else {
+      teamDatas[teamId] += score;
+    }
+    mapCallback();
+  };
+  var updateTeamScore = function (resultCallback) {
+    async.each(teamDatas, function(team,mapCallback){
+      Team.update({
+      _id: team.index
+    }, {
+      $inc: {
+        "score.total": team.value
+      }
+    }, {
+      multi: false
+    }, function (err, num) {
+      if (err) {
+        console.log('更新小队积分出错:', err, '小队id:',team.index);
+        console.log(err.stack);
+        failedCount++;
+      } else {
+        successCount++
+      }
+      mapCallback();
+    });
+    }, function (err, results) {
+      resultCallback();
+    })
+  };
+  async.doWhilst(function (doWhilstCallback) {
+    var query = {
+      'type':1,
+      'status':1,
+      'endTime':{
+        '$lt': new Date()
+      }
+    }
+    if (nextQueryId) {
+      query._id = {
+        $gt: nextQueryId
+      };
+    }
+    Interaction.find(query)
+      .select("members targetType target relatedTeam")
+      .sort('_id')
+      .limit(pageSize)
+      .exec()
+      .then(function (interactions) {
+        if (interactions.length > 0) {
+          nowResultLength = interactions.length;
+          nextQueryId = interactions[nowResultLength - 1]._id;
+          totalCount += nowResultLength;
+        }
+        async.map(interactions, _updateTeamScore, function (err, results) {
+          doWhilstCallback();
+        })
+
+      })
+      .then(null, function (err) {
+        console.log('查找活动出错:', err);
+        console.log(err.stack);
+        doWhilstCallback();
+      });
+
+  }, function () {
+    return nowResultLength === pageSize;
+  }, function (err) {
+    teamDatas = objectToArray(teamDatas);
+    updateTeamScore(callback)
+    console.log('[更新小队分数]处理活动数:', totalCount, '成功:', successCount, '失败:', failedCount);
+  });
+
+}
+//结束比赛，并统计小队积分
+var finishActivity = function() {
+  addTeamScore(function (err) {
+    if (err) {
+      console.log('更新积分出错：', err);
+    }
+
+    // 必须在更新完成员积分后再进行，否则无法查询将要设为结束的活动
+    // 把时间到了的设为finish
+    Interaction.update({'type':1,'status':1,'endTime':{'$lt':new Date()}},{$set:{'status':2, 'updateTime': new Date()}},{multi:true},function(err,num){
+      if(err){
+        console.log(err);
+      }
+      else{
+        console.log('finishActivity:'+num);
+      }
+    })
+  })
+}
 /**
  * 活动结束更新成员积分
  * @param {Function} callback [description]
@@ -571,6 +694,11 @@ var ranking = function() {
 }
 
 exports.init = function(){
+  //自动完成已经结束的活动
+  var finishActivityRule = new schedule.RecurrenceRule();
+  finishActivityRule.minute = 0;
+  var finishActivitySchedule = schedule.scheduleJob(finishActivityRule, finishActivity);
+  // finishActivity();
   //自动统计小队排名
   // var teamPointRule = new schedule.RecurrenceRule();
   // teamPointRule.dayOfWeek = 0;
