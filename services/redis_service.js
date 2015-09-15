@@ -31,7 +31,7 @@ var identifierInf = 'inf:';
  * 
  * @return {[type]}      [description]
  */
-redisRanking.addEleToZSET = function(cid, type, elements, limit) {
+redisRanking.addEleToZSET = function(cid, type, elements) {
   var deferred = Q.defer();
 
   if (!isConnect) {
@@ -56,20 +56,10 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
     deferred.resolve(0);
   } else {
     redisClient.zadd(args, function(err, reply) {
-      if (err) {
+      if (err)
         deferred.reject(err);
-        return;
-      }
-
-      var length = elements.length / 2;
-
-      var commands = [hashKeyInf, 'count', reply];
-
-      redisClient.hincrby(commands).exec(function(err, replies) {
-        if (err) deferred.reject(err);
-        else deferred.resolve(replies);
-      });
-
+      else
+        deferred.resolve(reply);
     });
   }
   return deferred.promise;
@@ -97,9 +87,8 @@ redisRanking.getEleFromZSET = function(cid, type, elements) {
   }
 
   var hashKey = identifier + type + cid;
-  var hashKeyInf = identifierInf + type + cid;
 
-  redisClient.hget([hashKeyInf, 'count'], function(err, reply) {
+  redisClient.zcard(hashKey, function(err, reply) {
     if (err) {
       deferred.reject(err);
       return;
@@ -145,18 +134,10 @@ redisRanking.updateElement = function(cid, type, elements) {
     return deferred.promise;
   }
   var hashKey = identifier + type + cid;
-  var hashKeyInf = identifierInf + type + cid;
   var args = [];
   args.push(hashKey);
   args = args.concat(elements);
   redisClient.zincrby(args, function(err, reply) {
-    if(reply===1) {
-      var commands = [ hashKeyInf, 'count', 1];
-
-      redisClient.hincrby(commands, function(err, reply) {
-        if (err) deferred.reject(err);
-      });
-    }
     if (err) deferred.reject(err);
     else deferred.resolve(reply);
   });
