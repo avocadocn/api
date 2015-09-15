@@ -164,12 +164,16 @@ module.exports = {
             ranking: parseRes(result.value)
           });
         } else {
-          next();
+          res.status(200).send({
+            ranking: []
+          });
         }
       })
       .then(null, function(err) {
         log(err);
-        next();
+        res.status(500).send({
+            msg:"服务器发送错误"
+          });
       });
     },
     /**

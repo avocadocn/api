@@ -11,7 +11,6 @@ var log = require('../../services/error_log.js'),
 var maxGifts = 3; //最多3个
 var recoveryHour = 3; //恢复时间3小时
 var recoveryTime = recoveryHour*3600*1000;
-
   
 var getRemain = function(gifts, nowTime) {
 
@@ -202,6 +201,10 @@ module.exports = {
         else {
           req.remains && req.remains.remainGift --;
           res.status(200).send({gift:gift, remain:req.remains});
+          //送爱心更新男神榜女神榜
+          if(req.body.giftIndex===4) {
+            redisService.redisRanking.updateElement(req.user.cid, req.receiver.gender===1 ?1 :2, [1, req.body.receiverId]);
+          }
           notificationController.sendGiftNfct(gift, 1);
           return;
         }

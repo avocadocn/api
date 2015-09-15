@@ -53,10 +53,7 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
   args = args.concat(elements);
 
   if (!elements.length) {
-    redisClient.hmset([hashKeyInf, 'all', 1], function(err, reply) {
-      if (err) deferred.reject(err);
-      else deferred.resolve(reply);
-    });
+    deferred.resolve(0);
   } else {
     redisClient.zadd(args, function(err, reply) {
       if (err) {
@@ -66,15 +63,9 @@ redisRanking.addEleToZSET = function(cid, type, elements, limit) {
 
       var length = elements.length / 2;
 
-      var commands = [
-        ['hincrby', hashKeyInf, 'count', reply]
-      ];
+      var commands = [hashKeyInf, 'count', reply];
 
-      if (length < limit) {
-        commands.push(['hmset', hashKeyInf, 'all', 1]);
-      }
-
-      redisClient.multi(commands).exec(function(err, replies) {
+      redisClient.hincrby(commands).exec(function(err, replies) {
         if (err) deferred.reject(err);
         else deferred.resolve(replies);
       });
@@ -108,13 +99,13 @@ redisRanking.getEleFromZSET = function(cid, type, elements) {
   var hashKey = identifier + type + cid;
   var hashKeyInf = identifierInf + type + cid;
 
-  redisClient.hmget([hashKeyInf, 'count', 'all'], function(err, reply) {
+  redisClient.hget([hashKeyInf, 'count'], function(err, reply) {
     if (err) {
       deferred.reject(err);
       return;
     }
 
-    if (!reply[0] || ((parseInt(reply[0])) <= elements[1] && (!reply[1] || reply[1] === '0'))) {
+    if (!reply) {
        deferred.resolve({exist: false});
        return;
     }
@@ -125,11 +116,51 @@ redisRanking.getEleFromZSET = function(cid, type, elements) {
     args = args.concat(elements);
 
     args.push('WITHSCORES');
-
     redisClient.zrevrange(args, function(err, reply) {
       if (err) deferred.reject(err);
       else deferred.resolve({exist: true, value: reply});
     });
+  });
+
+  return deferred.promise;
+};
+/**
+ * Update the exist element
+ * @param  cid            the id of company
+ * @param  elements       the args of command. eg: 
+ * [2(increment), 53e9c3fcd271b3943b2d44c9]
+ * 
+ * @return {[type]}         [description]
+ */
+redisRanking.updateElement = function(cid, type, elements) {
+  var deferred = Q.defer();
+
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+
+  if (!elements.length) {
+    deferred.reject(new Error('参数错误'));
+    return deferred.promise;
+  }
+  var hashKey = identifier + type + cid;
+  var hashKeyInf = identifierInf + type + cid;
+  var args = [];
+  args.push(hashKey);
+  args = args.concat(elements);
+  console.log(args)
+  redisClient.zincrby(args, function(err, reply) {
+    if(reply===1) {
+      var commands = [ hashKeyInf, 'count', 1];
+
+      redisClient.hincrby(commands, function(err, reply) {
+        console.log(commands,reply)
+        if (err) deferred.reject(err);
+      });
+    }
+    if (err) deferred.reject(err);
+    else deferred.resolve(reply);
   });
 
   return deferred.promise;
