@@ -149,6 +149,7 @@ module.exports = {
           }
         });
       }
+      req.body.giftIndex = parseInt(req.body.giftIndex);
       donlerValidator({
         receiver: {
           name: '接收者',

@@ -149,13 +149,11 @@ redisRanking.updateElement = function(cid, type, elements) {
   var args = [];
   args.push(hashKey);
   args = args.concat(elements);
-  console.log(args)
   redisClient.zincrby(args, function(err, reply) {
     if(reply===1) {
       var commands = [ hashKeyInf, 'count', 1];
 
       redisClient.hincrby(commands, function(err, reply) {
-        console.log(commands,reply)
         if (err) deferred.reject(err);
       });
     }
