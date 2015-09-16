@@ -89,7 +89,6 @@ var updateInteractionTime = function(user) {
     }
   });
 };
-
 module.exports = {
   interaction: {
     /**
@@ -414,6 +413,8 @@ module.exports = {
               interactionContent = createActivity(data,template);
               if(interactionContent.startTime<new Date())
                 return callback("开始时间不能早于现在");
+              if(interaction.endTime<new Date())
+                return callback("结束时间不能早于现在");
               break;
             //投票
             case 2:
@@ -426,12 +427,16 @@ module.exports = {
           }
           interactionContent.save(function (error) {
             callback(error,interactionContent._id)
+            if(!error && data.templateId) {
+              template.forwarding++;
+              template.save(function(err){
+                if(err) log(err)
+              })
+            }
           });
         },
         function(id,callback){
           interaction[interactionType] = id;
-          if(interaction.endTime<new Date())
-            return callback("结束时间不能早于现在");
           interaction.save(callback)
         }
       ],

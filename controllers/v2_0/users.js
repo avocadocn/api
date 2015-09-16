@@ -521,6 +521,7 @@ module.exports = {
           return;
         }
         res.status(200).send({msg: '用户注册成功'});
+        easemob.user.create({"username":user._id,"password":user._id, "nickname":req.body.name});
       });
     },
 

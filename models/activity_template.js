@@ -47,6 +47,10 @@ var ActivityTemplate = new Schema({
   active:  {
     type: Boolean,
     default: true
+  },
+  forwarding:  {
+    type: Number,
+    default: 0
   }
 });
 
