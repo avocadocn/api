@@ -368,6 +368,23 @@ paths:
             type: array
             items:
               $ref: User
+  "/users/list/birthday":
+    get:
+      tags:
+        - user
+      operationId: getBirthdayUserList
+      summary: 获取近期生日的人（30天）
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        "200":
+          description: 获取成功
+          schema:
+            type: array
+            items:
+              $ref: User
   /users/validate:
     post:
       tags:

@@ -8,6 +8,7 @@ var Feedback = mongoose.model('Feedback');
 var Config = mongoose.model('Config');
 var async = require('async');
 var shortid = require('shortid');
+var moment = require('moment');
 var log = require('../../services/error_log.js'),
     donlerValidator = require('../../services/donler_validator.js'),
     uploader = require('../../services/uploader.js'),
@@ -823,5 +824,46 @@ module.exports = {
       else {
         return res.status(200).send({msg:'取消关注成功'});
       }
+    },
+    getBirthDayUsers: function (req, res) {
+      var day = moment().dayOfYear();
+      // console.time('birthday')
+      var aggregateOptions = [{
+        $match: {
+          'cid': mongoose.Types.ObjectId(req.user.cid),
+          'birthday':{$exists:true}
+        }
+      },
+      {
+        $project:{
+          nickname:'$nickname',
+          photo:'$photo',
+          birthday:'$birthday',
+          day:{$dayOfYear:"$birthday"}
+        }
+      },
+       {
+        $match: {
+          'day':{$gte:day,$lt:day+30}
+        }
+      }, {
+        $sort: {
+          'vote': -1,
+          '_id': 1
+        }
+      }];
+      User.aggregate(aggregateOptions).exec(function(err, users) {
+        if (err) {
+          log(err);
+          return res.status(500).send({
+            msg: '服务器错误'
+          });
+        }
+        // console.timeEnd('birthday')
+        return res.status(200).send(users);
+      });
     }
 };
+
+
+

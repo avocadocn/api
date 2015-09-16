@@ -23,6 +23,7 @@ module.exports = function (app, ctrl) {
   app.post('/users/validate', ctrl.v2_0.userInfoValidate);
   app.get('/users/:userId', token.needToken, ctrl.v2_0.getUserById);
   app.put('/users/:userId', token.needToken, ctrl.v2_0.updateValidate, ctrl.v2_0.updatePhoto, ctrl.v2_0.update);
+  app.get('/users/list/birthday', token.needToken ,ctrl.v2_0.getBirthDayUsers); //获取近期过生日的人
   app.get('/users/list/:companyId', token.needToken, ctrl.v2_0.getCompanyUsers);
   app.post('/users/forgetPassword', ctrl.v2_0.forgetPassword);
   app.post('/users/sendFeedback', token.needToken, multerService.upload('feedback').array('photos',9), ctrl.v2_0.sendFeedback);
@@ -44,4 +45,5 @@ module.exports = function (app, ctrl) {
   app.get('/users/concern/:userId', token.needToken ,ctrl.v2_0.getConcern); //获取我的关注列表
   app.post('/users/concern/:userId', token.needToken, ctrl.v2_0.addConcern); //对xx增加关注 
   app.delete('/users/concern/:userId', token.needToken, ctrl.v2_0.deleteConcern); //将xx从自己的关注列表中删除
+
 };

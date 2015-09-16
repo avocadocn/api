@@ -530,6 +530,32 @@
         }
       }
     },
+    "/users/list/birthday": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "operationId": "getBirthdayUserList",
+        "summary": "获取近期生日的人（30天）",
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "User"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/users/validate": {
       "post": {
         "tags": [
