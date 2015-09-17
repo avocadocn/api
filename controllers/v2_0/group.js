@@ -1040,7 +1040,6 @@ module.exports = {
       }
 
       Team.findOne(conditions, projection)
-      .populate('leader')
       .exec()
       .then(function(group) {
         res.status(200).send({
