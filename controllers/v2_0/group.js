@@ -1033,7 +1033,8 @@ module.exports = {
       var projection = {
         'name': 1,
         'logo': 1,
-        'brief': 1
+        'brief': 1,
+        'member': 1
       };
 
       if (req.query.allInfo) {
