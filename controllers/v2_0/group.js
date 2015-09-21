@@ -983,22 +983,30 @@ module.exports = {
         'brief': 1,
         'level':1,
         'hasValidate':1,
-        'score':1
+        'score':1,
+        'member':1
       };
       var isAdmin = req.user.isSuperAdmin(req.user.cid) && req.query.from === 'admin';
       if(isAdmin) {
         projection.applyStatus = 1;
         projection.leader = 1;
-        projection.member = 1;
       };
       var doc = Team.find(conditions, projection);
       if(isAdmin) {
         doc = doc.populate({path:'leader', select:'photo nickname'});
       }
-
       doc.exec()
       .then(function(docs) {
-        return res.status(200).send({groups: docs});
+        var result = docs.map(function(team) {
+          var isMember = team.isMember(req.user._id);
+          team = team.toObject();
+          team.isMember = isMember;
+          if(!isAdmin) {
+            delete team.member;
+          }
+          return team;
+        })
+        return res.status(200).send({groups: result});
       })
       .then(null, function(err) {
         return res.sendStatus(500);
@@ -1097,7 +1105,7 @@ module.exports = {
         }
       };
       var msg = '拒绝加入受邀群组成功';
-      var accept = req.body.accept===1 || req.body.accept===true || req.body.accept==='true';
+      var accept = req.body.accept==true || req.body.accept==='true';
       if (accept) {
         doc.$addToSet = {
           'member': {
@@ -1187,7 +1195,8 @@ module.exports = {
         }
       };
       var msg = '拒绝该申请';
-      var accept = req.body.accept===1 || req.body.accept===true || req.body.accept==='true';
+
+      var accept = req.body.accept==true || req.body.accept==='true';
       if (accept) {
         doc.$addToSet = {
           'member': {
