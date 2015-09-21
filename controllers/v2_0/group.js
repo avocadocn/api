@@ -1038,7 +1038,9 @@ module.exports = {
         }
         projection = {};
       }
-
+      else {
+        conditions['$or'] = [{'member._id':req.user._id},{'open':true}]
+      }
       Team.findOne(conditions, projection)
       .exec()
       .then(function(group) {
@@ -1095,8 +1097,8 @@ module.exports = {
         }
       };
       var msg = '拒绝加入受邀群组成功';
-
-      if (req.query.accept === 'true') {
+      var accept = req.body.accept===1 || req.body.accept===true || req.body.accept==='true';
+      if (accept) {
         doc.$addToSet = {
           'member': {
             _id: req.user._id // 成员id
@@ -1119,7 +1121,7 @@ module.exports = {
 
           // 更新user的team属性
           // TODO: 增加conditions条件
-          if (req.query.accept === 'true') {
+          if (accept) {
 
             //加入群聊
             easemob.group.addUser(req.group.easemobId, req.user._id);
@@ -1185,8 +1187,8 @@ module.exports = {
         }
       };
       var msg = '拒绝该申请';
-
-      if (req.query.accept === 'true') {
+      var accept = req.body.accept===1 || req.body.accept===true || req.body.accept==='true';
+      if (accept) {
         doc.$addToSet = {
           'member': {
             _id: user._id, // 成员id
@@ -1210,7 +1212,7 @@ module.exports = {
           });
           // 更新user的team属性
           // TODO: 增加conditions条件
-          if (req.query.accept === 'true') {
+          if (accept) {
             //加入群聊
             easemob.group.addUser(req.group.easemobId, req.user._id);
 
@@ -1232,8 +1234,7 @@ module.exports = {
 
             //发通知
             notificationController.sendTeamNtct(7, team, req.user._id, req.params.userId);
-            var result = req.query.accept === 'true';
-            notificationController.updateTeamNfct(team, req.params.userId, req.user._id, result);
+            notificationController.updateTeamNfct(team, req.params.userId, req.user._id, accept);
           }
         }
       });

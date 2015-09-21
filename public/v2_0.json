@@ -2228,7 +2228,7 @@
             "description": "是否接受邀请",
             "required": true,
             "type": "boolean",
-            "in": "query"
+            "in": "formData"
           }
         ],
         "responses": {
@@ -2694,7 +2694,7 @@
             "description": "群主是否同意",
             "required": true,
             "type": "boolean",
-            "in": "query"
+            "in": "formData"
           }
         ],
         "responses": {
