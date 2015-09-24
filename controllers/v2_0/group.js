@@ -942,7 +942,8 @@ module.exports = {
         'name': 1,
         'logo': 1,
         'themeColor': 1,
-        'brief': 1
+        'brief': 1,
+        'easemobId':1
       };
 
       Team.find(conditions, projection, function(err, docs) {
