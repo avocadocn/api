@@ -31,17 +31,15 @@ var modelKeys = ['app_id', 'api_key', 'device_id', 'device_type', 'platform', 'v
  * @return {Boolean}             如果一致，返回true，否则返回false
  */
 var validateHeaders = function (headers, device) {
-  for(var i=0; i<device.length; i++) {
-    if(headers['x-platform']==device[i]['platform']){
-      for (var j = 0; j < headersKeys.length; j++) {
-        var headersKey = headersKeys[j];
-        var modelKey = modelKeys[j];
-        if (headers[headersKey] != device[i][modelKey]) {
-          return false;
-        }
+  if(device && headers['x-platform']==device['platform']){
+    for (var j = 0; j < headersKeys.length; j++) {
+      var headersKey = headersKeys[j];
+      var modelKey = modelKeys[j];
+      if (headers[headersKey] != device[modelKey]) {
+        return false;
       }
-      return true;
     }
+    return true;
   }
 
   return false;

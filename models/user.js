@@ -127,7 +127,22 @@ var UserSchema = new Schema({
     type: Boolean,
     default: false
   },
-  device: [_device],
+  device: {
+    platform: String,
+    version: String,
+    device_id: String,
+    device_type: String, //同一platform设备的类型(比如ios系统有iPhone和iPad)
+    access_token: String, //每次登录时生成
+    ios_token: String, //只有iosd的APN推送才会用到
+    user_id: String, //只有Android的百度云推送才会用到
+    channel_id: String, //只有Android的百度云推送才会用到
+    app_id: String,
+    api_key: String,
+    update_date: {
+      type: Date,
+      default: Date.now
+    }
+  },
   push_toggle: { //免打扰开关 false为接收push
     type: Boolean,
     default: false
@@ -407,17 +422,7 @@ UserSchema.methods = {
       device.user_id = pushData.user_id;
       device.channel_id = pushData.channel_id;
     }
-    if (!this.device) {
-      this.device = [];
-    }
-    for (var i = 0; i < this.device.length; i++) {
-      var historyDevice = this.device[i];
-      if (historyDevice.platform === device.platform) {
-        this.device.splice(i, 1);
-        break;
-      }
-    }
-    this.device.push(device);
+    this.device = device;
   },
 
   /**
@@ -427,12 +432,9 @@ UserSchema.methods = {
    * @return {Boolean} 如果有找到匹配的token，则返回true，否则返回false
    */
   updateDeviceToken: function (oldToken, newToken) {
-    for (var i = 0, deviceLen = this.device.length; i < deviceLen; i++) {
-      var device = this.device[i];
-      if (device.access_token === oldToken) {
-        device.access_token = newToken;
-        return true;
-      }
+    if (this.device&&this.device.access_token === oldToken) {
+      this.device.access_token = newToken;
+      return true;
     }
     return false;
   },
@@ -458,12 +460,9 @@ UserSchema.methods = {
     if (!this.device) {
       this.device = [];
     }
-    for (var i = 0; i < this.device.length; i++) {
-      var historyDevice = this.device[i];
-      if (historyDevice.platform === device.platform && historyDevice.device_id === device.device_id) {
-        this.device.splice(i, 1);
-        break;
-      }
+    var historyDevice = this.device;
+    if (historyDevice.platform === device.platform && historyDevice.device_id === device.device_id) {
+      this.device = null;
     }
   }
 };
