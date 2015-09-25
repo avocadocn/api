@@ -4,6 +4,9 @@ var mongoose = require('mongoose'),
   ErrorStatistics = mongoose.model('ErrorStatistics');
 
 module.exports = function (err) {
+  if(!err) {
+    return;
+  }
   if (process.env.NODE_ENV !== 'test') {
     console.log(err.stack || err);
 

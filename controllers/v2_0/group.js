@@ -551,7 +551,7 @@ module.exports = {
             });
 
             //加入群聊
-            easemob.group.addUser(req.group.easemobId, req.user._id);
+            easemob.group.addUser(req.group.easemobId, req.user._id,function(error,data){if(error) log(error)});
 
             // 更新user的team属性
             // TODO: 增加conditions条件
@@ -601,7 +601,7 @@ module.exports = {
       if (req.group.leader.toString() === req.user._id.toString()) {
         if (req.group.member.length > 1) {
           return res.status(200).send({
-            msg: '指定新群主'
+            msg: '群主无法退出'
           });
         } else {
           return res.status(200).send({
@@ -627,8 +627,8 @@ module.exports = {
               msg: '退出群组成功'
             });
 
-            //从群聊中删除
-            easemob.group.deleteUser(req.group.easemobId, req.user._id);
+            //从群聊中删除(改为客户端向环信发出退群申请)
+            easemob.group.deleteUser(req.group.easemobId, req.user._id,function(error,data){if(error) log(error)});
 
             // 更新user的team属性
             // TODO: 增加conditions条件
@@ -1227,7 +1227,7 @@ module.exports = {
           // TODO: 增加conditions条件
           if (accept) {
             //加入群聊
-            easemob.group.addUser(req.group.easemobId, req.user._id);
+            easemob.group.addUser(req.group.easemobId, req.params.userId,function(error,data){if(error) log(error)});
 
             User.update({
               '_id': req.params.userId

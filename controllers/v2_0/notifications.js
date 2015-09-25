@@ -161,7 +161,7 @@ module.exports = {
     }, {
       multi:true
     },function(err) {
-      log(err);
+      if(err) log(err);
     });
   },
   getNotifications: function(req, res) {
