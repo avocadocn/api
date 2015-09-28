@@ -329,12 +329,12 @@ module.exports = {
         endTime: data.endTime,
         tags: data.tags,
         photos: data.photos,
-        public: data.public,
+        public: data.public ==undefined ? true : data.public,
         relatedTeam: data.relatedTeam,
-        offical: data.offical,
+        offical: !!data.offical,
         template: data.templateId
       });
-      
+
       async.waterfall([
         function(callback){
           //邀请查看
@@ -522,7 +522,7 @@ module.exports = {
               }
               else {
                 option = {
-                 cid:req.user.cid,
+                  cid:req.user.cid,
                   status:{"$lt":3},
                   "$and":[
                     {"$or":[
