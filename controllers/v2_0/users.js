@@ -543,9 +543,65 @@ module.exports = {
             return res.status(401).send({ msg: '密码输入错误,请检查重试。' });
           }
 
-          // if(!user.mail_active) {
-          //   return res.status(401).send({ msg: '账号未激活,请至邮箱点击链接激活。' });
-          // }
+          if(!user.active) {
+            return res.status(401).send({ msg: '您的账号已被管理员禁用。' });
+          }
+
+          if(user.disabled) {
+            return res.status(401).send({ msg: '账号已被关闭。'})
+          }
+          var payload = {
+            type: "user",
+            id: user._id.toString(),
+            exp: req.app.get('tokenExpires') + Date.now()
+          };
+          var token = jwt.sign(payload, req.app.get('tokenSecret'));
+          var pushInfo = req.body.pushInfo ||{};
+          user.addDevice(req.headers, token, pushInfo);
+          req.session.uid = user.id;
+          var oldToken = req.headers["x-access-token"];
+          req.headers["x-access-token"] = token;
+          user.save(function (err) {
+            if (err) {
+              log(err);
+              res.sendStatus(500);
+            } else {
+              res.status(200).send({
+                token: token,
+                id:user._id,
+                cid:user.cid,
+                role:user.role
+              });
+              oldToken && tokenService.redisToken.delete(oldToken)
+                .then(null, console.log);
+              tokenService.redisToken.create(token, payload)
+                .then(null, console.log);
+            }
+          });
+
+        })
+        .then(null, function (err) {
+          log(err);
+          res.sendStatus(500);
+        });
+    },
+    //大使登录
+    adminLogin: function (req, res) {
+      if (!req.body || !req.body.phone || !req.body.password) {
+        return res.status(400).send({ msg: '缺少账户或密码' });
+      }
+
+      User.findOne({
+        phone: req.body.phone
+      }).exec()
+        .then(function (user) {
+          if (!user) {
+            return res.status(401).send({ msg: '账号不存在,请检查或注册。' });
+          }
+
+          if (!user.authenticate(req.body.password)) {
+            return res.status(401).send({ msg: '密码输入错误,请检查重试。' });
+          }
 
           if(!user.active) {
             return res.status(401).send({ msg: '您的账号已被管理员禁用。' });
@@ -555,12 +611,9 @@ module.exports = {
             return res.status(401).send({ msg: '账号已被关闭。'})
           }
           //登录网站，则只能管理员（大使，社团管理员）进行登录,app登录没有现在
-          if(!req.headers["x-api-key"] && !isMobile(req) && user.role!=="SuperAdmin") {
+          if(user.role!=="SuperAdmin") {
             return res.status(401).send({ msg: '您不是管理员无法进行登录管理界面'})
           }
-          // if(!user.cid.status.active) {
-          //   return res.status(401).send({ msg: '你的账号所属学校已被关闭。'})
-          // }
           var payload = {
             type: "user",
             id: user._id.toString(),

@@ -34,6 +34,7 @@ module.exports = function (app, ctrl) {
   app.post('/users/actions/invite', token.needToken, ctrl.v2_0.validatePhones, ctrl.v2_0.generateInviteUrl, ctrl.v2_0.inviteUser);
   // app.post('/users/actions/batchinvite', token.needToken, ctrl.v1_3.batchinviteUser); //批量邀请用户
   app.post('/users/login', sessionMiddleware, ctrl.v2_0.login);
+  app.post('/users/adminlogin', sessionMiddleware, ctrl.v2_0.adminLogin); //大使登录
   app.post('/users/refresh/token', token.needToken, sessionMiddleware, ctrl.v2_0.refreshToken);
   app.post('/users/logout', token.needToken, sessionMiddleware, ctrl.v2_0.logout);
 
