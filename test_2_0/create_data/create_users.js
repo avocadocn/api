@@ -12,22 +12,24 @@ var chance = require('chance').Chance();
  */
 var createNewUser = function(opts, callback) {
   // var chance = new Chance();
-  var phone =chance.string({ pool: '0123456789', length: 11 })
+  var phone = chance.string({ pool: '0123456789', length: 11 });
   var user = new User({
     username: phone,
     password: '55yali',
-    email: chance.email({domain: opts.domain}),
+    // email: email,
     active: opts.active,
     disabled: opts.disabled,
     gender: chance.bool(),
     nickname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     realname: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
     introduce: chance.string({pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}),
+    role: opts.role,
     cid: opts.cid,
     cname: opts.cname,
     company_official_name: opts.company_official_name,
     birthday: chance.birthday(),
-    phone: phone
+    phone: phone,
+    enrollment: chance.integer({min:2000, max: 2016})
   });
   user.save(function(err) {
     if(err){
@@ -71,7 +73,7 @@ var addConcern = function(users, callback) {
 
 /**
  * 创建公司的成员
- * 前5个为正常用户，第6个未激活，第7个被HR关闭，第8个被管理员关闭，第9个用户用于修改信息测试，第10个用于测试被hr关闭
+ * 前5个为正常用户，第6个为大使，第7个被HR关闭，第8个被管理员关闭，第9个用户用于修改信息测试，第10个用于测试被hr关闭
  * @param {Object} company
  * @param {Function} callback 形式为function(err, users){}
  */
@@ -89,16 +91,17 @@ var createUsers = function (company, callback) {
     function(cb) {
 
       var opts = {
-        domain: company.email.domain,
         cid: company._id,
         cname: company.info.name,
         company_official_name: company.info.official_name,
         active: true,
-        mail_active: true,
         disabled: false
       };
       if (i === 5) {
-        opts.mail_active = false;
+        opts.role = 'SuperAdmin';
+      }
+      else {
+        opts.role = 'Student';
       }
       if (i === 6) {
         opts.active = false;

@@ -36,14 +36,14 @@ var addUsersToGroups = function (companyData, callback) {
    * 现有5个人参加6个群组
    * 
    * A为群组1,4的群主, 群组2的成员；
-   * B为群组2的群主,群组1的成员;
+   * B为群组2的群主,群组1的管理员;
    * C为群组3、5、6的群主;
-   * D是群组4的成员;
+   * D是群组1、4的成员;
    * E不参加任何群组
    * 
    * 0表示未参加某队，1表示为队员，2表示为队长
    */
-  var relationship = [[2,1,0,2,0,0],[1,2,0,0,0,0],[0,0,2,0,2,2],[0,0,0,1,0,0],[0,0,0,0,0,0]];//假定数据初始化
+  var relationship = [[2,1,0,2,0,0],[3,2,0,0,0,0],[0,0,2,0,2,2],[1,0,0,1,0,0],[0,0,0,0,0,0]];//假定数据初始化
 
   var userLength = companyData.users.length;
   var teamLength = companyData.teams.length;

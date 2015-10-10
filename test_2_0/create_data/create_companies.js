@@ -10,7 +10,7 @@ var async = require('async');
 /**
  * 生成公司数据
  * @param {Function} callback 形式为function(err, companies){}
- * 第四个公司未激活,第五个公司被关闭
+ * 第五个公司被关闭, 第六个公司未验证
  */
 var createCompanies = function(callback) {
   var companies = [];
@@ -21,7 +21,8 @@ var createCompanies = function(callback) {
     chance.generateCompanyData(function(err, result) {
       var company = new Company({
         status: {
-          active: i===4 ? false : true
+          active: i===4 ? false : true,
+          verification: i===5 ? 0 : 1
         },
         info: {
           name: result.name,

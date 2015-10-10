@@ -57,17 +57,6 @@ exports.sendSMS = function(phone, key, callback) {
 };
 
 
-var expire = 60*60*24;
-var host = '';
-function getConfig() {
-  Config.findOne({name: 'admin'}, function(err, config) {
-    if(err) log(err);
-    else {
-      host = config.host.product;
-    }
-  });
-}
-getConfig();
 /**
  * 发送邀请短信(一个用户一天内对同一用户只能发一次)
  * @param  {User}     inviter 
