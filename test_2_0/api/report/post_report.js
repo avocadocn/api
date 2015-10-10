@@ -24,7 +24,7 @@ module.exports = function() {
 
       request.post('/users/login')
         .send({
-          email: user.email,
+          phone: user.phone,
           password: '55yali'
         })
         .expect(200)

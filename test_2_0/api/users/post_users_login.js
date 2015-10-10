@@ -16,7 +16,7 @@ module.exports = function () {
 
       request.post('/users/login')
         .send({
-          email: user.email,
+          phone: user.phone,
           password: '55yali'
         })
         .expect(200)
@@ -51,7 +51,7 @@ module.exports = function () {
         .set('x-platform', "iOS")
         .set('x-version', "8.1.2")
         .send({
-          email: user.email,
+          phone: user.phone,
           password: '55yali'
         })
         .expect(200)
@@ -80,7 +80,7 @@ module.exports = function () {
 
       request.post('/users/login')
         .send({
-          email: user.email,
+          phone: user.phone,
           password: '123456'
         })
         .expect(401)
@@ -111,7 +111,7 @@ module.exports = function () {
       user.mail_active.should.be.false;
       request.post('/users/login')
         .send({
-          email: user.email,
+          phone: user.phone,
           password: '55yali'
         })
         .expect(401)
@@ -128,7 +128,7 @@ module.exports = function () {
       user.active.should.be.false;
       request.post('/users/login')
         .send({
-          email: user.email,
+          phone: user.phone,
           password: '55yali'
         })
         .expect(401)
@@ -145,7 +145,7 @@ module.exports = function () {
       user.disabled.should.be.true;
       request.post('/users/login')
         .send({
-          email: user.email,
+          phone: user.phone,
           password: '55yali'
         })
         .expect(401)

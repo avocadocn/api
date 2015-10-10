@@ -18,7 +18,7 @@ module.exports = function() {
         var user = data[0].users[0];
         request.post('/users/login')
           .send({
-            email: user.email,
+            phone: user.phone,
             password: '55yali'
           })
           .expect(200)
@@ -36,7 +36,7 @@ module.exports = function() {
         var user = data[0].users[2];
         request.post('/users/login')
           .send({
-            email: user.email,
+            phone: user.phone,
             password: '55yali'
           })
           .expect(200)
@@ -54,7 +54,7 @@ module.exports = function() {
         var user = data[0].users[4];
         request.post('/users/login')
           .send({
-            email: user.email,
+            phone: user.phone,
             password: '55yali'
           })
           .expect(200)

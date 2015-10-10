@@ -16,7 +16,7 @@ module.exports = function () {
       var user = data[0].teams[1].leaders[0];
       request.post('/users/login')
         .send({
-          email: user.email,
+          phone: user.phone,
           password: '55yali'
         })
         .end(function (err, res) {

@@ -76,18 +76,13 @@ var addUsersToGroups = function (companyData, callback) {
 
         companyData.teams[j].model.member.push(member);
         //修改team的model外的users
-        // companyData.teams[j].users.push(companyData.users[i]);
-        // 不能在这里push进去，因为users还未更新完。只能for循环两次了...
         if (relationship[i][j] === 2) {
           //修改team的model
-          companyData.teams[j].model.leader = {
-            _id: companyData.users[i]._id,
-            nickname: companyData.users[i].nickname,
-            photo: companyData.users[i].photo
-          };
+          companyData.teams[j].model.leader = companyData.users[i]._id;
           //修改team的model外的leaders
-          // companyData.teams[j].leaders.push(companyData.users[i]);
-          // 不能在这里push进去，因为users还未更新完。只能for循环两次了...
+        }
+        if (relationship[i][j] === 3) {
+          companyData.teams[j].model.administrators = [companyData.users[i]._id];
         }
       }
     }

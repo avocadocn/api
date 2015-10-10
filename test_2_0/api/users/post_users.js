@@ -40,7 +40,7 @@ module.exports = function () {
 
       request.post('/users')
         .send({
-          email: user.email,
+          phone: user.phone,
           nickname: 'UserRgTestNickname',
           realname: 'UserRgTestRealname',
           cid: company.id,
