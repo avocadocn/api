@@ -7,7 +7,7 @@ var chance = require('chance').Chance();
 var async = require('async');
 
 module.exports = function() {
-  var data, userToken, userToken1, hrToken;
+  var data, userToken, userToken1;
   var circleContentIds = [];
   var circleComments = [];
   before(function(done) {
@@ -48,23 +48,6 @@ module.exports = function() {
                 userToken1 = res.body.token;
                 callback();
               });
-          },
-          function(callback) {
-            var company = data[0].model;
-            request.post('/companies/login')
-              .send({
-                username: company.username,
-                password: '55yali'
-              })
-              .expect(200)
-              .end(function(err, res) {
-                if (err) {
-                  console.log(res.body);
-                  return done(err);
-                }
-                hrToken = res.body.token;
-                callback();
-              })
           }
         ], function(err, results) {
           if (err) {
@@ -185,16 +168,6 @@ module.exports = function() {
           lastCommentDate: circleComments[0].postDate.toString()
         })
         .expect(200)
-        .end(function(err, res) {
-          if (err) return done(err);
-          done();
-        });
-    });
-
-    it('HR应该不能获取到是否有新消息', function(done) {
-      request.get('/circle/reminds/comments')
-        .set('x-access-token', hrToken)
-        .expect(403)
         .end(function(err, res) {
           if (err) return done(err);
           done();
