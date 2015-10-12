@@ -96,14 +96,17 @@ module.exports = function () {
         .field("target", data[0].model.id)
         .field("theme", chance.string({length: 10}))
         .field("content", chance.paragraph())
+        .field('option[0]', chance.string({length: 5}))
+        .field('option[1]', chance.string({length: 5}))
+        .field('option[2]', chance.string({length: 5}))
         .field("tags", chance.string({length: 5})+","+chance.string({length: 5}))
-        .field("option", chance.string({length: 5})+","+chance.string({length: 5})+","+chance.string({length: 5})+","+chance.string({length: 5}))
         .field("startTime", chance.date({year: nowYear, month: nowMonth +1}).toString())
         .field("endTime", chance.date({year: nowYear, month: nowMonth +2}).toString())
         .attach('photo', __dirname + '/test_photo.png')
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
+          console.log(res.body)
           if (err) return done(err);
           res.body.should.have.properties('interactionId');
           done();
@@ -143,7 +146,7 @@ module.exports = function () {
         .expect(403)
         .end(function (err, res) {
           if (err) return done(err);
-          res.body.msg.should.have.equal("您不能与其他公司进行互动");
+          res.body.msg.should.have.equal("您不能与其他学校进行互动");
           done();
         });
     });
@@ -164,7 +167,6 @@ module.exports = function () {
           _interactionData.location = interactionData.location || chance.address()
           _interactionData.longitude = interactionData.longitude || chance.longitude()
           _interactionData.latitude = interactionData.latitude || chance.latitude()
-          _interactionData.activityMold = interactionData.activityMold ===null ? null :chance.string({length: 5})
           _interactionData.startTime = interactionData.startTime ? interactionData.startTime.toString() : chance.date({year: nowYear, month: nowMonth +1}).toString()
         }
         else if(interactionData.type===2) {
@@ -189,7 +191,6 @@ module.exports = function () {
     errorInteractionTest('目标id',{target: 's'});
     errorInteractionTest('目标类型为群组，目标id为公司',{targetType:2},403);
     errorInteractionTest('主题',{theme:null});
-    errorInteractionTest('活动模型',{type:1, activityMold:null});
     errorInteractionTest('选项',{type:2, option:"dd"});
     errorInteractionTest('开始时间',{type:1, startTime:chance.date({year: nowYear, month: nowMonth -1})});
     errorInteractionTest('结束时间',{type:1, endTime:chance.date({year: nowYear, month: nowMonth -1})});

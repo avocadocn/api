@@ -16,7 +16,7 @@ module.exports = function () {
         function(cb) {
           request.post('/users/login')
             .send({
-              email: data[2].users[0].email,
+              phone: data[2].users[0].phone,
               password: '55yali'
             })
             .end(function (err, res) {

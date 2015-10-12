@@ -5,7 +5,7 @@ var dataService = require('../../create_data');
 var chance = require('chance').Chance();
 var util = require('util');
 module.exports = function () {
-  describe('post /interaction/template', function () {
+  describe.skip('post /interaction/template', function () {
     var accessToken;
     var now = new Date();
     var nowYear = now.getFullYear();

@@ -215,7 +215,7 @@ var createAllTypeInteractions = function(data,callback) {
  */
 var createInteractions = function (companyData, templates, callback) {
   interactionTemplates = templates;
-  if(!companyData.model.status.mail_active) {
+  if(!companyData.model.status.active) {
     return callback(null);
   }
   async.parallel({

@@ -161,7 +161,7 @@ var createAllTypeComments = function(model,callback) {
   });
 }
 var createInteractionComments = function(companyData, callback) {
-  if(!companyData.model.status.mail_active) {
+  if(!companyData.model.status.active) {
     return callback(null);
   }
   async.parallel({
