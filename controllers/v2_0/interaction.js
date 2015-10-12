@@ -175,7 +175,7 @@ module.exports = {
         endTime: {
           name: '结束时间',
           value: req.body.endTime,
-          validators: (!req.body.templateId &&interactionType!==3) ? [interactionType=== 1 ?'required':undefined,'date',donlerValidator.after(req.body.startTime)] : ['date']
+          validators: (!req.body.templateId &&interactionType===1) ? ['required','date',donlerValidator.after(req.body.startTime)] : ['date',donlerValidator.after(req.body.startTime)]
         },
         tags: {
           name: '标签',
@@ -185,7 +185,7 @@ module.exports = {
         startTime: {
           name: '开始时间',
           value: req.body.startTime,
-          validators: (interactionType===1 && !req.body.templateId )? ['required','date',donlerValidator.after(new Date())] : ['date']
+          validators: (interactionType===1 && !req.body.templateId )? ['required','date',donlerValidator.after(new Date())] : ['date',donlerValidator.after(new Date())]
         },
         memberMin:{
           name: '最小人数',
