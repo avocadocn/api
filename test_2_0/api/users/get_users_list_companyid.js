@@ -78,16 +78,16 @@ module.exports = function () {
         });
     });
 
-    describe('hr获取公司成员列表', function () {
+    describe('大使获取公司成员列表', function () {
       var hrAccessToken;
 
       before(function (done) {
         var data = dataService.getData();
-        var company = data[0].model;
+        var user = data[0].users[5];
 
-        request.post('/companies/login')
+        request.post('/users/login')
           .send({
-            username: company.username,
+            phone: user.phone,
             password: '55yali'
           })
           .expect(200)
@@ -101,12 +101,13 @@ module.exports = function () {
           });
       });
 
-      it('hr可以获取公司成员列表', function (done) {
+      it('大使可以获取公司成员列表', function (done) {
         var data = dataService.getData();
         var company = data[0].model;
         var users = data[0].users;
 
         request.get('/users/list/' + company.id)
+          .query({from:'admin'})
           .set('x-access-token', hrAccessToken)
           .expect(200)
           .end(function (err, res) {
@@ -118,7 +119,7 @@ module.exports = function () {
             users.forEach(function (user) {
               var got = false;
               for (var i = 0; i < userList.length; i++) {
-                if (!user.active || !user.mail_active) {
+                if (!user.active) {
                   got = true;
                   break;
                 }
@@ -134,7 +135,7 @@ module.exports = function () {
           });
       });
 
-      it('hr不可以获取其它公司的成员列表', function (done) {
+      it('大使不可以获取其它公司的成员列表', function (done) {
         var data = dataService.getData();
 
         request.get('/users/list/' + data[1].model.id)

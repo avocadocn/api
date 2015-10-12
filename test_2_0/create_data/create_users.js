@@ -12,7 +12,7 @@ var chance = require('chance').Chance();
  */
 var createNewUser = function(opts, callback) {
   // var chance = new Chance();
-  var phone = chance.string({ pool: '0123456789', length: 11 });
+  var phone = '13'+ chance.string({ pool: '0123456789', length: 9 });
   var user = new User({
     username: phone,
     password: '55yali',
