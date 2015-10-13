@@ -695,7 +695,7 @@ module.exports = {
       async.waterfall([
         function(callback) {
           //对评论的评论验证
-          if(req.body.commentId) {
+          if(req.body.commentId && interactionType === 3) {
             mongoose.model(commentModel).findById(req.body.commentId)
               .exec()
               .then(function (comment) {
@@ -735,7 +735,8 @@ module.exports = {
             posterId: userId,
             content: req.body.content
           }
-          if(req.body.commentId) {
+          //仅求助会有此参数
+          if(req.body.commentId && interactionType === 3) {
             _comment.commentId = req.body.commentId;
             _comment.targetUser = targetComment.targetUser;
           }
@@ -753,8 +754,8 @@ module.exports = {
           else {
             callback(null,comment);
           }
-          if(req.body.commentId) { //如果是评论回答 发通知
-            notificationController.sendInteractionNfct(4, interaction, req.user._id, interaction.poster._id, comment);
+          if(interactionType === 3 && req.body.commentId) { //如果是评论回答 发通知
+            notificationController.sendInteractionNfct(4, interaction, req.user._id, targetComment.posterId, comment);
           }
           else if(interactionType === 3 ) { //若是回答求助，发通知
             notificationController.sendInteractionNfct(1, interaction, req.user._id, interaction.poster._id);
