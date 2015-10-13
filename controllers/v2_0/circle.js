@@ -65,7 +65,7 @@ module.exports = {
           msg: '公司账号暂无同事圈功能'
         });
       }
-      if (!req.body.content &&!req.files) {
+      if (!req.body.content && (!req.files || !req.files.length)) {
         return res.status(400).send({
           msg: '文字和图片至少包含一种'
         });
@@ -123,7 +123,7 @@ module.exports = {
 
       circleContent.save(function(err) {
         if (err) {
-          log(err);
+          console.log(err);
           return res.sendStatus(500);
         } else {
           res.status(200).send({

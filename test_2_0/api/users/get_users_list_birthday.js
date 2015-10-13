@@ -36,7 +36,6 @@ module.exports = function () {
             return done(err);
           }
           var users = res.body;
-          console.log(users);
           users.length.should.be.above(-1);
           if(users.length>0) {
             users[0]._id.should.be.ok;

@@ -142,7 +142,7 @@ module.exports = function() {
       it('用户应不能对所在公司同事圈消息发表评论或赞(若参数错误)', function(done) {
         request.post('/circle/contents/' + circleContentIds[0] + '/comments')
           .send({
-            kind: 'comment',
+            kind: 'asdf',
             content: chance.string(),
             isOnlyToContent: true,
             targetUserId: data[0].users[1]._id.toString()

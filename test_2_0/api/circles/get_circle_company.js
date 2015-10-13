@@ -181,7 +181,6 @@ module.exports = function() {
           .expect(204)
           .end(function(err, res) {
             if (err) return done(err);
-            console.log(res.body);
             // res.body.msg.should.equal('未找到同事圈消息');
             done();
           })
