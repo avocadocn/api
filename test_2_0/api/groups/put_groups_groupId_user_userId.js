@@ -69,7 +69,7 @@ module.exports = function() {
       });
 
       it('用户(群主)不能将非群组成员指定为新群主', function(done) {
-        request.put('/groups/' + data[1].teams[0].model._id.toString() + '/user/' + data[1].users[3]._id.toString())
+        request.put('/groups/' + data[1].teams[0].model._id.toString() + '/user/' + data[1].users[2]._id.toString())
           .set('x-access-token', userToken)
           .expect(400)
           .end(function(err, res) {

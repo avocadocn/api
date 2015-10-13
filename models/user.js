@@ -75,7 +75,6 @@ var UserSchema = new Schema({
     type: String,
     default: '/img/icons/default_user_photo.png'
   },
-
   nickname: String,
   realname: String,
   //todo
@@ -83,7 +82,11 @@ var UserSchema = new Schema({
     name: String,
     _id: Schema.Types.ObjectId
   },
-  gender: Boolean,//0:女，1：男
+  //0:女，1：男
+  gender: {
+    type: Boolean,
+    default: false
+  },
   birthday: {
     type: Date
   },

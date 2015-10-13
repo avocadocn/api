@@ -126,7 +126,7 @@ module.exports = function() {
       it('用户(受邀请)能拒绝加入该群组的请求', function(done) {
         request.put('/groups/' + data[1].teams[0].model._id.toString() + '/invitation')
           .set('x-access-token', userToken1)
-          .query({
+          .send({
             'accept': false
           })
           .expect(200)
@@ -140,7 +140,7 @@ module.exports = function() {
       it('用户(受邀请)能接受加入该群组的请求', function(done) {
         request.put('/groups/' + data[1].teams[0].model._id.toString() + '/invitation')
           .set('x-access-token', userToken2)
-          .query({
+          .send({
             'accept': true
           })
           .expect(200)

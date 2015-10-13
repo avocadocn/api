@@ -150,7 +150,7 @@ module.exports = function() {
 
       it('用户(群主)拒绝申请列表的用户', function(done) {
         request.put('/groups/' + data[1].teams[2].model._id.toString() + '/applicant/' + data[1].users[0]._id.toString())
-          .query({
+          .send({
             'accept': false
           })
           .set('x-access-token', userToken1)
@@ -164,7 +164,7 @@ module.exports = function() {
 
       it('用户(群主)同意申请列表的用户', function(done) {
         request.put('/groups/' + data[1].teams[2].model._id.toString() + '/applicant/' + data[1].users[4]._id.toString())
-          .query({
+          .send({
             'accept': true
           })
           .set('x-access-token', userToken1)

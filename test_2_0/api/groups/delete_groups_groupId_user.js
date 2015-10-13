@@ -92,7 +92,7 @@ module.exports = function() {
           .expect(200)
           .end(function(err, res) {
             if (err) return done(err);
-            res.body.msg.should.equal('指定新群主');
+            res.body.msg.should.equal('群主无法退出');
             done();
           })
       });

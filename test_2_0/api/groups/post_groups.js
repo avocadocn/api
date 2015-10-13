@@ -53,12 +53,6 @@ module.exports = function() {
       it('用户不能建立新群组(缺少参数)', function(done) {
         request.post('/groups')
           .field(
-            'name', chance.string({
-              length: 10,
-              pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            })
-          )
-          .field(
             'themeColor', chance.color()
           )
           .set('x-access-token', userToken)
