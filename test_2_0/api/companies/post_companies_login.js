@@ -9,12 +9,11 @@ var util = require('util');
 
 module.exports = function () {
   var data ;
-  before(function() {
-    data = dataService.getData();
-  })
 
-  describe('post /companies/login', function () {
-
+  describe.skip('post /companies/login', function () {
+    before(function() {
+      data = dataService.getData();
+    })
     it('公司用户名和密码正确应该登录成功', function (done) {
       var company = data[0].model;
 

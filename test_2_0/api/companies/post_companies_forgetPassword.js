@@ -10,12 +10,13 @@ var util = require('util');
 
 module.exports = function () {
   var company;
-  before(function() {
-    var data = dataService.getData();
-    company = data[0].model;
-  })
+
 
   describe.skip('post /companies/forgetPassword',function() {
+    before(function() {
+      var data = dataService.getData();
+      company = data[0].model;
+    })
     it('填写正确邮箱返回201',function (done) {
       request.post('/companies/forgetPassword')
       .send({

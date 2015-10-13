@@ -40,8 +40,7 @@ var createGroups = function(company, callback) {
     });
 
     groups.push(group);
-
-    _groups.push(group._id);
+    _groups.push({_id:group._id});
   }
 
   company.team = _groups;

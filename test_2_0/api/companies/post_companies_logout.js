@@ -9,58 +9,57 @@ var util = require('util');
 
 module.exports = function () {
   var data, company, token, user, userToken;
-  before(function(done) {
-    //先登录拿token
-    data = dataService.getData();
-    company = data[0].model;
-    request.post('/companies/login')
-      .send({
-        username: company.username,
-        password: '55yali'
-      })
-      .expect(200)
-      .end(function (err, res) {
-        if (err) return done(err);
-        res.body.id.should.equal(company._id.toString());
+  describe.skip('post /companies/logout', function() {
+    before(function(done) {
+      //先登录拿token
+      data = dataService.getData();
+      company = data[0].model;
+      request.post('/companies/login')
+        .send({
+          username: company.username,
+          password: '55yali'
+        })
+        .expect(200)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.id.should.equal(company._id.toString());
 
-        jwt.verify(res.body.token, common.config.token.secret, function (err, decoded) {
-          if (err) {
-            console.log(err);
-            err.should.not.be.ok;
-          } else {
-            token = res.body.token;
-            decoded.id.should.equal(company._id.toString());
-            decoded.type.should.equal('company')
-          }
+          jwt.verify(res.body.token, common.config.token.secret, function (err, decoded) {
+            if (err) {
+              console.log(err);
+              err.should.not.be.ok;
+            } else {
+              token = res.body.token;
+              decoded.id.should.equal(company._id.toString());
+              decoded.type.should.equal('company')
+            }
+          });
         });
-      });
-    user = data[0].users[0];
-    request.post('/users/login')
-      .send({
-        phone: user.phone,
-        password: '55yali'
-      })
-      .expect(200)
-      .end(function (err, res) {
-        if(err) return done(err);
-        res.body.cid.should.equal(user.cid.toString());
-        res.body.id.should.equal(user.id);
+      user = data[0].users[0];
+      request.post('/users/login')
+        .send({
+          phone: user.phone,
+          password: '55yali'
+        })
+        .expect(200)
+        .end(function (err, res) {
+          if(err) return done(err);
+          res.body.cid.should.equal(user.cid.toString());
+          res.body.id.should.equal(user.id);
 
-        jwt.verify(res.body.token, common.config.token.secret, function (err, decoded) {
-          if (err) {
-            console.log(err);
-            err.should.not.be.ok;
-          } else {
-            userToken = res.body.token;
-            decoded.id.should.equal(user.id);
-            decoded.type.should.equal('user')
-          }
-          done();
-        });
-      })
-  })
-
-  describe('post /companies/logout', function() {
+          jwt.verify(res.body.token, common.config.token.secret, function (err, decoded) {
+            if (err) {
+              console.log(err);
+              err.should.not.be.ok;
+            } else {
+              userToken = res.body.token;
+              decoded.id.should.equal(user.id);
+              decoded.type.should.equal('user')
+            }
+            done();
+          });
+        })
+    })
     it('token正确应该登出成功', function (done) {
       request.post('/companies/logout')
         .set('x-access-token', token)

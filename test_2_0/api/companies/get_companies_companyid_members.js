@@ -6,7 +6,7 @@ var common = require('../../support/common');
 
 module.exports = function () {
 
-  describe('get /companies/:companyId/members', function () {
+  describe.skip('get /companies/:companyId/members', function () {
     var hrAccessToken, data, company;
 
     before(function (done) {

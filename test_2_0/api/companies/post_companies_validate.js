@@ -8,11 +8,11 @@ var chance = require('chance').Chance();
 
 module.exports = function () {
   var data ;
-  before(function() {
-    data = dataService.getData();
-  })
 
-  describe('post /companies/validate', function () {
+  describe.skip('post /companies/validate', function () {
+    before(function() {
+      data = dataService.getData();
+    })
     var validateSuccessTest = function(theme, testData) {
       var title= util.format('%s应该验证成功并返回可以使用', theme);
       it(title, function (done) {

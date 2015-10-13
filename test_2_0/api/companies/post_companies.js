@@ -9,8 +9,8 @@ var dataService = require('../../create_data');
 var chance = require('chance').Chance();
 
 module.exports = function () {
-  describe('post /companies', function () {
-    it.skip('应该在数据正确时返回201,数据库中应有此数据', function (done) {
+  describe.skip('post /companies', function () {
+    it('应该在数据正确时返回201,数据库中应有此数据', function (done) {
       var newCompany = {
         "name": chance.string({length:8,pool: '上海北京啊地方睡觉啊的法律玩儿哦温热我人是否和比赛公司'}),
         "province": "安徽省",
