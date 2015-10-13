@@ -123,7 +123,7 @@ module.exports = {
 
       circleContent.save(function(err) {
         if (err) {
-          console.log(err);
+          log(err);
           return res.sendStatus(500);
         } else {
           res.status(200).send({
@@ -1178,39 +1178,39 @@ module.exports = {
      *           newCircleComment : number //是否有同事圈评论
      *         }
      */
-    getReminds: function(req, res, next) {
-      if (!req.query.lastReadTime || !req.query.lastCommentDate) {
-        return res.status(422).send({msg:'参数错误'});
-      }
-      if (req.user.provider === 'company') {
-        return res.status(403).send({
-          msg: '公司账号暂无提醒功能'
-        });
-      }
-      //获取四个参数：
-      async.parallel({
-        newChat: function(callback) {
-          hasNewChat(req.user, callback);
-        },
-        newDiscover: function(callback) {
-          hasNewDiscover(req.user, callback);
-        },
-        newCircleContent: function(callback) {
-          hasNewCircleContent(req, callback);
-        },
-        newCircleComment: function(callback) {
-          getNewCommentNumber(req, callback);
-        }
-      }, function(err, results) {
-        if(err) {
-          next(err);
-        }
-        else {
-          return res.status(200).send(results);
-        }
-      })
+    // getReminds: function(req, res, next) {
+    //   if (!req.query.lastReadTime || !req.query.lastCommentDate) {
+    //     return res.status(422).send({msg:'参数错误'});
+    //   }
+    //   if (req.user.provider === 'company') {
+    //     return res.status(403).send({
+    //       msg: '公司账号暂无提醒功能'
+    //     });
+    //   }
+    //   //获取四个参数：
+    //   async.parallel({
+    //     newChat: function(callback) {
+    //       hasNewChat(req.user, callback);
+    //     },
+    //     newDiscover: function(callback) {
+    //       hasNewDiscover(req.user, callback);
+    //     },
+    //     newCircleContent: function(callback) {
+    //       hasNewCircleContent(req, callback);
+    //     },
+    //     newCircleComment: function(callback) {
+    //       getNewCommentNumber(req, callback);
+    //     }
+    //   }, function(err, results) {
+    //     if(err) {
+    //       next(err);
+    //     }
+    //     else {
+    //       return res.status(200).send(results);
+    //     }
+    //   })
 
-    }
+    // }
 };
 
 /**

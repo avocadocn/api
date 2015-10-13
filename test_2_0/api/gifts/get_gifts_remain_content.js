@@ -17,7 +17,7 @@ module.exports = function () {
         function(pcb) {
           request.post('/users/login')
           .send({
-            email: users[0].email,
+            phone: users[0].phone,
             password: '55yali'
           })
           .end(function (err, res) {
@@ -30,7 +30,7 @@ module.exports = function () {
         function(pcb) {
           request.post('/users/login')
           .send({
-            email: users[1].email,
+            phone: users[1].phone,
             password: '55yali'
           })
           .end(function (err, res) {
@@ -43,7 +43,7 @@ module.exports = function () {
         function(pcb) {
           request.post('/users/login')
           .send({
-            email: users[2].email,
+            phone: users[2].phone,
             password: '55yali'
           })
           .end(function (err, res) {

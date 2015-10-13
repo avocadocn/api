@@ -11,5 +11,5 @@ module.exports = function(app, ctrl) {
   app.get('/circle/company', token.needToken, ctrl.v2_0.getCompanyCircle); // 获取公司消息及评论
   app.get('/circle/user/:userId', token.needToken, ctrl.v2_0.getUserCircle); // 获取个人同事圈消息及评论
   app.get('/circle/reminds/comments', token.needToken, ctrl.v2_0.getCircleComments); // 获取同事圈提醒(被赞、被评论、赞过或评论过的消息有更新)
-  app.get('/circle/reminds', token.needToken, ctrl.v2_0.getReminds); // 获取是否有最新消息  (红点)
+  // app.get('/circle/reminds', token.needToken, ctrl.v2_0.getReminds); // 获取是否有最新消息  (红点)
 };
