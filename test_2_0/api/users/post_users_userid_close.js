@@ -11,11 +11,11 @@ module.exports = function () {
     var hrAccessToken;
     before(function (done) {
       var data = dataService.getData();
-      var company = data[0].model;
+      var user = data[0].users[5];
 
-      request.post('/companies/login')
+      request.post('/users/login')
         .send({
-          username: company.username,
+          phone: user.phone,
           password: '55yali'
         })
         .expect(200)

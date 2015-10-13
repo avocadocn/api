@@ -42,7 +42,6 @@ module.exports = function () {
           resUser.realname.should.equal(user.realname);
           resUser.gender.should.equal(user.gender);
           (new Date(resUser.birthday).valueOf()).should.equal(user.birthday.valueOf());
-          (new Date(resUser.registerDate).valueOf()).should.equal(user.register_date.valueOf());
           resUser.phone.should.equal(user.phone);
           resUser.company._id.should.equal(user.cid.toString());
           resUser.company.name.should.equal(user.company_official_name);
