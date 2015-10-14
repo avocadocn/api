@@ -43,7 +43,7 @@ var addUsersToGroups = function (companyData, callback) {
    * 
    * 0表示未参加某队，1表示为队员，2表示为队长
    */
-  var relationship = [[2,1,0,2,0,0],[3,2,0,0,0,0],[0,0,2,0,2,2],[1,0,0,1,0,0],[0,0,0,0,0,0]];//假定数据初始化
+  var relationship = [[2,1,0,2,0,0,3],[3,2,0,0,0,0,1],[0,0,2,0,2,2,0],[1,0,0,1,0,0,0],[0,0,0,0,0,0,0]];//假定数据初始化
 
   var userLength = companyData.users.length;
   var teamLength = companyData.teams.length;

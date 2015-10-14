@@ -36,7 +36,7 @@ module.exports = function() {
           .expect(200)
           .end(function(err, res) {
             if (err) return done(err);
-            res.body.groups.length.should.equal(3);
+            res.body.groups.length.should.equal(4);
             done();
           })
       });

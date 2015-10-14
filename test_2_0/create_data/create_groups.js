@@ -24,9 +24,9 @@ var createGroups = function(company, callback) {
   var groups = [];
   var _groups = [];
   // The number of groups that you want to create
-  var num = 6;
-  var openArr = [true, true, false, false, true, false];
-  var validateArr = [true, false, true, false, false, false];
+  var num = 7;
+  var openArr = [true, true, false, false, true, false,true];
+  var validateArr = [true, false, true, false, false, false,true];
 
   for (var i = 0; i < num; i++) {
     var group = new Team({
@@ -38,7 +38,8 @@ var createGroups = function(company, callback) {
       open: openArr[i], // 群组是否公开
       hasValidate: validateArr[i] // 群组是否需要验证
     });
-
+    if(i===6)
+      group.level = 1;
     groups.push(group);
     _groups.push({_id:group._id});
   }
