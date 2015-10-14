@@ -20,8 +20,9 @@ redisClient.on("ready", function () {
 var redisRanking = {};
 
 var identifier = 'id:';
-var identifierInf = 'inf:';
-
+if (process.env.NODE_ENV === 'test') {
+  identifier = 'testid:';
+}
 
 /**
  * Add new elements to ZSET
@@ -45,7 +46,6 @@ redisRanking.addEleToZSET = function(cid, type, elements) {
   }
 
   var hashKey = identifier + type + cid;
-  var hashKeyInf = identifierInf + type + cid;
 
   var args = [];
   args.push(hashKey);

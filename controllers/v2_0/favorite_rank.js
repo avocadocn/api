@@ -117,24 +117,62 @@ module.exports = {
             msg: '服务器错误'
           });
         }
-        // 用户基本信息可以通过sqlite在前端获取，这样效率或许更好点
-        res.status(200).send({
-          favoriteRank: favoriteRank
-        });
+        favoriteRank = favoriteRank.toObject();
         var elements = [];
+        var ids = [];
         for (var i = favoriteRank.length - 1; i >= 0; i--) {
-          elements.push(favoriteRank[i].vote);
-          elements.push(favoriteRank[i]._id);
+          ids.push(favoriteRank[i]._id)
+          elements.push(favoriteRank[i].vote,favoriteRank[i]._id);
         };
-        redisService.redisRanking.addEleToZSET(req.query.cid, req.query.type, elements)
-          .then(function(result) {
-            //TODO:
-            // console.timeEnd("rank")
-            // console.log(result)
-          })
-          .then(null, function(err) {
-            log(err);
+        var page = parseInt(req.query.page);
+        // isNaN(page) 排除req.query.page头字符为非数字
+        // TODO: 增加条件
+        if (!req.query.page || isNaN(page) || page < 1) {
+          res.status(400).send({
+            msg: '参数错误'
           });
+        }
+        else {
+          var num = req.query.limit || 10;
+          var sended = false;
+          if((page * num - 1)<=favoriteRank.length) {
+            var result = favoriteRank.slice((page - 1) * num, page * num - 1);
+            sended = true;
+            res.status(200).send({
+              favoriteRank: result
+            });
+          }
+          User.find({cid:req.query.cid,_id:{$nin:ids}},{_id:1}).exec().then(function(users){
+            users.forEach(function(user) {
+              elements.push(0,user._id);
+            })
+            if(!sended) {
+              var result = [];
+              for (var i = (page - 1) * num *2 ,end = page * num * 2 - 2; i <= end; i+=2) {
+                result.push({
+                  _id:elements[i+1],
+                  vote:elements[i]
+                })
+              };
+              res.status(200).send({
+                favoriteRank: result
+              });
+            }
+            redisService.redisRanking.addEleToZSET(req.query.cid, req.query.type, elements)
+              .then(function(result) {
+              })
+              .then(null, function(err) {
+                log(err);
+              });
+          })
+          .then(null,function(err){
+            log(err);
+            res.status(500).send({
+              msg: '服务器错误'
+            });
+          })
+          // 用户基本信息可以通过sqlite在前端获取，这样效率或许更好点
+        }
       });
     },
     /**
