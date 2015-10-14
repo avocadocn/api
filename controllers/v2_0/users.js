@@ -522,7 +522,7 @@ module.exports = {
           return;
         }
         res.status(200).send({msg: '用户注册成功'});
-        redisService.redisRanking.addEleToZSET(req.user.cid, user.gender===1 ?1 :2, [0,user._id.toString()]);
+        redisService.redisRanking.addEleToZSET(user.cid, user.gender===1 ?1 :2, [0,user._id.toString()]);
         easemob.user.create({"username":user._id,"password":user._id, "nickname":req.body.name});
       });
     },
