@@ -1370,85 +1370,85 @@ module.exports = {
         }
       });
     },
-    requestUpdate: function(req, res) {
-      if(req.group.applyStatus === 1) {
-        return res.status(400).send({msg:"已经收到了您申请的认证，无需重复申请！"})
-      }
-      else if(req.group.level === 1 || req.group.applyStatus === 2) {
-        return res.status(400).send({msg:"您的群已经通过认证，无需继续申请！"})
-      }
-      Team.update({
-        '_id': req.group._id,
-        'active': true
-      }, {
-        $set: {"applyStatus":1}
-      }, function(err, numberAffected) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
-        } else {
-          res.status(200).send({
-            msg: '申请成功！'
-          });
-        }
-      });
-    },
-    dealUpdate: function(req, res) {
-      if(req.group.level === 1 || req.group.applyStatus !== 1) {
-        return res.status(400).send({msg:"该群没有进行申请认证或已经通过了验证，无需处理！"})
-      }
-      var set;
-      if(req.body.status) {
-        set = {
-          "applyStatus": 2,
-          "level": 1
-        }
-      }
-      else {
-        set =  {
-          "applyStatus": 3
-        }
-      }
-      Team.update({
-        '_id': req.group._id,
-        'active': true
-      }, {
-        $set: set
-      }, function(err, numberAffected) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
-        } else {
-          res.status(200).send({
-            msg: '处理成功！'
-          });
-        }
-      });
-    },
-    getUpdateList: function(req, res) {
-      var conditions = {
-        'cid':req.user.cid,
-        'active': true,
-        'level':0,
-        'applyStatus':1
-      };
+    // requestUpdate: function(req, res) {
+    //   if(req.group.applyStatus === 1) {
+    //     return res.status(400).send({msg:"已经收到了您申请的认证，无需重复申请！"})
+    //   }
+    //   else if(req.group.level === 1 || req.group.applyStatus === 2) {
+    //     return res.status(400).send({msg:"您的群已经通过认证，无需继续申请！"})
+    //   }
+    //   Team.update({
+    //     '_id': req.group._id,
+    //     'active': true
+    //   }, {
+    //     $set: {"applyStatus":1}
+    //   }, function(err, numberAffected) {
+    //     if (err) {
+    //       log(err);
+    //       return res.sendStatus(500);
+    //     } else {
+    //       res.status(200).send({
+    //         msg: '申请成功！'
+    //       });
+    //     }
+    //   });
+    // },
+    // dealUpdate: function(req, res) {
+    //   if(req.group.level === 1 || req.group.applyStatus !== 1) {
+    //     return res.status(400).send({msg:"该群没有进行申请认证或已经通过了验证，无需处理！"})
+    //   }
+    //   var set;
+    //   if(req.body.status) {
+    //     set = {
+    //       "applyStatus": 2,
+    //       "level": 1
+    //     }
+    //   }
+    //   else {
+    //     set =  {
+    //       "applyStatus": 3
+    //     }
+    //   }
+    //   Team.update({
+    //     '_id': req.group._id,
+    //     'active': true
+    //   }, {
+    //     $set: set
+    //   }, function(err, numberAffected) {
+    //     if (err) {
+    //       log(err);
+    //       return res.sendStatus(500);
+    //     } else {
+    //       res.status(200).send({
+    //         msg: '处理成功！'
+    //       });
+    //     }
+    //   });
+    // },
+    // getUpdateList: function(req, res) {
+    //   var conditions = {
+    //     'cid':req.user.cid,
+    //     'active': true,
+    //     'level':0,
+    //     'applyStatus':1
+    //   };
 
-      var projection = {
-        'name': 1,
-        'logo': 1,
-        'themeColor': 1,
-        'brief': 1
-      };
+    //   var projection = {
+    //     'name': 1,
+    //     'logo': 1,
+    //     'themeColor': 1,
+    //     'brief': 1
+    //   };
 
-      Team.find(conditions, projection, function(err, docs) {
-        if (err) {
-          log(err);
-          return res.sendStatus(500);
-        } else {
-          return res.status(200).send({
-            groups: docs
-          });
-        }
-      });
-    }
+    //   Team.find(conditions, projection, function(err, docs) {
+    //     if (err) {
+    //       log(err);
+    //       return res.sendStatus(500);
+    //     } else {
+    //       return res.status(200).send({
+    //         groups: docs
+    //       });
+    //     }
+    //   });
+    // }
 };

@@ -3,7 +3,7 @@
 var token = require('../../services/token');
 var multerService = require('../../middlewares/multerService.js');
 module.exports = function(app, ctrl) {
-  app.post('/circle/contents', token.needToken, ctrl.v2_0.singleImgUploadSwitcher, multerService.upload('circle').array('photo',9), ctrl.v2_0.uploadValidate, ctrl.v2_0.uploadPhotoForContent, ctrl.v2_0.createCircleContent); // 发新同事圈
+  app.post('/circle/contents', token.needToken, multerService.upload('circle').array('photo',9), ctrl.v2_0.uploadValidate, ctrl.v2_0.uploadPhotoForContent, ctrl.v2_0.createCircleContent); // 发新同事圈
   app.get('/circle/contents/:contentId', token.needToken, ctrl.v2_0.getCircleContent); // 获取某个消息的内容及其评论
   app.delete('/circle/contents/:contentId', token.needToken, ctrl.v2_0.getCircleContentById, ctrl.v2_0.deleteCircleContent); // 删除已发消息
   app.post('/circle/contents/:contentId/comments', token.needToken, ctrl.v2_0.getCircleContentById, ctrl.v2_0.createCircleComment); // 评论或赞

@@ -11,35 +11,13 @@ var CircleContent = mongoose.model('CircleContent'),
   CompetitionMessage = mongoose.model('CompetitionMessage');
 var auth = require('../../services/auth.js'),
   log = require('../../services/error_log.js'),
-  socketClient = require('../../services/socketClient'),
+  // socketClient = require('../../services/socketClient'),
   tools = require('../../tools/tools.js'),
   async = require('async');
 var multerService = require('../../middlewares/multerService.js');
 
 
 module.exports = {
-
-    singleImgUploadSwitcher: function (req, res, next) {
-
-      /**
-       * 如果前端不能一次上传多张照片，则另外处理。
-       * 此时使用另外的上传文件api，不在此路由上传文件，所以这里可以获取req.body。
-       * 处理流程如下：
-       * 1. 先发一个请求，创建CircleContent，设置其状态为等待上传，并返回id给前端
-       * 2. 发请求上传图片，使用另一个api
-       * 3. 图片全部传好后，再发一次创建CircleContent的请求，确认已经传好，并查询File数据，将uri等相关信息保存到CircleConten中
-       *    激活CircleContent
-       *
-       * req.body.isUploadImgFromFileApi: Boolean // 是否先通过文件api上传完图片再创建
-       * req.body.uploadStep: String // 上传步骤，可以为'create'或'active'对应上述的第1步和第3步
-       */
-      if (req.body && req.body.isUploadImgFromFileApi === true) {
-        singleUpload(req, res, next);
-      }
-      else {
-        next();
-      }
-    },
 
     /**
      * 解析formData
@@ -723,7 +701,7 @@ module.exports = {
             res.send({
               circleComment: resComment
             });
-            socketClient.pushCircleComment([circleContent.postUserId], resComment);
+            // socketClient.pushCircleComment([circleContent.postUserId], resComment);
           } else {
             User.findById(resComment.targetUserId, {
                 _id: 1,
@@ -740,7 +718,7 @@ module.exports = {
                     circleComment: resComment
                   });
 
-                  socketClient.pushCircleComment([circleContent.postUserId], resComment);
+                  // socketClient.pushCircleComment([circleContent.postUserId], resComment);
                 }
               })
               .then(null, next);
@@ -1214,186 +1192,38 @@ module.exports = {
 };
 
 /**
- * 获取是否有新chat
- * @param  {object}   user
- * @param  {Function} callback function(err, unread)
- *                             unread: boolean
- */
-function hasNewChat (user, callback) {
-  async.map(user.chatrooms, function(chatroom, mapCallback) {
-    Chat.findOne({chatroom_id: chatroom._id, create_date: {'$gt':chatroom.read_time}},{'_id':1},function(err, chat) {
-      if(err) {
-        mapCallback(err);
-      }
-      else {
-        mapCallback(null, {_id: chatroom._id, unread: chat});
-      }
-    });
-  }, function(err, results) {
-    if(err) {
-      callback(err);
-    }
-    else {
-      var chatUnread = false;
-      for (var i = results.length - 1; i >= 0; i--) {
-        if(results[i].unread) {
-          chatUnread = true;
-          break;
-        }
-      };
-      callback(null, chatUnread);
-    }
-  });
-};
-
-/**
- * 获取是否有新挑战信信息
- * @param  {object}   user
- * @param  {Function} callback function(err, unread)
- *                             unread: boolean
- */
-function hasNewDiscover (user, callback) {
-  var leaderTeamIds = [];
-  for (var i = user.team.length - 1; i >= 0; i--) {
-    if(user.team[i].leader === true) {
-      leaderTeamIds.push(user.team[i]._id);
-    }
-  };
-  CompetitionMessage.findOne({
-    '$or': [
-      {'$and':[{'sponsor_team': {'$in': leaderTeamIds}}, {'sponsor_unread':true}]},
-      {'$and':[{'opposite_team': {'$in': leaderTeamIds}}, {'opposite_unread':true}]}
-    ]
-  }, function(err, result) {
-    if(err) {
-      callback(err);
-    }
-    else {
-      callback(null, result ? true: false);
-    }
-  });
-};
-
-/**
  * 获取是否有新同事圈,需要带上次时间来，如果没带...?
  * @param  {Object}   req
  * @param  {Function} callback function(err, content)
  */
-function hasNewCircleContent (req, callback) {
-  CircleContent.findOne(
-    {'cid':req.user.cid, 'status':'show', 'postDate':{'$gt':req.query.lastReadTime}},
-    {'postUserId':1}
-  )
-  .sort('-postDate')
-  .populate('postUserId','photo')
-  .exec()
-  .then(function(content) {
-    callback(null, content);
-  })
-  .then(null, function(err) {
-    callback(err);
-  });
-};
+// function hasNewCircleContent (req, callback) {
+//   CircleContent.findOne(
+//     {'cid':req.user.cid, 'status':'show', 'postDate':{'$gt':req.query.lastReadTime}},
+//     {'postUserId':1}
+//   )
+//   .sort('-postDate')
+//   .populate('postUserId','photo')
+//   .exec()
+//   .then(function(content) {
+//     callback(null, content);
+//   })
+//   .then(null, function(err) {
+//     callback(err);
+//   });
+// };
 
-function getNewCommentNumber (req, callback) {
-  //与获取comment同,稍后修改
-  getComments(req, function(err, data) {
-    if(err) {
-      callback(err);
-    }
-    else {
-      callback(null, data.comments ? data.comments.length : 0);
-    }
-  });
-};
+// function getNewCommentNumber (req, callback) {
+//   //与获取comment同,稍后修改
+//   getComments(req, function(err, data) {
+//     if(err) {
+//       callback(err);
+//     }
+//     else {
+//       callback(null, data.comments ? data.comments.length : 0);
+//     }
+//   });
+// };
 
-
-// 处理只能一次请求只能传一张图片时发同事圈的请求
-function singleUpload(req, res, next) {
-  if (req.body.uploadStep === 'create') {
-    createCircleContent(req, res, next);
-  }
-  else if (req.body.uploadStep === 'active') {
-    activeCircleContent(req, res, next);
-  }
-}
-
-// 创建同事圈的内容
-function createCircleContent(req, res, next) {
-  // create
-  var circleContent = new CircleContent({
-    cid: req.user.getCid(), // 所属公司id
-    postUserId: req.user._id, // 发消息的用户的id（头像和昵称再次查询）
-    status: 'wait'
-  });
-  if (req.body.content) {
-    circleContent.content = req.body.content;
-  }
-  circleContent.save(function(err) {
-    if (err) {
-      next(err);
-    } else {
-      res.send({
-        msg: '创建成功，等待文件上传',
-        id: circleContent.id
-      });
-    }
-  });
-}
-
-// 激活
-function activeCircleContent(req, res, next) {
-  CircleContent.findById(req.body.circleContentId).exec()
-    .then(function(circleContent) {
-      if (!circleContent) {
-        res.status(403).send({
-          msg: '您没有权限'
-        });
-        return;
-      }
-
-      // 查找circleContent对应的文件
-      File.find({
-          'owner.kind': 'CircleContent',
-          'owner._id': circleContent._id
-        }, {
-          _id: 0,
-          uri: 1,
-          width: 1,
-          height: 1
-        }).exec()
-        .then(function(files) {
-          if (files.length === 0 && (!circleContent.content || circleContent.content === '')) {
-            res.send({
-              msg: '发表失败，不允许既无文本内容又没有图片'
-            });
-            // TODO: 可以考虑将此CircleContent从数据库中删除，或是定期清除
-            return;
-          }
-          circleContent.photos = files;
-          circleContent.status = 'show';
-          circleContent.save(function(err) {
-            if (err) {
-              next(err);
-            } else {
-              res.send({
-                msg: '发表成功',
-                circleContent: circleContent
-              });
-
-              var poster = {
-                _id: req.user._id,
-                nickname: req.user.nickname,
-                photo: req.user.photo
-              };
-              socketClient.pushCircleContent(circleContent.cid, poster);
-            }
-          });
-        })
-        .then(null, next);
-    })
-    .then(null, next);
-}
 
 // 获取同事圈提醒
 function getComments(req, callback) {
