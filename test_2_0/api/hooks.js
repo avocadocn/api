@@ -4,9 +4,10 @@ var common = require('../support/common.js');
 var config = common.config;
 var mongoose = require('mongoose');
 var connect = mongoose.createConnection(config.db);
-
+var Company = mongoose.model('Company');
 var async = require('async');
 
+var redisService = require('../../services/redis_service.js');
 before(function (done) {
   this.timeout(30 * 1000);
 
@@ -50,12 +51,21 @@ before(function (done) {
 
   connect.on('open', function () {
     console.log('开始清空测试数据库:', config.db);
-    connect.db.dropDatabase(function (err, res) {
-      if (err) {
-        done(err);
-        return;
-      }
-      doTasksAfterDropDB();
+    var companies = Company.find().exec().then(function(companies){
+      companies.forEach(function(company){
+        redisService.redisRanking.removeKey(company.id, 1);
+        redisService.redisRanking.removeKey(company.id, 2);
+      })
+      connect.db.dropDatabase(function (err, res) {
+        if (err) {
+          done(err);
+          return;
+        }
+        doTasksAfterDropDB();
+      });
+    })
+    .then(null,function(err){
+      console.log('数据库错误')
     });
   });
 

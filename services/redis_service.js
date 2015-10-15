@@ -27,6 +27,7 @@ if (process.env.NODE_ENV === 'test') {
 /**
  * Add new elements to ZSET
  * @param  cid            the id of company
+ * @param  type           the type of rank 榜单类型
  * @param  elements       the args of command. eg: 
  * [2, 53e9c3fcd271b3943b2d44c9, 3, 53d798d638cf9def07d1ca23, ... ...]
  * 
@@ -116,6 +117,7 @@ redisRanking.getEleFromZSET = function(cid, type, elements) {
 /**
  * Update the exist element
  * @param  cid            the id of company
+ * @param  type           the type of rank 榜单类型
  * @param  elements       the args of command. eg: 
  * [2(increment), 53e9c3fcd271b3943b2d44c9]
  * 
@@ -144,7 +146,29 @@ redisRanking.updateElement = function(cid, type, elements) {
 
   return deferred.promise;
 };
+/**
+ * removeKey the key
+ * @param  cid            the id of company
+ * @param  type           the type of rank 榜单类型
+ * [2(increment), 53e9c3fcd271b3943b2d44c9]
+ * 
+ * @return {[type]}         [description]
+ */
+redisRanking.removeKey = function(cid, type) {
+  var deferred = Q.defer();
 
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+  var hashKey = identifier + type + cid;
+  redisClient.del(hashKey, function(err, reply) {
+    if (err) deferred.reject(err);
+    else deferred.resolve(reply);
+  });
+
+  return deferred.promise;
+};
 var redisPhoneValidate = {};
 
 /**
