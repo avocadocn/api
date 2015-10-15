@@ -71,6 +71,17 @@ module.exports = function () {
           done();
         });
     });
+    it('不带page参数获取排行榜应返回400', function (done) {
+      request.get('/favoriteRank')
+        .set('x-access-token', token)
+        .expect(400)
+        .end(function (err, res) {
+          if (err) return done(err);
+          res.body.should.have.properties('msg');
+          res.body.msg.should.be.equal('参数错误');
+          done();
+        });
+    });
     it('未登录用户无法根据名字查找用户', function (done) {
       var user = data[0].users[1];
       request.get('/favoriteRank')

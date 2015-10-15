@@ -926,13 +926,13 @@ module.exports = {
               return;
             }
             else{
-              console.log(err)
+              log(err)
               return res.status(500).send({msg:"服务器发生错误"});
             }
           });
         })
         .then(null,function (error) {
-          console.log(error);
+          log(error);
           res.status(500).send({msg:"服务器发生错误"});
         });
     },
