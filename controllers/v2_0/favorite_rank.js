@@ -53,7 +53,7 @@ module.exports = {
       // console.time("rank")
       var aggregateOptions = [{
         $match: {
-          'cid': mongoose.Types.ObjectId(req.query.cid)
+          'cid': mongoose.Types.ObjectId(req.user.cid)
         }
       }, {
         $group: {
@@ -117,7 +117,6 @@ module.exports = {
             msg: '服务器错误'
           });
         }
-        favoriteRank = favoriteRank.toObject();
         var elements = [];
         var ids = [];
         for (var i = favoriteRank.length - 1; i >= 0; i--) {
@@ -139,23 +138,24 @@ module.exports = {
             var result = favoriteRank.slice((page - 1) * num, page * num - 1);
             sended = true;
             res.status(200).send({
-              favoriteRank: result
+              ranking: result
             });
           }
-          User.find({cid:req.query.cid,_id:{$nin:ids}},{_id:1}).exec().then(function(users){
+          User.find({cid:req.user.cid,_id:{$nin:ids}},{_id:1}).exec().then(function(users){
             users.forEach(function(user) {
               elements.push(0,user._id);
             })
             if(!sended) {
               var result = [];
               for (var i = (page - 1) * num *2 ,end = page * num * 2 - 2; i <= end; i+=2) {
+
                 result.push({
                   _id:elements[i+1],
                   vote:elements[i]
                 })
               };
               res.status(200).send({
-                favoriteRank: result
+                ranking: result
               });
             }
             redisService.redisRanking.addEleToZSET(req.query.cid, req.query.type, elements)
@@ -223,78 +223,78 @@ module.exports = {
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
-    getRankFromDB: function(req, res) {
-      var conditions = {
-        'cid': mongoose.Types.ObjectId(req.query.cid)
-      };
+    // getRankFromDB: function(req, res) {
+    //   var conditions = {
+    //     'cid': mongoose.Types.ObjectId(req.query.cid)
+    //   };
 
-      // 榜单类型的选择
-      if (req.query.type) {
-        switch (req.query.type) {
-          case '1':
-            conditions.type = 1;
-            break;
-          case '2':
-            conditions.type = 2;
-            break;
-          case '3':
-          default:
-            conditions.type = 3;
-            break;
-        }
-      }
-      // 分页查询
-      if (req.query.vote && req.query.id) {
-        conditions.$or = [{
-          'vote': {
-            $gt: parseInt(req.query.vote)
-          }
-        }, {
-          $and: [{
-            'vote': {
-              $eq: parseInt(req.query.vote)
-            }
-          }, {
-            '_id': {
-              $gt: mongoose.Types.ObjectId(req.query.id)
-            }
-          }]
-        }];
-      }
-      var limit = req.query.limit || 10;
+    //   // 榜单类型的选择
+    //   if (req.query.type) {
+    //     switch (req.query.type) {
+    //       case '1':
+    //         conditions.type = 1;
+    //         break;
+    //       case '2':
+    //         conditions.type = 2;
+    //         break;
+    //       case '3':
+    //       default:
+    //         conditions.type = 3;
+    //         break;
+    //     }
+    //   }
+    //   // 分页查询
+    //   if (req.query.vote && req.query.id) {
+    //     conditions.$or = [{
+    //       'vote': {
+    //         $gt: parseInt(req.query.vote)
+    //       }
+    //     }, {
+    //       $and: [{
+    //         'vote': {
+    //           $eq: parseInt(req.query.vote)
+    //         }
+    //       }, {
+    //         '_id': {
+    //           $gt: mongoose.Types.ObjectId(req.query.id)
+    //         }
+    //       }]
+    //     }];
+    //   }
+    //   var limit = req.query.limit || 10;
 
-      FavoriteRank.find(conditions)
-        .sort({
-          'vote': -1,
-          'userId': 1
-        })
-        .limit(limit)
-        .exec()
-        .then(function(ranking) {
-          var result = ranking.map(function(e) {
-            return {'_id': e.userId, 'vote': e.vote};
-          });
+    //   FavoriteRank.find(conditions)
+    //     .sort({
+    //       'vote': -1,
+    //       'userId': 1
+    //     })
+    //     .limit(limit)
+    //     .exec()
+    //     .then(function(ranking) {
+    //       var result = ranking.map(function(e) {
+    //         return {'_id': e.userId, 'vote': e.vote};
+    //       });
 
-          res.status(200).send({
-            ranking: result
-          });
-          // 更新redis
-          var elements = [];
+    //       res.status(200).send({
+    //         ranking: result
+    //       });
+    //       // 更新redis
+    //       var elements = [];
 
-          ranking.forEach(function(e) {
-            elements.push(e.vote);
-            elements.push(e.userId);
-          });
+    //       ranking.forEach(function(e) {
+    //         elements.push(e.vote);
+    //         elements.push(e.userId);
+    //       });
           
-          redisService.redisRanking.addEleToZSET(req.query.cid, req.query.type, elements);
-        })
-        .then(null, function(err) {
-          log(err);
-          return res.status(500).send({
-            msg: '服务器错误'
-          });
-        });
-    },
+    //       redisService.redisRanking.addEleToZSET(req.query.cid, req.query.type, elements);
+    //     })
+    //     .then(null, function(err) {
+    //       log(err);
+    //       return res.status(500).send({
+    //         msg: '服务器错误'
+    //       });
+    //     });
+    // },
     /**
      * 获取小队排行榜
      * @param  {[type]} req [description]
@@ -302,8 +302,8 @@ module.exports = {
      * @return {[type]}     [description]
      */
     getTeamRank:function(req, res) {
-      var skip = isNaN(parseInt(req.query.page)) ? 0 : parseInt(req.query.page) * perPage;
       var _limit = isNaN(parseInt(req.query.limit)) ? perPage : parseInt(req.query.limit);
+      var skip = isNaN(parseInt(req.query.page)) ? 0 : parseInt(req.query.page) * _limit;
       Team.find({cid: req.user.cid, active: true})
         .sort({"score.total": -1,"level": -1})
         .limit(_limit)

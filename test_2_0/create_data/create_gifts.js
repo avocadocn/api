@@ -54,7 +54,7 @@ var createGift = function(opts, callback) {
 
 var anHour = 3600 * 1000;
 var createGifts = function(company, callback) {
-  if (company.model.status.mail_active === false) {
+  if (company.model.status.active === false) {
     callback(null, []);
     return;
   }

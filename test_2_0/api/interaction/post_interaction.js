@@ -106,7 +106,6 @@ module.exports = function () {
         .set('x-access-token', accessToken)
         .expect(200)
         .end(function (err, res) {
-          console.log(res.body)
           if (err) return done(err);
           res.body.should.have.properties('interactionId');
           done();
