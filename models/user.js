@@ -87,8 +87,10 @@ var UserSchema = new Schema({
     type: Boolean,
     default: false
   },
+  //默认值1990年1月1日
   birthday: {
-    type: Date
+    type: Date,
+    default: new Date('01.01.1990')
   },
   bloodType: {
     type: String,

@@ -2151,6 +2151,7 @@ paths:
           required: true
           type: integer
           in: query
+          default: 1
           enum:
             - 1
             - 2
@@ -2159,6 +2160,7 @@ paths:
           required: true
           type: integer
           in: query
+          default: 1
         - name: limit
           description: 每页数目，默认10
           required: false
@@ -2193,6 +2195,7 @@ paths:
           required: false
           type: integer
           in: query
+          default: 1
         - name: limit
           description: 每页数目，默认10
           required: false
@@ -2203,7 +2206,7 @@ paths:
           description: 成功
           type: array
           items:
-            $ref: 
+            $ref: RankTeam
         default:
           description: error
           schema:
@@ -2514,6 +2517,17 @@ definitions:
     properties:
       msg:
         type: string
+  RankTeam:
+    title: RankTeam
+    description: 小队排行榜数据
+    type: object
+    properties:
+      _id:
+        type: string
+        description: 小队Id
+      score:
+        type: string
+        description: 小队分数
   CompanyBrief:
     title: CompanyBrief
     required:

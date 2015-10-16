@@ -32,35 +32,39 @@ module.exports = function () {
     it('获取排行榜第一页正确返回', function (done) {
       request.get('/favoriteRank/team')
         .set('x-access-token', token)
+        .query({'page': 1})
         .expect(200)
         .end(function (err, res) {
           if (err) return done(err);
           res.body.length.should.be.above(0);
           res.body[0].should.have.properties('_id');
+          res.body[0].should.have.properties('score');
           done();
         });
     });
     it('获取排行榜前两个小队正确返回', function (done) {
       request.get('/favoriteRank/team')
         .set('x-access-token', token)
-        .query({'limit': 2})
+        .query({'limit': 2,'page': 1})
         .expect(200)
         .end(function (err, res) {
           if (err) return done(err);
           res.body.length.should.be.equal(2);
           res.body[0].should.have.properties('_id');
+          res.body[0].should.have.properties('score');
           done();
         });
     });
     it('获取排行榜第两个小队正确返回', function (done) {
       request.get('/favoriteRank/team')
         .set('x-access-token', token)
-        .query({'limit': 1, 'page': 1})
+        .query({'limit': 1, 'page': 2})
         .expect(200)
         .end(function (err, res) {
           if (err) return done(err);
           res.body.length.should.be.equal(1);
           res.body[0].should.have.properties('_id');
+          res.body[0].should.have.properties('score');
           done();
         });
     });

@@ -302,15 +302,24 @@ module.exports = {
      * @return {[type]}     [description]
      */
     getTeamRank:function(req, res) {
+      var page = parseInt(req.query.page)
+      if (isNaN(page) || page < 1) {
+        return res.status(400).send({
+          msg: '参数错误'
+        });
+      }
       var _limit = isNaN(parseInt(req.query.limit)) ? perPage : parseInt(req.query.limit);
-      var skip = isNaN(parseInt(req.query.page)) ? 0 : parseInt(req.query.page) * _limit;
-      Team.find({cid: req.user.cid, active: true})
+      var skip = parseInt( page - 1 ) * _limit;
+      Team.find({cid: req.user.cid, active: true},{'score':1})
         .sort({"score.total": -1,"level": -1})
         .limit(_limit)
         .skip(skip)
         .exec()
         .then(function(teams){
-          res.send(teams);
+          var result = teams.map(function(team){
+            return {_id:team._id,score:team.score.total || 0}
+          })
+          res.send(result);
         })
         .then(null,function(err){
           log(err);

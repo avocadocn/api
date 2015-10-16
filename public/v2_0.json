@@ -2763,6 +2763,7 @@
             "required": true,
             "type": "integer",
             "in": "query",
+            "default": 1,
             "enum": [
               1,
               2
@@ -2773,7 +2774,8 @@
             "description": "页数",
             "required": true,
             "type": "integer",
-            "in": "query"
+            "in": "query",
+            "default": 1
           },
           {
             "name": "limit",
@@ -2823,7 +2825,8 @@
             "description": "页数",
             "required": false,
             "type": "integer",
-            "in": "query"
+            "in": "query",
+            "default": 1
           },
           {
             "name": "limit",
@@ -2838,7 +2841,7 @@
             "description": "成功",
             "type": "array",
             "items": {
-              "$ref": null
+              "$ref": "RankTeam"
             }
           },
           "default": {
@@ -3296,6 +3299,21 @@
       "properties": {
         "msg": {
           "type": "string"
+        }
+      }
+    },
+    "RankTeam": {
+      "title": "RankTeam",
+      "description": "小队排行榜数据",
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "小队Id"
+        },
+        "score": {
+          "type": "string",
+          "description": "小队分数"
         }
       }
     },
