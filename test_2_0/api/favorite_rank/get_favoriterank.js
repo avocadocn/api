@@ -40,6 +40,8 @@ module.exports = function () {
           res.body.ranking.length.should.be.above(0);
           res.body.ranking[0].should.have.properties('vote');
           res.body.ranking[0].should.have.properties('_id');
+          res.body.ranking[0].should.have.properties('nickname');
+          res.body.ranking[0].should.have.properties('photo');
           done();
         });
     });
@@ -54,6 +56,8 @@ module.exports = function () {
           res.body.ranking.length.should.be.equal(2);
           res.body.ranking[0].should.have.properties('vote');
           res.body.ranking[0].should.have.properties('_id');
+          res.body.ranking[0].should.have.properties('nickname');
+          res.body.ranking[0].should.have.properties('photo');
           done();
         });
     });
@@ -68,6 +72,8 @@ module.exports = function () {
           res.body.ranking.length.should.be.equal(1);
           res.body.ranking[0].should.have.properties('vote');
           res.body.ranking[0].should.have.properties('_id');
+          res.body.ranking[0].should.have.properties('nickname');
+          res.body.ranking[0].should.have.properties('photo');
           done();
         });
     });

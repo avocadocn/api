@@ -17,6 +17,27 @@ var auth = require('../../services/auth.js'),
 
 var redisService = require('../../services/redis_service.js');
 var perPage =10;
+var getRankDetail = function(cid, ids, rank, res){
+  User.find({cid:cid,_id:{$in:ids}},{_id:1,nickname:1,photo:1}).exec().then(function(users){
+    rank.forEach(function(_rank){
+      var index = tools.arrayObjectIndexOf(users,_rank._id,'_id');
+      if(index>-1) {
+        _rank.nickname = users[index].nickname;
+        _rank.photo = users[index].photo;
+        users.splice(index,1)
+      }
+    })
+    res.status(200).send({
+      ranking: rank
+    });
+  })
+  .then(null,function(err){
+    log(err);
+    res.status(500).send({
+      msg: '服务器错误'
+    });
+  })
+}
 module.exports = {
     /**
      * 获取榜单
@@ -136,10 +157,11 @@ module.exports = {
           var sended = false;
           if((page * num - 1)<=favoriteRank.length) {
             var result = favoriteRank.slice((page - 1) * num, page * num - 1);
+            var resultIds = result.map(function(_result){
+              return _result._id;
+            })
             sended = true;
-            res.status(200).send({
-              ranking: result
-            });
+            getRankDetail(req.user.cid, resultIds, result, res)
           }
           User.find({cid:req.user.cid,_id:{$nin:ids}},{_id:1}).exec().then(function(users){
             users.forEach(function(user) {
@@ -154,11 +176,12 @@ module.exports = {
                   vote:elements[i]
                 })
               };
-              res.status(200).send({
-                ranking: result
-              });
+              var resultIds = result.map(function(_result){
+                return _result._id;
+              })
+              getRankDetail(req.user.cid, resultIds, result, res)
             }
-            redisService.redisRanking.addEleToZSET(req.query.cid, req.query.type, elements)
+            redisService.redisRanking.addEleToZSET(req.user.cid, req.query.type, elements)
               .then(function(result) {
               })
               .then(null, function(err) {
@@ -200,14 +223,17 @@ module.exports = {
         }
         return res;
       }
-
-      redisService.redisRanking.getEleFromZSET(req.query.cid, req.query.type, [(page - 1) * num, page * num - 1])
+      var parseIds = function(arr) {
+        var res = [];
+        for (var i = 0; i < arr.length; i+= 2) {
+          res.push(arr[i]);
+        }
+        return res;
+      }
+      redisService.redisRanking.getEleFromZSET(req.user.cid, req.query.type, [(page - 1) * num, page * num - 1])
       .then(function(result) {
         if (result.exist) {
-
-          res.status(200).send({
-            ranking: parseRes(result.value)
-          });
+          getRankDetail(req.user.cid, parseIds(result.value), parseRes(result.value), res)
         } else {
           next();
         }
