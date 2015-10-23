@@ -266,10 +266,10 @@ module.exports = {
       if (req.body.birthday) {
         user.birthday = new Date(req.body.birthday);
       }
-      if (req.body.pushToggle!==null) {
+      if (req.body.pushToggle!==undefined) {
         user.push_toggle = req.body.pushToggle;
       }
-      if (req.body.introduce!==null) {
+      if (req.body.introduce!==undefined) {
         user.introduce = req.body.introduce;
       }
       if(req.body.tag) {
@@ -281,7 +281,8 @@ module.exports = {
         var index = user.tags.indexOf(tag);
         if(index>-1) user.tags.splice(index, 1);
       }
-      if(req.body.gender !== null) {
+      if(req.body.gender !== undefined) {
+
         user.gender = req.body.gender;
       }
       if(req.body.enrollment) {

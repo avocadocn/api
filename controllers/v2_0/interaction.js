@@ -38,7 +38,7 @@ var createActivity = function (data,template) {
     memberMax: data.memberMax || template.memberMax,
     location: data.location || template.location,
     startTime: data.startTime || template.startTime,
-    deadline: data.deadline || template.deadline || data.endTime ,
+    deadline: data.deadline || data.endTime || template.deadline,
     activityMold: data.activityMold || template.activityMold,
     remindTime: data.remindTime
   };
