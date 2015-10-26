@@ -281,10 +281,11 @@ module.exports = {
         var index = user.tags.indexOf(tag);
         if(index>-1) user.tags.splice(index, 1);
       }
-      if(req.body.gender !== undefined) {
+      //性别不能修改！！！
+      // if(req.body.gender !== undefined) {
 
-        user.gender = req.body.gender;
-      }
+      //   user.gender = req.body.gender;
+      // }
       if(req.body.enrollment) {
         user.enrollment = req.body.enrollment;
       }

@@ -85,7 +85,7 @@ var UserSchema = new Schema({
   //0:女，1：男
   gender: {
     type: Boolean,
-    default: false
+    require: true
   },
   //默认值1990年1月1日
   birthday: {
