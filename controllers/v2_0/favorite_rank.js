@@ -72,131 +72,124 @@ module.exports = {
       // m.set('second', 0);
       // m.set('millisecond', 0);
       // console.time("rank")
-      var aggregateOptions = [{
-        $match: {
-          'cid': mongoose.Types.ObjectId(req.user.cid)
-        }
-      }, {
-        $group: {
-          '_id': '$receiver',
-          'vote': {
-            $sum: 1
-          }
-        }
-      }, {
-        $sort: {
-          'vote': -1,
-          '_id': 1
-        }
-      }];
-
+      var gender;
       // 榜单类型的选择
       switch (req.query.type) {
         case '1':
-          aggregateOptions[0].$match.receiverGender = true;
-          aggregateOptions[0].$match.giftIndex = 4;
+          gender = true;
           break;
         case '2':
-          aggregateOptions[0].$match.receiverGender = false;
-          aggregateOptions[0].$match.giftIndex = 4;
+          gender = false;
           break;
-        // case '3':
-        //   aggregateOptions[0].$match.giftIndex = {
-        //     $in: [1, 2, 3]
-        //   };
-        //   break;
         default:
+          gender = false;
           break;
       }
-      // 分页查询
-      // if (req.query.vote && req.query.id) {
-      //   aggregateOptions.splice(3, 0, {
-      //     $match: {
-      //       $or: [{
-      //         'vote': {
-      //           $gt: parseInt(req.query.vote)
-      //         }
-      //       }, {
-      //         $and: [{
-      //           'vote': {
-      //             $eq: parseInt(req.query.vote)
-      //           }
-      //         }, {
-      //           '_id': {
-      //             $gt: mongoose.Types.ObjectId(req.query.id)
-      //           }
-      //         }]
-      //       }]
-      //     }
-      //   });
-      // }
-
-      Gift.aggregate(aggregateOptions).exec(function(err, favoriteRank) {
-        if (err) {
-          log(err);
-          return res.status(500).send({
-            msg: '服务器错误'
-          });
+      var aggregateOptions = {
+        $match: {
+          'cid': mongoose.Types.ObjectId(req.user.cid),
+          'giftIndex': 4
         }
-        var elements = [];
-        var ids = [];
-        for (var i = favoriteRank.length - 1; i >= 0; i--) {
-          ids.push(favoriteRank[i]._id)
-          elements.push(favoriteRank[i].vote,favoriteRank[i]._id);
-        };
-        var page = parseInt(req.query.page);
-        // isNaN(page) 排除req.query.page头字符为非数字
-        // TODO: 增加条件
-        if (!req.query.page || isNaN(page) || page < 1) {
-          res.status(400).send({
-            msg: '参数错误'
-          });
-        }
-        else {
-          var num = req.query.limit || 10;
-          var sended = false;
-          if((page * num - 1)<=favoriteRank.length) {
-            var result = favoriteRank.slice((page - 1) * num, page * num - 1);
-            var resultIds = result.map(function(_result){
-              return _result._id;
+      };
+      async.waterfall([
+        function(callback){
+          User.find({cid:req.user.cid, gender:gender})
+          .exec()
+          .then(function(users){
+            var _users = []
+            users.forEach(function (user) {
+              _users.push(user._id);
             })
-            sended = true;
-            getRankDetail(req.user.cid, resultIds, result, res)
-          }
-          User.find({cid:req.user.cid,_id:{$nin:ids}},{_id:1}).exec().then(function(users){
-            users.forEach(function(user) {
-              elements.push(0,user._id);
-            })
-            if(!sended) {
-              var result = [];
-              for (var i = (page - 1) * num *2 ,end = page * num * 2 - 2; i <= end; i+=2) {
-
-                result.push({
-                  _id:elements[i+1],
-                  vote:elements[i]
-                })
-              };
-              var resultIds = result.map(function(_result){
-                return _result._id;
-              })
-              getRankDetail(req.user.cid, resultIds, result, res)
+            aggregateOptions['$match']['receiver'] ={'$in':_users}
+            callback(null)
+          })
+          .then(null, callback)
+        },
+        function(callback){
+          Gift.aggregate(aggregateOptions, {
+            $group: {
+              '_id': '$receiver',
+              'vote': {
+                $sum: 1
+              }
             }
-            redisService.redisRanking.addEleToZSET(req.user.cid, req.query.type, elements)
-              .then(function(result) {
-              })
-              .then(null, function(err) {
-                log(err);
+          }, {
+            $sort: {
+              'vote': -1,
+              '_id': 1
+            }
+          }).exec(function(err, favoriteRank) {
+            if (err) {
+              log(err);
+              return res.status(500).send({
+                msg: '服务器错误'
               });
-          })
-          .then(null,function(err){
-            log(err);
-            res.status(500).send({
-              msg: '服务器错误'
-            });
-          })
-          // 用户基本信息可以通过sqlite在前端获取，这样效率或许更好点
+            }
+            var elements = [];
+            var ids = [];
+            for (var i = 0,_length = favoriteRank.length; i < _length; i++) {
+              ids.push(favoriteRank[i]._id)
+              elements.push(favoriteRank[i].vote,favoriteRank[i]._id);
+            };
+            var page = parseInt(req.query.page);
+            // isNaN(page) 排除req.query.page头字符为非数字
+            // TODO: 增加条件
+            if (!req.query.page || isNaN(page) || page < 1) {
+              res.status(400).send({
+                msg: '参数错误'
+              });
+            }
+            else {
+              var num = req.query.limit || 10;
+              var sended = false;
+              if((page * num - 1)<=favoriteRank.length) {
+                var result = favoriteRank.slice((page - 1) * num, page * num - 1);
+                var resultIds = result.map(function(_result){
+                  return _result._id;
+                })
+                sended = true;
+                getRankDetail(req.user.cid, resultIds, result, res)
+              }
+              User.find({cid:req.user.cid,_id:{$nin:ids}},{_id:1}).exec().then(function(users){
+                users.forEach(function(user) {
+                  elements.push(0,user._id);
+                })
+                if(!sended) {
+                  var result = [];
+                  for (var i = (page - 1) * num *2 ,end = page * num * 2 - 2; i <= end; i+=2) {
+
+                    result.push({
+                      _id:elements[i+1],
+                      vote:elements[i]
+                    })
+                  };
+                  var resultIds = result.map(function(_result){
+                    return _result._id;
+                  })
+                  getRankDetail(req.user.cid, resultIds, result, res)
+                }
+                redisService.redisRanking.addEleToZSET(req.user.cid, req.query.type, elements)
+                  .then(function(result) {
+                  })
+                  .then(null, function(err) {
+                    log(err);
+                  });
+              })
+              .then(null,function(err){
+                log(err);
+                res.status(500).send({
+                  msg: '服务器错误'
+                });
+              })
+              // 用户基本信息可以通过sqlite在前端获取，这样效率或许更好点
+            }
+          });
+        }],
+        function(err, results){
         }
-      });
+      );
+
+
     },
     /**
      * 获取榜单(redis缓存)

@@ -45,7 +45,7 @@ var userFactory  = function(){
 
     nickname: randomString(),
     realname: randomString(),
-    gender: Math.round(Math.random()),
+    gender: !!Math.round(Math.random()),
     birthday: new Date(1991,3,11),
     bloodType: 'AB',
     //个人简介

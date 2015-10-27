@@ -246,6 +246,7 @@ module.exports = {
 
     update: function(req, res) {
       var user = req.user;
+      var oldgender;
       if (req.body.nickname) {
         user.nickname = req.body.nickname;
       }
@@ -281,11 +282,10 @@ module.exports = {
         var index = user.tags.indexOf(tag);
         if(index>-1) user.tags.splice(index, 1);
       }
-      //性别不能修改！！！
-      // if(req.body.gender !== undefined) {
-
-      //   user.gender = req.body.gender;
-      // }
+      oldgender = user.gender;
+      if(req.body.gender != undefined) {
+        user.gender = req.body.gender;
+      }
       if(req.body.enrollment) {
         user.enrollment = req.body.enrollment;
       }
@@ -294,6 +294,9 @@ module.exports = {
           log(err);
           res.sendStatus(500);
           return;
+        }
+        if(oldgender!==user.gender) {
+          redisService.redisRanking.updateGender(user.cid, oldgender===true ?1 :2, [user._id.toString()]);
         }
         // if(req.body.did && (!user.department || !user.department._id || user.department._id.toString()!= req.body.did)) {
         //   departmentController.joinDepartment(user,req.body.did,function (err) {
@@ -524,7 +527,7 @@ module.exports = {
           return;
         }
         res.status(200).send({msg: '用户注册成功'});
-        redisService.redisRanking.addEleToZSET(user.cid, user.gender===1 ?1 :2, [0,user._id.toString()]);
+        redisService.redisRanking.addEleToZSET(user.cid, user.gender===true ?1 :2, [0,user._id.toString()]);
         easemob.user.create({"username":user._id,"password":user._id, "nickname":req.body.name});
       });
     },

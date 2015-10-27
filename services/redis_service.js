@@ -5,7 +5,7 @@ var Q = require('q');
 var redis = require('redis');
 var redisClient = redis.createClient();
 var errorLog = require('./error_log');
-
+var async = require('async');
 var isConnect = false;
 
 redisClient.on("error", function (err) {
@@ -144,6 +144,51 @@ redisRanking.updateElement = function(cid, type, elements) {
     else deferred.resolve(reply);
   });
 
+  return deferred.promise;
+};
+redisRanking.updateGender = function(cid, type, elements) {
+  var deferred = Q.defer();
+
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+
+  if (elements.length<1) {
+    deferred.reject(new Error('参数错误'));
+    return deferred.promise;
+  }
+  var hashKey = identifier + type + cid;
+  var args = [hashKey,elements[0]]
+  async.waterfall([
+    function(callback) {
+      redisClient.zscore(args, function(err, reply) {
+        if (err) callback(err)
+        else {
+          callback(null, reply)
+          redisClient.zrem(args, function(err, reply) {
+            if (err) errorLog(err);
+          });
+        }
+      });
+
+    },
+    function(score, callback) {
+      var newKey = identifier + (type%2+1) + cid;
+      var newArgs = [newKey, score, elements[0]]
+      redisClient.zadd(newArgs, function(err, reply) {
+        if (err)
+          callback(err);
+        else
+          callback(null,reply);
+      });
+    }
+    ],function(err,result) {
+      if (err) deferred.reject(err);
+      else {
+        deferred.resolve(result);
+      }
+    });
   return deferred.promise;
 };
 /**
