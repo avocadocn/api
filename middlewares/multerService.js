@@ -8,13 +8,15 @@ var log = require('../services/error_log.js');
 var mkdirp = require('mkdirp');
 
 var publicDir = path.join(__dirname, '../../yali/public/img/');
-
+var oriDir = path.join(__dirname, '../../yali/ori_img/');
+var publicKey ='public/img';
+var oriKey ='ori_img';
 /**
  * 上传接口，调用后文件存储于img/dest/20xx-x/xxx
  * @param  {string} dest 目标文件夹
  */
 exports.upload = function(dest) {
-  var destDir = path.join(publicDir,dest);
+  var destDir = path.join(oriDir,dest);
   var now = new Date();
   var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
   var childDir = path.join(destDir, dateDirName);
@@ -44,7 +46,7 @@ exports.upload = function(dest) {
  *                            }
  * @param  {Function} callback(err,files)
  */
-exports.formatPhotos = function(files, options, callback) {
+exports.formatPhotos = function (files, options, callback) {
   if(!files) {
     return callback();
   }
@@ -62,31 +64,48 @@ exports.formatPhotos = function(files, options, callback) {
   if(!files || files.length === 0) {
     return callback();
   }
-  //获取size
-  if(options.getSize) {
-    async.map(files, function(file, mapCallback) {
-      try {
-        gm(file.path).size(function(err, size) {
+  try {
+    var now = new Date();
+    async.map(files, function (file, mapCallback) {
+      var thumbPath = file.path.replace(oriKey,publicKey);
+      gm(file.path)
+        .resize(750)
+        .write(thumbPath, function (err) {
           if(err) {
-            mapCallback(err);
-          } 
-          file.size = size;
-          mapCallback(null, file);
+            console.log('Error writing file to disk: ' + err);
+          }
+          
+          // if(!options.saveOrign) {
+          //   fs.unlink(file.path,function (err) {
+          //     err && console.log(err);
+          //   });
+          // }
+          file.path = thumbPath;
+          //获取size
+          if(options.getSize) {
+            gm(thumbPath).size(function (err, size) {
+              if(err) {
+                mapCallback(err);
+              }
+              else {
+                file.size = size;
+                mapCallback(null, file);
+              }
+            });
+          }
+          else {
+            mapCallback(null,file);
+          }
         });
-      }
-      catch(e) {
-        mapCallback(e);
-      }
-    },function(err, files) {
+    },function (err, files) {
       callback(err, files);
     })
   }
-  else {
-    callback(null,files);
+  catch(e) {
+    callback(e);
   }
-
 }
-exports.getRelPath = function(dest) {
+exports.getRelPath = function (dest) {
   return dest.slice(dest.indexOf('yali/public')+11)
 }
 
