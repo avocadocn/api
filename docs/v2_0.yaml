@@ -1914,6 +1914,19 @@ paths:
         - group
       summary: 获取个人群组列表
       operationId: getGroupListOfUser
+      parameters:
+        - name: limit
+          description: "结果返回数"
+          required: false
+          type: integer
+          format: int32
+          in: query
+        - name: page
+          description: "页数,无则为第一页"
+          required: false
+          type: integer
+          format: int32
+          in: query
       responses:
         200:
           description: 成功
@@ -1945,6 +1958,18 @@ paths:
           in: query
           enum:
             - admin
+        - name: limit
+          description: "结果返回数"
+          required: false
+          type: integer
+          format: int32
+          in: query
+        - name: page
+          description: "页数,无则为第一页"
+          required: false
+          type: integer
+          format: int32
+          in: query
       responses:
         200:
           description: 成功

@@ -4,7 +4,8 @@
  * 数据模型依赖项
  */
 var mongoose = require('mongoose'),
-  Schema = mongoose.Schema;
+  Schema = mongoose.Schema,
+  mongoosePaginate = require('mongoose-paginate');
 /**
  * 数据模型依赖组件
  */
@@ -114,7 +115,7 @@ var TeamModel = new Schema({
     }
   }
 });
-
+TeamModel.plugin(mongoosePaginate);
 /**
  * 群组方法
  */

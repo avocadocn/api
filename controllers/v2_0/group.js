@@ -20,6 +20,7 @@ var auth = require('../../services/auth.js'),
   notificationController = require('./notifications.js'),
   easemob = require('../../services/easemob.js'),
   multerService = require('../../middlewares/multerService.js');
+var perPageNum = 10;
 // TODO: 群组API涉及到权限判断，同时有重复代码，需要
 // 修改原权限判断代码，优化代码。
 module.exports = {
@@ -931,6 +932,7 @@ module.exports = {
      * @return {[type]}     [description]
      */
     getGroupListOfUser: function(req, res) {
+
       var conditions = {
         'member': {
           $elemMatch: {
@@ -947,17 +949,17 @@ module.exports = {
         'brief': 1,
         'easemobId':1
       };
-
-      Team.find(conditions, projection, function(err, docs) {
-        if (err) {
+      var page = req.query.page > 0? req.query.page:1;
+      var _perPageNum = req.query.limit || perPageNum;
+      Team.paginate(conditions, page, _perPageNum, function(err, pageCount, results, itemCount) {
+        if(err){
           log(err);
-          return res.sendStatus(500);
-        } else {
-          return res.status(200).send({
-            groups: docs
-          });
+          res.status(500).send({msg:err});
         }
-      });
+        else{
+          return res.send({'groups':results,'maxPage':pageCount});
+        }
+      },{columns:projection});
     },
     /**
      * 获取公司群组列表
@@ -990,30 +992,32 @@ module.exports = {
         'member':1
       };
       var isAdmin = req.user.isSuperAdmin(req.user.cid) && req.query.from === 'admin';
+      var page = req.query.page > 0 ? req.query.page : 1;
+      var _perPageNum = req.query.limit || perPageNum;
+      var options = {columns: projection}
       if(isAdmin) {
         projection.applyStatus = 1;
         projection.leader = 1;
-      };
-      var doc = Team.find(conditions, projection);
-      if(isAdmin) {
-        doc = doc.populate({path:'leader', select:'photo nickname'});
+        options.populate = {path: 'leader', select: 'photo nickname'};
       }
-      doc.exec()
-      .then(function(docs) {
-        var result = docs.map(function(team) {
-          var isMember = team.isMember(req.user._id);
-          team = team.toObject();
-          team.isMember = isMember;
-          if(!isAdmin) {
-            delete team.member;
-          }
-          return team;
-        })
-        return res.status(200).send({groups: result});
-      })
-      .then(null, function(err) {
-        return res.sendStatus(500);
-      });
+      Team.paginate(conditions, page, _perPageNum, function(err, pageCount, results, itemCount) {
+        if(err){
+          log(err);
+          res.status(500).send({msg:err});
+        }
+        else{
+          var result = results.map(function(team) {
+            var isMember = team.isMember(req.user._id);
+            team = team.toObject();
+            team.isMember = isMember;
+            if(!isAdmin) {
+              delete team.member;
+            }
+            return team;
+          })
+          return res.send({'groups':result,'maxPage':pageCount});
+        }
+      },options);
 
     },
     /**
