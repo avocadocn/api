@@ -18,7 +18,7 @@ var auth = require('../../services/auth.js'),
 var redisService = require('../../services/redis_service.js');
 var perPage =10;
 var getRankDetail = function(cid, ids, rank, res){
-  User.find({cid:cid,_id:{$in:ids}},{_id:1,nickname:1,photo:1}).exec().then(function(users){
+  User.find({cid:cid,_id:{$in:ids}},{nickname:1,photo:1}).exec().then(function(users){
     rank.forEach(function(_rank){
       var index = tools.arrayObjectIndexOf(users,_rank._id,'_id');
       if(index>-1) {
@@ -150,14 +150,15 @@ module.exports = {
                 sended = true;
                 getRankDetail(req.user.cid, resultIds, result, res)
               }
-              User.find({cid:req.user.cid,_id:{$nin:ids}},{_id:1}).exec().then(function(users){
+              User.find({cid:req.user.cid, gender:gender,_id:{$nin:ids}},{_id:1}).exec().then(function(users){
                 users.forEach(function(user) {
                   elements.push(0,user._id);
                 })
                 if(!sended) {
                   var result = [];
                   for (var i = (page - 1) * num *2 ,end = page * num * 2 - 2; i <= end; i+=2) {
-
+                    if(elements[i]===undefined)
+                      break;
                     result.push({
                       _id:elements[i+1],
                       vote:elements[i]

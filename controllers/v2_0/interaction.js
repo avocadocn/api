@@ -1006,9 +1006,9 @@ module.exports = {
         .then(function (interaction) {
           if(!interaction || !interaction.poll)
             return res.status(404).send({msg:"该投票不存在"})
-          if(interaction.endTime<new Date()){
-            return res.status(400).send({msg:"投票已经截止"})
-          }
+          // if(interaction.endTime<new Date()){
+          //   return res.status(400).send({msg:"投票已经截止"})
+          // }
           if(req.user.cid.toString()!=interaction.cid.toString() || interaction.targetType===2&&!req.user.isTeamMember(interaction.target))
             return res.status(403).send({msg:"您没有权限进行投票"})
           if(interaction.members.indexOf(userId)>-1){
