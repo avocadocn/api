@@ -330,7 +330,7 @@ module.exports = {
       }
       var _limit = isNaN(parseInt(req.query.limit)) ? perPage : parseInt(req.query.limit);
       var skip = parseInt( page - 1 ) * _limit;
-      Team.find({cid: req.user.cid, active: true},{'score':1,'name':1,'logo':1})
+      Team.find({cid: req.user.cid, active: true,open: true},{'score':1,'name':1,'logo':1})
         .sort({"score.total": -1,"level": -1})
         .limit(_limit)
         .skip(skip)
