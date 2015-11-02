@@ -23,6 +23,11 @@ exports.upload = function(dest) {
   if (!fs.existsSync(childDir)) {
     mkdirp.sync(childDir);
   }
+  var showDestDir = path.join(publicDir,dest);
+  var showchildDir = path.join(showDestDir, dateDirName);
+  if (!fs.existsSync(showchildDir)) {
+    mkdirp.sync(showchildDir);
+  }
   var storage = multer.diskStorage({
     destination: function (req, file, cb) {
       cb(null, childDir)
