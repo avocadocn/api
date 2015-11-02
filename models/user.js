@@ -14,7 +14,7 @@ var _device = new Schema({
   device_id: String,
   device_type: String, //同一platform设备的类型(比如ios系统有iPhone和iPad)
   access_token: String, //每次登录时生成
-  ios_token: String, //只有iosd的APN推送才会用到
+  ios_token: String, //只有ios的APN推送才会用到
   user_id: String, //只有Android的百度云推送才会用到
   channel_id: String, //只有Android的百度云推送才会用到
   app_id: String,

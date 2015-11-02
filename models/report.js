@@ -9,7 +9,7 @@ var Schema = mongoose.Schema;
 var Report = new Schema({
   host_type:{
     type: String,
-    enum: ['album', 'campaign', 'photo', 'comment', 'user', 'company']
+    enum: ['photo', 'comment', 'user']
   },
   host_id: Schema.Types.ObjectId,  //留言主体的id,这个主体可以是 一条活动、一条评论、一张照片、一场比赛等等
   //举报的补充

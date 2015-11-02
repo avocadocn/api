@@ -321,7 +321,7 @@ module.exports = {
       if(req.user.cid.toString() !== req.params.companyId)
         return res.sendStatus(403);
       var findOptions = {'cid':req.params.companyId, 'active':true};
-      var outputOptions = {'nickname':1, 'photo':1, 'realname': 1, 'gender':1};
+      var outputOptions = {'nickname':1, 'photo':1, 'realname': 1, 'gender':1, 'phone':1};
       var sortOption = req.query.freshman ? {'register_date':-1} : {'nickname':1};
       if(req.query.page) {
         var pageNum = 20;
