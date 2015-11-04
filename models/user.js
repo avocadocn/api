@@ -203,6 +203,15 @@ var UserSchema = new Schema({
       default: Date.now
     }
   }],
+
+  //关注自己的人
+  concerned: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    }
+  ],
+  
   enrollment: { // 入学时间
     type: Number
   }

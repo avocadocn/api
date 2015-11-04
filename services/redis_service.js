@@ -214,6 +214,95 @@ redisRanking.removeKey = function(cid, type) {
 
   return deferred.promise;
 };
+
+var redisPushQueue = {};
+
+//加入队列
+redisPushQueue.addToQueue = function(userId, msg) {
+  var deferred = Q.defer();
+
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+  redisClient.lpush(userId, function(err, reply) {
+    console.log(reply);
+    if(err) deferred.reject(err);
+    else deferred.resolve(reply);
+  });
+
+  return deferred.promise;
+};
+
+//若有的话查看第一个元素，没有的话返回null()
+redisPushQueue.getFirst = function(userId) {
+  var deferred = Q.defer();
+
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+  redisClient.lindex([userId, -1], function(err, reply) {
+    console.log(reply);
+    if(err) deferred.reject(err);
+    else deferred.resolve(reply);
+  });
+
+  return deferred.promise;
+};
+
+//返回整个队列
+redisPushQueue.getList = function(userId) {
+  var deferred = Q.defer();
+
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+
+  redisClient.lrange([userId, 0, -1], function(err, reply) {
+    console.log(reply);
+    if(err) deferred.reject(err);
+    else deferred.resolve(reply);
+  });
+
+  return deferred.promise;
+};
+
+function getListLength(userId) {
+
+  redisClient.llen(userId, function(err, reply) {
+    console.log(reply);
+    if(err) deferred.reject(err);
+    else deferred.resolve(reply);
+  });
+
+  return deferred.promise;
+}
+
+//删除整个队列
+redisPushQueue.deleteList = function(userId) {
+  var deferred = Q.defer();
+
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+  getListLength(userId)
+  .then(function(length) {
+    redisClient.ltrim([userId, length, length], function(err, reply) {
+      console.log(reply);
+      if(err) deferred.reject(err);
+      else deferred.resolve(reply);
+    })
+  })
+  .then(null, function(err) {
+    deferred.reject(err);
+  });
+
+  return deferred.promise;
+};
+
 var redisPhoneValidate = {};
 
 /**
@@ -264,5 +353,8 @@ redisPhoneValidate.getCode = function(phone, key) {
   return deferred.promise;
 };
 
+
+
 exports.redisRanking = redisRanking;
 exports.redisPhoneValidate = redisPhoneValidate;
+exports.redisPushQueue = redisPushQueue;
