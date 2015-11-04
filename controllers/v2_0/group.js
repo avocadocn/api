@@ -1034,7 +1034,8 @@ module.exports = {
     getGroupInfo: function(req, res) {
       var conditions = {
         '_id': req.params.groupId,
-        'active': true
+        'active': true,
+        'cid':req.user.cid
       };
 
       var projection = {
@@ -1044,19 +1045,15 @@ module.exports = {
         'member': 1
       };
 
-      if (req.query.allInfo) {
-        if(req.user.role!=="SuperAdmin") {
-          conditions.member = {
-            $elemMatch: {
-              '_id': req.user._id
-            }
-          };
+      if (req.query.allInfo==='true' || req.query.allInfo==='1') {
+        if(req.user.role !== "SuperAdmin" && !req.user.isTeamMember(req.params.groupId)) {
+          return res.sendStatus(403);
         }
         projection = {};
       }
-      else {
-        conditions['$or'] = [{'member._id':req.user._id},{'open':true}]
-      }
+      // else {
+      //   conditions['$or'] = [{'member._id':req.user._id},{'open':true}]
+      // }
       Team.findOne(conditions, projection)
       .exec()
       .then(function(group) {

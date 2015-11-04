@@ -100,19 +100,6 @@ module.exports = function () {
           done();
         });
     });
-    it('投已经截止的投票应该返回400', function (done) {
-      var user = data[2].users[1];
-      var interaction = data[2].teams[0].polls[3];
-      request.post('/interaction/poll/'+interaction.id+'/users/'+user.id)
-        .set('x-access-token', accessToken[1])
-        .send({index:1})
-        .expect(400)
-        .end(function (err, res) {
-          if (err) return done(err);
-          res.body.msg.should.equal('投票已经截止');
-          done();
-        });
-    });
     it('投没有参加的小队的投票应该返回403', function (done) {
       var user = data[2].users[1];
       var interaction = data[2].teams[2].polls[0];
