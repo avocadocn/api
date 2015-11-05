@@ -232,7 +232,6 @@ module.exports = {
      */
     validateUpdate: function(req, res, next) {
       if(req.user.isTeamAdmin(req.params.groupId) || req.user.isSuperAdmin(req.group ? req.group.cid : req.user.cid)&&(!req.group ||req.group.level===1)) {
-        next();
         if(req.file) {
           multerService.formatPhotos([req.file], {getSize:false}, function(err, files) {
             next();
