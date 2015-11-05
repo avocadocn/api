@@ -76,7 +76,12 @@ module.exports = {
           // }
         }, 'complete', function(pass, msg) {
           if (pass) {
-            next();
+            if(req.file) {
+              multerService.formatPhotos([req.file], {getSize:false}, function(err, files) {
+                next();
+              })
+            }
+            
           } else {
             var resMsg = donlerValidator.combineMsg(msg);
             res.status(400).send({
@@ -228,6 +233,14 @@ module.exports = {
     validateUpdate: function(req, res, next) {
       if(req.user.isTeamAdmin(req.params.groupId) || req.user.isSuperAdmin(req.group ? req.group.cid : req.user.cid)&&(!req.group ||req.group.level===1)) {
         next();
+        if(req.file) {
+          multerService.formatPhotos([req.file], {getSize:false}, function(err, files) {
+            next();
+          })
+        }
+        else {
+          next();
+        }
       }
       else {
         return res.status(403).send({msg:'抱歉，您无管理员权限'});
