@@ -22,7 +22,7 @@ module.exports = function (app, ctrl) {
   // app.post('/users', ctrl.v2_0.getFormData, ctrl.v2_0.getCompanyByCid, ctrl.v2_0.registerValidate, ctrl.v2_0.uploadPhotoForUser, ctrl.v2_0.register);
   app.post('/users/validate', ctrl.v2_0.userInfoValidate);
   app.get('/users/:userId', token.needToken, ctrl.v2_0.getUserById);
-  app.put('/users/:userId', token.needToken, ctrl.v2_0.updateValidate, ctrl.v2_0.updatePhoto, ctrl.v2_0.update);
+  app.put('/users/:userId', token.needToken, multerService.upload('/user/photo').single('photo'), ctrl.v2_0.updateValidate, ctrl.v2_0.update);
   app.get('/users/list/birthday', token.needToken ,ctrl.v2_0.getBirthDayUsers); //获取近期过生日的人
   app.get('/users/list/:companyId', token.needToken, ctrl.v2_0.getCompanyUsers);
   app.post('/users/forgetPassword', ctrl.v2_0.forgetPassword);

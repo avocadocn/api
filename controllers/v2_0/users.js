@@ -158,11 +158,6 @@ module.exports = {
     },
 
     updateValidate: function(req, res, next) {
-      if (req.headers['content-type'].indexOf('multipart/form-data') !== -1) {
-        next();
-        return;
-      }
-
       donlerValidator({
         nickname: {
           name: '昵称',
@@ -212,38 +207,20 @@ module.exports = {
         // },
       }, 'complete', function (pass, msg) {
         if (pass) {
-          next();
+          if(req.file) {
+            multerService.formatPhotos([req.file], {getSize:false}, function(err, files) {
+              next()
+            })
+          }
+          else {
+            next()
+          }
         } else {
           var resMsg = donlerValidator.combineMsg(msg);
           return res.status(400).send({ msg: resMsg });
         }
       });
     },
-
-    updatePhoto: function(req, res, next) {
-      if (req.headers['content-type'].indexOf('multipart/form-data') === -1) {
-        next();
-        return;
-      }
-      uploader.uploadImg(req, {
-        fieldName: 'photo',
-        targetDir: '/public/img/user/photo',
-        success: function (url, oriName) {
-          req.user.photo = path.join('/img/user/photo', url);
-          req.updatePhoto = true;
-          next();
-        },
-        error: function (err) {
-          if (err.type === 'notfound') {
-            next();
-          } else {
-            log(err);
-            res.status(500).send({ msg: '服务器错误' });
-          }
-        }
-      });
-    },
-
     update: function(req, res) {
       var user = req.user;
       var oldgender;
@@ -288,6 +265,9 @@ module.exports = {
       }
       if(req.body.enrollment) {
         user.enrollment = req.body.enrollment;
+      }
+      if(req.file) {
+        user.photo = multerService.getRelPath(req.file.path)
       }
       user.save(function (err) {
         if (err) {
@@ -489,7 +469,14 @@ module.exports = {
         }
       }, 'complete', function (pass, msg) {
         if (pass) {
-          next();
+          if(req.file) {
+            multerService.formatPhotos([req.file], {getSize:false}, function(err, files) {
+              next()
+            })
+          }
+          else {
+            next()
+          }
         } else {
           var resMsg = donlerValidator.combineMsg(msg);
           res.status(400).send({ msg: resMsg });
@@ -507,19 +494,9 @@ module.exports = {
         company_official_name: req.company.info.official_name,
         password: req.body.password,
         gender: req.body.gender,
-        enrollment: req.body.enrollment
+        enrollment: req.body.enrollment,
+        photo: req.file ? multerService.getRelPath(req.file.path) :undefined
       });
-      if(req.file) {
-        multerService.formatPhotos([req.file], {getSize:false}, function(err, files) {
-          if(files && files.length) {
-            var now = new Date();
-            var dateDirName = now.getFullYear().toString() + '-' + (now.getMonth() + 1);
-            var dir = path.join('/img/user/photo', dateDirName)
-            user.photo = path.join(dir, files[0].filename);
-          }
-        })
-      }
-      
       user.save(function (err) {
         if (err) {
           log(err);

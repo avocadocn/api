@@ -2,7 +2,7 @@
 
 (function ($) {
 
-  var baseUrl = 'http://localhost:3002'
+  var baseUrl = 'http://localhost:3002/v2_0'
   var tokenInput = $('#x-access-token');
   var appIdInput = $('#x-app-id');
   var apiKeyInput = $('#x-api-key');
