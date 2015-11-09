@@ -31,8 +31,7 @@ module.exports = function() {
       })
 
       before(function(done) {
-        redisPushQueue.deleteList(1);
-        redisPushQueue.deleteList(2);
+        
         redisPushQueue.addToQueue(1,msgs[0])
         .then(function(result) {
           redisPushQueue.addToQueue(1,msgs[1])
@@ -68,7 +67,7 @@ module.exports = function() {
       it('应能获取第一个进队列的元素', function(done) {
         redisPushQueue.getFirst(1)
         .then(function(result) {
-          result.should.equal(msgs[0]);
+          result.type.should.equal(msgs[0].type);
           done();
         })
         .then(null, function(err) {
@@ -85,6 +84,9 @@ module.exports = function() {
         .then(null, function(err) {
           err & done(err);
         })
+
+        redisPushQueue.deleteList(1);
+        redisPushQueue.deleteList(2);
       })
       
     })

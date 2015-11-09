@@ -225,8 +225,9 @@ redisPushQueue.addToQueue = function(userId, msg) {
     deferred.reject(new Error('redis连接失败'));
     return deferred.promise;
   }
+  msg = JSON.stringify(msg);
   redisClient.lpush(userId, msg, function(err, reply) {
-    console.log(reply);
+    // console.log('pushReply:', reply);
     if(err) deferred.reject(err);
     else deferred.resolve(reply);
   });
@@ -243,9 +244,10 @@ redisPushQueue.getFirst = function(userId) {
     return deferred.promise;
   }
   redisClient.lindex(userId, -1, function(err, reply) {
-    console.log(reply);
+    var result = JSON.parse(reply);
+    // console.log('第一个元素:',result);
     if(err) deferred.reject(err);
-    else deferred.resolve(reply);
+    else deferred.resolve(result);
   });
 
   return deferred.promise;
@@ -261,7 +263,10 @@ redisPushQueue.getList = function(userId) {
   }
 
   redisClient.lrange(userId, 0, -1, function(err, reply) {
-    console.log(reply);
+    // console.log('整个队列:',reply);
+    for(var i=reply.length - 1; i>=0; i--) {
+      reply[i] = JSON.parse(reply[i]);
+    }
     if(err) deferred.reject(err);
     else deferred.resolve(reply);
   });
@@ -273,7 +278,7 @@ function getListLength(userId) {
   var deferred = Q.defer();
 
   redisClient.llen(userId, function(err, reply) {
-    console.log(reply);
+    // console.log('获取队列长度：',reply);
     if(err) deferred.reject(err);
     else deferred.resolve(reply);
   });
@@ -292,7 +297,7 @@ redisPushQueue.deleteList = function(userId) {
   getListLength(userId)
   .then(function(length) {
     redisClient.ltrim(userId, length, length, function(err, reply) {
-      console.log(reply);
+      // console.log('删除:',reply);
       if(err) deferred.reject(err);
       else deferred.resolve(reply);
     })
