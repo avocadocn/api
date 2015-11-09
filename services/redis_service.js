@@ -225,7 +225,7 @@ redisPushQueue.addToQueue = function(userId, msg) {
     deferred.reject(new Error('redis连接失败'));
     return deferred.promise;
   }
-  redisClient.lpush(userId, function(err, reply) {
+  redisClient.lpush(userId, msg, function(err, reply) {
     console.log(reply);
     if(err) deferred.reject(err);
     else deferred.resolve(reply);
@@ -234,7 +234,7 @@ redisPushQueue.addToQueue = function(userId, msg) {
   return deferred.promise;
 };
 
-//若有的话查看第一个元素，没有的话返回null()
+//若有的话查看第一个元素，没有的话返回null
 redisPushQueue.getFirst = function(userId) {
   var deferred = Q.defer();
 
@@ -242,7 +242,7 @@ redisPushQueue.getFirst = function(userId) {
     deferred.reject(new Error('redis连接失败'));
     return deferred.promise;
   }
-  redisClient.lindex([userId, -1], function(err, reply) {
+  redisClient.lindex(userId, -1, function(err, reply) {
     console.log(reply);
     if(err) deferred.reject(err);
     else deferred.resolve(reply);
@@ -260,7 +260,7 @@ redisPushQueue.getList = function(userId) {
     return deferred.promise;
   }
 
-  redisClient.lrange([userId, 0, -1], function(err, reply) {
+  redisClient.lrange(userId, 0, -1, function(err, reply) {
     console.log(reply);
     if(err) deferred.reject(err);
     else deferred.resolve(reply);
@@ -270,6 +270,7 @@ redisPushQueue.getList = function(userId) {
 };
 
 function getListLength(userId) {
+  var deferred = Q.defer();
 
   redisClient.llen(userId, function(err, reply) {
     console.log(reply);
@@ -290,7 +291,7 @@ redisPushQueue.deleteList = function(userId) {
   }
   getListLength(userId)
   .then(function(length) {
-    redisClient.ltrim([userId, length, length], function(err, reply) {
+    redisClient.ltrim(userId, length, length, function(err, reply) {
       console.log(reply);
       if(err) deferred.reject(err);
       else deferred.resolve(reply);
