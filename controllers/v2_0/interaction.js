@@ -17,6 +17,7 @@ var User = mongoose.model('User'),
 var log = require('../../services/error_log.js'),
     auth = require('../../services/auth.js'),
     donlerValidator = require('../../services/donler_validator.js'),
+    pushService = require('../../services/push_service.js'),
     tools = require('../../tools/tools.js'),
     async = require('async'),
     notificationController = require('./notifications.js'),
@@ -461,6 +462,10 @@ module.exports = {
           }
           if(interaction.public) {
             updateInteractionTime(req.user);
+            pushService.concernPush(req.user);
+          }
+          if(interaction.type===1 && interaction.targetType === 2) {
+            pushService.teamPush(interaction.target);
           }
         }
       });
@@ -761,6 +766,7 @@ module.exports = {
             notificationController.sendInteractionNfct(1, interaction, req.user._id, interaction.poster._id);
             if(interaction.public) {
               updateInteractionTime(req.user);
+              pushService.questionPush(interaction);
             }
           }
         }

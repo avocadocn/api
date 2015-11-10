@@ -2,6 +2,7 @@
 
 var mongoose = require('mongoose');
 var QuestionComment= mongoose.model('QuestionComment');
+var Team = mongoose.model('Team');
 var log = require('./error_log.js');
 var push = require('./push.js');
 var redisService = require('./redis_service.js');
@@ -133,15 +134,22 @@ exports.concernPush = function (user) {
  * 群组有新活动Push接口
  * @param  {Team} team  
  */
-exports.teamPush = function (team) {
-  var members = team.member;
-  if(members && team.member.length){
-    var msg = {
-      time: new Date(),
-      type: 0
-    };
-    for (var i = members.length - 1; i >= 0; i--) {
-      insertQueue(members[i]._id, msg, {forcePush:true});
+exports.teamPush = function (teamId) {
+  Team.findOne({_id:teamId}, function(err, team) {
+    if(err) {
+      log(err);
+      return;
     }
-  }
+    var members = team.member;
+    if(members && team.member.length){
+      var msg = {
+        time: new Date(),
+        type: 0
+      };
+      for (var i = members.length - 1; i >= 0; i--) {
+        insertQueue(members[i]._id, msg, {forcePush:true});
+      }
+    }
+  })
+    
 }
