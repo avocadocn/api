@@ -818,7 +818,13 @@ module.exports = {
           return res.status(500).send({msg:'保存出错'});
         }
         else{
-          return res.status(200).send({msg:'添加关注成功'});
+          res.status(200).send({msg:'添加关注成功'});
+          //更新被关注人
+          User.findByIdAndUpdate(req.params.userId, 
+            {$push: {'concerned' : req.user._id}},
+            function(err) {
+              err && log(err);
+            })
         }
       });
     },
@@ -853,7 +859,13 @@ module.exports = {
             return res.status(500).send({msg:'保存出错'});
           }
           else{
-            return res.status(200).send({msg:'取消关注成功'});
+            res.status(200).send({msg:'取消关注成功'});
+            //更新被关注人
+            User.findByIdAndUpdate(req.params.userId, 
+            {$pull: {'concerned' : req.user._id}},
+            function(err) {
+              err && log(err);
+            })
           }
         });
       }
