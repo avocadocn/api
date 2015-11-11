@@ -16,6 +16,7 @@ var auth = require('../../services/auth.js'),
   uploader = require('../../services/uploader.js'),
   tools = require('../../tools/tools.js'),
   donlerValidator = require('../../services/donler_validator.js'),
+  pushService = require('../../services/push_service.js'),
   async = require('async'),
   notificationController = require('./notifications.js'),
   easemob = require('../../services/easemob.js'),
@@ -538,6 +539,8 @@ module.exports = {
             });
             //发通知给管理员
             notificationController.sendTeamNtct(8, req.group, req.user._id);
+            //如果是公开群，告诉关注者
+            if(req.group.open) pushService.concernPush(req.user);
           }
         });
       } else {
@@ -581,6 +584,9 @@ module.exports = {
                 log(err);
               }
             });
+
+            //如果是公开群，告诉关注者
+            if(req.group.open) pushService.concernPush(req.user);
           }
         });
       }
