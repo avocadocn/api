@@ -17,6 +17,7 @@ var mongoose = require('mongoose'),
     async = require('async'),
     schedule = require('node-schedule'),
     emailService = require('../services/email.js'),
+    pushService = require('./push_service.js'),
     userScore = require('./user_score.js'),
     moment = require('moment');
 var winScore =3;
@@ -698,6 +699,12 @@ exports.init = function(){
   var finishActivityRule = new schedule.RecurrenceRule();
   finishActivityRule.minute = 0;
   var finishActivitySchedule = schedule.scheduleJob(finishActivityRule, finishActivity);
+
+  //每小时清推送
+  var pushClearRule = new schedule.RecurrenceRule();
+  pushClearRule.minute = 30;
+  var pushClearSchedule = schedule.scheduleJob(pushClearRule, pushService.getAllListsAndPush);
+
   // finishActivity();
   //自动统计小队排名
   // var teamPointRule = new schedule.RecurrenceRule();

@@ -27,6 +27,34 @@ function mergeMsgs(msgList) {
 
 //推送间隔2小时
 var interval = 2*3600*1000;
+
+/**
+ * 获取某人的列表并push
+ * @param  {User} userId
+ * @param  {string} msg (optional)
+ */
+function getListAndPush(userId, msg) {
+  redisPushQueue.getList(userId)
+  .then(function(list) {
+    if(msg) list.push(msg);
+    var msgs = mergeMsgs(list);
+    push.push(msgs, function(err) {
+      err && log(err);
+    });
+    redisPushQueue.deleteList(userId)
+    .then(function(result){
+      console.log(result);
+    })
+    .then(null, function(err) {
+      err && log(err);
+    });
+  })
+  .then(null, function(err) {
+    err && log(err);
+  })
+};
+
+
 /**
  * 插入/读取队列
  * 若是options.forcePush为true则立即推送
@@ -44,35 +72,14 @@ var interval = 2*3600*1000;
  * 
  */
 function insertQueue(userId, msg, options) {
-  var getListAndPush = function() {
-    redisPushQueue.getList(userId)
-    .then(function(list) {
-      list.push(msg);
-      var msgs = mergeMsgs(list);
-      push.push(msgs, function(err) {
-        err && log(err);
-      });
-      redisPushQueue.deleteList(userId)
-      .then(function(result){
-        console.log(result);
-      })
-      .then(null, function(err) {
-        err && log(err);
-      });
-    })
-    .then(null, function(err) {
-      err && log(err);
-    })
-  };
-
   if(options && options.forcePush) {
-    getListAndPush();
+    getListAndPush(userId, msg);
   }
   else {
     redisPushQueue.getFirst(userId)
     .then(function(result) {
       if(result && new Date() - result.time > interval) {
-        getListAndPush();
+        getListAndPush(userId, msg);
       }
       else {
         redisPushQueue.addToQueue(userId, msg)
@@ -88,6 +95,20 @@ function insertQueue(userId, msg, options) {
       err && log(err);
     })
   }
+}
+
+//找出所有的list并push
+exports.getAllListsAndPush = function() {
+  redisPushQueue.getAllListKeys()
+  .then(function(result) {
+    for(var i=0; i<result.length; i++) {
+      getListAndPush(result[i]);
+    }
+    console.log('推送了'+result.length + '个用户');
+  })
+  .then(null, function(err) {
+    err && log(err);
+  })
 }
 
 /**
@@ -148,7 +169,7 @@ exports.teamPush = function (teamId) {
       };
       for (var i = members.length - 1; i >= 0; i--) {
         insertQueue(members[i]._id, msg, {forcePush:true});
-      }
+      };
     }
   })
     

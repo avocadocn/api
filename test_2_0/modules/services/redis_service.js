@@ -75,6 +75,17 @@ module.exports = function() {
         })
       })
 
+      it('应能获取所有队列的keys', function(done) {
+        redisPushQueue.getAllListKeys()
+        .then(function(result) {
+          result.length.should.equal(3);
+          done();
+        })
+        .then(null, function(err) {
+          err & done(err);
+        })
+      })
+
       it('应能删除整个队列', function(done) {
         redisPushQueue.deleteList(3)
         .then(function(result) {

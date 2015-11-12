@@ -216,7 +216,10 @@ redisRanking.removeKey = function(cid, type) {
 };
 
 var redisPushQueue = {};
-
+var pushIdentifier = 'PushUid:';
+if (process.env.NODE_ENV === 'test') {
+  pushIdentifier = 'TestPushUid:';
+}
 //加入队列
 redisPushQueue.addToQueue = function(userId, msg) {
   var deferred = Q.defer();
@@ -226,7 +229,7 @@ redisPushQueue.addToQueue = function(userId, msg) {
     return deferred.promise;
   }
   msg = JSON.stringify(msg);
-  redisClient.lpush(userId, msg, function(err, reply) {
+  redisClient.lpush(pushIdentifier + userId, msg, function(err, reply) {
     // console.log('pushReply:', reply);
     if(err) deferred.reject(err);
     else deferred.resolve(reply);
@@ -243,7 +246,7 @@ redisPushQueue.getFirst = function(userId) {
     deferred.reject(new Error('redis连接失败'));
     return deferred.promise;
   }
-  redisClient.lindex(userId, -1, function(err, reply) {
+  redisClient.lindex(pushIdentifier + userId, -1, function(err, reply) {
     var result = JSON.parse(reply);
     // console.log('第一个元素:',result);
     if(err) deferred.reject(err);
@@ -262,7 +265,7 @@ redisPushQueue.getList = function(userId) {
     return deferred.promise;
   }
 
-  redisClient.lrange(userId, 0, -1, function(err, reply) {
+  redisClient.lrange(pushIdentifier + userId, 0, -1, function(err, reply) {
     // console.log('整个队列:',reply);
     for(var i=reply.length - 1; i>=0; i--) {
       reply[i] = JSON.parse(reply[i]);
@@ -277,7 +280,7 @@ redisPushQueue.getList = function(userId) {
 function getListLength(userId) {
   var deferred = Q.defer();
 
-  redisClient.llen(userId, function(err, reply) {
+  redisClient.llen(pushIdentifier + userId, function(err, reply) {
     // console.log('获取队列长度：',reply);
     if(err) deferred.reject(err);
     else deferred.resolve(reply);
@@ -296,7 +299,7 @@ redisPushQueue.deleteList = function(userId) {
   }
   getListLength(userId)
   .then(function(length) {
-    redisClient.ltrim(userId, length, length, function(err, reply) {
+    redisClient.ltrim(pushIdentifier + userId, length, length, function(err, reply) {
       // console.log('删除:',reply);
       if(err) deferred.reject(err);
       else deferred.resolve(reply);
@@ -308,6 +311,29 @@ redisPushQueue.deleteList = function(userId) {
 
   return deferred.promise;
 };
+
+//获取所有队列
+redisPushQueue.getAllListKeys = function() {
+  var deferred = Q.defer();
+
+  if (!isConnect) {
+    deferred.reject(new Error('redis连接失败'));
+    return deferred.promise;
+  }
+
+  redisClient.keys(pushIdentifier+'*', function(err, reply) {
+    if(err) deferred.reject(err);
+    else {
+      for (var i = reply.length - 1; i >= 0; i--) {
+        reply[i] = reply[i].split(pushIdentifier)[1];
+      };
+      // console.log('获取所有队列:',reply);
+      deferred.resolve(reply);
+    }
+  })
+
+  return deferred.promise;
+}
 
 var redisPhoneValidate = {};
 
