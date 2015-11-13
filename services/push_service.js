@@ -78,10 +78,10 @@ function insertQueue(userId, msg, options) {
   else {
     redisPushQueue.getFirst(userId)
     .then(function(result) {
-      if(result && new Date() - result.time > interval) {
+      if(result && (new Date() - result.time > interval)) {
         getListAndPush(userId, msg);
       }
-      else {
+      else if(msg) {
         redisPushQueue.addToQueue(userId, msg)
         .then(function(result) {
           console.log(result);
@@ -97,14 +97,14 @@ function insertQueue(userId, msg, options) {
   }
 }
 
-//找出所有的list并push
+//找出所有的list并push那些满了一小时的
 exports.getAllListsAndPush = function() {
   redisPushQueue.getAllListKeys()
   .then(function(result) {
     for(var i=0; i<result.length; i++) {
-      getListAndPush(result[i]);
+      insertQueue(result[i]);
     }
-    console.log('推送了'+result.length + '个用户');
+    // console.log('推送了'+result.length + '个用户');
   })
   .then(null, function(err) {
     err && log(err);
