@@ -562,7 +562,7 @@
           "user"
         ],
         "operationId": "userInfoValidate",
-        "summary": "验证个人邮箱以及邀请码",
+        "summary": "验证手机号以及邀请码",
         "consumes": [
           "application/x-www-form-urlencoded"
         ],
@@ -753,45 +753,6 @@
         }
       }
     },
-    "/users/{userId}/photos": {
-      "get": {
-        "tags": [
-          "user"
-        ],
-        "summary": "获取用户上传过的照片",
-        "parameters": [
-          {
-            "name": "userId",
-            "description": "用户id",
-            "required": true,
-            "type": "string",
-            "in": "path",
-            "default": "53aa707a11fd597b3e1be260"
-          },
-          {
-            "name": "start",
-            "description": "分页的查询时间",
-            "required": false,
-            "type": "string",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功",
-            "schema": {
-              "$ref": "PhotoListData"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
     "/users/actions/invite": {
       "post": {
         "tags": [
@@ -854,177 +815,6 @@
             "description": "公司数据",
             "schema": {
               "$ref": "Company"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "companies"
-        ],
-        "summary": "修改公司数据",
-        "consumes": [
-          "application/x-www-form-urlencoded"
-        ],
-        "parameters": [
-          {
-            "name": "companyId",
-            "description": "公司id",
-            "required": true,
-            "type": "string",
-            "in": "path",
-            "default": "53aa6fc011fd597b3e1be250"
-          },
-          {
-            "name": "name",
-            "description": "简称",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "logo",
-            "description": "logo",
-            "required": false,
-            "type": "file",
-            "in": "formData"
-          },
-          {
-            "name": "password",
-            "description": "密码",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "domain",
-            "description": "邮箱后缀(可以是多个，用空格区分)",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "ssv",
-            "in": "formData"
-          },
-          {
-            "name": "province",
-            "description": "省份",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "city",
-            "description": "城市",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "district",
-            "description": "区",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "address",
-            "description": "地址",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "contacts",
-            "description": "联系人",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "areacode",
-            "description": "区号",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "tel",
-            "description": "电话号码",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "extension",
-            "description": "分机",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "intro",
-            "description": "简介",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "phone",
-            "description": "手机号码",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          },
-          {
-            "name": "email",
-            "description": "企业邮箱",
-            "required": false,
-            "type": "string",
-            "in": "formData"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "修改成功"
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/companies/{companyId}/departments": {
-      "get": {
-        "tags": [
-          "companies"
-        ],
-        "summary": "获取公司部门数据",
-        "parameters": [
-          {
-            "name": "companyId",
-            "description": "公司id",
-            "required": true,
-            "type": "string",
-            "in": "path",
-            "default": "53aa6fc011fd597b3e1be250"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "部门数据",
-            "schema": {
-              "$ref": "DepartmentList"
             }
           },
           "default": {
@@ -2633,71 +2423,6 @@
         }
       }
     },
-    "/groups/{groupId}/update": {
-      "post": {
-        "tags": [
-          "group"
-        ],
-        "summary": "申请认证群",
-        "operationId": "requestUpdate",
-        "parameters": [
-          {
-            "name": "groupId",
-            "description": "群组id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "group"
-        ],
-        "summary": "处理认证群",
-        "operationId": "dealUpdate",
-        "parameters": [
-          {
-            "name": "groupId",
-            "description": "群组id",
-            "required": true,
-            "type": "string",
-            "in": "path"
-          },
-          {
-            "name": "body",
-            "description": "body",
-            "required": true,
-            "schema": {
-              "$ref": "updateTeamForm"
-            },
-            "in": "body"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
     "/groups/{groupId}/applicant/{userId}": {
       "put": {
         "tags": [
@@ -2781,7 +2506,7 @@
         "tags": [
           "favoriteRank"
         ],
-        "summary": "获取公司内、公司外排行榜",
+        "summary": "获取男神女神榜",
         "operationId": "getFavoriteRank",
         "parameters": [
           {
@@ -3154,47 +2879,6 @@
         }
       }
     },
-    "/circle/reminds": {
-      "get": {
-        "tags": [
-          "circles"
-        ],
-        "summary": "获取是否有新评论、新朋友圈内容、消息(包括最新消息人的头像)",
-        "operationId": "getReminds",
-        "parameters": [
-          {
-            "name": "lastReadTime",
-            "description": "上次查询朋友圈的时间",
-            "required": true,
-            "type": "string",
-            "format": "date-time",
-            "in": "query"
-          },
-          {
-            "name": "lastCommentDate",
-            "description": "上次查询朋友评论的时间",
-            "required": true,
-            "type": "string",
-            "format": "date-time",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功",
-            "schema": {
-              "$ref": "NewReminds"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
     "/circle/reminds/comments": {
       "get": {
         "tags": [
@@ -3257,29 +2941,6 @@
         "responses": {
           "200": {
             "description": "举报成功"
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "Error"
-            }
-          }
-        }
-      }
-    },
-    "/search": {
-      "get": {
-        "tags": [
-          "search"
-        ],
-        "summary": "搜索",
-        "operationId": "search",
-        "consumes": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "成功"
           },
           "default": {
             "description": "error",
