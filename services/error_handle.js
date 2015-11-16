@@ -2,7 +2,7 @@
 
 var mongoose = require('mongoose'),
   ErrorStatistics = mongoose.model('ErrorStatistics');
-
+var err_log = require('./error_log.js');
 module.exports = function (err, req, res, next) {
   if (res.statusCode < 400) {
     res.status(500);
@@ -12,14 +12,13 @@ module.exports = function (err, req, res, next) {
   if (err instanceof Error) {
     _err = err.stack;
     msg = err.message;
-    console.log(_err);
+    err_log(_err);
   }
   else {
     _err = err;
     msg = err;
-    console.log(_err);
+    err_log(_err);
   }
-
   if (res.statusCode === 403) {
     res.status(403).send({msg: msg});
   }
@@ -51,7 +50,7 @@ module.exports = function (err, req, res, next) {
       }
     }
     log.save(function(err) {
-      if (err) console.log(err);
+      if (err) err_log(err);
     });
     res.status(500).send({ msg: '服务器错误' });
   }
