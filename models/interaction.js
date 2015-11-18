@@ -41,10 +41,10 @@ var Interaction = new Schema({
   inviters: [_member],
   //评论数
   // commentCount: Number,
-  //状态 1:'正常',2:'结束',3:'删除'
+  //状态 1:'正常',2:'结束',3:'删除',4:'屏蔽'
   status:{
     type: Number,
-    enum: [1,2,3],
+    enum: [1,2,3,4],
     default: 1
   },
   //发布者

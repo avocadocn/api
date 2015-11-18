@@ -2567,8 +2567,10 @@ definitions:
         type: string
         enum:
           - user
-          - comment
-          - photo
+          - activity
+          - poll
+          - question
+          - circle
       hostId:
         type: string
       reportType:

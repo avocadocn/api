@@ -9,9 +9,9 @@ var Schema = mongoose.Schema;
 var Report = new Schema({
   host_type:{
     type: String,
-    enum: ['photo', 'comment', 'user']
+    enum: ['activity', 'poll', 'question', 'circle', 'user']
   },
-  host_id: Schema.Types.ObjectId,  //留言主体的id,这个主体可以是 一条活动、一条评论、一张照片、一场比赛等等
+  host_id: Schema.Types.ObjectId,  //留言主体的id,这个主体可以是 活动，投票，
   //举报的补充
   content: String,
   content_poster:{

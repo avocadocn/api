@@ -3,7 +3,6 @@
 var mongoose = require('mongoose');
 var CircleContent = mongoose.model('CircleContent'),
   CircleComment = mongoose.model('CircleComment'),
-  File = mongoose.model('File'),
   User = mongoose.model('User'),
   Company = mongoose.model('Company'),
   CompanyGroup = mongoose.model('CompanyGroup'),

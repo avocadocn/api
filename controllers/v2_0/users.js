@@ -300,7 +300,7 @@ module.exports = {
     getCompanyUsers: function(req, res) {
       if(req.user.cid.toString() !== req.params.companyId)
         return res.sendStatus(403);
-      var findOptions = {'cid':req.params.companyId, 'active':true};
+      var findOptions = {'cid':req.params.companyId, 'active':true,'disabled':true};
       var outputOptions = {'nickname':1, 'photo':1, 'realname': 1, 'gender':1, 'phone':1};
       var sortOption = req.query.freshman ? {'register_date':-1} : {'nickname':1};
       if(req.query.page) {
@@ -879,7 +879,9 @@ module.exports = {
       var aggregateOptions = [{
         $match: {
           'cid': mongoose.Types.ObjectId(req.user.cid),
-          'birthday':{$exists:true}
+          'birthday':{$exists:true},
+          'disabled':true,
+          'active':true
         }
       },
       {

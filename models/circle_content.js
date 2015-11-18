@@ -60,7 +60,7 @@ var CircleContent = new Schema({
    */
   status: { // wait或许已经无用
     type: String,
-    enum: ['show', 'delete', 'wait'],
+    enum: ['show', 'delete', 'wait','shield'],
     required: true,
     default: 'show'
   },
