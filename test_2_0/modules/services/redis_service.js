@@ -1,5 +1,6 @@
 var path = require('path');
 
+var async = require('async');
 var common = require('../../support/common.js');
 var dataService = require('../../create_data');
 var redisService = require(path.join(common.config.rootPath, 'services/redis_service.js'));
@@ -9,12 +10,31 @@ module.exports = function() {
   describe('redisService', function () {
     var data;
     var msgs;
-    before(function () {
+
+    before(function (done) {
       data = dataService.getData();
       msgs = [
         {type:1, time: new Date()},
         {type:2, time: new Date()}
       ];
+
+      redisPushQueue.getAllListKeys()
+      .then(function(result) {
+        async.map(result, function(item, callback) {
+          redisPushQueue.deleteList(item)
+          .then(function(result) {
+            callback();
+          })
+          .then(null, function(err) {
+            err & callback(err);
+          });
+        }, function(err, results) {
+          done(err);
+        })
+      })
+      .then(null, function(err) {
+        err & done(err);
+      })
     });
 
     describe('redisPushQueue', function () {
