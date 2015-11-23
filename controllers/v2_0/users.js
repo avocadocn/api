@@ -744,7 +744,9 @@ module.exports = {
                 }
               })
             }
-            return res.status(200).send({active: true, msg:'已注册'});
+            else {
+              return res.status(200).send({active: true, msg:'已注册'});
+            }
           }
           else {
             if(req.body.forgetValidate) {
