@@ -638,19 +638,9 @@ module.exports = {
         .then(function(reply) {
           res.send({
             msg: '更新成功',
-            newToken: reply
+            newToken: token
           });
           req.session.touch();
-          req.user.updateDeviceToken(req.headers['x-access-token'], reply);
-          req.user.save(function(err) {
-            if (err) next(err);
-            else {
-              res.send({
-                msg: '更新成功',
-                newToken: reply
-              });
-            }
-          });
         })
         .then(null, function(err) {
           var newToken = jwt.sign({
