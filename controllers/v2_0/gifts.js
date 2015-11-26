@@ -204,7 +204,7 @@ module.exports = {
           res.status(200).send({gift:gift, remain:req.remains});
           //送爱心更新男神榜女神榜
           if(req.body.giftIndex===4) {
-            redisService.redisRanking.updateElement(req.user.cid, req.receiver.gender===1 ?1 :2, [1, req.body.receiverId]);
+            redisService.redisRanking.updateElement(req.user.cid, req.receiver.gender==true ?1 :2, [1, req.body.receiverId]);
           }
           notificationController.sendGiftNfct(gift, 1);
           return;
