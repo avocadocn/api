@@ -94,6 +94,29 @@
         }
       }
     },
+    "/users/refresh/token": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "用户更新token",
+        "operationId": "userRefreshToken",
+        "responses": {
+          "200": {
+            "description": "新toke",
+            "schema": {
+              "$ref": "LoginSuccess"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "Error"
+            }
+          }
+        }
+      }
+    },
     "/users/concern/{userId}": {
       "post": {
         "tags": [

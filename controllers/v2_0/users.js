@@ -300,7 +300,7 @@ module.exports = {
     getCompanyUsers: function(req, res) {
       if(req.user.cid.toString() !== req.params.companyId)
         return res.sendStatus(403);
-      var findOptions = {'cid':req.params.companyId, 'active':true,'disabled':true};
+      var findOptions = {'cid':req.params.companyId, 'active':true,'disabled':false};
       var outputOptions = {'nickname':1, 'photo':1, 'realname': 1, 'gender':1, 'phone':1};
       var sortOption = req.query.freshman ? {'register_date':-1} : {'nickname':1};
       if(req.query.page) {
@@ -317,7 +317,7 @@ module.exports = {
         },{columns:outputOptions, sortBy:sortOption});
       }
       else{
-        if(req.query.from='admin' && req.user.isSuperAdmin(req.params.companyId)) {
+        if(req.query.from==='admin' && req.user.isSuperAdmin(req.params.companyId)) {
           findOptions = {'cid':req.params.companyId};
           outputOptions.active = 1;
         }
@@ -638,9 +638,19 @@ module.exports = {
         .then(function(reply) {
           res.send({
             msg: '更新成功',
-            newToken: token
+            newToken: reply
           });
           req.session.touch();
+          req.user.updateDeviceToken(req.headers['x-access-token'], reply);
+          req.user.save(function(err) {
+            if (err) next(err);
+            else {
+              res.send({
+                msg: '更新成功',
+                newToken: reply
+              });
+            }
+          });
         })
         .then(null, function(err) {
           var newToken = jwt.sign({

@@ -56,6 +56,21 @@ paths:
           description: 登录成功后返回的数据
           schema:
             $ref: LoginSuccess
+  /users/refresh/token:
+    post:
+      tags:
+        - user
+      summary: 用户更新token
+      operationId: userRefreshToken
+      responses:
+        default:
+          description: error
+          schema:
+            $ref: Error
+        200:
+          description: 新toke
+          schema:
+            $ref: LoginSuccess
   "/users/concern/{userId}":
     post:
       tags:
