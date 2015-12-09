@@ -26,14 +26,14 @@ module.exports = function() {
             callback();
           })
           .then(null, function(err) {
-            err & callback(err);
+            err && callback(err);
           });
         }, function(err, results) {
           done(err);
         })
       })
       .then(null, function(err) {
-        err & done(err);
+        err && done(err);
       })
     });
 
@@ -46,7 +46,7 @@ module.exports = function() {
           done();
         })
         .then(null, function(err) {
-          err & done(err);
+          err && done(err);
         })
       })
 
@@ -61,15 +61,15 @@ module.exports = function() {
               done();
             })
             .then(null, function() {
-              err & done(err);
+              err && done(err);
             })
           })
           .then(null, function() {
-            err & done(err);
+            err && done(err);
           })
         })
         .then(null, function(err) {
-          err & done(err);
+          err && done(err);
         })
       })
 
@@ -80,7 +80,7 @@ module.exports = function() {
           done();
         })
         .then(null, function(err) {
-          err & done(err);
+          err && done(err);
         })
       })
 
@@ -91,7 +91,7 @@ module.exports = function() {
           done();
         })
         .then(null, function(err) {
-          err & done(err);
+          err && done(err);
         })
       })
 
@@ -102,7 +102,7 @@ module.exports = function() {
           done();
         })
         .then(null, function(err) {
-          err & done(err);
+          err && done(err);
         })
       })
 
@@ -113,7 +113,7 @@ module.exports = function() {
           done();
         })
         .then(null, function(err) {
-          err & done(err);
+          err && done(err);
         })
 
         redisPushQueue.deleteList(1);
