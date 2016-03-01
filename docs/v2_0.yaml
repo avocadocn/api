@@ -3,7 +3,7 @@ info:
   title: Donler API v2
   description: Donler API v2
   version: 2.0.0
-host: www.donler.com:3002
+host: www.55yali.com:3002
 basePath: /v2_0
 schemes:
   - http
